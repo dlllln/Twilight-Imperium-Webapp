@@ -19,10 +19,15 @@ Umgebungsvariablen: `PORT` (Standard 3000), `GAME_PASSWORD` (Gruppenpasswort), `
 - `src/engine.js` – Regel-Engine (Phasen, Bewegung, Kampf, Produktion, Abstimmung)
 - `server.js` – HTTP- und WebSocket-Server, Räume, Speicherung
 - `public/` – Browser-Client (SVG-Karte, Dialoge)
-- `test/smoke.js` – simuliert ganze Partien mit Zufallszügen (`npm test`)
+- `src/bot.js`, `src/botrunner.js` – KI-Gegner
+- `test/` – Simulationen: `smoke.js` (Zufallszüge), `bots.js` (reine Bot-Partien), `combat.js` (Raumkampf)
 
-## Bekannte Vereinfachungen (Version 0.1)
+## KI-Gegner
 
-- Kampfverluste werden automatisch verteilt (zuerst Schadensresistenz, dann die billigsten Schiffe), Rückzug gibt es noch nicht.
+In der Lobby fügt „+ KI-Gegner“ einen Bot mit zufälliger freier Fraktion hinzu. Bots wählen Strategiekarten, expandieren, kämpfen, forschen, stimmen ab und erfüllen Ziele. `BOT_DELAY` (ms) steuert, wie schnell sie ziehen.
+
+## Bekannte Vereinfachungen (Version 0.2)
+
+- Raumkampf läuft rundenweise mit Rückzug und eigener Verlustwahl; Bodenkampf und Geschützfeuer werden automatisch ausgewürfelt.
 - Abstimmungen im Rat laufen gleichzeitig und verdeckt.
 - Orbitalgeschütze feuern automatisch auf jede fremde Flotte, die in Reichweite einfliegt.
