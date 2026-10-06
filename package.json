@@ -1,0 +1,14 @@
+{
+  "name": "sternenthron",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Privates Browser-Strategiespiel für 3 bis 6 Spieler",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/smoke.js"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}
