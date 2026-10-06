@@ -17,7 +17,7 @@ const LS = {
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   S.ws = new WebSocket(`${proto}://${location.host}`);
-  S.ws.onopen = () => { const pw = LS.get('pw'); if (pw) send({ type: 'hello', password: pw }); else renderLogin(); };
+  S.ws.onopen = () => send({ type: 'hello', password: LS.get('pw') || '' });
   S.ws.onmessage = (e) => onMsg(JSON.parse(e.data));
   S.ws.onclose = () => { toast('Verbindung verloren, verbinde neu …'); setTimeout(connect, 2000); };
 }
@@ -26,7 +26,7 @@ function act(action) { send({ type: 'action', action }); }
 
 function onMsg(m) {
   if (m.type === 'auth') {
-    if (!m.ok) { LS.set('pw', ''); renderLogin(m.message); return; }
+    if (!m.ok) { const had = LS.get('pw'); LS.set('pw', ''); renderLogin(had ? m.message : ''); return; }
     S.D = m.data;
     const code = LS.get('code'), token = code && LS.get('tok_' + code);
     if (code && token) send({ type: 'join', code, token }); else renderMenu();

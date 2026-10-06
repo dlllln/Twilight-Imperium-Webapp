@@ -10,7 +10,9 @@ const { stepBots } = require('./src/botrunner');
 const BOT_DELAY = +(process.env.BOT_DELAY || 700);
 
 const PORT = process.env.PORT || 3000;
-const PASSWORD = process.env.GAME_PASSWORD || 'sternenthron';
+const PASSWORD = process.env.GAME_PASSWORD || ''; // leer = kein Passwort
+const MAX_ROOMS = +(process.env.MAX_ROOMS || 300);
+const ROOM_TTL_MS = 1000 * 60 * 60 * 24 * 14; // ungenutzte Spiele nach 14 Tagen löschen
 const SAVE_DIR = process.env.SAVE_DIR || path.join(__dirname, 'saves');
 fs.mkdirSync(SAVE_DIR, { recursive: true });
 
@@ -57,6 +59,7 @@ function newCode() {
 
 function broadcast(room) {
   room.state.version++;
+  room.lastActive = Date.now();
   for (const ws of room.sockets) send(ws, { type: 'state', state: E.view(room.state, ws.pid), you: ws.pid });
   save(room);
   scheduleBots(room);
@@ -71,7 +74,7 @@ function scheduleBots(room) {
 }
 function send(ws, msg) { if (ws.readyState === 1) ws.send(JSON.stringify(msg)); }
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 });
 wss.on('connection', (ws) => {
   ws.authed = false;
   ws.on('message', (raw) => {
@@ -87,9 +90,9 @@ wss.on('connection', (ws) => {
 
 function handle(ws, msg) {
   if (msg.type === 'hello') {
-    if (msg.password !== PASSWORD) return send(ws, { type: 'auth', ok: false, message: 'Falsches Passwort.' });
+    if (PASSWORD && msg.password !== PASSWORD) return send(ws, { type: 'auth', ok: false, message: 'Falsches Passwort.' });
     ws.authed = true;
-    send(ws, { type: 'auth', ok: true, data: D });
+    send(ws, { type: 'auth', ok: true, data: D, open: !PASSWORD });
     return;
   }
   if (!ws.authed) return send(ws, { type: 'error', message: 'Bitte zuerst das Passwort eingeben.' });
@@ -97,6 +100,8 @@ function handle(ws, msg) {
   if (msg.type === 'create' || msg.type === 'join') {
     let room;
     if (msg.type === 'create') {
+      if (rooms.size >= MAX_ROOMS) cleanupRooms(true);
+      if (rooms.size >= MAX_ROOMS) return send(ws, { type: 'error', message: 'Der Server ist gerade voll. Bitte später erneut versuchen.' });
       const code = newCode();
       room = { state: E.createGame(code), tokens: {}, sockets: new Set() };
       rooms.set(code, room);
@@ -142,4 +147,17 @@ function handle(ws, msg) {
 }
 
 loadRooms();
-server.listen(PORT, () => console.log(`Sternenthron läuft auf http://localhost:${PORT} (Passwort: ${PASSWORD === 'sternenthron' ? 'Standard "sternenthron", bitte GAME_PASSWORD setzen' : 'gesetzt'})`));
+// Alte Spiele entfernen: beendete oder lange ungenutzte; bei force auch leere Lobbys ohne Verbindung
+function cleanupRooms(force = false) {
+  const now = Date.now();
+  for (const [code, room] of rooms) {
+    if (room.sockets.size) continue;
+    const last = room.state.log.length ? room.state.log[room.state.log.length - 1].t : 0;
+    const idle = now - (room.lastActive || last || 0);
+    const stale = idle > ROOM_TTL_MS || (room.state.phase === 'ended' && idle > 1000 * 60 * 60 * 24) || (force && room.state.phase === 'lobby');
+    if (stale) { rooms.delete(code); fs.unlink(path.join(SAVE_DIR, code + '.json'), () => {}); }
+  }
+}
+setInterval(cleanupRooms, 1000 * 60 * 60);
+
+server.listen(PORT, () => console.log(`Sternenthron läuft auf http://localhost:${PORT} (${PASSWORD ? 'mit Passwort' : 'öffentlich, ohne Passwort'})`));

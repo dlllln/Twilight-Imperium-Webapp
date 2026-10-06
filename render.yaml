@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: sternenthron
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: SAVE_DIR
+        value: /tmp/sternenthron-saves

@@ -1,17 +1,27 @@
 # Sternenthron
 
-Privates Browser-Strategiespiel für 3 bis 6 Spieler: Hex-Galaxie, Strategiekarten, Flottenkampf, Bodeninvasionen, Technologien, Ratsabstimmungen und ein Wettrennen um 10 Siegpunkte. Alle Namen, Fraktionen, Texte und Grafiken sind eigene Inhalte.
+Browser-Strategiespiel für 2 bis 6 Spieler (Menschen und KI): Hex-Galaxie, Strategiekarten, Flottenkampf, Bodeninvasionen, Technologien, Ratsabstimmungen und ein Wettrennen um 10 Siegpunkte. Alle Namen, Fraktionen, Texte und Grafiken sind eigene Inhalte.
 
 ## Starten
 
 ```bash
 npm install
-GAME_PASSWORD=euer-passwort npm start
+npm start
 ```
 
-Danach im Browser `http://localhost:3000` öffnen. Ein Spieler erstellt ein Spiel und gibt den 5-stelligen Spielcode an die anderen weiter. Spielstände werden in `saves/` gespeichert, Spieler können nach einem Verbindungsabbruch einfach neu laden.
+Danach im Browser `http://localhost:3000` öffnen. Das Spiel ist öffentlich, ein Passwort ist nicht nötig. Ein Spieler erstellt ein Spiel und gibt den 5-stelligen Spielcode an die anderen weiter. Spielstände werden in `saves/` gespeichert, Spieler können nach einem Verbindungsabbruch einfach neu laden.
 
-Umgebungsvariablen: `PORT` (Standard 3000), `GAME_PASSWORD` (Gruppenpasswort), `SAVE_DIR`.
+Umgebungsvariablen: `PORT` (Standard 3000), `SAVE_DIR`, `MAX_ROOMS` (Standard 300), `BOT_DELAY` und optional `GAME_PASSWORD`, falls der Server doch nur für eine Gruppe sein soll.
+
+Ungenutzte Spiele werden nach 14 Tagen gelöscht, beendete nach einem Tag.
+
+## Online stellen (Render)
+
+1. Auf [render.com](https://render.com) mit GitHub anmelden.
+2. „New“ → „Blueprint“ wählen und dieses Repo auswählen. Render liest `render.yaml` und richtet den Dienst ein.
+3. Nach dem ersten Build ist das Spiel unter der angezeigten `onrender.com`-Adresse erreichbar.
+
+Hinweis: Im kostenlosen Tarif schläft der Server nach längerer Inaktivität ein (der erste Aufruf dauert dann etwas), und Spielstände gehen bei einem Neustart verloren. Ein bezahlter Tarif mit Festplatte behebt beides.
 
 ## Aufbau
 
