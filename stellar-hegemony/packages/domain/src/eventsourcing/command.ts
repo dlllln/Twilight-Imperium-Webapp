@@ -1,6 +1,7 @@
 import type { DomainError } from '../shared/domain-error.ts';
 import type { PlayerId } from '../shared/ids.ts';
 import { ok, type Result } from '../shared/result.ts';
+import type { ContentPort } from '../ports/content-port.ts';
 import type { RandomPort } from '../ports/random-port.ts';
 import type { DomainEvent } from './domain-event.ts';
 
@@ -14,6 +15,7 @@ export interface Command<T extends string = string> {
 export interface DecisionContext {
   readonly random: RandomPort;
   readonly now: number;
+  readonly content: ContentPort;
 }
 
 /**

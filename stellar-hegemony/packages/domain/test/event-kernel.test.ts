@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyEvent,
   gameId,
+  playerId,
   replay,
   type DomainEvent,
   type ReducerMap,
@@ -34,6 +35,7 @@ describe('Event-Sourcing-Kern', () => {
     const fresh = setupReducers.GameCreated({ phase: 'action' } as never, {
       type: 'GameCreated',
       gameId: gameId('g'),
+      host: playerId('h'),
       config: config(),
     });
     expect(fresh).toMatchObject({ phase: 'setup', round: 0, players: [], version: 1 });

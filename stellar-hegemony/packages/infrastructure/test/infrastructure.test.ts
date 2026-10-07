@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { gameId, type GameEvent } from '@stellar/domain';
+import { gameId, type GameEvent, playerId } from '@stellar/domain';
 import { BASE_RULE_NUMBERS } from '@stellar/content';
 import {
   InMemoryEventStore,
@@ -12,6 +12,7 @@ import {
 const created: GameEvent = {
   type: 'GameCreated',
   gameId: gameId('g'),
+  host: playerId('h'),
   config: { playerCount: 3, victoryPointsToWin: 10, rules: BASE_RULE_NUMBERS },
 };
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BASE_RULE_NUMBERS } from '@stellar/content';
+import { BASE_RULE_NUMBERS, createBaseContent } from '@stellar/content';
 import { factionId, gameId, type GameEvent, playerId, type SeatPlayer } from '@stellar/domain';
 import {
   InMemoryEventStore,
@@ -21,6 +21,7 @@ function setup() {
     publisher,
     random: new SeededRandom(1),
     clock: new SystemClock(),
+    content: createBaseContent(),
   });
   return { controller, published };
 }

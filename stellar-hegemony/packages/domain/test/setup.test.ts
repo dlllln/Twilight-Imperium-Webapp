@@ -16,10 +16,15 @@ import {
   seatPlayerHandler,
   updatePlayer,
 } from '../src/index.ts';
-import { BLUE, config, RED, ScriptedRandom } from './fixtures.ts';
+import { BLUE, config, contextWith, RED } from './fixtures.ts';
 
-const context = { random: new ScriptedRandom([1]), now: 0 };
-const created = (): GameEvent => ({ type: 'GameCreated', gameId: gameId('g1'), config: config(3) });
+const context = contextWith();
+const created = (): GameEvent => ({
+  type: 'GameCreated',
+  gameId: gameId('g1'),
+  host: RED,
+  config: config(3),
+});
 
 const seat = (id: string, color: SeatPlayer['color'], faction = id): SeatPlayer => ({
   type: 'SeatPlayer',

@@ -8,6 +8,7 @@ export function initialGameState(event: GameCreated): GameState {
   return {
     id: event.gameId,
     config: event.config,
+    host: event.host,
     version: 1,
     round: 0,
     phase: 'setup',
@@ -15,6 +16,7 @@ export function initialGameState(event: GameCreated): GameState {
     players: [],
     systems: {},
     planets: {},
+    homeSlots: [],
     nextUnitNumber: 1,
     winner: null,
   };

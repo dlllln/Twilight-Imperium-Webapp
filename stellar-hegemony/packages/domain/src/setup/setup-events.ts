@@ -5,6 +5,7 @@ import type { PlayerColor } from '../player/player-state.ts';
 
 export interface GameCreated extends DomainEvent<'GameCreated'> {
   readonly gameId: GameId;
+  readonly host: PlayerId;
   readonly config: GameConfig;
 }
 

@@ -1,4 +1,10 @@
 import {
+  type ContentPort,
+  type GalaxyTemplate,
+  hexRing,
+  ORIGIN,
+  StaticTileCatalog,
+  type SystemTile,
   type GameConfig,
   planetId,
   playerId,
@@ -147,6 +153,7 @@ export const system = (spaceUnits: readonly Unit[], planetIds = [planetId('p1')]
   id: systemId('s1'),
   position: { q: 0, r: 0 },
   planetIds,
+  wormholes: [],
   spaceUnits,
   commandTokens: [],
 });
@@ -168,3 +175,56 @@ export class ScriptedRandom implements RandomPort {
     return Math.min(maxInclusive, Math.max(minInclusive, value));
   }
 }
+
+const tile = (
+  id: string,
+  back: SystemTile['back'],
+  extra: Partial<SystemTile> = {},
+): SystemTile => ({
+  id: systemId(id),
+  back,
+  planets: [],
+  wormholes: [],
+  ...extra,
+});
+
+export const TILES: readonly SystemTile[] = [
+  tile('center', 'center', { planets: [{ id: planetId('throne'), resources: 1, influence: 6 }] }),
+  tile('b1', 'blue', { planets: [{ id: planetId('alpha-1'), resources: 2, influence: 1 }] }),
+  tile('b2', 'blue', {
+    planets: [
+      { id: planetId('beta-1'), resources: 1, influence: 2 },
+      { id: planetId('beta-2'), resources: 0, influence: 1 },
+    ],
+  }),
+  tile('b3', 'blue', { planets: [{ id: planetId('gamma-1'), resources: 3, influence: 0 }] }),
+  tile('b4', 'blue', {
+    wormholes: ['alpha'],
+    planets: [{ id: planetId('delta-1'), resources: 1, influence: 1 }],
+  }),
+  tile('r1', 'red', { anomaly: 'nebula' }),
+  tile('r2', 'red', { anomaly: 'asteroidField' }),
+  tile('r3', 'red', { wormholes: ['alpha'] }),
+  tile('home-x', 'home'),
+];
+
+/** Kleine Galaxie: Zentrum, Ring 1 mit sechs Tafeln, drei Heimat-Plätze in Ring 2. */
+export const TEMPLATE: GalaxyTemplate = {
+  playerCount: 3,
+  homeSlots: [0, 4, 8].map((index) => hexRing(ORIGIN, 2)[index] ?? ORIGIN),
+  systemSlots: hexRing(ORIGIN, 1),
+  blueTiles: 4,
+  redTiles: 2,
+};
+
+export const content: ContentPort = {
+  units: catalog,
+  tiles: new StaticTileCatalog(TILES),
+  galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
+};
+
+export const contextWith = (random: RandomPort = new ScriptedRandom([0])) => ({
+  random,
+  now: 0,
+  content,
+});
