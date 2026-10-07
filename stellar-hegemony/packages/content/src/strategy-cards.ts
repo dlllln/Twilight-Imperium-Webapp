@@ -24,7 +24,7 @@ const card = (
 
 export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
   card('vanguard', 1, 'commandTokens', { tokensGained: 3, influencePerToken: 3 }, false),
-  card('embassy', 2, 'diplomacy'),
+  card('embassy', 2, 'diplomacy', { readyPlanets: 2 }),
   card('senate', 3, 'politics'),
   card('engineering', 4, 'construction'),
   card('exchange', 5, 'trade'),
@@ -48,12 +48,12 @@ export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
   embassy: {
     name: { de: 'Gesandtschaft', en: 'Embassy' },
     primary: {
-      de: 'Wähle ein System mit einem deiner Planeten außer der Thronwelt. Alle anderen legen dort einen Marker ab. Mache deine Planeten dort bereit.',
-      en: 'Choose a system with one of your planets other than the throne world. Everyone else places a token there. Ready your planets there.',
+      de: 'Wähle ein System, in dem dir ein Planet gehört (nicht das Thronwelt-System). Mache deine erschöpften Planeten dort bereit. Jeder andere Spieler legt dort einen Kommandomarker ab.',
+      en: 'Choose a system where you control a planet (not the throne world system). Ready your exhausted planets there. Every other player places a command token there.',
     },
     secondary: {
-      de: 'Mache bis zu 2 deiner Planeten bereit.',
-      en: 'Ready up to 2 of your planets.',
+      de: 'Gib 1 Strategiemarker aus, um bis zu 2 deiner erschöpften Planeten bereitzumachen.',
+      en: 'Spend 1 strategy token to ready up to 2 of your exhausted planets.',
     },
   },
   senate: {

@@ -3,9 +3,9 @@ import type { Payment } from '../economy/payment.ts';
 import type { GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
 import type { PoolCounts } from '../player/command-sheet.ts';
-import type { DomainError } from '../shared/domain-error.ts';
-import type { PlayerId } from '../shared/ids.ts';
-import type { Result } from '../shared/result.ts';
+import { type DomainError, domainError } from '../shared/domain-error.ts';
+import type { PlanetId, PlayerId, SystemId } from '../shared/ids.ts';
+import { err, ok, type Result } from '../shared/result.ts';
 import type { StrategyCardDefinition, StrategyMechanic } from './strategy-card.ts';
 
 /** Entscheidungen des Spielers für die Mechanik „Kommandomarker gewinnen“. */
@@ -15,8 +15,18 @@ export interface CommandTokensChoice {
   readonly allocation: PoolCounts;
 }
 
+/**
+ * Entscheidungen für „Diplomatie“: Primär ein System (außer dem Zentrum),
+ * sekundär bis zu zwei erschöpfte eigene Planeten.
+ */
+export interface DiplomacyChoice {
+  readonly mechanic: 'diplomacy';
+  readonly system: SystemId | null;
+  readonly planets: readonly PlanetId[];
+}
+
 /** Jede Mechanik ergänzt hier ihre Auswahl-Struktur. */
-export type StrategyChoice = CommandTokensChoice;
+export type StrategyChoice = CommandTokensChoice | DiplomacyChoice;
 
 export interface EffectInput {
   readonly state: GameState;
@@ -31,4 +41,15 @@ export interface StrategyEffect {
   readonly mechanic: StrategyMechanic;
   primary(input: EffectInput): Result<readonly GameEvent[], DomainError>;
   secondary(input: EffectInput): Result<readonly GameEvent[], DomainError>;
+}
+
+/** Prüft, ob die Auswahl zur Mechanik der Karte passt, und verengt ihren Typ. */
+export function choiceOf<M extends StrategyChoice['mechanic']>(
+  input: EffectInput,
+  mechanic: M,
+): Result<Extract<StrategyChoice, { mechanic: M }>, DomainError> {
+  const { choice } = input;
+  return choice.mechanic === mechanic
+    ? ok(choice as Extract<StrategyChoice, { mechanic: M }>)
+    : err(domainError('strategy.choiceMismatch', 'Auswahl passt nicht zur Karte', { mechanic }));
 }

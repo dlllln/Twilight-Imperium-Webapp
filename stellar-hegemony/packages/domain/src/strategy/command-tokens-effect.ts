@@ -10,9 +10,12 @@ import {
   guard,
 } from '../shared/domain-error.ts';
 import { andThen, err, map, ok, type Result } from '../shared/result.ts';
-import type { EffectInput, StrategyEffect } from './strategy-effect.ts';
-
-const NO_TOKENS: PoolCounts = { tactic: 0, fleet: 0, strategy: 0 };
+import {
+  choiceOf,
+  type CommandTokensChoice,
+  type EffectInput,
+  type StrategyEffect,
+} from './strategy-effect.ts';
 
 const total = (pools: PoolCounts): number =>
   COMMAND_POOLS.reduce((sum, pool) => sum + pools[pool], 0);
@@ -20,7 +23,9 @@ const total = (pools: PoolCounts): number =>
 const validPools = (pools: PoolCounts): boolean =>
   COMMAND_POOLS.every((pool) => Number.isInteger(pools[pool]) && pools[pool] >= 0);
 
-function parameter(input: EffectInput, name: string): Result<number, DomainError> {
+type TokenInput = Omit<EffectInput, 'choice'>;
+
+function parameter(input: TokenInput, name: string): Result<number, DomainError> {
   const value = input.card.parameters[name];
   return value === undefined
     ? err(domainError('strategy.parameter', `Parameter fehlt: ${name}`))
@@ -28,18 +33,16 @@ function parameter(input: EffectInput, name: string): Result<number, DomainError
 }
 
 /** RR 29.2/29.3: Grundmenge plus 1 Marker je volle Einflussmenge; begrenzt durch den Nachschub (RR 46.3). */
-function tokenCount(input: EffectInput, base: number): Result<number, DomainError> {
-  const { state, player, choice, context } = input;
-  const spent = evaluatePayment(
-    state,
-    context.content.tiles,
-    player,
-    choice.influence,
-    'influence',
-  );
+function tokenCount(
+  input: TokenInput,
+  influence: Payment,
+  base: number,
+): Result<number, DomainError> {
+  const { state, player, context } = input;
+  const spent = evaluatePayment(state, context.content.tiles, player, influence, 'influence');
   const reinforcements = findPlayer(state, player)?.reinforcementTokens ?? 0;
   return andThen(parameter(input, 'influencePerToken'), (perToken) =>
-    map(spent, (influence) => Math.min(base + Math.floor(influence / perToken), reinforcements)),
+    map(spent, (value) => Math.min(base + Math.floor(value / perToken), reinforcements)),
   );
 }
 
@@ -52,9 +55,9 @@ function allocationCheck(allocation: PoolCounts, gained: number): Check {
   ]);
 }
 
-function gainTokens(input: EffectInput, base: number): Result<readonly GameEvent[], DomainError> {
-  const { player, choice } = input;
-  return andThen(tokenCount(input, base), (gained) =>
+function tokenEvents(input: EffectInput, choice: CommandTokensChoice, base: number) {
+  const { player } = input;
+  return andThen(tokenCount(input, choice.influence, base), (gained) =>
     map(allocationCheck(choice.allocation, gained), (): readonly GameEvent[] => [
       ...paymentEvents(player, choice.influence),
       ...(gained > 0
@@ -64,6 +67,9 @@ function gainTokens(input: EffectInput, base: number): Result<readonly GameEvent
   );
 }
 
+const gainTokens = (input: EffectInput, base: number): Result<readonly GameEvent[], DomainError> =>
+  andThen(choiceOf(input, 'commandTokens'), (choice) => tokenEvents(input, choice, base));
+
 export const commandTokensEffect: StrategyEffect = {
   mechanic: 'commandTokens',
   primary: (input) => andThen(parameter(input, 'tokensGained'), (base) => gainTokens(input, base)),
@@ -72,15 +78,9 @@ export const commandTokensEffect: StrategyEffect = {
 
 /** Abfrage für Clients: wie viele Marker eine Bezahlung bringen würde (gleiche Regel wie oben). */
 export function previewCommandTokens(
-  input: Omit<EffectInput, 'choice'> & { readonly influence: Payment },
+  input: TokenInput & { readonly influence: Payment },
   ability: 'primary' | 'secondary',
 ): Result<number, DomainError> {
-  const choice = {
-    mechanic: 'commandTokens',
-    influence: input.influence,
-    allocation: NO_TOKENS,
-  } as const;
-  const effectInput = { ...input, choice };
-  const base = ability === 'primary' ? parameter(effectInput, 'tokensGained') : ok(0);
-  return andThen(base, (tokens) => tokenCount(effectInput, tokens));
+  const base = ability === 'primary' ? parameter(input, 'tokensGained') : ok(0);
+  return andThen(base, (tokens) => tokenCount(input, input.influence, tokens));
 }

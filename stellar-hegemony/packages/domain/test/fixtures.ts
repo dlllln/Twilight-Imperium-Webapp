@@ -273,7 +273,7 @@ const strategyCard = (
 export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
   strategyCard(1, 'commandTokens', { tokensGained: 3, influencePerToken: 3 }, false),
   strategyCard(2, 'commandTokens', { tokensGained: 2, influencePerToken: 2 }),
-  strategyCard(3, 'politics'),
+  strategyCard(3, 'diplomacy', { readyPlanets: 2 }),
   strategyCard(4, 'construction'),
   strategyCard(5, 'trade'),
   strategyCard(6, 'warfare'),

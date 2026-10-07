@@ -66,3 +66,4 @@ export * from './tactical/route-rules.ts';
 export * from './tactical/ship-move-validator.ts';
 export * from './tactical/ship-pathfinder.ts';
 export * from './tactical/tactical-commands.ts';
+export * from './strategy/diplomacy-effect.ts';
