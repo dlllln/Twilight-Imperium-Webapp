@@ -2,3 +2,5 @@ node_modules
 coverage
 dist
 *.tsbuildinfo
+test-results
+playwright-report

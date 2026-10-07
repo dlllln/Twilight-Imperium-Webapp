@@ -24,12 +24,20 @@ export default tseslint.config(
       'max-depth': ['error', 2],
       complexity: ['error', 8],
       'no-else-return': 'error',
+      '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
     },
   },
   {
-    files: ['packages/*/src/**/*.ts'],
+    files: ['packages/*/src/**/*.ts', 'apps/*/src/**/*.ts'],
     rules: {
       'max-lines-per-function': ['error', { max: 20, skipBlankLines: true, skipComments: true }],
+    },
+  },
+  {
+    // React-Komponenten: JSX-Markup zählt mit, daher etwas mehr Raum als für Logik.
+    files: ['apps/*/src/**/*.tsx'],
+    rules: {
+      'max-lines-per-function': ['error', { max: 30, skipBlankLines: true, skipComments: true }],
     },
   },
   {
