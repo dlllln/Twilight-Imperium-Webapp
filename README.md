@@ -15,6 +15,10 @@ Umgebungsvariablen: `PORT` (Standard 3000), `SAVE_DIR`, `MAX_ROOMS` (Standard 30
 
 Ungenutzte Spiele werden nach 14 Tagen gelöscht, beendete nach einem Tag.
 
+## Einzelspieler-Version
+
+`node tools/build-solo.js` erzeugt `dist/sternenthron-solo.html`: eine einzelne Datei, die das Spiel ohne Server komplett im Browser gegen KI-Gegner laufen lässt.
+
 ## Online stellen (Render)
 
 1. Auf [render.com](https://render.com) mit GitHub anmelden.

@@ -16,7 +16,7 @@ const LS = {
 // ------------------------------------------------------------ Verbindung
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  S.ws = new WebSocket(`${proto}://${location.host}`);
+  S.ws = window.SoloSocket ? new window.SoloSocket() : new WebSocket(`${proto}://${location.host}`);
   S.ws.onopen = () => send({ type: 'hello', password: LS.get('pw') || '' });
   S.ws.onmessage = (e) => onMsg(JSON.parse(e.data));
   S.ws.onclose = () => { toast('Verbindung verloren, verbinde neu …'); setTimeout(connect, 2000); };
@@ -63,11 +63,11 @@ function renderMenu() {
     <h1>STERNENTHRON</h1>
     <input id="name" placeholder="Dein Name" value="${esc(LS.get('name') || '')}">
     <button class="primary" id="create">Neues Spiel erstellen</button>
-    <div class="row" style="justify-content:center"><input id="code" placeholder="Spielcode" style="width:140px;text-transform:uppercase"><button id="join">Beitreten</button></div>
+    ${window.SoloSocket ? '<div class="muted">Einzelspieler-Version: Du spielst gegen KI-Gegner in diesem Browser.</div>' : '<div class="row" style="justify-content:center"><input id="code" placeholder="Spielcode" style="width:140px;text-transform:uppercase"><button id="join">Beitreten</button></div>'}
   </div></div>`;
   const name = () => { const n = $('#name').value.trim() || 'Spieler'; LS.set('name', n); return n; };
   $('#create').onclick = () => send({ type: 'create', name: name() });
-  $('#join').onclick = () => {
+  if ($('#join')) $('#join').onclick = () => {
     const code = $('#code').value.trim().toUpperCase();
     send({ type: 'join', code, name: name(), token: LS.get('tok_' + code) || undefined });
   };
@@ -79,7 +79,7 @@ function renderLobby() {
   $('#app').innerHTML = `<div class="center"><div class="card col" style="width:min(980px,100%)">
     <div class="row" style="justify-content:space-between"><h1>STERNENTHRON</h1>
       <div>Spielcode: <b style="font-size:22px;color:var(--gold);letter-spacing:.15em">${esc(G.id)}</b></div></div>
-    <div class="muted">Gib deinen Freunden den Spielcode. Empfohlen sind 3 bis 6 Spieler.</div>
+    <div class="muted">${window.SoloSocket ? 'Wähle deine Fraktion und füge 2 bis 5 KI-Gegner hinzu.' : 'Gib deinen Freunden den Spielcode oder füge KI-Gegner hinzu. Empfohlen sind 3 bis 6 Spieler.'}</div>
     <h3>Spieler (${G.players.length}/6)</h3>
     <div class="row">${G.players.map((p) => `<span class="chip">${p.bot ? '🤖 ' : ''}${esc(p.name)}${p.faction ? ' · ' + esc(D.FACTIONS[p.faction].name) : ' · <i>wählt …</i>'}${p.bot ? ` <button class="small rmbot" data-id="${p.id}">×</button>` : ''}</span>`).join('')}
       <button class="small" id="addbot" ${G.players.length >= 6 ? 'disabled' : ''}>+ KI-Gegner</button></div>
