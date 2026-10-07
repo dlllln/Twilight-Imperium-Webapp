@@ -1,0 +1,1 @@
+cd stellar-hegemony && pnpm exec lint-staged && pnpm typecheck

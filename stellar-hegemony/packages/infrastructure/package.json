@@ -1,0 +1,17 @@
+{
+  "name": "@stellar/infrastructure",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Adapter: Zufall, Uhr, Event Store, Logging",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@stellar/domain": "workspace:*",
+    "@stellar/application": "workspace:*"
+  },
+  "devDependencies": {
+    "@stellar/content": "workspace:*"
+  }
+}

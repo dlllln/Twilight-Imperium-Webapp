@@ -1,0 +1,42 @@
+{
+  "name": "stellar-hegemony",
+  "private": true,
+  "description": "Stellar Hegemony (Arbeitstitel): rundenbasiertes Multiplayer-Strategiespiel im Browser",
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:coverage",
+    "prepare": "cd .. && husky stellar-hegemony/.husky || true"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --max-warnings=0",
+      "prettier --check"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --check"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.4",
+    "@vitest/coverage-v8": "^5.0.3",
+    "eslint": "^10.12.0",
+    "fast-check": "^4.10.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^5.0.3"
+  }
+}

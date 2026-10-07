@@ -1,0 +1,10 @@
+{
+  "name": "@stellar/domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reine, deterministische Spiellogik ohne Abhängigkeiten zu UI, Netzwerk oder Datenbank",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
