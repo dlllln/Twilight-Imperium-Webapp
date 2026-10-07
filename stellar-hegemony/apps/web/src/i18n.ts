@@ -32,6 +32,67 @@ const DICTIONARY = {
     en: 'Keys: G new galaxy · +/− zoom · arrows pan · 0 reset',
   },
   errorPrefix: { de: 'Karte abgelehnt', en: 'Map rejected' },
+  startGame: { de: 'Partie starten', en: 'Start game' },
+  backToGalaxy: { de: 'Zur Galaxie', en: 'Back to galaxy' },
+  subtitleGame: { de: 'Lokale Partie (Hot-Seat)', en: 'Local game (hot seat)' },
+  round: { de: 'Runde', en: 'Round' },
+  speaker: { de: 'Sprecher', en: 'Speaker' },
+  onTurn: { de: 'Am Zug', en: 'To act' },
+  'phase.strategy': { de: 'Strategie', en: 'Strategy' },
+  'phase.action': { de: 'Aktion', en: 'Action' },
+  'phase.status': { de: 'Status', en: 'Status' },
+  'phase.agenda': { de: 'Agenda', en: 'Agenda' },
+  strategyCards: { de: 'Strategiekarten', en: 'Strategy cards' },
+  pickHint: {
+    de: 'Wähle eine freie Strategiekarte.',
+    en: 'Pick an available strategy card.',
+  },
+  initiativeOrder: { de: 'Initiative', en: 'Initiative' },
+  tradeGoods: { de: 'Handelswaren', en: 'Trade goods' },
+  reinforcements: { de: 'Nachschub', en: 'Reinforcements' },
+  tactic: { de: 'Taktik', en: 'Tactic' },
+  fleet: { de: 'Flotte', en: 'Fleet' },
+  strategy: { de: 'Strategie', en: 'Strategy' },
+  passed: { de: 'gepasst', en: 'passed' },
+  strategicAction: { de: 'Strategische Aktion', en: 'Strategic action' },
+  pass: { de: 'Passen', en: 'Pass' },
+  secondaryPrompt: { de: 'Sekundärfähigkeit', en: 'Secondary ability' },
+  useSecondary: { de: 'Nutzen', en: 'Use' },
+  decline: { de: 'Ablehnen', en: 'Decline' },
+  spendTradeGoods: { de: 'Handelswaren als Einfluss', en: 'Trade goods as influence' },
+  tokensGained: { de: 'Erhaltene Marker', en: 'Tokens gained' },
+  toDistribute: { de: 'noch zu verteilen', en: 'left to place' },
+  confirm: { de: 'Ausführen', en: 'Confirm' },
+  cancel: { de: 'Zurück', en: 'Back' },
+  laterIteration: {
+    de: 'Diese Karte wird in einer späteren Ausbaustufe spielbar.',
+    en: 'This card becomes playable in a later stage.',
+  },
+  statusReached: {
+    de: 'Die Aktionsphase ist vorbei. Die Statusphase folgt in einer späteren Ausbaustufe.',
+    en: 'The action phase is over. The status phase follows in a later stage.',
+  },
+  ruleError: { de: 'Nicht erlaubt', en: 'Not allowed' },
+  'strategy.mechanicUnavailable': {
+    de: 'Diese Karte ist noch nicht spielbar.',
+    en: 'This card is not playable yet.',
+  },
+  'tokens.allocationMismatch': {
+    de: 'Verteile genau so viele Marker, wie du erhältst.',
+    en: 'Place exactly as many tokens as you gain.',
+  },
+  'action.noStrategyToken': {
+    de: 'Dafür brauchst du einen Marker im Strategiepool.',
+    en: 'You need a token in your strategy pool.',
+  },
+  'action.strategyCardUnused': {
+    de: 'Passen geht erst, wenn du deine Strategiekarten genutzt hast.',
+    en: 'You can pass only after using your strategy cards.',
+  },
+  'payment.tradeGoods': {
+    de: 'So viele Handelswaren hast du nicht.',
+    en: 'Not enough trade goods.',
+  },
   'map.empty': { de: 'Der Map-String ist leer.', en: 'The map string is empty.' },
   'map.invalidToken': {
     de: 'Der Map-String enthält ungültige Zeichen.',
@@ -69,3 +130,7 @@ export type MessageKey = keyof typeof DICTIONARY;
 export const translate = (language: Language, key: MessageKey): string => DICTIONARY[key][language];
 
 export const isMessageKey = (value: string): value is MessageKey => value in DICTIONARY;
+
+/** Übersetzter Fehlertext; unbekannte Codes erscheinen unverändert. */
+export const errorText = (language: Language, code: string): string =>
+  isMessageKey(code) ? translate(language, code) : code;

@@ -84,7 +84,8 @@ body {
 
 button,
 select,
-textarea {
+textarea,
+input {
   font: inherit;
   color: var(--text);
   background: var(--metal);
@@ -351,4 +352,204 @@ label {
 .zoom-layer {
   transform-origin: center;
   transform-box: fill-box;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+button.primary {
+  background: linear-gradient(180deg, #3c6fd1 0%, #1d3a7a 100%);
+}
+
+input[type='number'] {
+  width: 64px;
+}
+
+.board.playing {
+  grid-template-columns: 1fr 400px;
+}
+
+.phase-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 18px;
+}
+
+.phases {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.phases li {
+  padding: 4px 14px;
+  border-radius: 999px;
+  color: var(--muted);
+  border: 1px solid transparent;
+}
+
+.phases li[aria-current='step'] {
+  color: var(--text);
+  border-color: #9fc0ff;
+  background: rgba(95, 179, 255, 0.18);
+  box-shadow: 0 0 10px rgba(120, 170, 255, 0.35);
+}
+
+.actor {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.player-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.game-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.game-section h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.game-section h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.strategy-card button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.strategy-card button:disabled {
+  opacity: 1;
+}
+
+.strategy-card.exhausted button {
+  opacity: 0.4;
+}
+
+.strategy-card .initiative {
+  font-size: 20px;
+  font-weight: 700;
+  width: 22px;
+  color: var(--resources);
+}
+
+.strategy-card .card-name {
+  flex: 1;
+}
+
+.strategy-card .goods {
+  font-size: 12px;
+  color: var(--resources);
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-list li {
+  display: grid;
+  grid-template-columns: 1fr 50px 60px 36px 40px auto;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.player-list li.active {
+  background: rgba(95, 179, 255, 0.15);
+  outline: 1px solid #9fc0ff;
+}
+
+.badge {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.turn-block,
+.token-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.token-form p {
+  margin: 0;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: 1fr 32px 28px 32px;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepper button {
+  padding: 2px 0;
+}
+
+.stepper output {
+  text-align: center;
+  font-weight: 700;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(242, 193, 78, 0.12);
 }

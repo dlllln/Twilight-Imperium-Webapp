@@ -98,7 +98,14 @@ Abhängigkeiten zeigen nur nach innen: `web → application → domain`, `infras
 
 «data» GameConfig { playerCount, victoryPointsToWin, rules: RuleNumbers }
 «data» GameState { id, config, version, round, phase, speaker, players[], systems{}, planets{},
-                   nextUnitNumber, winner }
+                   nextUnitNumber, strategyCards{}, pickQueue[], actionPhase?, centerTokenRemoved, winner }
+«data» StrategyCardDefinition { id, initiative, mechanic, secondaryCostsStrategyToken, parameters }
+«data» StrategyCardState { id, initiative, mechanic, holder?, exhausted, tradeGoods }
+«data» ActionPhaseState { order[], active?, passed[], secondary?: { card, awaiting[] } }
+«state» GamePhase { name, accepts(commandType), next(state) }  ◁── SetupPhase, StrategyPhase,
+        ActionPhase, StatusPhase, AgendaPhase, GameOverPhase
+«strategy» StrategyEffect { mechanic, primary(input), secondary(input) }  ◁── commandTokensEffect
+«value» Payment { planets[], tradeGoods } ── evaluatePayment(currency), paymentEvents
        1 ── * PlayerState, 1 ── * SystemState, 1 ── * PlanetState
 
 «interface» CommandHandler<S, C, E> { commandType; decide(state, command, ctx): Result<E[]> }
@@ -112,8 +119,6 @@ Abhängigkeiten zeigen nur nach innen: `web → application → domain`, `infras
 Geplante Erweiterungen (je Iteration, gleiche Muster):
 
 ```
-«state» Phase { allowedCommands, onEnter, next }  ◁── SetupPhase, StrategyPhase, ActionPhase,
-                                                      StatusPhase, AgendaPhase, GameOverPhase
 «service» HexPathfinder, MovementValidator, CombatResolver, ProductionCalculator, VotingTally
 «fabrication» EffectResolver, TimingWindowManager (Chain of Responsibility: when → after,
               ab dem aktiven Spieler im Uhrzeigersinn)
@@ -126,19 +131,19 @@ Geplante Erweiterungen (je Iteration, gleiche Muster):
 
 Commands sind Absichten (Imperativ), Events sind Tatsachen (Partizip). ✓ = umgesetzt.
 
-| Bereich             | Commands                                                                                                           | Events                                                                                                                                                                                                                                                                                                                                                |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aufbau              | ✓ CreateGame, ✓ SeatPlayer, ✓ ImportMap, ✓ GenerateGalaxy, PlaceSystemTile (Draft), StartGame, KeepSecretObjective | ✓ GameCreated, ✓ PlayerSeated, SpeakerAssigned, ✓ GalaxyAssembled, SystemTilePlaced, StartingForcesPlaced, ObjectivesPrepared, SecretObjectivesDealt, SecretObjectiveKept, GameStarted                                                                                                                                                                |
-| Strategiephase      | PickStrategyCard                                                                                                   | StrategyCardPicked, TradeGoodsPlacedOnUnpickedCards, StrategyPhaseEnded                                                                                                                                                                                                                                                                               |
-| Taktische Aktion    | ActivateSystem, MoveUnits, AnnounceRetreat, AssignHits, CommitGroundForces, ProduceUnits, EndTacticalAction        | SystemActivated, UnitsMoved, GravityRiftRolled, SpaceCannonFired, AntiFighterBarrageFired, CombatRoundRolled, HitsAssigned, UnitDamaged, UnitDestroyed, Retreated, SpaceCombatEnded, BombardmentRolled, GroundForcesCommitted, GroundCombatRoundRolled, PlanetControlGained, CenterTokenRemoved, UnitsProduced, PlanetsExhausted, TacticalActionEnded |
-| Strategische Aktion | PerformPrimaryAbility, ResolveSecondaryAbility, DeclineSecondaryAbility                                            | PrimaryAbilityResolved, SecondaryAbilityResolved, SecondaryAbilityDeclined, CommandTokensGained, SystemLocked, PlanetsReadied, SpeakerChanged, ActionCardsDrawn, StructurePlaced, TradeGoodsGained, CommoditiesReplenished, CommandTokenReturned, TechnologyResearched, SecretObjectiveDrawn                                                          |
-| Komponentenaktion   | PlayActionCard, UseComponentAbility                                                                                | ActionCardPlayed, ActionCardCancelled, EffectResolved                                                                                                                                                                                                                                                                                                 |
-| Passen              | Pass                                                                                                               | PlayerPassed, ActionPhaseEnded                                                                                                                                                                                                                                                                                                                        |
-| Handel              | ProposeTransaction, AcceptTransaction, RejectTransaction                                                           | TransactionProposed, TransactionCompleted, TransactionRejected                                                                                                                                                                                                                                                                                        |
-| Statusphase         | ScoreObjective, SkipScoring, DiscardActionCards, RedistributeCommandTokens                                         | ObjectiveScored, PublicObjectiveRevealed, ActionCardsDrawn, ActionCardsDiscarded, CommandTokensReturned, CommandTokensRedistributed, PlanetsReadied, UnitsRepaired, StrategyCardsReturned, StatusPhaseEnded                                                                                                                                           |
-| Agendaphase         | CastVotes, Abstain, BreakTie                                                                                       | AgendaRevealed, VotesCast, PlayerAbstained, LawEnacted, DirectiveResolved, AgendaDiscarded, AgendaPhaseEnded                                                                                                                                                                                                                                          |
-| Reaktionsfenster    | PlayReaction, PassReaction                                                                                         | TimingWindowOpened, ReactionPlayed, ReactionPassed, ReactionTimedOut, TimingWindowClosed                                                                                                                                                                                                                                                              |
-| Sieg                | –                                                                                                                  | VictoryPointGained, GameWon                                                                                                                                                                                                                                                                                                                           |
+| Bereich             | Commands                                                                                                             | Events                                                                                                                                                                                                                                                                                                                                                |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aufbau              | ✓ CreateGame, ✓ SeatPlayer, ✓ ImportMap, ✓ GenerateGalaxy, PlaceSystemTile (Draft), ✓ StartGame, KeepSecretObjective | ✓ GameCreated, ✓ PlayerSeated, ✓ GalaxyAssembled, SystemTilePlaced, StartingForcesPlaced, ObjectivesPrepared, SecretObjectivesDealt, SecretObjectiveKept, ✓ GameStarted (legt auch den Sprecher fest)                                                                                                                                                 |
+| Strategiephase      | ✓ PickStrategyCard                                                                                                   | ✓ StrategyPhaseStarted, ✓ StrategyCardPicked, ✓ TradeGoodsPlacedOnCards, ✓ ActionPhaseStarted                                                                                                                                                                                                                                                         |
+| Taktische Aktion    | ActivateSystem, MoveUnits, AnnounceRetreat, AssignHits, CommitGroundForces, ProduceUnits, EndTacticalAction          | SystemActivated, UnitsMoved, GravityRiftRolled, SpaceCannonFired, AntiFighterBarrageFired, CombatRoundRolled, HitsAssigned, UnitDamaged, UnitDestroyed, Retreated, SpaceCombatEnded, BombardmentRolled, GroundForcesCommitted, GroundCombatRoundRolled, PlanetControlGained, CenterTokenRemoved, UnitsProduced, PlanetsExhausted, TacticalActionEnded |
+| Strategische Aktion | ✓ PerformStrategicAction, ✓ ResolveSecondary, ✓ DeclineSecondary                                                     | ✓ StrategicActionPerformed, ✓ SecondaryResolved, ✓ SecondaryDeclined, ✓ CommandTokensGained, ✓ PlanetsExhausted, ✓ TradeGoodsSpent, SystemLocked, PlanetsReadied, SpeakerChanged, ActionCardsDrawn, StructurePlaced, ✓ TradeGoodsGained, CommoditiesReplenished, CommandTokenReturned, TechnologyResearched, SecretObjectiveDrawn                     |
+| Komponentenaktion   | PlayActionCard, UseComponentAbility                                                                                  | ActionCardPlayed, ActionCardCancelled, EffectResolved                                                                                                                                                                                                                                                                                                 |
+| Passen              | ✓ Pass                                                                                                               | ✓ PlayerPassed, ✓ TurnEnded, ✓ StatusPhaseStarted                                                                                                                                                                                                                                                                                                     |
+| Handel              | ProposeTransaction, AcceptTransaction, RejectTransaction                                                             | TransactionProposed, TransactionCompleted, TransactionRejected                                                                                                                                                                                                                                                                                        |
+| Statusphase         | ScoreObjective, SkipScoring, DiscardActionCards, RedistributeCommandTokens                                           | ObjectiveScored, PublicObjectiveRevealed, ActionCardsDrawn, ActionCardsDiscarded, CommandTokensReturned, CommandTokensRedistributed, PlanetsReadied, UnitsRepaired, StrategyCardsReturned, StatusPhaseEnded                                                                                                                                           |
+| Agendaphase         | CastVotes, Abstain, BreakTie                                                                                         | AgendaRevealed, VotesCast, PlayerAbstained, LawEnacted, DirectiveResolved, AgendaDiscarded, AgendaPhaseEnded                                                                                                                                                                                                                                          |
+| Reaktionsfenster    | PlayReaction, PassReaction                                                                                           | TimingWindowOpened, ReactionPlayed, ReactionPassed, ReactionTimedOut, TimingWindowClosed                                                                                                                                                                                                                                                              |
+| Sieg                | –                                                                                                                    | VictoryPointGained, GameWon                                                                                                                                                                                                                                                                                                                           |
 
 ## 5. Prinzipien je Klasse (Iteration 1)
 
@@ -177,13 +182,30 @@ Commands sind Absichten (Imperativ), Events sind Tatsachen (Partizip). ✓ = umg
 
 Funktionen in `.ts`-Dateien haben höchstens 20 Zeilen. React-Komponenten (`.tsx`) dürfen 30 Zeilen haben, weil das JSX-Markup mitzählt.
 
-## 7. Iterationen
+## 7. Iteration 3 im Detail
+
+| Element                                                                                                     | Prinzip                                                                                                                                              |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GamePhase` mit `SetupPhase`, `StrategyPhase`, `ActionPhase`, `StatusPhase`, `AgendaPhase`, `GameOverPhase` | State Pattern: jede Phase kennt ihre erlaubten Commands und ihren Nachfolger. `decideGameCommand` fragt nur `phaseOf(state).accepts(...)`.           |
+| `startGameHandler`, `pickQueueFor`                                                                          | Information Expert: Sprecher per `RandomPort`, Wahlreihenfolge ab dem Sprecher im Uhrzeigersinn, bei 3–4 Spielern zwei Durchgänge.                   |
+| `pickStrategyCardHandler`, `orderByInitiative`                                                              | SRP: Kartenwahl und Initiative getrennt; nach der letzten Wahl Handelswaren auf freie Karten und Start der Aktionsphase.                             |
+| `StrategyEffect`, `strategyEffectFor`                                                                       | Strategy Pattern + OCP: jede Kartenmechanik ist ein Objekt mit Primär- und Sekundärfähigkeit, registriert in einer Tabelle.                          |
+| `commandTokensEffect`, `previewCommandTokens`                                                               | Information Expert: Markerzahl aus Grundwert, Einfluss und Nachschub. Die Vorschau nutzt dieselbe Rechnung, damit der Client keine Regel dupliziert. |
+| `performStrategicActionHandler`, `resolveSecondaryHandler`, `declineSecondaryHandler`, `passHandler`        | Command Pattern: ein Handler je Command. Das Sekundärfenster läuft ab dem linken Nachbarn reihum, danach endet der Zug.                              |
+| `nextActivePlayer`                                                                                          | Pure Fabrication: nächster Spieler in Initiativreihenfolge, der noch nicht gepasst hat.                                                              |
+| `evaluatePayment`, `paymentEvents`                                                                          | Information Expert über `Planet.exhaust`: Bezahlen mit Planeten und Handelswaren, wiederverwendbar für Produktion und Abstimmung.                    |
+| Web: `createLocalGame`, `useGameStore`                                                                      | Lokaler Adapter: dieselben Commands wie später über das Netz, nur ohne Server (Hot-Seat).                                                            |
+| Web: `PhaseBar`, `StrategyCardGrid`, `TurnPanel`, `TokenForm`                                               | SRP: Anzeige und Eingabe; Regeln stammen aus der Domain.                                                                                             |
+
+Mechaniken, deren Karten noch nicht registriert sind, lehnt die Domain mit `strategy.mechanicUnavailable` ab: Diplomatie und Kriegsführung folgen in Iteration 4, Bauen und Handel in 6, Technologie in 7, Imperium in 8, Politik in 10. Bis dahin endet eine Runde im Browser nicht, weil Passen erst nach allen eigenen Strategiekarten erlaubt ist (RR 4.3).
+
+## 8. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
 | 1   | Monorepo, Tooling, CI, Domain-Grundtypen            | ✓     |
 | 2   | Galaxie-Aufbau, Hex-Rendering, Map-Import           | ✓     |
-| 3   | Phasen-State-Machine, Strategiephase                | offen |
+| 3   | Phasen-State-Machine, Strategiephase                | ✓     |
 | 4   | Taktische Aktion: Bewegung, Kapazität, Flottenlimit | offen |
 | 5   | Kampf, Space Cannon, Bombardement                   | offen |
 | 6   | Produktion, Wirtschaft, Transaktionen               | offen |
@@ -195,7 +217,7 @@ Funktionen in `.ts`-Dateien haben höchstens 20 Zeilen. React-Komponenten (`.tsx
 | 12  | Multiplayer, Persistenz, Reconnect                  | offen |
 | 13  | Animationen, Sound-Hooks, Tutorial                  | offen |
 
-## 8. Befehle
+## 9. Befehle
 
 ```
 pnpm install
