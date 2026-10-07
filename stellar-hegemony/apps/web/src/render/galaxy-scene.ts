@@ -1,12 +1,5 @@
 import { AdvancedBloomFilter } from 'pixi-filters';
-import {
-  type Application,
-  Container,
-  type Graphics,
-  Sprite,
-  type Ticker,
-  UPDATE_PRIORITY,
-} from 'pixi.js';
+import { type Application, Container, type Graphics, Sprite, type Ticker } from 'pixi.js';
 import type { Bounds } from '../hex-geometry.ts';
 import type { Viewport } from '../store.ts';
 import { drawHex, type HexLayers } from './hex-view.ts';
@@ -17,6 +10,8 @@ import { worldTransform } from './view-transform.ts';
 const BACKGROUND_OVERSCAN = 1.1;
 const PARALLAX = 0.04;
 const PULSE_SPEED = 0.004;
+/** Nur für das Pulsieren der Hervorhebung; sonst wird erst bei Änderungen gezeichnet. */
+const PULSE_FPS = 30;
 
 interface Framing {
   readonly bounds: Bounds;
@@ -35,6 +30,7 @@ function bloomLayer(): Container {
  * Controller der Pixi-Darstellung (GRASP Controller, Single Responsibility):
  * kennt nur Szene-Daten und Ansicht, keine Spielregeln. React steuert sie über
  * `show` und `frame`, Treffer und Tastatur übernimmt die SVG-Ebene darüber.
+ * Gezeichnet wird nur bei Änderungen; die Schleife läuft nur, solange etwas pulsiert.
  */
 export class GalaxyScene {
   private readonly background = new Sprite(nebulaTexture());
@@ -51,6 +47,7 @@ export class GalaxyScene {
     this.background.anchor.set(0.5);
     this.world.addChild(this.layers.base, this.layers.glow, this.layers.content);
     app.stage.addChild(this.background, this.world);
+    app.ticker.maxFPS = PULSE_FPS;
     app.ticker.add(this.pulse);
     app.renderer.on('resize', this.reframe);
   }
@@ -59,12 +56,10 @@ export class GalaxyScene {
   show(hexes: readonly SceneHex[]): void {
     const { base, glow, content } = this.layers;
     const old = [base, glow, content].flatMap((layer) => layer.removeChildren());
-    // Erst nach dem nächsten Rendern freigeben, damit kein Shader mehr darauf zeigt.
-    const release = () => {
-      for (const child of old) child.destroy({ children: true });
-    };
-    this.app.ticker.addOnce(release, undefined, UPDATE_PRIORITY.UTILITY);
     this.pulses = hexes.flatMap((hex) => drawHex(hex, this.layers) ?? []);
+    this.redraw();
+    // Erst nach dem Zeichnen freigeben, damit kein Shader mehr auf die alten Objekte zeigt.
+    for (const child of old) child.destroy({ children: true });
   }
 
   frame(bounds: Bounds, viewport: Viewport): void {
@@ -85,7 +80,14 @@ export class GalaxyScene {
     this.world.scale.set(transform.scale);
     this.world.position.set(transform.x, transform.y);
     this.coverBackground(viewport);
+    this.redraw();
   };
+
+  private redraw(): void {
+    if (this.pulses.length > 0) this.app.start();
+    else this.app.stop();
+    this.app.render();
+  }
 
   private coverBackground(viewport: Viewport): void {
     const { width, height } = this.app.screen;

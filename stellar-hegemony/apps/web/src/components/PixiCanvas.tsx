@@ -19,6 +19,7 @@ async function createApplication(host: HTMLElement): Promise<Application> {
     preference: 'webgl',
     resolution: window.devicePixelRatio,
     autoDensity: true,
+    autoStart: false,
   });
   await loadFonts();
   return app;
