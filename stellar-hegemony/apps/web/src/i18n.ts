@@ -27,6 +27,14 @@ const DICTIONARY = {
   propulsion: { de: 'Antrieb', en: 'Propulsion' },
   cybernetic: { de: 'Kybernetik', en: 'Cybernetic' },
   warfare: { de: 'Kriegsführung', en: 'Warfare' },
+  technologies: { de: 'Technologien', en: 'Technologies' },
+  unitUpgrades: { de: 'Aufwertungen für Einheiten', en: 'Unit upgrades' },
+  prerequisites: { de: 'Voraussetzungen', en: 'Prerequisites' },
+  specialties: {
+    de: 'Spezialisierung nutzen (Planet wird erschöpft)',
+    en: 'Use specialty (planet is exhausted)',
+  },
+  research: { de: 'Erforschen', en: 'Research' },
   shortcuts: {
     de: 'Tasten: G neue Galaxie · +/− Zoom · Pfeile verschieben · 0 zurücksetzen',
     en: 'Keys: G new galaxy · +/− zoom · arrows pan · 0 reset',
@@ -430,6 +438,31 @@ const DICTIONARY = {
     de: 'Es ist schon ein Angebot offen.',
     en: 'An offer is already open.',
   },
+  'technology.count': {
+    de: 'So viele Technologien erlaubt die Karte nicht.',
+    en: 'The card does not allow that many technologies.',
+  },
+  'technology.cost': {
+    de: 'Die Ressourcen reichen nicht.',
+    en: 'Not enough resources.',
+  },
+  'technology.prerequisites': {
+    de: 'Dafür fehlen Voraussetzungen.',
+    en: 'Prerequisites are missing.',
+  },
+  'technology.specialty': {
+    de: 'Diese Spezialisierung kannst du nicht nutzen.',
+    en: 'You cannot use this specialty.',
+  },
+  'technology.unusedSpecialty': {
+    de: 'Diese Spezialisierung wird nicht gebraucht.',
+    en: 'This specialty is not needed.',
+  },
+  'technology.owned': {
+    de: 'Diese Technologie hast du schon.',
+    en: 'You already own this technology.',
+  },
+  'technology.unknown': { de: 'Unbekannte Technologie.', en: 'Unknown technology.' },
   'planet.alreadyExhausted': {
     de: 'Dieser Planet ist schon erschöpft.',
     en: 'This planet is already exhausted.',

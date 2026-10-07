@@ -13,6 +13,7 @@ import { useGameStore } from '../../game-store.ts';
 import { systemLabel, unitLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
 import { cargoAtOrigin, movementChoices } from '../../tactical-view.ts';
+import { unitsOf } from '../../unit-stats.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { BombardForm, LandingForm } from './InvasionForms.tsx';
 import { ProductionForm } from './ProductionForm.tsx';
@@ -77,7 +78,7 @@ interface OptionProps extends TurnProps {
 
 function CargoChoices({ game, player, option, api }: OptionProps): ReactElement | null {
   const language = useLanguage();
-  const capacity = content.units.find(option.ship.type)?.capacity ?? 0;
+  const capacity = unitsOf(game).find(option.ship.type, player)?.capacity ?? 0;
   const loaded = api.orders[option.ship.id] ?? [];
   const candidates = cargoAtOrigin(game, content, option, player);
   if (capacity === 0 || candidates.length === 0) return null;

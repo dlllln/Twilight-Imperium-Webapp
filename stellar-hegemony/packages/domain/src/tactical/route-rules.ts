@@ -23,7 +23,7 @@ export function canEnter(
 /** RR 15.5: Nicht-Jäger-Schiffe anderer Spieler versperren den Durchflug. */
 function hasForeignBlockers(system: SystemState, player: PlayerId, catalog: UnitCatalog): boolean {
   return system.spaceUnits.some((unit) => {
-    const definition = catalog.find(unit.type);
+    const definition = catalog.find(unit.type, unit.owner);
     return unit.owner !== player && definition !== undefined && countsTowardFleetLimit(definition);
   });
 }

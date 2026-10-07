@@ -1,3 +1,5 @@
+import type { ContentPort } from '../ports/content-port.ts';
+import { fleetLimitOf } from '../technology/technology-catalog.ts';
 import { activeTurnChecks, endTurn } from '../action/action-commands.ts';
 import type { Command, CommandHandler, DecisionContext } from '../eventsourcing/command.ts';
 import { StarSystem } from '../galaxy/star-system.ts';
@@ -86,9 +88,9 @@ function activeSystemAfter(context: MoveContext, moved: ShipsMoved, catalog: Cat
 }
 
 /** RR 28.3, RR 43.3: Flottenlimit und Kapazität im aktiven System nach der Bewegung. */
-function limitsCheck(context: MoveContext, moved: ShipsMoved, catalog: Catalog): Check {
-  const fleet = findPlayer(context.state, context.player)?.commandPools.fleet ?? 0;
-  return andThen(activeSystemAfter(context, moved, catalog), (system) =>
+function limitsCheck(context: MoveContext, moved: ShipsMoved, content: ContentPort): Check {
+  const fleet = fleetLimitOf(context.state, context.player, content);
+  return andThen(activeSystemAfter(context, moved, content.units), (system) =>
     firstFailure([
       guard(
         !system.exceedsFleetLimit(context.player, fleet),
@@ -142,7 +144,7 @@ function movementEvents(
   const movements = moves.map(({ ship, from, path, cargo }) => ({ ship, from, path, cargo }));
   const { player, active: system } = context;
   const moved: ShipsMoved = { type: 'ShipsMoved', player, system, movements };
-  const limits = limitsCheck(context, moved, decision.content.units);
+  const limits = limitsCheck(context, moved, decision.content);
   if (!limits.ok) return limits;
   const rolls = moves.flatMap((move) => riftRollsFor(context, move, decision.random));
   const resolved = [...rolls, moved, ...destroyedEvents(context, moves, rolls)];

@@ -4,7 +4,7 @@ import type { GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
 import type { PoolCounts } from '../player/command-sheet.ts';
 import { type DomainError, domainError } from '../shared/domain-error.ts';
-import type { PlanetId, PlayerId, SystemId, UnitTypeId } from '../shared/ids.ts';
+import type { PlanetId, PlayerId, SystemId, TechnologyId, UnitTypeId } from '../shared/ids.ts';
 import type { ProductionRequest } from '../production/production.ts';
 import { err, ok, type Result } from '../shared/result.ts';
 import type { StrategyCardDefinition, StrategyMechanic } from './strategy-card.ts';
@@ -55,9 +55,25 @@ export interface WarfareChoice {
   readonly production: ProductionRequest | null;
 }
 
+/**
+ * „Technologie“: primär eine Technologie und optional eine zweite gegen Ressourcen,
+ * sekundär eine gegen Ressourcen. Spezialisierungen ersetzen Voraussetzungen.
+ */
+export interface TechnologyChoice {
+  readonly mechanic: 'technology';
+  readonly technologies: readonly TechnologyId[];
+  readonly specialties: readonly PlanetId[];
+  readonly payment: Payment;
+}
+
 /** Jede Mechanik ergänzt hier ihre Auswahl-Struktur. */
 export type StrategyChoice =
-  CommandTokensChoice | DiplomacyChoice | ConstructionChoice | TradeChoice | WarfareChoice;
+  | CommandTokensChoice
+  | DiplomacyChoice
+  | ConstructionChoice
+  | TradeChoice
+  | WarfareChoice
+  | TechnologyChoice;
 
 export interface EffectInput {
   readonly state: GameState;
@@ -83,4 +99,15 @@ export function choiceOf<M extends StrategyChoice['mechanic']>(
   return choice.mechanic === mechanic
     ? ok(choice as Extract<StrategyChoice, { mechanic: M }>)
     : err(domainError('strategy.choiceMismatch', 'Auswahl passt nicht zur Karte', { mechanic }));
+}
+
+/** Zahl aus den Kartenparametern; fehlt sie, ist das ein Fehler der Stammdaten. */
+export function parameterOf(
+  card: StrategyCardDefinition,
+  name: string,
+): Result<number, DomainError> {
+  const value = card.parameters[name];
+  return value === undefined
+    ? err(domainError('strategy.parameter', `Parameter fehlt: ${name}`))
+    : ok(value);
 }

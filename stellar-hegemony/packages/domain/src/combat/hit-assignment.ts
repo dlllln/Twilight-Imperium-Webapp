@@ -13,7 +13,7 @@ export interface HitAssignment {
 }
 
 const canSustain = (unit: Unit, catalog: UnitCatalog): boolean => {
-  const definition = catalog.find(unit.type);
+  const definition = catalog.find(unit.type, unit.owner);
   return !unit.damaged && definition !== undefined && canSustainDamage(definition);
 };
 
@@ -53,7 +53,7 @@ export function validateHitAssignment(
 }
 
 const valueOf = (unit: Unit, catalog: UnitCatalog): number => {
-  const cost = catalog.find(unit.type)?.cost;
+  const cost = catalog.find(unit.type, unit.owner)?.cost;
   return cost === undefined ? 0 : cost.resources / cost.unitsPerCost;
 };
 

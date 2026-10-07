@@ -9,6 +9,7 @@ import {
   suggestHitAssignment,
   type SystemId,
   tacticalDecider,
+  technologyCatalog,
   type Unit,
 } from '@stellar/domain';
 
@@ -129,7 +130,7 @@ export function combatDecision(game: GameState, content: ContentPort): CombatDec
   const tactical = game.actionPhase?.tactical;
   const player = tacticalDecider(game);
   if (tactical == null || player === null) return null;
-  const catalog = content.units;
+  const catalog = technologyCatalog(game, content);
   const pending = tactical.pendingHits.find((entry) => entry.player === player);
   if (pending === undefined) {
     const targets = retreatTargets(game, tactical.system, player, catalog);

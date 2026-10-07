@@ -9,7 +9,7 @@ import type { Unit } from '../unit/unit.ts';
 import type { Shooter } from './dice.ts';
 
 const shipFilter = (catalog: UnitCatalog) => (unit: Unit) => {
-  const definition = catalog.find(unit.type);
+  const definition = catalog.find(unit.type, unit.owner);
   return definition !== undefined && isShip(definition);
 };
 
@@ -70,7 +70,7 @@ function capabilityOf<K extends CapabilityKind>(
   unit: Unit,
   kind: K,
 ): CapabilityOf<K> | undefined {
-  const definition = catalog.find(unit.type);
+  const definition = catalog.find(unit.type, unit.owner);
   return definition === undefined ? undefined : findCapability(definition, kind);
 }
 
@@ -101,7 +101,7 @@ export function spaceCannonShooters(
 /** Kampfwerte der Schiffe (RR 44). */
 export const combatShooters = (ships: readonly Unit[], catalog: UnitCatalog): readonly Shooter[] =>
   ships.flatMap((unit) => {
-    const profile = catalog.find(unit.type)?.combat;
+    const profile = catalog.find(unit.type, unit.owner)?.combat;
     return profile === undefined ? [] : [{ unit, profile }];
   });
 
@@ -114,7 +114,7 @@ export const barrageShooters = (ships: readonly Unit[], catalog: UnitCatalog): r
 /** Wie viele Treffer die Einheiten höchstens abfangen können: Zerstörung plus Schadensresistenz. */
 export function absorbableHits(units: readonly Unit[], catalog: UnitCatalog): number {
   const sustainable = units.filter((unit) => {
-    const definition = catalog.find(unit.type);
+    const definition = catalog.find(unit.type, unit.owner);
     return !unit.damaged && definition !== undefined && canSustainDamage(definition);
   });
   return units.length + sustainable.length;

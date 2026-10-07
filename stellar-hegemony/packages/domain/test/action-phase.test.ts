@@ -134,14 +134,14 @@ describe('Strategische Aktion: Kommandomarker (RR 29, RR 74)', () => {
 
   it('Karten, deren Mechanik noch fehlt, sind gesperrt', () => {
     const base = game();
-    const research = { ...base.strategyCards[CARD(7)], holder: RED } as StrategyCardState;
+    const imperial = { ...base.strategyCards[CARD(8)], holder: RED } as StrategyCardState;
     const result = performStrategicActionHandler.decide(
-      { ...base, strategyCards: { ...base.strategyCards, [CARD(7)]: research } },
-      { ...vanguard(pools(3), []), card: CARD(7) },
+      { ...base, strategyCards: { ...base.strategyCards, [CARD(8)]: imperial } },
+      { ...vanguard(pools(3), []), card: CARD(8) },
       contextWith(),
     );
     expect(result).toMatchObject({
-      error: { code: 'strategy.mechanicUnavailable', details: { mechanic: 'technology' } },
+      error: { code: 'strategy.mechanicUnavailable', details: { mechanic: 'imperial' } },
     });
   });
 

@@ -1,22 +1,23 @@
 import { type DomainError, domainError } from '../shared/domain-error.ts';
-import type { UnitTypeId } from '../shared/ids.ts';
+import type { PlayerId, UnitTypeId } from '../shared/ids.ts';
 import { err, ok, type Result } from '../shared/result.ts';
 import type { UnitDefinition } from './unit-definition.ts';
 
 /**
- * Lesezugriff auf Einheitenwerte. Spätere Iterationen liefern pro Spieler
- * einen Katalog mit angewendeten Technologie-Upgrades (Open/Closed).
+ * Lesezugriff auf Einheitenwerte. Mit `owner` liefert ein technologiebewusster
+ * Katalog die Werte dieses Spielers (Aufwertungen, Boni); ohne ihn die Grundwerte.
  */
 export interface UnitCatalog {
-  find(type: UnitTypeId): UnitDefinition | undefined;
-  all(): readonly UnitDefinition[];
+  find(type: UnitTypeId, owner?: PlayerId): UnitDefinition | undefined;
+  all(owner?: PlayerId): readonly UnitDefinition[];
 }
 
 export function requireUnitDefinition(
   catalog: UnitCatalog,
   type: UnitTypeId,
+  owner?: PlayerId,
 ): Result<UnitDefinition, DomainError> {
-  const definition = catalog.find(type);
+  const definition = catalog.find(type, owner);
   return definition === undefined
     ? err(domainError('unit.unknownType', `Unbekannter Einheitentyp: ${type}`, { type }))
     : ok(definition);

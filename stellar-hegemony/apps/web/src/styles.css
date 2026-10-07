@@ -853,3 +853,151 @@ input[type='checkbox'] {
   flex-wrap: wrap;
   gap: 10px;
 }
+
+/* Technologien (Iteration 7) */
+.tech-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.tech-group {
+  --tech: var(--gold);
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--tech);
+  border-radius: 6px;
+}
+
+.tech-group legend {
+  padding: 0 4px;
+  color: var(--tech);
+  font-family: var(--title-font);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.tech-biotic {
+  --tech: var(--biotic);
+}
+
+.tech-propulsion {
+  --tech: var(--propulsion);
+}
+
+.tech-cybernetic {
+  --tech: var(--cybernetic);
+}
+
+.tech-warfare {
+  --tech: var(--warfare);
+}
+
+.tech-upgrade {
+  --tech: var(--gold);
+}
+
+.tech-option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    'box name dots'
+    'box effect effect';
+  column-gap: 6px;
+  padding: 3px 0;
+  font-size: 13px;
+}
+
+.tech-option input {
+  grid-area: box;
+  align-self: start;
+}
+
+.tech-option .tech-name {
+  grid-area: name;
+}
+
+.tech-option .prerequisites {
+  grid-area: dots;
+}
+
+.tech-option .tech-effect {
+  grid-area: effect;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tech-option.locked .tech-name {
+  color: var(--muted);
+}
+
+.prerequisites {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.tech-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tech);
+  box-shadow: 0 0 4px var(--tech);
+}
+
+.tech-dot.missing {
+  background: transparent;
+  border: 1px solid var(--tech);
+  box-shadow: none;
+}
+
+.specialties {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+}
+
+.specialties legend {
+  padding: 0 4px;
+  color: var(--gold-bright);
+}
+
+.tech-owners {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tech-owners li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.tech-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tech-chip {
+  padding: 1px 7px;
+  border: 1px solid var(--tech);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--tech) 18%, transparent);
+  font-size: 11px;
+  cursor: help;
+}

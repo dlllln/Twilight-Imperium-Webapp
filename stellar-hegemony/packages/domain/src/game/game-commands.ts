@@ -47,6 +47,7 @@ import {
   rejectTransactionHandler,
 } from '../transaction/transaction-commands.ts';
 import { phaseOf } from '../phases/game-phase.ts';
+import { withTechnologies } from '../technology/technology-catalog.ts';
 import { type StartGame, startGameHandler } from '../phases/start-game.ts';
 import { seatPlayerHandler, type SeatPlayer } from '../setup/setup-commands.ts';
 import { type PickStrategyCard, pickStrategyCardHandler } from '../strategy/pick-strategy-card.ts';
@@ -125,5 +126,6 @@ export function decideGameCommand(
   }
   // TypeScript kann command.type und den Handler-Typ nicht korrelieren.
   const handler = handlers[command.type] as CommandHandler<GameState, GameCommand, GameEvent>;
-  return handler.decide(state, command, context);
+  // Alle Einheitenwerte kommen mit den Technologien der Spieler (RR 80.6, Aufwertungen).
+  return handler.decide(state, command, withTechnologies(context, state));
 }

@@ -7,7 +7,7 @@ import type { CapabilityKind } from '../unit/unit-definition.ts';
 import type { Unit } from '../unit/unit.ts';
 
 const isGround = (catalog: UnitCatalog) => (unit: Unit) => {
-  const definition = catalog.find(unit.type);
+  const definition = catalog.find(unit.type, unit.owner);
   return definition !== undefined && isGroundForce(definition);
 };
 
@@ -34,7 +34,7 @@ export function landingForces(
 }
 
 const has = (catalog: UnitCatalog, unit: Unit, kind: CapabilityKind): boolean => {
-  const definition = catalog.find(unit.type);
+  const definition = catalog.find(unit.type, unit.owner);
   return definition !== undefined && hasCapability(definition, kind);
 };
 
@@ -84,7 +84,7 @@ export function bombardablePlanets(
 
 /** RR 20.1: Bombardement-Werte einer Einheit. */
 export const bombardmentOf = (unit: Unit, catalog: UnitCatalog) => {
-  const definition = catalog.find(unit.type);
+  const definition = catalog.find(unit.type, unit.owner);
   return definition === undefined ? undefined : findCapability(definition, 'bombardment');
 };
 

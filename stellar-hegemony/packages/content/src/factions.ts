@@ -3,6 +3,7 @@ import {
   type FactionDefinition,
   planetId,
   type SystemTile,
+  technologyId,
   type UnitStack,
   type UnitTypeId,
 } from '@stellar/domain';
@@ -33,6 +34,7 @@ interface FactionSeed {
   readonly space: readonly UnitStack[];
   readonly planets: FactionDefinition['startingForces']['planets'];
   readonly commodityLimit: number;
+  readonly technologies: readonly string[];
 }
 
 const SEEDS: readonly FactionSeed[] = [
@@ -43,6 +45,7 @@ const SEEDS: readonly FactionSeed[] = [
     space: units([U.carrier, 2], [U.dreadnought, 1], [U.fighter, 3]),
     planets: [on('Aurelis', [U.infantry, 4], [U.orbitalDock, 1])],
     commodityLimit: 3,
+    technologies: ['ion-drive', 'target-acquisition'],
   },
   {
     id: 'orun',
@@ -51,6 +54,7 @@ const SEEDS: readonly FactionSeed[] = [
     space: units([U.carrier, 1], [U.cruiser, 2], [U.fighter, 2]),
     planets: [on('Orun', [U.infantry, 3], [U.orbitalDock, 1]), on('Orun Tief', [U.infantry, 1])],
     commodityLimit: 3,
+    technologies: ['cell-regeneration'],
   },
   {
     id: 'sel',
@@ -59,6 +63,7 @@ const SEEDS: readonly FactionSeed[] = [
     space: units([U.carrier, 2], [U.destroyer, 1], [U.fighter, 2]),
     planets: [on('Selis', [U.infantry, 3], [U.orbitalDock, 1]), on('Kadrun', [U.infantry, 1])],
     commodityLimit: 4,
+    technologies: ['target-acquisition'],
   },
   {
     id: 'karth',
@@ -67,6 +72,7 @@ const SEEDS: readonly FactionSeed[] = [
     space: units([U.carrier, 1], [U.dreadnought, 2], [U.fighter, 1]),
     planets: [on('Karthos', [U.infantry, 3], [U.orbitalDock, 1])],
     commodityLimit: 2,
+    technologies: ['reactive-plating', 'cell-regeneration'],
   },
   {
     id: 'nesh',
@@ -78,6 +84,7 @@ const SEEDS: readonly FactionSeed[] = [
       on('Vael', [U.infantry, 1]),
     ],
     commodityLimit: 3,
+    technologies: ['ion-drive'],
   },
   {
     id: 'quel',
@@ -86,6 +93,7 @@ const SEEDS: readonly FactionSeed[] = [
     space: units([U.carrier, 2], [U.destroyer, 1], [U.fighter, 4]),
     planets: [on('Quellis', [U.infantry, 4], [U.orbitalDock, 1]), on('Kiro', [U.infantry, 1])],
     commodityLimit: 3,
+    technologies: ['cell-regeneration', 'ion-drive'],
   },
 ];
 
@@ -94,6 +102,7 @@ export const FACTIONS: readonly FactionDefinition[] = SEEDS.map((seed) => ({
   homeSystem: seed.home,
   startingForces: { space: seed.space, planets: seed.planets },
   commodityLimit: seed.commodityLimit,
+  startingTechnologies: seed.technologies.map(technologyId),
 }));
 
 export const FACTION_NAMES: Readonly<Record<string, LocalizedText>> = Object.fromEntries(

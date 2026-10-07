@@ -1,5 +1,6 @@
 import { findPlayer, type GameState } from '../game/game-state.ts';
 import type { ContentPort } from '../ports/content-port.ts';
+import { technologyCatalog } from '../technology/technology-catalog.ts';
 import type { PlanetId, PlayerId, SystemId } from '../shared/ids.ts';
 import { canBeProduced, isShip } from '../unit/unit-capabilities.ts';
 import type { UnitCatalog } from '../unit/unit-catalog.ts';
@@ -30,7 +31,7 @@ export function producibleUnits(
 ): readonly UnitDefinition[] {
   const technologies = findPlayer(state, player)?.technologies ?? [];
   return catalog
-    .all()
+    .all(player)
     .filter(canBeProduced)
     .filter(
       (unit) =>
@@ -39,9 +40,9 @@ export function producibleUnits(
 }
 
 /** Bekannte, baubare Bestellungen; die Kosten rechnet dieselbe Regel wie beim Command. */
-const priced = (orders: readonly ProductionOrder[], catalog: UnitCatalog) =>
+const priced = (orders: readonly ProductionOrder[], catalog: UnitCatalog, player: PlayerId) =>
   orders.flatMap((order) => {
-    const definition = catalog.find(order.type);
+    const definition = catalog.find(order.type, player);
     return definition !== undefined && canBeProduced(definition) ? [{ order, definition }] : [];
   });
 
@@ -56,21 +57,22 @@ const ownSitePlanets = (
 
 /**
  * Information Expert für die Produktionsvorschau: dieselben Abfragen wie die Regel,
- * damit Clients nichts nachbauen. Ob die Bestellung gilt, entscheidet weiterhin der Command.
+ * damit Clients nichts nachbauen; Technologien gelten wie beim Command. Ob die Bestellung gilt, entscheidet weiterhin der Command.
  */
 export function productionQuote(
   state: GameState,
   system: SystemId,
   player: PlayerId,
   orders: readonly ProductionOrder[],
-  content: ContentPort,
+  base: ContentPort,
 ): ProductionQuote {
+  const content = { ...base, units: technologyCatalog(state, base) };
   const sites = productionSites(state, system, player, content);
-  const ships = priced(orders, content.units).some(({ definition }) => isShip(definition));
+  const ships = priced(orders, content.units, player).some(({ definition }) => isShip(definition));
   return {
     limit: productionLimit(sites),
     count: orders.reduce((sum, order) => sum + order.count, 0),
-    cost: productionCost(priced(orders, content.units)),
+    cost: productionCost(priced(orders, content.units, player)),
     blockaded: ships && isBlockaded(state, system, player, content.units),
     groundPlanets: ownSitePlanets(state, player, sites),
   };

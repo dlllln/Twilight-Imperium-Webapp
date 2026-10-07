@@ -29,7 +29,7 @@ export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
   card('engineering', 4, 'construction', { structures: 2 }),
   card('exchange', 5, 'trade', { tradeGoods: 3 }),
   card('armament', 6, 'warfare'),
-  card('research', 7, 'technology'),
+  card('research', 7, 'technology', { extraResearchCost: 6, secondaryResearchCost: 4 }),
   card('crown', 8, 'imperial'),
 ];
 

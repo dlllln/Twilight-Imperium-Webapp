@@ -69,6 +69,7 @@ describe('StartGame (RR 76.1: Sprecher und Kartenauslage)', () => {
       'HomeSystemPlaced',
       'HomeSystemPlaced',
       'HomeSystemPlaced',
+      'TechnologiesGranted',
       'StrategyPhaseStarted',
     ]);
     const initiatives = Object.values(state.strategyCards).map((card) => card.initiative);

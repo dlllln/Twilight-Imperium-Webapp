@@ -18,7 +18,7 @@ const sides = (state: GameState, planet: PlanetId, attacker: PlayerId, catalog: 
 
 const cannonsOn = (units: readonly Unit[], catalog: UnitCatalog): readonly Shooter[] =>
   units.flatMap((unit) => {
-    const definition = catalog.find(unit.type);
+    const definition = catalog.find(unit.type, unit.owner);
     const cannon = definition === undefined ? undefined : findCapability(definition, 'spaceCannon');
     return cannon === undefined ? [] : [{ unit, profile: cannon.profile }];
   });
@@ -111,7 +111,7 @@ function controlEvents(
   if (planetState === undefined || !holds || planetState.controller === player) return [];
   const structuresDestroyed = planetState.units
     .filter((unit) => {
-      const definition = catalog.find(unit.type);
+      const definition = catalog.find(unit.type, unit.owner);
       return unit.owner !== player && definition !== undefined && isStructure(definition);
     })
     .map((unit) => unit.id);

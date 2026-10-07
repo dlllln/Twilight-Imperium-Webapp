@@ -14,6 +14,7 @@ import {
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { unitLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
+import { unitsOf } from '../../unit-stats.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { Actions, PlanetSelect } from './FormParts.tsx';
 import { PaymentPicker, usePayment } from './PaymentPicker.tsx';
@@ -116,7 +117,10 @@ export function ProductionForm(props: ProductionFormProps): ReactElement {
     <div className="choice-form production-form">
       <h3>{t('production')}</h3>
       <QuoteLine quote={form.quote} />
-      <UnitSteppers form={form} units={producibleUnits(props.game, props.player, content.units)} />
+      <UnitSteppers
+        form={form}
+        units={producibleUnits(props.game, props.player, unitsOf(props.game))}
+      />
       <GroundPlanet form={form} />
       <PaymentPicker
         game={props.game}

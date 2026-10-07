@@ -53,7 +53,7 @@ function barrage(
   if (shooters.length === 0) return [];
   const volley = rollVolley(decision.random, state.config.rules.dieSides, shooters, sides);
   const fighters = shipsOf(state, system, sides.target, catalog).filter(
-    (unit) => catalog.find(unit.type)?.isFighter === true,
+    (unit) => catalog.find(unit.type, unit.owner)?.isFighter === true,
   );
   const destroyed = fighters.slice(0, volley.hits).map((unit) => unit.id);
   return [{ type: 'AntiFighterBarrageFired', system, volley, destroyed }];
@@ -119,7 +119,7 @@ function retreatingUnits(
   catalog: Catalog,
 ): readonly Unit[] {
   const carried = (unit: Unit) => {
-    const definition = catalog.find(unit.type);
+    const definition = catalog.find(unit.type, unit.owner);
     return unit.owner === player && definition !== undefined && isGroundForce(definition);
   };
   const space = state.systems[system]?.spaceUnits ?? [];
@@ -145,11 +145,11 @@ export function retreatEvents(
 /** Fracht, die bei fehlender Kapazität verloren gehen kann: Jäger vor Bodentruppen. */
 function cargoOf(units: readonly Unit[], winner: PlayerId, catalog: Catalog): readonly Unit[] {
   const cargo = units.filter((unit) => {
-    const definition = catalog.find(unit.type);
+    const definition = catalog.find(unit.type, unit.owner);
     if (unit.owner !== winner || definition === undefined) return false;
     return definition.isFighter || isGroundForce(definition);
   });
-  const isFighter = (unit: Unit) => catalog.find(unit.type)?.isFighter === true;
+  const isFighter = (unit: Unit) => catalog.find(unit.type, unit.owner)?.isFighter === true;
   return [...cargo].sort((a, b) => Number(isFighter(b)) - Number(isFighter(a)));
 }
 

@@ -1,4 +1,4 @@
-import { planetName, unitName } from '@stellar/content';
+import { planetName, technologyText, unitName } from '@stellar/content';
 import { type GameState, unitTypeId } from '@stellar/domain';
 import type { Language } from './i18n.ts';
 
@@ -13,3 +13,9 @@ export function systemLabel(game: GameState, id: string, language: Language): st
   const planets = game.systems[id]?.planetIds.map((planet) => planetLabel(planet, language)) ?? [];
   return [id.toUpperCase(), planets.join(', ')].filter((part) => part !== '').join(' · ');
 }
+
+export const technologyLabel = (id: string, language: Language): string =>
+  technologyText(id)?.name[language] ?? id;
+
+export const technologyEffectText = (id: string, language: Language): string =>
+  technologyText(id)?.effect[language] ?? '';

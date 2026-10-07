@@ -9,7 +9,7 @@ import {
 } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
 import { useGameStore } from '../../game-store.ts';
-import { content } from '../../store.ts';
+import { unitsOf } from '../../unit-stats.ts';
 import { useT } from '../../use-translation.ts';
 import { UnitFigure } from './UnitFigure.tsx';
 
@@ -24,8 +24,8 @@ const initialChoices = (units: readonly Unit[], suggestion: HitAssignment): Choi
     }),
   );
 
-const sustainable = (unit: Unit): boolean => {
-  const definition = content.units.find(unit.type);
+const sustainable = (game: GameState, unit: Unit): boolean => {
+  const definition = unitsOf(game).find(unit.type, unit.owner);
   return !unit.damaged && definition !== undefined && canSustainDamage(definition);
 };
 
@@ -61,7 +61,7 @@ function UnitChoice({
         onChange={(event) => onChange(event.target.value as Choice)}
       >
         <option value="none">{t('noHit')}</option>
-        {sustainable(unit) && <option value="sustain">{t('sustain')}</option>}
+        {sustainable(game, unit) && <option value="sustain">{t('sustain')}</option>}
         <option value="destroy">{t('destroy')}</option>
       </select>
     </li>
@@ -119,7 +119,7 @@ export function HitAssignmentForm({
   const api = useChoices(units, suggestion);
   const { sustained, destroyed } = api;
   const confirm = () => send({ type: 'AssignHits', issuedBy: player, sustained, destroyed });
-  const required = Math.min(hits, absorbableHits(units, content.units));
+  const required = Math.min(hits, absorbableHits(units, unitsOf(game)));
   const assigned = sustained.length + destroyed.length;
   return (
     <div className="combat-decision">

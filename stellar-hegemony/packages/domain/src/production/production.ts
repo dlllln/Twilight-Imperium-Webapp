@@ -1,3 +1,4 @@
+import { fleetLimitOf } from '../technology/technology-catalog.ts';
 import { evaluatePayment, type Payment, paymentEvents } from '../economy/payment.ts';
 import type { DecisionContext } from '../eventsourcing/command.ts';
 import { StarSystem } from '../galaxy/star-system.ts';
@@ -64,7 +65,7 @@ function resolveOrder(
   input: ProductionInput,
   order: ProductionOrder,
 ): Result<Resolved, DomainError> {
-  const definition = input.decision.content.units.find(order.type);
+  const definition = input.decision.content.units.find(order.type, input.player);
   const technologies = findPlayer(input.state, input.player)?.technologies ?? [];
   const problem = orderProblem(definition, order, technologies);
   if (problem !== null || definition === undefined || !canBeProduced(definition))
@@ -173,7 +174,7 @@ function limitsAfter(input: ProductionInput, events: readonly GameEvent[]): Chec
   if (systemState === undefined)
     return err(domainError('tactical.unknownSystem', 'Unbekanntes System'));
   const planets = systemState.planetIds.flatMap((id) => after.planets[id] ?? []);
-  const fleet = findPlayer(after, input.player)?.commandPools.fleet ?? 0;
+  const fleet = fleetLimitOf(after, input.player, input.decision.content);
   return andThen(StarSystem.inspect(systemState, planets, input.decision.content.units), (star) =>
     firstFailure([
       guard(

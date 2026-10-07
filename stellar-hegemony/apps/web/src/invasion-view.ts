@@ -8,6 +8,7 @@ import {
   type PlanetId,
   type PlayerId,
   type SystemId,
+  technologyCatalog,
   type Unit,
 } from '@stellar/domain';
 
@@ -35,8 +36,8 @@ export function bombardChoices(game: GameState, content: ContentPort): BombardCh
   if (active === null) return { ships: [], planets: [] };
   const { player, system } = active;
   return {
-    ships: bombardingShips(game, system, player, content.units),
-    planets: bombardablePlanets(game, system, player, content.units),
+    ships: bombardingShips(game, system, player, technologyCatalog(game, content)),
+    planets: bombardablePlanets(game, system, player, technologyCatalog(game, content)),
   };
 }
 
@@ -53,7 +54,7 @@ export function landingChoices(game: GameState, content: ContentPort): LandingCh
   const { player, system } = active;
   const center = isCenterSystem(content.tiles, system) && !game.centerTokenRemoved;
   return {
-    forces: landingForces(game, system, player, content.units),
+    forces: landingForces(game, system, player, technologyCatalog(game, content)),
     planets: game.systems[system]?.planetIds ?? [],
     centerCost: center ? game.config.rules.centerTokenInfluenceCost : null,
   };

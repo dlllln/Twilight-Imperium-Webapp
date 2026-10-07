@@ -106,3 +106,24 @@ test('Hot-Seat: Produktion im eigenen Heimatsystem', async ({ page }) => {
   await page.getByRole('button', { name: 'Taktische Aktion beenden' }).click();
   await expect(page.getByTestId('actor')).not.toHaveText(actor);
 });
+
+test('Hot-Seat: Forschung bringt eine neue Technologie', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Spieler').selectOption('3');
+  await page.getByRole('button', { name: 'Partie starten' }).click();
+  const free = page.locator('.strategy-card button:not([disabled])');
+  for (let pick = 0; pick < 3; pick += 1) await free.first().click();
+  await page.locator('.strategy-card button', { hasText: 'Forschung' }).click();
+  for (let pick = 0; pick < 2; pick += 1) await free.first().click();
+
+  const chips = page.locator('.tech-owners .tech-chip');
+  const before = await chips.count();
+  await page.getByRole('button', { name: 'Strategische Aktion: Forschung' }).click();
+  await page.locator('.tech-option:not(.locked) input').first().check();
+  await expect(page.getByTestId('paid')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Erforschen' }).click();
+  await expect(page.getByRole('heading', { name: /Sekundärfähigkeit/ })).toBeVisible();
+  await expect(chips).toHaveCount(before + 1);
+  await page.getByRole('button', { name: 'Ablehnen' }).click();
+  await page.getByRole('button', { name: 'Ablehnen' }).click();
+});

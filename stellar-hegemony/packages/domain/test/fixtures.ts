@@ -19,6 +19,7 @@ import {
   type StrategyCardDefinition,
   strategyCardId,
   type SystemState,
+  type TechnologyDefinition,
   type Unit,
   unitId,
   unitTypeId,
@@ -243,7 +244,11 @@ export const TILES: readonly SystemTile[] = [
       { id: planetId('beta-2'), resources: 0, influence: 1 },
     ],
   }),
-  tile('b3', 'blue', { planets: [{ id: planetId('gamma-1'), resources: 3, influence: 0 }] }),
+  tile('b3', 'blue', {
+    planets: [
+      { id: planetId('gamma-1'), resources: 3, influence: 0, technologySpecialty: 'propulsion' },
+    ],
+  }),
   tile('b4', 'blue', {
     wormholes: ['alpha'],
     planets: [{ id: planetId('delta-1'), resources: 1, influence: 1 }],
@@ -284,6 +289,7 @@ export const FACTIONS: readonly FactionDefinition[] = ['red', 'blue', 'green'].m
     ],
   },
   commodityLimit: 3,
+  startingTechnologies: color === 'green' ? [technologyId('drive-a')] : [],
 }));
 
 /** Kleine Galaxie: Zentrum, Ring 1 mit sechs Tafeln, drei Heimat-Plätze in Ring 2. */
@@ -316,17 +322,73 @@ export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
   strategyCard(4, 'construction', { structures: 2 }),
   strategyCard(5, 'trade', { tradeGoods: 3 }),
   strategyCard(6, 'warfare'),
-  strategyCard(7, 'technology'),
+  strategyCard(7, 'technology', { extraResearchCost: 6, secondaryResearchCost: 4 }),
   strategyCard(8, 'imperial'),
 ];
 
 export const CARD = (initiative: number) => strategyCardId(`card-${String(initiative)}`);
+
+const research = (
+  id: string,
+  color: TechnologyDefinition['color'],
+  prerequisites: TechnologyDefinition['prerequisites'],
+  extra: Partial<TechnologyDefinition> = {},
+): TechnologyDefinition => ({
+  id: technologyId(id),
+  color,
+  prerequisites,
+  modifiers: [],
+  ...extra,
+});
+
+/** Kleiner Technologiebaum: Antrieb in drei Stufen, Waffen, Zielerfassung, eine Aufwertung. */
+export const TECHNOLOGIES: readonly TechnologyDefinition[] = [
+  research('drive-a', 'propulsion', [], {
+    modifiers: [{ target: { types: [T.cruiser] }, change: { move: 1 } }],
+  }),
+  research('drive-b', 'propulsion', ['propulsion'], { rules: { fleetLimit: 2 } }),
+  research('drive-c', 'propulsion', ['propulsion', 'propulsion'], {
+    modifiers: [{ target: { category: 'ship', fighters: false }, change: { move: 1 } }],
+  }),
+  research('gunnery', 'warfare', [], {
+    modifiers: [
+      { target: { types: [T.cruiser] }, change: { hitOn: -1 } },
+      { target: { types: [T.battleship] }, change: { dice: 1 } },
+    ],
+  }),
+  research('targeting', 'cybernetic', [], {
+    modifiers: [
+      {
+        target: { types: [T.escort] },
+        change: { capability: { kind: 'antiFighterBarrage', hitOn: -1, dice: 1 } },
+      },
+      {
+        target: { category: 'structure' },
+        change: { capability: { kind: 'spaceCannon', range: 1 } },
+      },
+      {
+        target: { types: [T.dock] },
+        change: { capability: { kind: 'fighterHangar', fighters: 1 } },
+      },
+      { target: { types: [T.dock] }, change: { capability: { kind: 'production', bonus: 1 } } },
+    ],
+  }),
+  research('armour', 'biotic', [], {
+    modifiers: [{ target: { types: [T.infantry] }, change: { add: [{ kind: 'sustainDamage' }] } }],
+  }),
+  research('heavy-carrier', null, ['propulsion', 'propulsion'], {
+    upgrades: T.carrier,
+    modifiers: [{ target: { types: [T.carrier] }, change: { set: { move: 2, capacity: 6 } } }],
+  }),
+  research('breaker-plans', 'warfare', ['warfare']),
+];
 
 export const content: ContentPort = {
   units: catalog,
   tiles: new StaticTileCatalog(TILES),
   strategyCards: STRATEGY_CARDS,
   factions: FACTIONS,
+  technologies: TECHNOLOGIES,
   galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
 };
 

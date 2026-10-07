@@ -1,74 +1,16 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import {
-  findPlayer,
-  type GameState,
-  type PlayerId,
-  type StrategyCardDefinition,
-  unitTypeId,
-} from '@stellar/domain';
-import type { ReactElement } from 'react';
+import { findPlayer, type GameState, type PlayerId, unitTypeId } from '@stellar/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { homeSystemOf } from '../src/card-view.ts';
-import { ChoiceForm } from '../src/components/game/ChoiceForm.tsx';
 import { useGameStore } from '../src/game-store.ts';
-import { content, useGalaxyStore } from '../src/store.ts';
-import { pickAll, started } from './game-helpers.ts';
+import { content } from '../src/store.ts';
+import { holding, Live } from './card-form-helpers.tsx';
 
 afterEach(cleanup);
 
 const store = () => useGameStore.getState();
 const game = () => store().game as GameState;
-
-const cardOf = (mechanic: StrategyCardDefinition['mechanic']) =>
-  content.strategyCards.find((card) => card.mechanic === mechanic) as StrategyCardDefinition;
-
-/** Der aktive Spieler bekommt die Karte zusätzlich; optional liegt ein Marker in seiner Heimat. */
-function holding(mechanic: StrategyCardDefinition['mechanic'], tokenAtHome = false) {
-  useGalaxyStore.setState({ language: 'de' });
-  const state = pickAll(started());
-  const player = state.actionPhase?.active as PlayerId;
-  const card = cardOf(mechanic);
-  const held = { ...state.strategyCards[card.id], holder: player, exhausted: false };
-  const home = homeSystemOf(state, player, content) as string;
-  const system = state.systems[home] as GameState['systems'][string];
-  const systems = tokenAtHome
-    ? { ...state.systems, [home]: { ...system, commandTokens: [player] } }
-    : state.systems;
-  useGameStore.setState({
-    game: { ...state, systems, strategyCards: { ...state.strategyCards, [card.id]: held } },
-  } as never);
-  return { player, card, home };
-}
-
-/** Formular der Karte; die Auswahl geht wie im Spiel als Command an die Domain. */
-function Live(props: {
-  readonly player: PlayerId;
-  readonly card: StrategyCardDefinition;
-  readonly ability: 'primary' | 'secondary';
-}): ReactElement | null {
-  const current = useGameStore((state) => state.game);
-  const send = useGameStore((state) => state.send);
-  if (current === null) return null;
-  return (
-    <ChoiceForm
-      game={current}
-      {...props}
-      onSubmit={(choice) =>
-        send(
-          props.ability === 'primary'
-            ? {
-                type: 'PerformStrategicAction',
-                issuedBy: props.player,
-                card: props.card.id,
-                choice,
-              }
-            : { type: 'ResolveSecondary', issuedBy: props.player, choice },
-        )
-      }
-    />
-  );
-}
 
 const awaiting = () => game().actionPhase?.secondary?.awaiting[0] as PlayerId;
 const unitsOn = (planet: string, type: string) =>

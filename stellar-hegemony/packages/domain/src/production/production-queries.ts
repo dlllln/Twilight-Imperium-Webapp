@@ -18,7 +18,7 @@ function siteOf(
   unit: Unit,
   planet: PlanetId | null,
 ): readonly ProductionSite[] {
-  const definition = content.units.find(unit.type);
+  const definition = content.units.find(unit.type, unit.owner);
   const production =
     definition === undefined ? undefined : findCapability(definition, 'production');
   if (production === undefined) return [];
@@ -60,7 +60,7 @@ export function isBlockaded(
   catalog: UnitCatalog,
 ): boolean {
   const ships = (state.systems[system]?.spaceUnits ?? []).filter((unit) => {
-    const definition = catalog.find(unit.type);
+    const definition = catalog.find(unit.type, unit.owner);
     return definition !== undefined && isShip(definition);
   });
   return ships.some((ship) => ship.owner !== player) && !ships.some((s) => s.owner === player);

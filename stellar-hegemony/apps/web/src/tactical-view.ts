@@ -6,6 +6,7 @@ import {
   type MovementOption,
   movementOptions,
   type PlayerId,
+  technologyCatalog,
   type Unit,
 } from '@stellar/domain';
 import type { Highlight } from './render/scene-model.ts';
@@ -19,7 +20,7 @@ export function moveContextOf(game: GameState, content: ContentPort): MoveContex
     state: game,
     player: turn.active,
     active: tactical.system,
-    catalog: content.units,
+    catalog: technologyCatalog(game, content),
     rules: game.config.rules,
   };
 }
@@ -58,7 +59,7 @@ export function cargoAtOrigin(
   const system = game.systems[option.from];
   if (system === undefined) return [];
   const transportable = (unit: Unit) => {
-    const definition = content.units.find(unit.type);
+    const definition = technologyCatalog(game, content).find(unit.type, unit.owner);
     return (
       unit.owner === player &&
       definition !== undefined &&

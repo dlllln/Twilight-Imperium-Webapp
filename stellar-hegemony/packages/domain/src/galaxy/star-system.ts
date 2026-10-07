@@ -38,7 +38,10 @@ export class StarSystem {
     catalog: UnitCatalog,
   ): Result<StarSystem, DomainError> {
     const resolve = (unit: Unit): Result<ResolvedUnit, DomainError> =>
-      map(requireUnitDefinition(catalog, unit.type), (definition) => ({ unit, definition }));
+      map(requireUnitDefinition(catalog, unit.type, unit.owner), (definition) => ({
+        unit,
+        definition,
+      }));
     const space = combine(state.spaceUnits.map(resolve));
     const ground = combine(planets.flatMap((planet) => planet.units).map(resolve));
     if (!space.ok) return space;

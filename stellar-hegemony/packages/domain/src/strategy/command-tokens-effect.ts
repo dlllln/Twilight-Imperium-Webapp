@@ -2,16 +2,11 @@ import { evaluatePayment, type Payment, paymentEvents } from '../economy/payment
 import type { GameEvent } from '../game/game-events.ts';
 import { findPlayer } from '../game/game-state.ts';
 import { COMMAND_POOLS, type PoolCounts } from '../player/command-sheet.ts';
-import {
-  type Check,
-  type DomainError,
-  domainError,
-  firstFailure,
-  guard,
-} from '../shared/domain-error.ts';
-import { andThen, err, map, ok, type Result } from '../shared/result.ts';
+import { type Check, type DomainError, firstFailure, guard } from '../shared/domain-error.ts';
+import { andThen, map, ok, type Result } from '../shared/result.ts';
 import {
   choiceOf,
+  parameterOf,
   type CommandTokensChoice,
   type EffectInput,
   type StrategyEffect,
@@ -25,12 +20,7 @@ const validPools = (pools: PoolCounts): boolean =>
 
 type TokenInput = Omit<EffectInput, 'choice'>;
 
-function parameter(input: TokenInput, name: string): Result<number, DomainError> {
-  const value = input.card.parameters[name];
-  return value === undefined
-    ? err(domainError('strategy.parameter', `Parameter fehlt: ${name}`))
-    : ok(value);
-}
+const parameter = (input: TokenInput, name: string) => parameterOf(input.card, name);
 
 /** RR 29.2/29.3: Grundmenge plus 1 Marker je volle Einflussmenge; begrenzt durch den Nachschub (RR 46.3). */
 function tokenCount(

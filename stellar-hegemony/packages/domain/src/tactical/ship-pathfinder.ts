@@ -52,7 +52,10 @@ function search(context: MoveContext, start: Node): readonly SystemId[] | undefi
 export function findShipPath(context: MoveContext, ship: UnitId): readonly SystemId[] | undefined {
   const location = locateUnit(context.state, ship);
   const origin = location === undefined ? undefined : context.state.systems[location.system];
-  const definition = location === undefined ? undefined : context.catalog.find(location.unit.type);
+  const definition =
+    location === undefined
+      ? undefined
+      : context.catalog.find(location.unit.type, location.unit.owner);
   if (origin === undefined || definition === undefined) return undefined;
   const remaining = baseMove(definition, origin, context.rules) + riftBonus(context, origin);
   return search(context, { system: origin, remaining, path: [] });
@@ -72,7 +75,7 @@ export function movementOptions(context: MoveContext): readonly MovementOption[]
     )
     .flatMap((system) =>
       system.spaceUnits.flatMap((unit) => {
-        const definition = context.catalog.find(unit.type);
+        const definition = context.catalog.find(unit.type, unit.owner);
         const movable =
           unit.owner === context.player &&
           definition !== undefined &&

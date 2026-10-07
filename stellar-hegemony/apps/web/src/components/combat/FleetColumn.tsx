@@ -1,7 +1,7 @@
 import { type GameState, type PlayerId, shipsOf, type SystemId, type Unit } from '@stellar/domain';
 import type { ReactElement } from 'react';
 import type { CombatLogEvent } from '../../combat-view.ts';
-import { content } from '../../store.ts';
+import { unitsOf } from '../../unit-stats.ts';
 import { useT } from '../../use-translation.ts';
 import type { MessageKey } from '../../i18n.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
@@ -54,7 +54,7 @@ function GroundRow({ game, units }: { readonly game: GameState; readonly units: 
 /** Eine Seite des Kampfs: Spieler, Rolle, Schiffe und Bodentruppen im System, Verluste. */
 export function FleetColumn({ game, system, player, role, log }: FleetProps): ReactElement {
   const t = useT();
-  const ships = shipsOf(game, system, player, content.units);
+  const ships = shipsOf(game, system, player, unitsOf(game));
   return (
     <section className="fleet-column" data-player={player}>
       <header>

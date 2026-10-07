@@ -53,7 +53,7 @@ const hasToken = (context: MoveContext, system: SystemState): boolean =>
 function resolveShip(context: MoveContext, order: ShipMoveOrder) {
   const location = locateUnit(context.state, order.ship);
   if (location?.planet !== null) return fail('move.unknownShip', 'Schiff nicht gefunden');
-  const definition = context.catalog.find(location.unit.type);
+  const definition = context.catalog.find(location.unit.type, location.unit.owner);
   if (definition === undefined) return fail('unit.unknownType', 'Unbekannter Einheitentyp');
   return ok({ location, definition });
 }
@@ -137,7 +137,10 @@ function cargoPickup(
   id: UnitId,
 ): Result<CargoPickup, DomainError> {
   const location = locateUnit(context.state, id);
-  const cargo = location === undefined ? undefined : context.catalog.find(location.unit.type);
+  const cargo =
+    location === undefined
+      ? undefined
+      : context.catalog.find(location.unit.type, location.unit.owner);
   if (location === undefined || cargo === undefined)
     return fail('move.cargoUnknown', 'Fracht nicht gefunden');
   return map(cargoChecks(context, reachable, location, cargo), () => ({

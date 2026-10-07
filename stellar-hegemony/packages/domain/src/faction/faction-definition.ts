@@ -1,5 +1,5 @@
 import type { SystemTile } from '../galaxy/system-tile.ts';
-import type { FactionId, PlanetId, UnitTypeId } from '../shared/ids.ts';
+import type { FactionId, PlanetId, TechnologyId, UnitTypeId } from '../shared/ids.ts';
 
 /** Mehrere gleiche Einheiten, z. B. „3 Jäger“. */
 export interface UnitStack {
@@ -20,11 +20,13 @@ export interface StartingForces {
 
 /**
  * Stammdaten einer Fraktion. Fähigkeiten folgen in Iteration 11; bis dahin
- * unterscheiden sich Fraktionen durch Heimatsystem, Startflotte und Massenprodukte.
+ * unterscheiden sich Fraktionen durch Heimatsystem, Startflotte, Rohstoffe und Starttechnologien.
  */
 export interface FactionDefinition {
   readonly id: FactionId;
   readonly homeSystem: SystemTile;
   readonly startingForces: StartingForces;
   readonly commodityLimit: number;
+  /** RR 80.5: Technologien, die die Fraktion zu Spielbeginn besitzt. */
+  readonly startingTechnologies: readonly TechnologyId[];
 }
