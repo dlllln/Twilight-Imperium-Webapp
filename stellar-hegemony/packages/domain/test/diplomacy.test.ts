@@ -63,6 +63,19 @@ describe('Diplomatie (RR 21)', () => {
     expect(state.players[0]?.reinforcementTokens).toBe(7);
   });
 
+  it('RR 27.11: ohne eigenen Planeten bleibt die Primärfähigkeit ohne Wirkung', () => {
+    const start = greensTurn();
+    const planets = {
+      ...start.planets,
+      [PRIME]: { ...(start.planets[PRIME] as GameState['planets'][string]), controller: null },
+    };
+    const { events } = step({ ...start, planets }, embassy(null));
+    expect(events.map((event) => event.type)).toEqual(['StrategicActionPerformed']);
+    expect(codeOf(performStrategicActionHandler.decide(start, embassy(null), contextWith()))).toBe(
+      'diplomacy.unknownSystem',
+    );
+  });
+
   it('wer schon einen Marker dort hat, legt keinen weiteren; ohne Nachschub aus dem vollsten Pool', () => {
     const start = greensTurn();
     const home = start.systems[HOME];
@@ -81,7 +94,9 @@ describe('Diplomatie (RR 21)', () => {
       ...p,
       commandPools: { tactic: 0, fleet: 0, strategy: 0 },
     }));
-    expect(step(broke, embassy(HOME)).events.at(-1)).toMatchObject({ placements: [] });
+    expect(
+      step(broke, embassy(HOME)).events.find((e) => e.type === 'CommandTokensPlaced'),
+    ).toMatchObject({ placements: [] });
   });
 
   it('nur ein System mit eigenem Planeten, nicht das Zentrum', () => {

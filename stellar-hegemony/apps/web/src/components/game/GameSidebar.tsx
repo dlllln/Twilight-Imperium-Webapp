@@ -5,6 +5,7 @@ import { errorText } from '../../i18n.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { LawsPanel } from '../agenda/LawsPanel.tsx';
 import { HandPanel } from '../cards/HandPanel.tsx';
+import { FactionsPanel } from '../faction/FactionsPanel.tsx';
 import { ObjectivesPanel } from '../objectives/ObjectivesPanel.tsx';
 import { TechnologyPanel } from '../technology/TechnologyPanel.tsx';
 import { PlayersPanel } from './PlayersPanel.tsx';
@@ -28,6 +29,7 @@ export function GameSidebar({ game }: { readonly game: GameState }): ReactElemen
       <ObjectivesPanel game={game} />
       <LawsPanel game={game} />
       <PlayersPanel game={game} />
+      <FactionsPanel game={game} />
       <TechnologyPanel game={game} />
     </aside>
   );

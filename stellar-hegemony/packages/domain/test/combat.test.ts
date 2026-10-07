@@ -262,8 +262,8 @@ describe('Raumkampf (RR 63)', () => {
 
 describe('Rückzug (RR 63.7)', () => {
   const retreatBoard = (red: Unit, blue: Unit): readonly Spec[] => [
-    // Ein zurückgelassener Jäger macht `a` zu einem gültigen Rückzugsziel für Rot.
-    { id: 'a', q: 0, units: [red, unit(T.fighter)] },
+    // Ein eigener Planet macht `a` zu einem gültigen Rückzugsziel für Rot.
+    { id: 'a', q: 0, units: [red], planet: [], planetController: RED },
     { id: 'b', q: 1, units: [blue] },
     { id: 'c', q: 2, planet: [], planetController: BLUE },
   ];

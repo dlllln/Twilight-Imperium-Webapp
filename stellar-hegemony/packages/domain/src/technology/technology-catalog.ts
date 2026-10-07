@@ -4,8 +4,9 @@ import type { ContentPort } from '../ports/content-port.ts';
 import type { PlayerId, UnitTypeId } from '../shared/ids.ts';
 import type { UnitCatalog } from '../unit/unit-catalog.ts';
 import type { UnitDefinition } from '../unit/unit-definition.ts';
-import type { TechnologyDefinition } from './technology-definition.ts';
+import type { TechnologyDefinition, UnitModifier } from './technology-definition.ts';
 import { applyChange, matches } from './unit-modifiers.ts';
+import { factionRule } from '../faction/faction-ability.ts';
 
 /** Technologien eines Spielers als Stammdaten, in der Reihenfolge des Erwerbs. */
 export function ownedTechnologies(
@@ -17,8 +18,24 @@ export function ownedTechnologies(
   return owned.flatMap((id) => content.technologies.find((tech) => tech.id === id) ?? []);
 }
 
+/** Alles, was Einheitenwerte eines Spielers ändert: Technologien und Fraktionsfähigkeiten. */
+export interface ModifierSource {
+  readonly upgrades?: UnitTypeId;
+  readonly modifiers: readonly UnitModifier[];
+}
+
+/** Fähigkeiten der Fraktion eines Spielers (Iteration 11). */
+export function factionAbilitiesOf(
+  state: GameState,
+  player: PlayerId,
+  content: Pick<ContentPort, 'factions'>,
+): readonly ModifierSource[] {
+  const faction = findPlayer(state, player)?.faction;
+  return content.factions.find((candidate) => candidate.id === faction)?.abilities ?? [];
+}
+
 /** Aufwertungen zuerst (sie ersetzen Werte), danach Boni (sie addieren). */
-const upgradesFirst = (a: TechnologyDefinition, b: TechnologyDefinition) =>
+const upgradesFirst = (a: ModifierSource, b: ModifierSource) =>
   Number(a.upgrades === undefined) - Number(b.upgrades === undefined);
 
 /**
@@ -28,7 +45,7 @@ const upgradesFirst = (a: TechnologyDefinition, b: TechnologyDefinition) =>
 export class TechnologyCatalog implements UnitCatalog {
   constructor(
     private readonly base: UnitCatalog,
-    private readonly owned: (player: PlayerId) => readonly TechnologyDefinition[],
+    private readonly owned: (player: PlayerId) => readonly ModifierSource[],
   ) {}
 
   find(type: UnitTypeId, owner?: PlayerId): UnitDefinition | undefined {
@@ -54,7 +71,10 @@ export class TechnologyCatalog implements UnitCatalog {
 
 /** Katalog mit den Technologien aller Spieler dieses Spielstands. */
 export const technologyCatalog = (state: GameState, content: ContentPort): UnitCatalog =>
-  new TechnologyCatalog(content.units, (player) => ownedTechnologies(state, player, content));
+  new TechnologyCatalog(content.units, (player) => [
+    ...ownedTechnologies(state, player, content),
+    ...factionAbilitiesOf(state, player, content),
+  ]);
 
 /** Entscheidungskontext, in dem alle Einheitenwerte die Technologien berücksichtigen. */
 export const withTechnologies = (context: DecisionContext, state: GameState): DecisionContext => ({
@@ -62,12 +82,12 @@ export const withTechnologies = (context: DecisionContext, state: GameState): De
   content: { ...context.content, units: technologyCatalog(state, context.content) },
 });
 
-/** Flottenlimit: Marker im Flottenpool plus Boni aus Technologien (RR 28). */
+/** Flottenlimit: Marker im Flottenpool plus Boni aus Technologien und Fraktion (RR 28). */
 export function fleetLimitOf(state: GameState, player: PlayerId, content: ContentPort): number {
   const pool = findPlayer(state, player)?.commandPools.fleet ?? 0;
   const bonus = ownedTechnologies(state, player, content).reduce(
     (sum, tech) => sum + (tech.rules?.fleetLimit ?? 0),
     0,
   );
-  return pool + bonus;
+  return pool + bonus + factionRule(state, player, 'fleetLimit');
 }

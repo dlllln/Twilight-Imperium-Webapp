@@ -7,7 +7,7 @@ import {
   combatParties,
   isSpaceBattle,
 } from '../../combat-view.ts';
-import { useGameStore } from '../../game-store.ts';
+import { useBotTurn, useGameStore } from '../../game-store.ts';
 import type { MessageKey } from '../../i18n.ts';
 import { systemLabel } from '../../labels.ts';
 import { combatBackdrop } from '../../render/images.ts';
@@ -56,10 +56,21 @@ function HitsDecision(props: {
   );
 }
 
+function BotDeciding(props: { readonly game: GameState; readonly player: PlayerId }): ReactElement {
+  const t = useT();
+  return (
+    <p className="decider">
+      <PlayerTag game={props.game} id={props.player} /> {t('botThinking')}
+    </p>
+  );
+}
+
 /** Aktuelle Entscheidung oder, wenn nichts mehr offen ist, der Knopf zum Schließen. */
 function DecisionArea({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const close = useGameStore((state) => state.closeCombat);
+  const bot = useBotTurn(game);
+  if (bot !== null) return <BotDeciding game={game} player={bot} />;
   if (reactionActor(game) !== null) return <ReactionPrompt game={game} withCards />;
   const decision = combatDecision(game, content);
   if (decision === null)

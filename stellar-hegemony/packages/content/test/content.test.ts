@@ -5,7 +5,15 @@ import {
   findCapability,
   validateGameConfig,
 } from '@stellar/domain';
-import { BASE_RULE_NUMBERS, BASE_UNITS, UNIT_TYPES, unitName } from '../src/index.ts';
+import {
+  abilitiesOf,
+  BASE_RULE_NUMBERS,
+  BASE_UNITS,
+  FACTIONS,
+  factionAbilityText,
+  UNIT_TYPES,
+  unitName,
+} from '../src/index.ts';
 
 const byId = (id: string) => BASE_UNITS.find((unit) => unit.id === id);
 
@@ -66,5 +74,28 @@ describe('Content: Grundwerte der Einheiten', () => {
     expect(
       validateGameConfig({ playerCount: 6, victoryPointsToWin: 10, rules: BASE_RULE_NUMBERS }).ok,
     ).toBe(true);
+  });
+});
+
+describe('Content: Fraktionsfähigkeiten (RR 27.21)', () => {
+  it('RR 27.21: jede Fraktion hat zwei eigene Fähigkeiten mit Name und Wirkung', () => {
+    for (const faction of FACTIONS) {
+      expect(faction.abilities).toHaveLength(2);
+      for (const ability of faction.abilities) {
+        expect(factionAbilityText(ability.id)?.name.de.length).toBeGreaterThan(0);
+        expect(factionAbilityText(ability.id)?.effect.en.length).toBeGreaterThan(0);
+      }
+    }
+    expect(abilitiesOf('unbekannt')).toEqual([]);
+  });
+
+  it('RR 27.21: Einheitenwerte der Fähigkeiten zielen auf vorhandene Einheiten', () => {
+    const known = new Set(BASE_UNITS.map((unit) => unit.id));
+    const targets = FACTIONS.flatMap((faction) =>
+      faction.abilities.flatMap((ability) =>
+        ability.modifiers.flatMap((modifier) => modifier.target.types ?? []),
+      ),
+    );
+    expect(targets.every((type) => known.has(type))).toBe(true);
   });
 });

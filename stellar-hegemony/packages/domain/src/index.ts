@@ -144,3 +144,6 @@ export * from './agenda/agenda-flow.ts';
 export * from './agenda/voting.ts';
 export * from './agenda/law-effects.ts';
 export * from './agenda/agenda-effects.ts';
+export * from './faction/faction-ability.ts';
+export * from './phases/current-actor.ts';
+export * from './galaxy/board-limits.ts';

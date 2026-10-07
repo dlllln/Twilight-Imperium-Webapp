@@ -1,6 +1,8 @@
 import {
   actionCardText,
   agendaText,
+  FACTION_NAMES,
+  factionAbilityText,
   objectiveText,
   planetName,
   technologyText,
@@ -50,3 +52,12 @@ export const agendaPassedText = (id: string, language: Language): string =>
 
 export const agendaRejectedText = (id: string, language: Language): string =>
   agendaText(id)?.rejected[language] ?? '';
+
+export const factionLabel = (id: string, language: Language): string =>
+  FACTION_NAMES[id]?.[language] ?? id;
+
+export const factionAbilityLabel = (id: string, language: Language): string =>
+  factionAbilityText(id)?.name[language] ?? id;
+
+export const factionAbilityEffect = (id: string, language: Language): string =>
+  factionAbilityText(id)?.effect[language] ?? '';

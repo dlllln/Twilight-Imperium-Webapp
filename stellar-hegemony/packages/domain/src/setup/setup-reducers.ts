@@ -1,5 +1,6 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
 import type { GameState } from '../game/game-state.ts';
+import { NO_FACTION_RULES } from '../faction/faction-ability.ts';
 import { NO_ACTION_DECK } from '../action-card/action-card-state.ts';
 import { NO_AGENDA_DECK } from '../agenda/agenda-state.ts';
 import { NO_OBJECTIVES, NO_ROUND_STATS } from '../objective/objective-state.ts';
@@ -52,6 +53,7 @@ const FRESH_PLAYER = {
   secretChoice: null,
   actionCards: [],
   roundStats: NO_ROUND_STATS,
+  factionRules: NO_FACTION_RULES,
 } as const satisfies Partial<PlayerState>;
 
 function seatPlayer(state: GameState, event: PlayerSeated): GameState {

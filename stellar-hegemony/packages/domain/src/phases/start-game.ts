@@ -14,6 +14,8 @@ import type { ActionDeckPrepared } from '../action-card/action-card-events.ts';
 import { actionDeckEvent } from '../action-card/action-deck-setup.ts';
 import type { AgendaDeckPrepared } from '../agenda/agenda-events.ts';
 import { shuffle } from '../ports/random-port.ts';
+import { combinedRules } from '../faction/faction-ability.ts';
+import type { FactionAbilitiesGranted } from '../faction/home-events.ts';
 import type { HomeSystemPlaced } from '../faction/home-events.ts';
 import { homeSystemEvents } from '../faction/home-placement.ts';
 import { objectiveSetupEvents, type ObjectiveSetupEvent } from '../objective/objective-setup.ts';
@@ -46,7 +48,26 @@ type StartEvent =
   | ObjectiveSetupEvent
   | ActionDeckPrepared
   | AgendaDeckPrepared
+  | FactionAbilitiesGranted
   | StrategyPhaseStarted;
+
+/** Fähigkeiten jeder Fraktion gelten ab Spielstart. */
+const abilities = (
+  state: GameState,
+  context: DecisionContext,
+): readonly FactionAbilitiesGranted[] =>
+  state.players.flatMap((player) => {
+    const faction = context.content.factions.find((f) => f.id === player.faction);
+    return faction === undefined || faction.abilities.length === 0
+      ? []
+      : [
+          {
+            type: 'FactionAbilitiesGranted',
+            player: player.id,
+            rules: combinedRules(faction.abilities),
+          } as const,
+        ];
+  });
 
 /** Starttechnologien jeder Fraktion (RR 80.5: erhalten, ohne Voraussetzungen). */
 const grants = (state: GameState, context: DecisionContext): readonly TechnologiesGranted[] =>
@@ -88,6 +109,7 @@ export const startGameHandler = {
       { type: 'GameStarted', speaker: speaker.id, strategyCards: startingCards(context) },
       ...homes,
       ...grants(state, context),
+      ...abilities(state, context),
       ...objectiveSetupEvents(state, context),
       actionDeckEvent(context),
       agendaDeckEvent(context),

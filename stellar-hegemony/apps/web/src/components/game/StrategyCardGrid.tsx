@@ -1,7 +1,6 @@
 import type { GameState, StrategyCardState } from '@stellar/domain';
 import type { ReactElement } from 'react';
-import { useGameStore } from '../../game-store.ts';
-import { currentActor } from '../../local-game.ts';
+import { useGameStore, useHumanActor } from '../../game-store.ts';
 import { seatColor } from '../../seat-colors.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from './card-text.ts';
@@ -39,8 +38,9 @@ function StrategyCardTile({ card, game, onPick }: TileProps): ReactElement {
 export function StrategyCardGrid({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const send = useGameStore((state) => state.send);
+  const human = useHumanActor(game);
   const choosing = game.players.some((player) => player.secretChoice !== null);
-  const actor = game.phase === 'strategy' && !choosing ? currentActor(game) : null;
+  const actor = game.phase === 'strategy' && !choosing ? human : null;
   const cards = Object.values(game.strategyCards).sort((a, b) => a.initiative - b.initiative);
   const pick = (card: StrategyCardState) =>
     actor === null || card.holder !== null

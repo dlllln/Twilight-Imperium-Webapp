@@ -77,9 +77,22 @@ export class StarSystem {
     return this.nonFighterShipCount(owner) > fleetPoolTokens;
   }
 
+  /** Kapazität aller eigenen Schiffe im Weltraum (RR 43.2). */
+  shipCapacity(owner: PlayerId): number {
+    return sum(this.spaceOf(owner).map(({ definition }) => definition.capacity ?? 0));
+  }
+
+  /** Plätze für Jäger in eigenen Gebäuden mit Hangar, unabhängig von den Jägern im System. */
+  hangarSpace(owner: PlayerId): number {
+    return sum(
+      this.onPlanets
+        .filter((entry) => entry.unit.owner === owner)
+        .map(({ definition }) => findCapability(definition, 'fighterHangar')?.fighters ?? 0),
+    );
+  }
+
   capacity(owner: PlayerId): number {
-    const shipCapacity = sum(this.spaceOf(owner).map(({ definition }) => definition.capacity ?? 0));
-    return shipCapacity + this.hangarAllowance(owner);
+    return this.shipCapacity(owner) + this.hangarAllowance(owner);
   }
 
   capacityUsage(owner: PlayerId): number {
@@ -96,13 +109,10 @@ export class StarSystem {
 
   /** Gebäude mit Hangar (z. B. Raumdock) erlauben Jäger ohne Trägerkapazität. */
   private hangarAllowance(owner: PlayerId): number {
-    const hangars = this.onPlanets
-      .filter((entry) => entry.unit.owner === owner)
-      .map(({ definition }) => findCapability(definition, 'fighterHangar')?.fighters ?? 0);
     const fightersInSpace = this.spaceOf(owner).filter(
       ({ definition }) => definition.isFighter,
     ).length;
-    return Math.min(sum(hangars), fightersInSpace);
+    return Math.min(this.hangarSpace(owner), fightersInSpace);
   }
 
   private spaceOf(owner: PlayerId): readonly ResolvedUnit[] {

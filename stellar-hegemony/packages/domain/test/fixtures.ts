@@ -304,6 +304,7 @@ export const FACTIONS: readonly FactionDefinition[] = ['red', 'blue', 'green'].m
   },
   commodityLimit: 3,
   startingTechnologies: color === 'green' ? [technologyId('drive-a')] : [],
+  abilities: [],
 }));
 
 /** Kleine Galaxie: Zentrum, Ring 1 mit sechs Tafeln, drei Heimat-Plätze in Ring 2. */

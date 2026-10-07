@@ -108,6 +108,21 @@ function namedIn(event: CombatLogEvent): readonly PlayerId[] {
   }
 }
 
+const isLogged = (event: GameEvent): event is CombatLogEvent =>
+  OPENING.has(event.type) || FOLLOWING.has(event.type);
+
+/** Kämpfe nur zwischen KI-Gegnern öffnen die Ansicht nicht; ein Mensch muss beteiligt sein. */
+export function involvesHuman(
+  game: GameState,
+  events: readonly GameEvent[],
+  bots: readonly PlayerId[],
+): boolean {
+  const named = events.filter(isLogged).flatMap(namedIn);
+  const active = game.actionPhase?.active;
+  const parties = active == null ? named : [active, ...named];
+  return parties.some((player) => !bots.includes(player));
+}
+
 /** Gab es im Protokoll einen Raumkampf oder Kanonenfeuer im Weltraum? */
 export const isSpaceBattle = (log: readonly CombatLogEvent[]): boolean =>
   log.some((event) => event.type === 'SpaceCombatStarted' || event.type === 'SpaceCannonFired');

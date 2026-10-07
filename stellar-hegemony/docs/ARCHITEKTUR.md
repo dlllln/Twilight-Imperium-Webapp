@@ -43,11 +43,12 @@ stellar-hegemony/
 │   │       ├── objectives/    (It. 8) ObjectiveEvaluator, VictoryChecker
 │   │       ├── action-card/   (It. 9) Aktionskarten als Daten, Wirkungsregeln, Zeitfenster, Verhindern
 │   │       ├── agenda/        (It. 10) Agenden als Daten, Abstimmung, Gesetze, Direktiven
-│   │       └── factions/      (It. 11) FactionAbility-Strategien
+│   │       └── faction/       (It. 11) FactionAbility, Fraktionsregeln; galaxy/board-limits
 │   ├── application/         Use Cases: GameController, Ports (EventStorePort, EventPublisherPort)
 │   ├── infrastructure/      Adapter: SeededRandom, SystemClock, InMemoryEventStore, InProcessEventPublisher
 │   │                        → It. 12: PostgresEventStore, RedisLobbyStore, SocketIoGateway, Logger
-│   └── content/             Daten: Regelzahlen, Einheiten  → Systeme, Fraktionen, Techs, Karten
+│   ├── content/             Daten: Regelzahlen, Einheiten, Systeme, Fraktionen, Techs, Karten
+│   └── bots/                (It. 11) KI-Gegner: Planer schlagen Commands vor, die Domain prüft
 └── apps/
     ├── server/              (It. 12) Fastify + Socket.IO, Composition Root
     └── web/                 React 18 + Vite + Zustand, i18n de/en, Playwright-E2E
@@ -56,7 +57,7 @@ stellar-hegemony/
 ```
 
 Abhängigkeiten zeigen nur nach innen: `web → application → domain`, `infrastructure → application → domain`,
-`content → domain`. ESLint (`no-restricted-imports`) bricht den Build, wenn eine Schicht nach außen greift.
+`content → domain`, `bots → domain`. ESLint (`no-restricted-imports`) bricht den Build, wenn eine Schicht nach außen greift.
 
 ## 2. Architekturentscheidungen
 
@@ -347,7 +348,28 @@ mitgespeichert, damit eine Aufhebung sie exakt zurücknimmt.
 | `agendaActor`, `currentAgenda`, `votingPower`            | Information Expert für Clients: wer entscheidet, Zwischenstand und die eigenen bereiten Planeten samt Gesetzesstimmen.                                           |
 | Web: `AgendaTurn`, `AgendaCard`, `VoteForm`, `LawsPanel` | Offene Agenda mit Wirkung bei Annahme und Ablehnung, Stimmabgabe mit Planeten und Summe, Stichentscheid des Sprechers und geltende Gesetze in der Seitenleiste.  |
 
-## 15. Iterationen
+## 15. Iteration 11 im Detail
+
+Jede unserer sechs Fraktionen hat zwei eigene Fähigkeiten (RR 27.21). Sie sind Daten
+(`FactionAbility`): Einheitenwerte über dieselben Bausteine wie Technologien und wenige Regelwerte
+(Zusatzstimmen, Handkartenlimit, Einkommen in der Statusphase, Flottenlimit, kostenlose
+Sekundärfähigkeiten). Dazu kommen KI-Gegner im Paket `@stellar/bots`: Sie spielen über genau
+dieselben Commands wie Menschen und kennen keine Sonderregeln.
+
+| Element                                                 | Prinzip                                                                                                                                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FactionAbility`, `FactionRules`, `combinedRules`       | Open/Closed: eine neue Fähigkeit ist ein Datensatz; die Regeln fragen nur `factionRule` ab und kennen keine Fraktion beim Namen.                                          |
+| `ModifierSource` im Technologiekatalog                  | Protected Variations: Einheitenwerte aus Technologien und Fähigkeiten laufen durch denselben Katalog, Kampf und Bewegung bleiben unverändert.                             |
+| `boardLimitEvents` (`board-limits.ts`)                  | Pure Fabrication: nach jedem Command prüft ein Durchlauf Flottenlimit (RR 28.3) und Kapazität (RR 43.3); das aktive System während des Kampfes ist ausgenommen (RR 43.4). |
+| `excessCargo`, `shipCapacity`, `hangarSpace`            | Information Expert: das System weiß, wie viel Platz Schiffe und Hangars bieten; Bodentruppen belegen Schiffsplatz, Jäger zuerst Hangars.                                  |
+| `currentActor` (Domain)                                 | Information Expert: wer gerade entscheiden muss, an einer Stelle für Web-App, Bots und später den Server.                                                                 |
+| `BotStrategy`, `heuristicBot`                           | Strategy Pattern: die Web-App kennt nur `nextCommand`; weitere Schwierigkeitsstufen sind weitere Strategien.                                                              |
+| Planer (`actionPhase`, `statusPhase`, `agendaPhase`, …) | Generate and Test: jeder Planer schlägt Commands vor, `decideGameCommand` prüft, der erste angenommene gewinnt. So kann ein Bot nie gegen die Regeln ziehen (DIP).        |
+| `targetValue`, `planMoves`, `planOrders`                | High Cohesion: Ziele, Bewegung mit Flottenlimit und Produktion sind getrennte, einzeln testbare Funktionen.                                                               |
+| Web: `useBotDriver`, `botStep`, `involvesHuman`         | Controller: ein Zeitgeber lässt die KI ziehen, solange sie dran ist; die Kampfansicht öffnet sich nur, wenn ein Mensch beteiligt ist.                                     |
+| Web: `FactionsPanel`, `BotCountSelect`, `BotNotice`     | Die Fähigkeiten jeder Fraktion in der Seitenleiste, die Zahl der KI-Gegner beim Start und ein Hinweis, solange die KI überlegt.                                           |
+
+## 16. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -361,11 +383,11 @@ mitgespeichert, damit eine Aufhebung sie exakt zurücknimmt.
 | 8   | Ziele, Statusphase, Sieg                            | ✓     |
 | 9   | Effekt-System, Aktionskarten, Timing-Fenster        | ✓     |
 | 10  | Agendaphase, Abstimmung                             | ✓     |
-| 11  | Fraktionsfähigkeiten (3 eigene Fraktionen)          | offen |
+| 11  | Fraktionsfähigkeiten, KI-Gegner                     | ✓     |
 | 12  | Multiplayer, Persistenz, Reconnect                  | offen |
 | 13  | Animationen, Sound-Hooks, Tutorial                  | offen |
 
-## 16. Befehle
+## 17. Befehle
 
 ```
 pnpm install

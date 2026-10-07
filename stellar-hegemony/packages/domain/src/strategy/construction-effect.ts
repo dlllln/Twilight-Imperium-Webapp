@@ -95,14 +95,27 @@ function placedEvent(
   return { type: 'StructuresPlaced', player, placements: placed };
 }
 
+/** Ob irgendein Gebäude auf irgendeinen eigenen Planeten passt. */
+function anyPlacement(input: EffectInput): boolean {
+  const types = input.context.content.units.all(input.player).filter(isStructure);
+  const planets = Object.values(input.state.planets).filter((p) => p.controller === input.player);
+  return planets.some((planet) =>
+    types.some((type) => placementChecks(input, [{ type: type.id, planet: planet.id }]).ok),
+  );
+}
+
+/** RR 27.11: Passt nirgends ein Gebäude, bleibt die Fähigkeit ohne Wirkung; die Karte ist genutzt. */
+const fewestPlacements = (input: EffectInput): number => (anyPlacement(input) ? 1 : 0);
+
 /** Primär: ein Gebäude, danach optional eines mit Weltraumkanone. */
 function primaryShape(input: EffectInput, choice: ConstructionChoice): Check {
   const [, second] = choice.placements;
   const catalog = input.context.content.units;
   const most = input.card.parameters.structures ?? 1;
+  const count = choice.placements.length;
   return firstFailure([
     guard(
-      choice.placements.length >= 1 && choice.placements.length <= most,
+      count >= fewestPlacements(input) && count <= most,
       'construction.count',
       'Ein oder zwei Gebäude',
     ),

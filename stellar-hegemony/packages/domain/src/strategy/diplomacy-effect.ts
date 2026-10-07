@@ -50,11 +50,20 @@ function chosenSystem(
   return map(checked, () => system);
 }
 
+/** RR 27.11: Ohne eigenen Planeten außerhalb des Zentrums bleibt die Fähigkeit ohne Wirkung. */
+const hasEligibleSystem = ({ state, player, context }: EffectInput): boolean =>
+  Object.values(state.systems).some(
+    (system) =>
+      context.content.tiles.find(system.id)?.back !== 'center' &&
+      system.planetIds.some((id) => controls(state, player, id)),
+  );
+
 /** RR 21.2: eigene Planeten im System bereitmachen, die anderen legen dort einen Marker ab. */
 function primary(input: EffectInput): Events {
   const { state, player } = input;
-  return andThen(choiceOf(input, 'diplomacy'), (choice) =>
-    map(chosenSystem(input, choice), (system): readonly GameEvent[] => {
+  return andThen(choiceOf(input, 'diplomacy'), (choice) => {
+    if (choice.system === null && !hasEligibleSystem(input)) return ok([]);
+    return map(chosenSystem(input, choice), (system): readonly GameEvent[] => {
       const readied = exhaustedOwn(state, player, system.planetIds);
       return [
         ...(readied.length > 0
@@ -66,8 +75,8 @@ function primary(input: EffectInput): Events {
           placements: placements(state, system, player),
         },
       ];
-    }),
-  );
+    });
+  });
 }
 
 /** RR 21.3: bis zu zwei eigene erschöpfte Planeten bereitmachen. */

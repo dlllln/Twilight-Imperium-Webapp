@@ -1,23 +1,15 @@
 import { clockwiseFrom, type GameState, type PlayerState, strategyCardsOf } from '@stellar/domain';
 import type { ReactElement } from 'react';
+import { useGameStore } from '../../game-store.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from './PlayerTag.tsx';
 
-function PlayerRow({
-  game,
-  player,
-}: {
-  readonly game: GameState;
-  readonly player: PlayerState;
-}): ReactElement {
+/** Kommandomarker, Nachschub, Handelswaren, Rohstoffe und Handkarten eines Spielers. */
+function PlayerCounters({ player }: { readonly player: PlayerState }): ReactElement {
   const t = useT();
-  const cards = strategyCardsOf(game, player.id).map((card) => card.initiative);
   const { tactic, fleet, strategy } = player.commandPools;
-  const passed = game.actionPhase?.passed.includes(player.id) ?? false;
   return (
-    <li className={game.actionPhase?.active === player.id ? 'active' : undefined}>
-      <PlayerTag game={game} id={player.id} />
-      <span className="initiatives">{cards.join(' · ')}</span>
+    <>
       <span title={`${t('tactic')} / ${t('fleet')} / ${t('strategy')}`}>
         {tactic}/{fleet}/{strategy}
       </span>
@@ -29,6 +21,27 @@ function PlayerRow({
       <span title={t('handSize')} data-testid={`hand-${player.id}`}>
         ▤ {player.actionCards.length}
       </span>
+    </>
+  );
+}
+
+function PlayerRow({
+  game,
+  player,
+}: {
+  readonly game: GameState;
+  readonly player: PlayerState;
+}): ReactElement {
+  const t = useT();
+  const cards = strategyCardsOf(game, player.id).map((card) => card.initiative);
+  const passed = game.actionPhase?.passed.includes(player.id) ?? false;
+  const bot = useGameStore((state) => state.bots.includes(player.id));
+  return (
+    <li className={game.actionPhase?.active === player.id ? 'active' : undefined}>
+      <PlayerTag game={game} id={player.id} />
+      {bot && <span className="badge bot-badge">{t('botBadge')}</span>}
+      <span className="initiatives">{cards.join(' · ')}</span>
+      <PlayerCounters player={player} />
       {passed && <span className="badge">{t('passed')}</span>}
     </li>
   );

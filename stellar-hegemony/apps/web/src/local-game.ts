@@ -1,7 +1,7 @@
 import {
-  agendaActor,
   createGameHandler,
   decideGameCommand,
+  type DecisionContext,
   type DomainError,
   evolveGame,
   factionId,
@@ -17,11 +17,7 @@ import {
   type GameEvent,
   type Result,
   andThen,
-  excessActionCards,
   map,
-  reactionActor,
-  statusActor,
-  tacticalDecider,
 } from '@stellar/domain';
 import { BASE_RULE_NUMBERS } from '@stellar/content';
 import { SeededRandom } from '@stellar/infrastructure';
@@ -42,13 +38,20 @@ export interface Applied {
   readonly events: readonly GameEvent[];
 }
 
+/** Zufall hängt von Seed und Version ab: dieselbe Partie würfelt beim Wiederholen gleich. */
+export const decisionContext = (state: GameState, seed: number): DecisionContext => ({
+  random: new SeededRandom(seed + state.version),
+  now: Date.now(),
+  content,
+});
+
 /** Wie `applyCommand`, liefert aber auch die Events (für Kampfansicht und Protokoll). */
 export function applyCommandWithEvents(
   state: GameState,
   command: GameCommand,
   seed: number,
 ): Result<Applied, DomainError> {
-  const context = { random: new SeededRandom(seed + state.version), now: Date.now(), content };
+  const context = decisionContext(state, seed);
   return map(decideGameCommand(state, command, context), (events) => ({
     state: events.reduce(evolveGame, state),
     events,
@@ -62,16 +65,32 @@ export const applyCommand = (
 ): Result<GameState, DomainError> =>
   map(applyCommandWithEvents(state, command, seed), (applied) => applied.state);
 
-function setupCommands(layout: MapLayout, playerCount: number): readonly GameCommand[] {
-  const host = seatPlayerId(0);
-  const seats = Array.from({ length: playerCount }, (_, seat): GameCommand => ({
+/** KI-Gegner sitzen auf den letzten Plätzen; der Gastgeber ist immer ein Mensch. */
+export const botSeats = (playerCount: number, botCount: number): readonly PlayerId[] =>
+  Array.from({ length: playerCount }, (_, seat) => seat)
+    .slice(Math.max(1, playerCount - botCount))
+    .map(seatPlayerId);
+
+function seatCommand(seat: number, bots: readonly PlayerId[]): GameCommand {
+  const id = seatPlayerId(seat);
+  return {
     type: 'SeatPlayer',
-    issuedBy: seatPlayerId(seat),
-    name: `P${String(seat + 1)}`,
+    issuedBy: id,
+    name: `${bots.includes(id) ? 'KI' : 'P'}${String(seat + 1)}`,
     color: COLORS[seat] ?? 'black',
     faction: content.factions[seat]?.id ?? factionId('unbekannt'),
     commodityLimit: content.factions[seat]?.commodityLimit ?? 0,
-  }));
+  };
+}
+
+function setupCommands(
+  layout: MapLayout,
+  playerCount: number,
+  botCount: number,
+): readonly GameCommand[] {
+  const host = seatPlayerId(0);
+  const bots = botSeats(playerCount, botCount);
+  const seats = Array.from({ length: playerCount }, (_, seat) => seatCommand(seat, bots));
   return [
     ...seats,
     { type: 'ImportMap', issuedBy: host, mapString: formatMapString(layout) },
@@ -84,6 +103,7 @@ export function createLocalGame(
   layout: MapLayout,
   playerCount: number,
   seed: number,
+  botCount = 0,
 ): Result<GameState, DomainError> {
   const config = { playerCount, victoryPointsToWin: VICTORY_POINTS, rules: BASE_RULE_NUMBERS };
   const command = {
@@ -93,37 +113,11 @@ export function createLocalGame(
     config,
   } as const;
   const created = andThen(createGameHandler.decide(null, command), replayGame);
-  return setupCommands(layout, playerCount).reduce<Result<GameState, DomainError>>(
+  return setupCommands(layout, playerCount, botCount).reduce<Result<GameState, DomainError>>(
     (state, next) => andThen(state, (current) => applyCommand(current, next, seed)),
     created,
   );
 }
 
-/** In der Aktionsphase: Sekundärfähigkeit, Tauschangebot, Kampfentscheidung, sonst der Zug. */
-function actionActor(state: GameState): PlayerId | null {
-  const turn = state.actionPhase;
-  if (turn === null) return null;
-  return (
-    turn.secondary?.awaiting[0] ?? turn.transaction?.to ?? tacticalDecider(state) ?? turn.active
-  );
-}
-
-/** Wer vor allem anderen dran ist: Geheimauftrags-Wahl, Reaktion, dann Ablegen über dem Limit. */
-function interruptingActor(state: GameState): PlayerId | null {
-  const choosing = state.players.find((player) => player.secretChoice !== null);
-  if (choosing !== undefined) return choosing.id;
-  const reacting = reactionActor(state);
-  if (reacting !== null) return reacting;
-  return state.players.find((player) => excessActionCards(state, player.id) > 0)?.id ?? null;
-}
-
-/** Wer gerade am Bildschirm entscheiden muss (Hot-Seat). */
-export function currentActor(state: GameState): PlayerId | null {
-  if (state.phase === 'gameOver') return null;
-  const interrupting = interruptingActor(state);
-  if (interrupting !== null) return interrupting;
-  if (state.phase === 'strategy') return state.pickQueue[0] ?? null;
-  if (state.phase === 'status') return statusActor(state);
-  if (state.phase === 'agenda') return agendaActor(state);
-  return state.phase === 'action' ? actionActor(state) : null;
-}
+/** Wer gerade am Bildschirm entscheiden muss (Hot-Seat); dieselbe Stelle wie für Bots. */
+export { currentActor } from '@stellar/domain';

@@ -116,8 +116,9 @@ describe('Bewegung (RR 15, RR 79.2)', () => {
     const foreign = unit(T.cruiser, BLUE);
     const fighter = unit(T.fighter);
     const parked = unit(T.cruiser);
+    // Ein Träger hält den Jäger im System (RR 43.3).
     const state = board(
-      { id: 'a', q: 0, units: [foreign, fighter] },
+      { id: 'a', q: 0, units: [foreign, unit(T.carrier), fighter] },
       { id: 'b', q: 1, units: [parked], tokens: [RED] },
       { id: 'c', q: 2 },
     );
@@ -254,7 +255,7 @@ describe('Transport (RR 83) und Grenzen (RR 28, RR 43)', () => {
     const passenger = unit(T.infantry);
     const state = board(
       { id: 'a', q: 0, units: [carrier, fighter], planet: [infantry] },
-      { id: 'b', q: 1, units: [passenger], anomaly: 'gravityRift' },
+      { id: 'b', q: 1, planet: [passenger], anomaly: 'gravityRift' },
       { id: 'c', q: 2 },
     );
     const activated = run(state, [activate('c')]);
@@ -269,7 +270,7 @@ describe('Transport (RR 83) und Grenzen (RR 28, RR 43)', () => {
           cargo: [
             { unit: fighter.id, system: S('a'), planet: null },
             { unit: infantry.id, system: S('a'), planet: PLANET_A },
-            { unit: passenger.id, system: S('b'), planet: null },
+            { unit: passenger.id, system: S('b'), planet: planetId('p-b') },
           ],
         },
       ],
@@ -284,9 +285,15 @@ describe('Transport (RR 83) und Grenzen (RR 28, RR 43)', () => {
     const foreign = unit(T.infantry, BLUE);
     const far = unit(T.fighter);
     const state = board(
-      { id: 'a', q: 0, units: [carrier, cruiser, foreign, ...units(5, T.fighter)] },
+      {
+        id: 'a',
+        q: 0,
+        units: [carrier, unit(T.carrier), cruiser, ...units(5, T.fighter)],
+        planet: [foreign],
+        planetController: BLUE,
+      },
       { id: 'b', q: 1 },
-      { id: 'z', q: 5, units: [far] },
+      { id: 'z', q: 5, units: [unit(T.carrier), far] },
     );
     const fighters = state.systems.a?.spaceUnits.filter((u) => u.type === T.fighter) ?? [];
     const attempt = (cargo: readonly Unit[]) =>
@@ -304,8 +311,8 @@ describe('Transport (RR 83) und Grenzen (RR 28, RR 43)', () => {
     const waiting = unit(T.infantry);
     const state = board(
       { id: 'a', q: 0, units: [unit(T.cruiser)] },
-      { id: 'b', q: 1, units: [stranded], tokens: [RED], anomaly: 'gravityRift' },
-      { id: 'c', q: 2, units: [waiting] },
+      { id: 'b', q: 1, planet: [stranded], tokens: [RED], anomaly: 'gravityRift' },
+      { id: 'c', q: 2, planet: [waiting] },
     );
     const withCarrier: GameState = {
       ...state,
@@ -330,17 +337,33 @@ describe('Transport (RR 83) und Grenzen (RR 28, RR 43)', () => {
   });
 
   it('RR 28: nicht mehr Nicht-Jäger-Schiffe im aktiven System als Marker im Flottenpool', () => {
-    const ships = units(2, T.cruiser);
+    const [first, second] = units(2, T.cruiser) as [Unit, Unit];
     const state = updatePlayer(
-      board({ id: 'a', q: 0, units: ships }, { id: 'b', q: 1 }),
+      board(
+        { id: 'a', q: 0, units: [first] },
+        { id: 'b', q: 1 },
+        { id: 'c', q: 2, units: [second] },
+      ),
       RED,
       (p) => ({ ...p, commandPools: { ...p.commandPools, fleet: 1 } }),
     );
-    const [first, second] = ships as [Unit, Unit];
     expect(codeOf(tryMove(state, 'b', order(first, ['b']), order(second, ['b'])))).toBe(
       'move.fleetLimit',
     );
     expect(codeOf(tryMove(state, 'b', order(first, ['b'])))).toBe('ok');
+  });
+
+  it('RR 28.3: sinkt der Flottenpool, gehen überzählige Schiffe verloren, günstigste zuerst', () => {
+    const dreadnought = unit(T.battleship);
+    const cruiser = unit(T.cruiser);
+    const state = updatePlayer(
+      board({ id: 'a', q: 0, units: [dreadnought, cruiser] }, { id: 'b', q: 1 }),
+      RED,
+      (p) => ({ ...p, commandPools: { ...p.commandPools, fleet: 1 } }),
+    );
+    const { state: after, events } = step(state, activate('b'));
+    expect(events).toContainEqual({ type: 'UnitsDestroyed', system: S('a'), units: [cruiser.id] });
+    expect(after.systems.a?.spaceUnits).toEqual([dreadnought]);
   });
 
   it('RR 43.3: nicht mehr Jäger und Bodentruppen als Kapazität im aktiven System', () => {
@@ -350,6 +373,37 @@ describe('Transport (RR 83) und Grenzen (RR 28, RR 43)', () => {
       { id: 'b', q: 1, units: units(2, T.fighter) },
     );
     expect(codeOf(tryMove(state, 'b', order(cruiser, ['b'])))).toBe('move.capacity');
+  });
+});
+
+describe('Zurückgelassene Fracht (RR 43.3)', () => {
+  it('RR 43.3: Jäger ohne Kapazität im Herkunftssystem werden zerstört', () => {
+    const carrier = unit(T.carrier);
+    const fighters = units(2, T.fighter);
+    const state = board({ id: 'a', q: 0, units: [carrier, ...fighters] }, { id: 'b', q: 1 });
+    const activated = run(state, [activate('b')]);
+    const { state: after, events } = step(activated, moves(order(carrier, ['b'])));
+    expect(events).toContainEqual({
+      type: 'UnitsDestroyed',
+      system: S('a'),
+      units: fighters.map((fighter) => fighter.id),
+    });
+    expect(after.systems.a?.spaceUnits).toEqual([]);
+  });
+});
+
+describe('Zurückgelassene Fracht mit Hangar (RR 43.3)', () => {
+  it('RR 43.3: ein Hangar hält Jäger, Bodentruppen ohne Träger gehen verloren', () => {
+    const carrier = unit(T.carrier);
+    const fighters = units(3, T.fighter);
+    const infantry = unit(T.infantry);
+    const state = board(
+      { id: 'a', q: 0, units: [carrier, ...fighters, infantry], planet: [unit(T.dock)] },
+      { id: 'b', q: 1 },
+    );
+    const activated = run(state, [activate('b')]);
+    const { state: after } = step(activated, moves(order(carrier, ['b'])));
+    expect(after.systems.a?.spaceUnits.map((u) => u.id)).toEqual(fighters.map((f) => f.id));
   });
 });
 

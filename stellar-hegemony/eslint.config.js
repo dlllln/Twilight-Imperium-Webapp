@@ -76,6 +76,15 @@ export default tseslint.config(
     },
   },
   {
+    files: ['packages/bots/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        forbid('@stellar/application', '@stellar/infrastructure', '@stellar/content'),
+      ],
+    },
+  },
+  {
     files: ['**/*.js', '**/*.config.ts'],
     ...tseslint.configs.disableTypeChecked,
   },

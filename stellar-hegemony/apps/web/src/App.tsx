@@ -8,6 +8,7 @@ import { Toolbar } from './components/Toolbar.tsx';
 import { useGameStore } from './game-store.ts';
 import { handleShortcut } from './keyboard.ts';
 import { useGalaxyStore } from './store.ts';
+import { useBotDriver } from './use-bot-driver.ts';
 
 /** Während einer Partie bleibt die Galaxie fest; nur Ansichtstasten wirken. */
 function onKey(event: KeyboardEvent): void {
@@ -20,6 +21,7 @@ function onKey(event: KeyboardEvent): void {
 export function App(): ReactElement {
   const language = useGalaxyStore((state) => state.language);
   const game = useGameStore((state) => state.game);
+  useBotDriver();
 
   useEffect(() => {
     useGalaxyStore.getState().generate();

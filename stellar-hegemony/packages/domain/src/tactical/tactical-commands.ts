@@ -7,6 +7,8 @@ import { evolveGame, type GameEvent } from '../game/game-events.ts';
 import type { TacticalStep } from '../combat/combat-state.ts';
 import { reachNext } from './tactical-steps.ts';
 import { progressTactical } from '../combat/tactical-flow.ts';
+import { excessCargo } from '../combat/space-combat.ts';
+import { chain } from '../game/event-chain.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
 import { type RandomPort, rollDie } from '../ports/random-port.ts';
 import {
@@ -136,6 +138,20 @@ function destroyedEvents(
   return units.length > 0 ? [{ type: 'UnitsDestroyed', system: context.active, units }] : [];
 }
 
+/** RR 43.3: Was ohne Träger im Herkunftssystem zurückbleibt und keinen Platz hat, geht verloren. */
+const leftBehind = (
+  context: MoveContext,
+  moves: readonly ValidatedMove[],
+  state: GameState,
+): readonly GameEvent[] =>
+  chain(
+    state,
+    [...new Set(moves.map((move) => move.from))].map(
+      (origin) => (current: GameState) =>
+        excessCargo(current, origin, context.player, context.catalog),
+    ),
+  );
+
 function movementEvents(
   context: MoveContext,
   moves: readonly ValidatedMove[],
@@ -147,7 +163,9 @@ function movementEvents(
   const limits = limitsCheck(context, moved, decision.content);
   if (!limits.ok) return limits;
   const rolls = moves.flatMap((move) => riftRollsFor(context, move, decision.random));
-  const resolved = [...rolls, moved, ...destroyedEvents(context, moves, rolls)];
+  const flown = [...rolls, moved, ...destroyedEvents(context, moves, rolls)];
+  const landed = flown.reduce(evolveGame, context.state);
+  const resolved = [...flown, ...leftBehind(context, moves, landed)];
   const after = resolved.reduce(evolveGame, context.state);
   const reached = reachNext(after, 'movement', decision.content);
   return ok([...resolved, reached, ...progressTactical(evolveGame(after, reached), decision)]);

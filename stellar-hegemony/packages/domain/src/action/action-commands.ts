@@ -1,4 +1,5 @@
 import type { Command, CommandHandler, DecisionContext } from '../eventsourcing/command.ts';
+import { freeSecondary } from '../faction/faction-ability.ts';
 import type { GameEvent } from '../game/game-events.ts';
 import { clockwiseFrom, findPlayer, type GameState, strategyCardsOf } from '../game/game-state.ts';
 import {
@@ -141,7 +142,9 @@ function afterSecondary(state: GameState, player: PlayerId): readonly GameEvent[
 
 /** RR 46.5: Die Sekundärfähigkeit kostet meist einen Marker aus dem Strategiepool. */
 const paysStrategyToken = (state: GameState, player: PlayerId, card: StrategyCardDefinition) =>
-  card.secondaryCostsStrategyToken && state.actionPhase?.secondary?.free.includes(player) !== true;
+  card.secondaryCostsStrategyToken &&
+  state.actionPhase?.secondary?.free.includes(player) !== true &&
+  !freeSecondary(state, player, card.mechanic);
 
 function secondaryCostCheck(
   state: GameState,

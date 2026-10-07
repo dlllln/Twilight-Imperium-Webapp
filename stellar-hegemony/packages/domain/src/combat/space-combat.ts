@@ -141,22 +141,36 @@ export function retreatEvents(
   return [{ type: 'ShipsRetreated', player: plan.player, from: system, to: plan.to, units, token }];
 }
 
-/** Fracht, die bei fehlender Kapazität verloren gehen kann: Jäger vor Bodentruppen. */
-function cargoOf(units: readonly Unit[], winner: PlayerId, catalog: Catalog): readonly Unit[] {
-  const cargo = units.filter((unit) => {
-    const definition = catalog.find(unit.type, unit.owner);
-    if (unit.owner !== winner || definition === undefined) return false;
-    return definition.isFighter || isGroundForce(definition);
-  });
-  const isFighter = (unit: Unit) => catalog.find(unit.type, unit.owner)?.isFighter === true;
-  return [...cargo].sort((a, b) => Number(isFighter(b)) - Number(isFighter(a)));
+interface Room {
+  readonly ships: number;
+  readonly hangars: number;
 }
 
-/** RR 63.10: Überzählige Jäger und Bodentruppen des Gewinners gehen verloren (Jäger zuerst). */
-function excessCargo(
+/**
+ * Was keinen Platz hat: Bodentruppen belegen zuerst die Schiffskapazität, Jäger danach
+ * Hangars und den Rest. Verloren gehen also zuerst Jäger, dann Bodentruppen.
+ */
+function overflowing(units: readonly Unit[], room: Room, catalog: Catalog): readonly Unit[] {
+  const definition = (unit: Unit) => catalog.find(unit.type, unit.owner);
+  const ground = units.filter((unit) => {
+    const found = definition(unit);
+    return found !== undefined && isGroundForce(found);
+  });
+  const fighters = units.filter((unit) => definition(unit)?.isFighter === true);
+  const keptGround = Math.min(ground.length, room.ships);
+  const keptFighters = room.hangars + room.ships - keptGround;
+  const lost = (all: readonly Unit[], kept: number) => all.slice(0, Math.max(0, all.length - kept));
+  return [...lost(fighters, keptFighters), ...lost(ground, keptGround)];
+}
+
+/**
+ * RR 43.3/63.10: Überzählige Jäger und Bodentruppen eines Spielers im Weltraum gehen
+ * verloren, etwa nach dem Kampf oder wenn Träger das System verlassen.
+ */
+export function excessCargo(
   state: GameState,
   system: SystemId,
-  winner: PlayerId,
+  player: PlayerId,
   catalog: Catalog,
 ): readonly GameEvent[] {
   const systemState = state.systems[system];
@@ -164,10 +178,13 @@ function excessCargo(
   const planets = systemState.planetIds.flatMap((id) => state.planets[id] ?? []);
   const inspected = StarSystem.inspect(systemState, planets, catalog);
   if (!inspected.ok) return [];
-  const overflow = inspected.value.capacityUsage(winner) - inspected.value.capacity(winner);
-  if (overflow <= 0) return [];
-  const lost = cargoOf(systemState.spaceUnits, winner, catalog).slice(0, overflow);
-  return [{ type: 'UnitsDestroyed', system, units: lost.map((unit) => unit.id) }];
+  const { value } = inspected;
+  const room = { ships: value.shipCapacity(player), hangars: value.hangarSpace(player) };
+  const own = systemState.spaceUnits.filter((unit) => unit.owner === player);
+  const lost = overflowing(own, room, catalog);
+  return lost.length === 0
+    ? []
+    : [{ type: 'UnitsDestroyed', system, units: lost.map((u) => u.id) }];
 }
 
 /** RR 63.9: Der Kampf endet, sobald höchstens ein Spieler noch Schiffe hat. */

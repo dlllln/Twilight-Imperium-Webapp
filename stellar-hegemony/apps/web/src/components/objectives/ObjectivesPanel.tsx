@@ -1,6 +1,6 @@
 import { findPlayer, type GameState, type PlayerId, scoringOptions } from '@stellar/domain';
 import type { ReactElement } from 'react';
-import { currentActor } from '../../local-game.ts';
+import { useHumanActor } from '../../game-store.ts';
 import { content } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
@@ -80,7 +80,7 @@ function SecretList({ game, player }: { readonly game: GameState; readonly playe
 /** Seitenleiste: Siegpunkte, öffentliche Aufträge und die eigenen geheimen. */
 export function ObjectivesPanel({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
-  const actor = currentActor(game);
+  const actor = useHumanActor(game);
   return (
     <section className="game-section objectives-panel">
       <h2>{t('objectives')}</h2>

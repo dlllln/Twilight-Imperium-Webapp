@@ -4,26 +4,42 @@ import { CommandSheet } from '../player/command-sheet.ts';
 import { productionEvents } from '../production/production.ts';
 import { type DomainError, domainError } from '../shared/domain-error.ts';
 import type { SystemId } from '../shared/ids.ts';
-import { andThen, err, map, type Result } from '../shared/result.ts';
+import { andThen, err, map, ok, type Result } from '../shared/result.ts';
 import { choiceOf, type EffectInput, type StrategyEffect } from './strategy-effect.ts';
 
 type Events = Result<readonly GameEvent[], DomainError>;
 
+const tokensOnBoard = (input: EffectInput): boolean =>
+  Object.values(input.state.systems).some((system) => system.commandTokens.includes(input.player));
+
+/** RR 27.11: Liegt kein eigener Marker auf dem Plan, wird nur umverteilt. */
+function returnedToken(input: EffectInput, system: SystemId | null): Result<boolean, DomainError> {
+  const hasToken =
+    system !== null && input.state.systems[system]?.commandTokens.includes(input.player) === true;
+  if (hasToken || (system === null && !tokensOnBoard(input))) return ok(hasToken);
+  return err(domainError('warfare.noToken', 'Dort liegt kein eigener Marker'));
+}
+
 /** Primär (RR 49.1/49.2): einen eigenen Marker vom Plan auf die Tafel nehmen, dann neu verteilen. */
 function primary(input: EffectInput): Events {
   const { state, player } = input;
-  return andThen(choiceOf(input, 'warfare'), ({ system, pools }) => {
-    const hasToken =
-      system !== null && state.systems[system]?.commandTokens.includes(player) === true;
-    if (system === null || !hasToken)
-      return err(domainError('warfare.noToken', 'Dort liegt kein eigener Marker'));
-    const current = findPlayer(state, player)?.commandPools ?? pools;
-    const sheet = andThen(CommandSheet.of(current), (s) => s.gain('tactic', 1).redistribute(pools));
-    return map(sheet, (): readonly GameEvent[] => [
-      { type: 'CommandTokenReturned', player, system },
-      { type: 'CommandTokensRedistributed', player, pools },
-    ]);
-  });
+  return andThen(choiceOf(input, 'warfare'), ({ system, pools }) =>
+    andThen(returnedToken(input, system), (returned) => {
+      const current = findPlayer(state, player)?.commandPools ?? pools;
+      const gained = returned ? 1 : 0;
+      const sheet = andThen(CommandSheet.of(current), (s) =>
+        s.gain('tactic', gained).redistribute(pools),
+      );
+      const back =
+        returned && system !== null
+          ? [{ type: 'CommandTokenReturned', player, system } as const]
+          : [];
+      return map(sheet, (): readonly GameEvent[] => [
+        ...back,
+        { type: 'CommandTokensRedistributed', player, pools },
+      ]);
+    }),
+  );
 }
 
 /** Heimatsystem laut Fraktion (Information Expert: die Fraktionsdaten kennen es). */

@@ -6,6 +6,7 @@ import type {
   PlayerId,
   TechnologyId,
 } from '../shared/ids.ts';
+import type { FactionRules } from '../faction/faction-ability.ts';
 import type { PoolCounts } from './command-sheet.ts';
 
 export type PlayerColor =
@@ -34,4 +35,6 @@ export interface PlayerState {
   readonly actionCards: readonly ActionCardId[];
   /** Mitgezählt für Aufträge, die sich auf diese Runde beziehen. */
   readonly roundStats: RoundStats;
+  /** Abweichungen der Fraktion von den allgemeinen Regeln (ab Spielstart). */
+  readonly factionRules: FactionRules;
 }

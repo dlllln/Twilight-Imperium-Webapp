@@ -1,0 +1,17 @@
+{
+  "name": "@stellar/bots",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "KI-Spieler: wählen gültige Commands über dieselbe Domain wie Menschen",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@stellar/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@stellar/content": "workspace:*",
+    "@stellar/infrastructure": "workspace:*"
+  }
+}

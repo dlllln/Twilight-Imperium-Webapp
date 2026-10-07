@@ -1301,3 +1301,37 @@ input[type='checkbox'] {
   background: rgba(217, 180, 90, 0.08);
   font-size: 12px;
 }
+
+.factions-panel summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.factions-panel summary h2 {
+  display: inline;
+}
+
+.factions-panel > ul,
+.faction-abilities {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.faction-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.faction-abilities li {
+  display: grid;
+  gap: 2px;
+  padding: 4px 6px;
+  border-left: 3px solid var(--gold);
+  background: rgba(217, 180, 90, 0.08);
+  font-size: 12px;
+}

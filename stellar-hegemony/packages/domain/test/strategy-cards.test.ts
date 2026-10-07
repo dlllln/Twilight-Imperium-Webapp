@@ -101,6 +101,38 @@ describe('Infrastruktur (RR 39)', () => {
     );
   });
 
+  it('RR 27.11: ohne eigenen Planeten bleibt Bauen ohne Wirkung, die Karte ist genutzt', () => {
+    const state = actionPhaseGame();
+    const planets = Object.fromEntries(
+      Object.entries(state.planets).map(([id, planet]) => [
+        id,
+        planet.controller === RED ? { ...planet, controller: null } : planet,
+      ]),
+    );
+    const { state: after, events } = step({ ...state, planets }, act(4, construction([])));
+    expect(events.map((event) => event.type)).toEqual([
+      'StrategicActionPerformed',
+      'StructuresPlaced',
+    ]);
+    expect(after.strategyCards[CARD(4)]?.exhausted).toBe(true);
+  });
+
+  it('RR 27.11: passt kein Gebäude mehr auf eigene Planeten, bleibt Bauen ohne Wirkung', () => {
+    const state = actionPhaseGame();
+    const full = {
+      ...state,
+      planets: {
+        ...state.planets,
+        [RED_PRIME]: {
+          ...(state.planets[RED_PRIME] as GameState['planets'][string]),
+          units: [unit(T.dock), unit(T.battery), unit(T.battery)],
+        },
+      },
+    };
+    expect(codeOf(full, act(4, construction([])))).toBe('ok');
+    expect(codeOf(state, act(4, construction([])))).toBe('construction.count');
+  });
+
   it('RR 39.4: Sekundär ein Gebäude im System, dorthin ein Marker aus dem Nachschub', () => {
     const acted = run(actionPhaseGame(), [act(4, construction([place(T.battery)]))]);
     const home = homeOf(acted, 'blue');
@@ -213,6 +245,18 @@ describe('Kriegsführung (RR 49)', () => {
     expect(codeOf(state, act(6, warfare(homeOf(state, 'red'), pools)))).toBe(
       'commandSheet.totalChanged',
     );
+  });
+
+  it('RR 27.11: ohne eigenen Marker auf dem Plan wird nur umverteilt', () => {
+    const state = holding(6);
+    const { tactic, fleet, strategy } = playerOf(state, RED)?.commandPools as PoolCounts;
+    const pools = { tactic: tactic - 1, fleet: fleet + 1, strategy };
+    const { state: after, events } = step(state, act(6, warfare(null, pools)));
+    expect(events.map((event) => event.type)).toEqual([
+      'StrategicActionPerformed',
+      'CommandTokensRedistributed',
+    ]);
+    expect(playerOf(after, RED)?.commandPools).toEqual(pools);
   });
 
   it('RR 49.3: Sekundär produziert im eigenen Heimatsystem', () => {

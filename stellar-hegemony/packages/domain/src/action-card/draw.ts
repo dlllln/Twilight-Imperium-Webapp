@@ -4,6 +4,7 @@ import type { GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
 import { shuffle } from '../ports/random-port.ts';
 import type { PlayerId } from '../shared/ids.ts';
+import { factionRule } from '../faction/faction-ability.ts';
 
 /** RR 3.3: oberste Karten ziehen; reicht der Stapel nicht, wird die Ablage untergemischt. */
 export function drawEvents(
@@ -26,16 +27,20 @@ export function drawEvents(
 export const drawForAll = (
   state: GameState,
   players: readonly PlayerId[],
-  count: number,
+  count: (player: PlayerId) => number,
   random: DecisionContext['random'],
 ): readonly GameEvent[] =>
   chain(
     state,
-    players.map((player) => (current: GameState) => drawEvents(current, player, count, random)),
+    players.map(
+      (player) => (current: GameState) => drawEvents(current, player, count(player), random),
+    ),
   );
 
 /** RR 3.4: so viele Karten muss der Spieler über dem Handkartenlimit ablegen. */
 export function excessActionCards(state: GameState, player: PlayerId): number {
   const hand = state.players.find((p) => p.id === player)?.actionCards.length ?? 0;
-  return Math.max(0, hand - state.config.rules.actionCardHandLimit);
+  const limit =
+    state.config.rules.actionCardHandLimit + factionRule(state, player, 'actionCardHandLimit');
+  return Math.max(0, hand - limit);
 }

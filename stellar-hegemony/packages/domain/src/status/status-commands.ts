@@ -5,6 +5,7 @@ import { findPlayer, type GameState } from '../game/game-state.ts';
 import { StarSystem } from '../galaxy/star-system.ts';
 import { pickQueueFor } from '../phases/start-game.ts';
 import { agendaPhaseEvents } from '../agenda/agenda-flow.ts';
+import { factionRule } from '../faction/faction-ability.ts';
 import { CommandSheet, type PoolCounts } from '../player/command-sheet.ts';
 import {
   type Check,
@@ -45,6 +46,13 @@ function winnerByPoints(state: GameState): PlayerId | null {
   );
 }
 
+/** Fraktionen mit Einkommen erhalten in der Statusphase Handelswaren. */
+const statusIncome = (state: GameState, order: readonly PlayerId[]): readonly GameEvent[] =>
+  order.flatMap((player) => {
+    const amount = factionRule(state, player, 'statusTradeGoods');
+    return amount > 0 ? [{ type: 'TradeGoodsGained', player, amount } as const] : [];
+  });
+
 /** RR 73.2–73.4: Auftrag aufdecken (oder Spielende), Aktionskarten ziehen, Marker vom Plan. */
 function afterScoring(state: GameState, context: DecisionContext): readonly GameEvent[] {
   const next = state.objectives.public.find((slot) => !slot.revealed);
@@ -53,9 +61,11 @@ function afterScoring(state: GameState, context: DecisionContext): readonly Game
     return winner === null ? [] : [{ type: 'GameWon', player: winner }];
   }
   const order = state.statusPhase?.order ?? [];
-  const count = state.config.rules.statusPhaseActionCards;
+  const count = (player: PlayerId) =>
+    state.config.rules.statusPhaseActionCards + factionRule(state, player, 'statusActionCards');
   return [
     { type: 'PublicObjectiveRevealed', objective: next.id },
+    ...statusIncome(state, order),
     ...drawForAll(state, order, count, context.random),
     { type: 'CommandTokensCleared' },
     { type: 'TokenStepReached' },
@@ -120,7 +130,9 @@ function allocation(
 ): Result<GameEvent, DomainError> {
   const player = findPlayer(state, command.issuedBy);
   if (player === undefined) return err(domainError('status.unknownPlayer', 'Unbekannter Spieler'));
-  const gained = Math.min(state.config.rules.statusPhaseCommandTokens, player.reinforcementTokens);
+  const tokens =
+    state.config.rules.statusPhaseCommandTokens + player.factionRules.statusCommandTokens;
+  const gained = Math.min(tokens, player.reinforcementTokens);
   return andThen(CommandSheet.of(player.commandPools), (sheet) =>
     map(sheet.gain('tactic', gained).redistribute(command.pools), (next) => ({
       type: 'CommandTokensAllocated',

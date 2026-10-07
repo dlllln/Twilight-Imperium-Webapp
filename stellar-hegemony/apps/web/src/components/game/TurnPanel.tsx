@@ -11,8 +11,7 @@ import {
   strategyEffectFor,
 } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
-import { useGameStore } from '../../game-store.ts';
-import { currentActor } from '../../local-game.ts';
+import { useBotTurn, useGameStore, useHumanActor } from '../../game-store.ts';
 import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { GameOverNotice, StatusTurn } from '../objectives/StatusTurn.tsx';
@@ -22,6 +21,7 @@ import { DiscardForm } from '../cards/DiscardForm.tsx';
 import { ReactionPrompt } from '../cards/ReactionPrompt.tsx';
 import { cardText } from './card-text.ts';
 import { ChoiceForm } from './ChoiceForm.tsx';
+import { PlayerTag } from './PlayerTag.tsx';
 import { ActivationBlock, TacticalTurn } from './TacticalPanel.tsx';
 import { TransactionForm, TransactionReply } from './TransactionForm.tsx';
 
@@ -177,11 +177,25 @@ const PHASE_TITLE = {
 const hasTurnPanel = (game: GameState, actor: PlayerId): boolean =>
   game.phase !== 'strategy' || interruption(game, actor) !== null;
 
+/** Während die KI zieht, gibt es nichts zu entscheiden, nur einen Hinweis. */
+function BotNotice({ game, player }: TurnProps): ReactElement {
+  const t = useT();
+  return (
+    <section className="game-section bot-turn" aria-live="polite">
+      <p>
+        <PlayerTag game={game} id={player} /> {t('botThinking')}
+      </p>
+    </section>
+  );
+}
+
 /** Was der Spieler am Bildschirm gerade tun kann; nach dem Sieg nur noch das Ergebnis. */
 export function TurnPanel({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
-  const actor = currentActor(game);
+  const actor = useHumanActor(game);
+  const bot = useBotTurn(game);
   if (game.phase === 'gameOver') return <GameOverNotice game={game} />;
+  if (bot !== null) return <BotNotice game={game} player={bot} />;
   if (actor === null || !hasTurnPanel(game, actor)) return null;
   return (
     <section className="game-section">

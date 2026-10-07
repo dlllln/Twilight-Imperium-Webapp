@@ -7,6 +7,7 @@ import {
   type UnitStack,
   type UnitTypeId,
 } from '@stellar/domain';
+import { abilitiesOf } from './faction-abilities.ts';
 import type { LocalizedText } from './localized.ts';
 import { GALAXY_TILES, homeTile, p, slug } from './systems.ts';
 import { UNIT_TYPES } from './units.ts';
@@ -103,6 +104,7 @@ export const FACTIONS: readonly FactionDefinition[] = SEEDS.map((seed) => ({
   startingForces: { space: seed.space, planets: seed.planets },
   commodityLimit: seed.commodityLimit,
   startingTechnologies: seed.technologies.map(technologyId),
+  abilities: abilitiesOf(seed.id),
 }));
 
 export const FACTION_NAMES: Readonly<Record<string, LocalizedText>> = Object.fromEntries(

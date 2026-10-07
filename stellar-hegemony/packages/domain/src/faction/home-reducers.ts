@@ -1,5 +1,5 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
-import type { GameState } from '../game/game-state.ts';
+import { type GameState, updatePlayer } from '../game/game-state.ts';
 import type { PlanetState } from '../planet/planet-state.ts';
 import type { HomeEvent, HomeSystemPlaced } from './home-events.ts';
 
@@ -26,4 +26,6 @@ function placeHomeSystem(state: GameState, event: HomeSystemPlaced): GameState {
 
 export const homeReducers: ReducerMap<GameState, HomeEvent> = {
   HomeSystemPlaced: placeHomeSystem,
+  FactionAbilitiesGranted: (state, event) =>
+    updatePlayer(state, event.player, (player) => ({ ...player, factionRules: event.rules })),
 };

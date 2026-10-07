@@ -1,0 +1,127 @@
+import { describe, expect, it } from 'vitest';
+import {
+  currentActor,
+  decideGameCommand,
+  type GameState,
+  type PlayerId,
+  playerId,
+  updatePlayer,
+} from '@stellar/domain';
+import {
+  botView,
+  gainSplit,
+  heuristicBot,
+  pickStrategyCard,
+  planPayment,
+  preferredOutcomes,
+  readyPlanets,
+  splitGain,
+} from '../src/index.ts';
+import { apply, botGame, contextFor, playBots } from './bot-game.ts';
+
+const SEED = 3;
+const P1 = playerId('p1');
+
+const viewOf = (state: GameState, player: PlayerId) =>
+  botView(state, player, contextFor(state, SEED));
+
+describe('KI-Bots: ganze Partien', () => {
+  it.each([3, 4, 6])(
+    '%i Bots spielen eine Partie bis zum Ende, jeder Zug ist regelkonform',
+    (n) => {
+      const start = botGame(n, SEED);
+      const run = playBots(start, SEED, 4000);
+      expect(run.stuck).toBe(false);
+      expect(run.state.phase).toBe('gameOver');
+      expect(run.state.winner).not.toBeNull();
+      expect(run.state.round).toBeGreaterThan(3);
+      const kinds = new Set(run.commands.map((command) => command.type));
+      for (const kind of ['ActivateSystem', 'MoveShips', 'ProduceUnits', 'CastVotes'])
+        expect(kinds.has(kind as never)).toBe(true);
+    },
+    60_000,
+  );
+
+  it('der Bot schlägt nur Commands vor, die die Domain annimmt', () => {
+    let state = botGame(3, SEED);
+    for (let turn = 0; turn < 150; turn += 1) {
+      const actor = currentActor(state);
+      if (actor === null) break;
+      const command = heuristicBot.nextCommand(state, actor, contextFor(state, SEED));
+      if (command === null) throw new Error('kein Zug');
+      expect(decideGameCommand(state, command, contextFor(state, SEED)).ok).toBe(true);
+      state = apply(state, command, SEED);
+    }
+    expect(state.phase).not.toBe('setup');
+  });
+
+  it('wer nicht an der Reihe ist, bekommt keinen Vorschlag', () => {
+    const picking = (s: GameState) =>
+      s.phase === 'strategy' && s.players.every((player) => player.secretChoice === null);
+    const state = playBots(botGame(3, SEED), SEED, 100, picking).state;
+    const waiting = state.players.find((player) => player.id !== currentActor(state));
+    expect(waiting).toBeDefined();
+    expect(heuristicBot.nextCommand(state, waiting?.id ?? P1, contextFor(state, SEED))).toBeNull();
+  });
+});
+
+describe('KI-Bots: Planer', () => {
+  it('RR 76: die Strategiekarte mit Vorliebe und Handelswaren zuerst', () => {
+    const game = playBots(botGame(3, SEED), SEED, 100, (s) => s.phase === 'strategy').state;
+    const picker = game.pickQueue[0] ?? P1;
+    const [first] = pickStrategyCard(viewOf(game, picker));
+    expect(first?.type).toBe('PickStrategyCard');
+    expect(pickStrategyCard(viewOf(game, game.players[1]?.id ?? P1))).toEqual([]);
+  });
+
+  it('RR 73.5: neue Marker füllen zuerst Flotte und Strategie auf', () => {
+    expect(gainSplit({ tactic: 3, fleet: 2, strategy: 1 }, 2)).toEqual({
+      tactic: 0,
+      fleet: 1,
+      strategy: 1,
+    });
+    expect(gainSplit({ tactic: 3, fleet: 3, strategy: 2 }, 2)).toEqual({
+      tactic: 2,
+      fleet: 0,
+      strategy: 0,
+    });
+    expect(splitGain({ tactic: 3, fleet: 2, strategy: 2 }, 1)).toEqual({
+      tactic: 3,
+      fleet: 3,
+      strategy: 2,
+    });
+  });
+
+  it('RR 22.3: Bezahlung erst mit Planeten, den Rest mit Handelswaren; sonst null', () => {
+    const state = updatePlayer(botGame(3, SEED), P1, (p) => ({ ...p, tradeGoods: 2 }));
+    const view = viewOf(state, P1);
+    const total = readyPlanets(view, 'resources').reduce((sum, p) => sum + p.value, 0);
+    expect(planPayment(view, 'resources', 0)).toEqual({ planets: [], tradeGoods: 0 });
+    expect(planPayment(view, 'resources', total + 2)?.tradeGoods).toBe(2);
+    expect(planPayment(view, 'resources', total + 3)).toBeNull();
+  });
+
+  it('RR 2: Bots stimmen für sich selbst, eigene Planeten, sonst dafür', () => {
+    const state = botGame(3, SEED);
+    const view = viewOf(state, P1);
+    const own = Object.values(state.planets).find((planet) => planet.controller === P1)?.id ?? '';
+    expect(preferredOutcomes(view, ['against', 'for', 'p2', own, 'p1'])).toEqual([
+      own,
+      'p1',
+      'for',
+      'against',
+      'p2',
+    ]);
+  });
+
+  it('RR 27.21: zu Beginn verliert niemand Einheiten an Flottenlimit oder Kapazität', () => {
+    const state = botGame(6, SEED);
+    const ships = state.players.map(
+      (player) =>
+        Object.values(state.systems)
+          .flatMap((system) => system.spaceUnits)
+          .filter((unit) => unit.owner === player.id).length,
+    );
+    expect(ships.every((count) => count > 0)).toBe(true);
+  });
+});

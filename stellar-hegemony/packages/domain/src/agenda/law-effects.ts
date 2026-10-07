@@ -2,6 +2,7 @@ import { type GameState, updatePlayer } from '../game/game-state.ts';
 import type { PlayerId } from '../shared/ids.ts';
 import type { LawEffect } from './agenda-definition.ts';
 import type { EnactedLaw } from './agenda-state.ts';
+import { factionRule } from '../faction/faction-ability.ts';
 
 /** +1 beim Beschließen, −1 beim Aufheben: jede Gesetzeswirkung ist umkehrbar. */
 type Direction = 1 | -1;
@@ -56,8 +57,11 @@ const applierOf = (effect: LawEffect) => APPLIERS[effect.kind] as LawApplier<Law
 export const applyLaw = (state: GameState, law: EnactedLaw, direction: Direction): GameState =>
   applierOf(law.effect)(state, law.effect, law.owner, direction);
 
-/** Zusätzliche Stimmen aus Gesetzen, die der Spieler besitzt. */
+/** Zusätzliche Stimmen aus Gesetzen, die der Spieler besitzt, und aus seiner Fraktion. */
 export const lawVotes = (state: GameState, player: PlayerId): number =>
   state.laws
     .filter((law) => law.owner === player)
-    .reduce((sum, law) => sum + (law.effect.kind === 'ownerVotes' ? law.effect.amount : 0), 0);
+    .reduce(
+      (sum, law) => sum + (law.effect.kind === 'ownerVotes' ? law.effect.amount : 0),
+      factionRule(state, player, 'extraVotes'),
+    );

@@ -26,6 +26,27 @@ function PlayerCountSelect({ label }: { readonly label: string }): ReactElement 
   );
 }
 
+/** KI-Gegner übernehmen die letzten Plätze; der erste Platz bleibt immer menschlich. */
+function BotCountSelect({ label }: { readonly label: string }): ReactElement {
+  const { playerCount, botCount, setBotCount } = useGalaxyStore();
+  return (
+    <label>
+      {label}
+      <select
+        value={botCount}
+        onChange={(event) => setBotCount(Number(event.target.value))}
+        aria-label={label}
+      >
+        {Array.from({ length: playerCount }, (_, count) => (
+          <option key={count} value={count}>
+            {count}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 function LanguageSwitch(): ReactElement {
   const { language, setLanguage } = useGalaxyStore();
   return (
@@ -46,9 +67,10 @@ function LanguageSwitch(): ReactElement {
 
 function GameButton({ t }: { readonly t: (key: MessageKey) => string }): ReactElement {
   const { game, start, leave } = useGameStore();
-  const { layout, playerCount } = useGalaxyStore();
+  const { layout, playerCount, botCount } = useGalaxyStore();
+  const begin = () => start(layout, playerCount, undefined, botCount);
   return game === null ? (
-    <button type="button" className="primary" onClick={() => start(layout, playerCount)}>
+    <button type="button" className="primary" onClick={begin}>
       {t('startGame')}
     </button>
   ) : (
@@ -69,6 +91,7 @@ export function Toolbar(): ReactElement {
         <span>{t(playing ? 'subtitleGame' : 'subtitle')}</span>
       </div>
       {!playing && <PlayerCountSelect label={t('players')} />}
+      {!playing && <BotCountSelect label={t('botOpponents')} />}
       {!playing && (
         <button type="button" onClick={() => generate()}>
           {t('newGalaxy')}

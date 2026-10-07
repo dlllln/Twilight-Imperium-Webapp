@@ -31,6 +31,8 @@ const ZOOM_MAX = 3;
 export interface GalaxyStore {
   readonly language: Language;
   readonly playerCount: number;
+  /** Wie viele Plätze die KI übernimmt (höchstens alle außer dem Gastgeber). */
+  readonly botCount: number;
   readonly seed: number;
   readonly layout: MapLayout;
   readonly error: DomainError | null;
@@ -38,6 +40,7 @@ export interface GalaxyStore {
   readonly viewport: Viewport;
   readonly setLanguage: (language: Language) => void;
   readonly setPlayerCount: (count: number) => void;
+  readonly setBotCount: (count: number) => void;
   readonly generate: (seed?: number) => void;
   readonly importMap: (mapString: string) => boolean;
   readonly hover: (key: string | null) => void;
@@ -73,7 +76,7 @@ export const nextSeed = (): number => Math.floor(Math.random() * 2 ** 31);
 
 type Set = StoreApi<GalaxyStore>['setState'];
 type Get = StoreApi<GalaxyStore>['getState'];
-type GalaxyActions = Pick<GalaxyStore, 'setPlayerCount' | 'generate' | 'importMap'>;
+type GalaxyActions = Pick<GalaxyStore, 'setPlayerCount' | 'setBotCount' | 'generate' | 'importMap'>;
 type ViewActions = Pick<GalaxyStore, 'setLanguage' | 'hover' | 'zoomBy' | 'panBy' | 'resetView'>;
 
 function importedLayout(mapString: string, fallbackPlayers: number): Partial<GalaxyStore> {
@@ -87,9 +90,10 @@ function importedLayout(mapString: string, fallbackPlayers: number): Partial<Gal
 
 const galaxyActions = (set: Set, get: Get): GalaxyActions => ({
   setPlayerCount: (playerCount) => {
-    set({ playerCount });
+    set({ playerCount, botCount: Math.min(get().botCount, playerCount - 1) });
     get().generate();
   },
+  setBotCount: (botCount) => set({ botCount: clamp(botCount, 0, get().playerCount - 1) }),
   generate: (seed = nextSeed()) => {
     const result = generated(get().playerCount, seed);
     set(result.ok ? { layout: result.value, seed, error: null } : { error: result.error });
@@ -115,6 +119,7 @@ const viewActions = (set: Set): ViewActions => ({
 export const useGalaxyStore = create<GalaxyStore>()((set, get) => ({
   language: 'de',
   playerCount: DEFAULT_PLAYERS,
+  botCount: 0,
   seed: 1,
   layout: [],
   error: null,

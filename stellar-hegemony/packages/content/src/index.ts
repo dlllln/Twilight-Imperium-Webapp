@@ -10,3 +10,4 @@ export * from './technologies.ts';
 export * from './objectives.ts';
 export * from './action-cards.ts';
 export * from './agendas.ts';
+export * from './faction-abilities.ts';

@@ -1,6 +1,7 @@
 import type { DomainEvent } from '../eventsourcing/domain-event.ts';
 import type { PlacedSystem } from '../galaxy/galaxy-events.ts';
 import type { PlanetId, PlayerId } from '../shared/ids.ts';
+import type { FactionRules } from './faction-ability.ts';
 import type { Unit } from '../unit/unit.ts';
 
 export interface PlacedPlanetUnits {
@@ -16,4 +17,10 @@ export interface HomeSystemPlaced extends DomainEvent<'HomeSystemPlaced'> {
   readonly planets: readonly PlacedPlanetUnits[];
 }
 
-export type HomeEvent = HomeSystemPlaced;
+/** Die Fähigkeiten der Fraktion gelten ab Spielstart für diesen Spieler. */
+export interface FactionAbilitiesGranted extends DomainEvent<'FactionAbilitiesGranted'> {
+  readonly player: PlayerId;
+  readonly rules: FactionRules;
+}
+
+export type HomeEvent = HomeSystemPlaced | FactionAbilitiesGranted;

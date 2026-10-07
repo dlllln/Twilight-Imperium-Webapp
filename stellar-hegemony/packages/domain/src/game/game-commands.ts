@@ -53,6 +53,7 @@ import {
   scoreObjectiveHandler,
 } from '../objective/objective-commands.ts';
 import { withVictory } from '../objective/victory.ts';
+import { boardLimitEvents } from '../galaxy/board-limits.ts';
 import {
   type AllocateCommandTokens,
   allocateCommandTokensHandler,
@@ -171,7 +172,9 @@ function withFlow(
   context: DecisionContext,
 ): readonly GameEvent[] {
   const after = events.reduce(evolveGame, state);
-  return [...events, ...progressTactical(after, context)];
+  const progressed = [...events, ...progressTactical(after, context)];
+  const settled = progressed.slice(events.length).reduce(evolveGame, after);
+  return [...progressed, ...boardLimitEvents(settled, context.content)];
 }
 
 /** Ob der Command überhaupt an der Reihe ist: Partie läuft, Phase passt, kein Zeitfenster offen. */
