@@ -2,7 +2,7 @@
   --space-deep: #05060d;
   --space-mid: #0c1022;
   --glass: rgba(22, 30, 58, 0.55);
-  --glass-border: rgba(160, 190, 255, 0.22);
+  --glass-border: rgba(217, 180, 90, 0.32);
   --metal: linear-gradient(180deg, #3a4560 0%, #1b2134 100%);
   --text: #e3e8f7;
   --muted: #8d97b5;
@@ -12,7 +12,11 @@
   --propulsion: #42a5f5;
   --cybernetic: #fdd835;
   --warfare: #ef5350;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  --gold: #d9b45a;
+  --gold-bright: #ffe08a;
+  --gold-line: rgba(217, 180, 90, 0.45);
+  --title-font: 'Cinzel', Georgia, serif;
+  font-family: 'Exo 2', 'Segoe UI', system-ui, sans-serif;
   color: var(--text);
 }
 
@@ -68,10 +72,11 @@ body {
 
 .brand h1 {
   margin: 0;
-  font-size: 20px;
-  letter-spacing: 0.12em;
+  font-family: var(--title-font);
+  font-size: 22px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  background: linear-gradient(180deg, #fff 0%, #9fb2e8 100%);
+  background: linear-gradient(180deg, #fff6d8 0%, var(--gold) 60%, #8a6a24 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -100,8 +105,8 @@ button {
 
 button:hover,
 button[aria-pressed='true'] {
-  border-color: #9fc0ff;
-  box-shadow: 0 0 10px rgba(120, 170, 255, 0.35);
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 10px rgba(255, 210, 120, 0.35);
 }
 
 .languages {
@@ -131,161 +136,102 @@ label {
   touch-action: none;
 }
 
-.galaxy svg {
+.galaxy svg,
+.pixi-host {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.hex-frame {
-  fill: #2c3550;
-  stroke: #7d8db8;
-  stroke-width: 1.5;
+.pixi-host canvas {
+  display: block;
 }
 
-.hex-face {
-  stroke-width: 3;
+/* Trefferflächen über dem Pixi-Bild: unsichtbar, nur Hover und Auswahl leuchten golden. */
+.hex {
+  fill: transparent;
   stroke: transparent;
+  stroke-width: 2;
+  pointer-events: all;
+  outline: none;
+  transition: stroke 120ms ease;
 }
 
-.tile-blue .hex-face {
+.hex.highlighted,
+.hex:focus-visible {
+  stroke: var(--gold-bright);
+  filter: drop-shadow(0 0 6px var(--gold));
+}
+
+/* Ersatzdarstellung ohne WebGL: schlichte Flächen statt Pixi-Szene. */
+.galaxy.flat .hex {
+  stroke: #52618a;
+}
+
+.galaxy.flat .tile-blue {
   fill: #111b3d;
 }
 
-.tile-red .hex-face {
+.galaxy.flat .tile-red {
   fill: #2a1020;
 }
 
-.tile-center .hex-face {
+.galaxy.flat .tile-center {
   fill: #3a2f10;
 }
 
-.tile-home .hex-face {
+.galaxy.flat .tile-home {
   fill: #0d1020;
-  stroke-dasharray: 8 6;
 }
 
-.hex.highlighted .hex-frame {
-  stroke: #ffffff;
-  stroke-width: 3;
-  filter: drop-shadow(0 0 6px #9fc0ff);
+.galaxy.flat .highlight-active {
+  stroke: var(--gold-bright);
+  stroke-width: 4;
 }
 
-.planet-body {
-  fill: #6b7fa8;
-  stroke: #d8e2ff;
-  stroke-width: 1;
+.tooltip .resources {
+  color: var(--resources);
 }
 
-.trait-cultural {
-  fill: #3f7fd6;
-}
-
-.trait-hazardous {
-  fill: #c0503c;
-}
-
-.trait-industrial {
-  fill: #4e9b5a;
-}
-
-.tile-center .planet-body {
-  fill: #d6a93c;
-}
-
-.tech {
-  stroke: #000;
+.tooltip .influence {
+  color: var(--influence);
 }
 
 .tech-biotic {
-  fill: var(--biotic);
   color: var(--biotic);
 }
 
 .tech-propulsion {
-  fill: var(--propulsion);
   color: var(--propulsion);
 }
 
 .tech-cybernetic {
-  fill: var(--cybernetic);
   color: var(--cybernetic);
 }
 
 .tech-warfare {
-  fill: var(--warfare);
   color: var(--warfare);
 }
 
-.planet-values,
-.tile-label,
-.home-label,
-.wormhole text {
-  text-anchor: middle;
-  font-weight: 700;
-  pointer-events: none;
+.seat-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 5px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  vertical-align: baseline;
 }
 
-.planet-values {
+.unit-line {
+  display: block;
   font-size: 12px;
 }
 
-.planet-values .resources,
-.tooltip .resources {
-  fill: var(--resources);
-  color: var(--resources);
-}
-
-.planet-values .influence,
-.tooltip .influence {
-  fill: var(--influence);
-  color: var(--influence);
-}
-
-.planet-values .separator {
-  fill: var(--muted);
-}
-
-.tile-label {
-  font-size: 9px;
-  fill: var(--muted);
-}
-
-.home-label {
-  font-size: 22px;
-}
-
-.anomaly-nebula {
-  fill: rgba(150, 90, 220, 0.45);
-  filter: blur(6px);
-}
-
-.anomaly-asteroidField {
-  fill: none;
-  stroke: #9a8f7c;
-  stroke-width: 6;
-  stroke-dasharray: 2 9;
-}
-
-.anomaly-supernova {
-  fill: rgba(255, 110, 40, 0.75);
-  filter: blur(3px);
-}
-
-.anomaly-gravityRift {
-  fill: #000;
-  stroke: #7b5cff;
-  stroke-width: 3;
-}
-
-.wormhole circle {
-  fill: #0b0b14;
-  stroke: #c88cff;
-  stroke-width: 2;
-}
-
-.wormhole text {
-  fill: #e4c8ff;
-  font-size: 14px;
+.tooltip .exhausted {
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .map-panel {
@@ -349,11 +295,6 @@ label {
   color: #ffb27a;
 }
 
-.zoom-layer {
-  transform-origin: center;
-  transform-box: fill-box;
-}
-
 button:disabled {
   cursor: default;
   opacity: 0.45;
@@ -395,10 +336,10 @@ input[type='number'] {
 }
 
 .phases li[aria-current='step'] {
-  color: var(--text);
-  border-color: #9fc0ff;
-  background: rgba(95, 179, 255, 0.18);
-  box-shadow: 0 0 10px rgba(120, 170, 255, 0.35);
+  color: var(--gold-bright);
+  border-color: var(--gold);
+  background: rgba(217, 180, 90, 0.16);
+  box-shadow: 0 0 10px rgba(255, 210, 120, 0.3);
 }
 
 .actor {
@@ -430,10 +371,13 @@ input[type='number'] {
 
 .game-section h2 {
   margin: 0 0 8px;
+  padding-bottom: 4px;
+  font-family: var(--title-font);
   font-size: 13px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--gold);
+  border-bottom: 1px solid var(--gold-line);
 }
 
 .game-section h3 {
@@ -502,8 +446,8 @@ input[type='number'] {
 }
 
 .player-list li.active {
-  background: rgba(95, 179, 255, 0.15);
-  outline: 1px solid #9fc0ff;
+  background: rgba(217, 180, 90, 0.12);
+  outline: 1px solid var(--gold);
 }
 
 .badge {
@@ -552,4 +496,38 @@ input[type='number'] {
   padding: 10px;
   border-radius: 8px;
   background: rgba(242, 193, 78, 0.12);
+}
+
+.choice-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ship-choices,
+.cargo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.cargo {
+  margin: 4px 0 4px 24px;
+  padding-left: 8px;
+  border-left: 1px solid var(--gold-line);
+  color: var(--muted);
+}
+
+.turn-block + .turn-block {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gold-line);
+}
+
+input[type='checkbox'] {
+  accent-color: var(--gold);
 }

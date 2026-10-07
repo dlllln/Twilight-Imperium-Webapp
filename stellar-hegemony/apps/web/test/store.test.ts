@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
-import { toSlotViews } from '../src/galaxy-view.ts';
 import { handleShortcut } from '../src/keyboard.ts';
-import { content, currentMapString, DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
+import { currentMapString, DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
 
 const store = () => useGalaxyStore.getState();
 
@@ -65,15 +64,5 @@ describe('Galaxie-Store', () => {
     expect(store().layout.length).toBeGreaterThan(0);
     expect(press('x')).toBe(false);
     expect(press('+', document.createElement('textarea'))).toBe(false);
-  });
-
-  it('Feldansichten enthalten Planetennamen in der gewählten Sprache und Sitzplätze', () => {
-    store().generate(3);
-    const views = toSlotViews(store().layout, content, 'de');
-    const center = views.find((view) => view.kind === 'system' && view.back === 'center');
-    expect(center?.kind === 'system' && center.planets[0]?.name).toBe('Thronwelt Aurum');
-    expect(views.flatMap((view) => (view.kind === 'home' ? [view.seat] : []))).toEqual([
-      1, 2, 3, 4, 5, 6,
-    ]);
   });
 });

@@ -1,9 +1,9 @@
 import {
-  type CommandTokensChoice,
   type GameState,
   type PlayerId,
   type StrategyCardDefinition,
   type StrategyCardId,
+  type StrategyChoice,
   strategyCardsOf,
   strategyEffectFor,
 } from '@stellar/domain';
@@ -13,7 +13,8 @@ import { currentActor } from '../../local-game.ts';
 import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from './card-text.ts';
-import { TokenForm } from './TokenForm.tsx';
+import { ChoiceForm } from './ChoiceForm.tsx';
+import { ActivationBlock, TacticalTurn } from './TacticalPanel.tsx';
 
 const definitionOf = (id: StrategyCardId | undefined): StrategyCardDefinition | undefined =>
   content.strategyCards.find((card) => card.id === id);
@@ -36,7 +37,7 @@ function SecondaryPrompt({ game, player }: TurnProps): ReactElement | null {
         {t('secondaryPrompt')}: {cardText(card.id).name[language]}
       </h3>
       <p className="hint">{cardText(card.id).secondary[language]}</p>
-      <TokenForm
+      <ChoiceForm
         key={player}
         game={game}
         player={player}
@@ -47,7 +48,7 @@ function SecondaryPrompt({ game, player }: TurnProps): ReactElement | null {
         <button type="button" onClick={decline}>
           {t('decline')}
         </button>
-      </TokenForm>
+      </ChoiceForm>
     </div>
   );
 }
@@ -81,17 +82,17 @@ function PrimaryAction({ game, player, card, onBack }: PrimaryProps): ReactEleme
   const t = useT();
   const language = useLanguage();
   const send = useGameStore((state) => state.send);
-  const perform = (choice: CommandTokensChoice) =>
+  const perform = (choice: StrategyChoice) =>
     send({ type: 'PerformStrategicAction', issuedBy: player, card: card.id, choice });
   return (
     <div className="turn-block">
       <h3>{cardText(card.id).name[language]}</h3>
       <p className="hint">{cardText(card.id).primary[language]}</p>
-      <TokenForm game={game} player={player} card={card} ability="primary" onSubmit={perform}>
+      <ChoiceForm game={game} player={player} card={card} ability="primary" onSubmit={perform}>
         <button type="button" onClick={onBack}>
           {t('cancel')}
         </button>
-      </TokenForm>
+      </ChoiceForm>
     </div>
   );
 }
@@ -100,6 +101,7 @@ function ActiveTurn({ game, player }: TurnProps): ReactElement {
   const t = useT();
   const send = useGameStore((state) => state.send);
   const [chosen, setChosen] = useState<StrategyCardDefinition | null>(null);
+  if (game.actionPhase?.tactical != null) return <TacticalTurn game={game} player={player} />;
   if (chosen !== null)
     return (
       <PrimaryAction game={game} player={player} card={chosen} onBack={() => setChosen(null)} />
@@ -113,6 +115,7 @@ function ActiveTurn({ game, player }: TurnProps): ReactElement {
           <CardChoice key={card.id} card={card} onChoose={() => setChosen(card)} />
         ))}
       </ul>
+      <ActivationBlock game={game} player={player} />
       <button
         type="button"
         disabled={unused.length > 0}

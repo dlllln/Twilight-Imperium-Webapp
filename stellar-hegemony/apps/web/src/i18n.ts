@@ -123,6 +123,71 @@ const DICTIONARY = {
     de: 'Für diese Spielerzahl gibt es keine Vorlage.',
     en: 'No template for this player count.',
   },
+  exhausted: { de: 'erschöpft', en: 'exhausted' },
+  homeSystem: { de: 'Heimatsystem', en: 'Home system' },
+  commandTokens: { de: 'Kommandomarker', en: 'Command tokens' },
+  tacticalAction: { de: 'Taktische Aktion', en: 'Tactical action' },
+  activateSystem: { de: 'System aktivieren', en: 'Activate system' },
+  selectSystemHint: {
+    de: 'Wähle auf der Karte ein System, um es mit einem Taktik-Marker zu aktivieren.',
+    en: 'Pick a system on the map to activate it with a tactic token.',
+  },
+  selectedSystem: { de: 'Gewählt', en: 'Selected' },
+  activeSystem: { de: 'Aktiviertes System', en: 'Activated system' },
+  movement: { de: 'Bewegung', en: 'Movement' },
+  moveShips: { de: 'Schiffe bewegen', en: 'Move ships' },
+  noMovableShips: {
+    de: 'Keine eigenen Schiffe können dieses System erreichen.',
+    en: 'None of your ships can reach this system.',
+  },
+  fleetArrived: {
+    de: 'Die Bewegung ist abgeschlossen. Kampf, Invasion und Produktion folgen in späteren Ausbaustufen.',
+    en: 'Movement is done. Combat, invasion and production follow in later stages.',
+  },
+  endTactical: { de: 'Taktische Aktion beenden', en: 'End tactical action' },
+  cargo: { de: 'Fracht', en: 'Cargo' },
+  from: { de: 'aus', en: 'from' },
+  step: { de: 'Schritt', en: 'step' },
+  steps: { de: 'Schritte', en: 'steps' },
+  chooseSystem: { de: 'System wählen', en: 'Choose system' },
+  readyPlanets: { de: 'Planeten bereitmachen', en: 'Ready planets' },
+  noExhaustedPlanets: {
+    de: 'Du hast keine erschöpften Planeten.',
+    en: 'You have no exhausted planets.',
+  },
+  'tactical.noTacticToken': {
+    de: 'Dein Taktikpool ist leer.',
+    en: 'Your tactic pool is empty.',
+  },
+  'tactical.alreadyActivated': {
+    de: 'Dort liegt schon dein Kommandomarker.',
+    en: 'Your command token is already there.',
+  },
+  'move.blocked': {
+    de: 'Fremde Schiffe versperren den Weg.',
+    en: 'Enemy ships block the way.',
+  },
+  'move.capacity': {
+    de: 'Nicht genug Kapazität für alle Jäger und Bodentruppen.',
+    en: 'Not enough capacity for all fighters and ground forces.',
+  },
+  'move.fleetLimit': {
+    de: 'Das überschreitet dein Flottenlimit.',
+    en: 'That exceeds your fleet limit.',
+  },
+  'move.overCapacity': {
+    de: 'Zu viel Fracht für dieses Schiff.',
+    en: 'Too much cargo for this ship.',
+  },
+  'diplomacy.unknownSystem': { de: 'Wähle ein System.', en: 'Choose a system.' },
+  'diplomacy.center': {
+    de: 'Die Thronwelt ist ausgenommen.',
+    en: 'The throne world is excluded.',
+  },
+  'diplomacy.noPlanet': {
+    de: 'Du musst dort einen Planeten kontrollieren.',
+    en: 'You must control a planet there.',
+  },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof DICTIONARY;

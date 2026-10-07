@@ -1,54 +1,146 @@
-import { type ReactElement, useMemo, useRef } from 'react';
-import { type SlotView, toSlotViews } from '../galaxy-view.ts';
-import { boundsOf } from '../hex-geometry.ts';
-import { content, useGalaxyStore } from '../store.ts';
+import type { GameState, MapLayout } from '@stellar/domain';
+import {
+  forwardRef,
+  lazy,
+  Suspense,
+  type KeyboardEvent,
+  type ReactElement,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useGameStore } from '../game-store.ts';
+import { type Bounds, boundsOf, hexCorners, hexToPixel, toSvgPoints } from '../hex-geometry.ts';
+import type { Language } from '../i18n.ts';
+import { gameScene, layoutScene, type SceneHex } from '../render/scene-model.ts';
+import { content, useGalaxyStore, type Viewport } from '../store.ts';
+import { highlightsOf, movementChoices } from '../tactical-view.ts';
 import { usePanZoom } from '../use-pan-zoom.ts';
-import { HexTile } from './HexTile.tsx';
-import { Tooltip } from './Tooltip.tsx';
+import { HexTooltip } from './HexTooltip.tsx';
 
-/** Das hervorgehobene Feld wird zuletzt gezeichnet, damit sein Rahmen oben liegt. */
-const orderedForHover = (
-  slots: readonly SlotView[],
-  hovered: string | null,
-): readonly SlotView[] => [
-  ...slots.filter((slot) => slot.key !== hovered),
-  ...slots.filter((slot) => slot.key === hovered),
-];
+/** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
+const PixiCanvas = lazy(() =>
+  import('./PixiCanvas.tsx').then((module) => ({ default: module.PixiCanvas })),
+);
 
-function useSlotViews() {
-  const { layout, language } = useGalaxyStore();
-  const slots = useMemo(() => toSlotViews(layout, content, language), [layout, language]);
-  const bounds = useMemo(() => boundsOf(slots.map((slot) => slot.position)), [slots]);
-  return { slots, bounds };
+interface SceneInput {
+  readonly layout: MapLayout;
+  readonly game: GameState | null;
+  readonly selected: string | null;
+  readonly language: Language;
 }
 
-export function GalaxyMap(): ReactElement {
-  const { language, hovered, viewport, hover } = useGalaxyStore();
-  const { slots, bounds } = useSlotViews();
-  const svg = useRef<SVGSVGElement>(null);
-  const { cursor, ...handlers } = usePanZoom(svg, bounds.width);
-  const hoveredSlot = slots.find((slot) => slot.key === hovered);
-  const viewBox = `${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`;
+function sceneFor({ layout, game, selected, language }: SceneInput): readonly SceneHex[] {
+  if (game === null) return layoutScene(layout, content, language);
+  const highlights = highlightsOf(game, movementChoices(game, content), selected);
+  return gameScene(game, content, language, highlights);
+}
+
+/** Szene aus Galaxie-Layout (Aufbau) oder Spielzustand (Partie). */
+function useScene(): readonly SceneHex[] {
+  const layout = useGalaxyStore((state) => state.layout);
+  const language = useGalaxyStore((state) => state.language);
+  const game = useGameStore((state) => state.game);
+  const selected = useGameStore((state) => state.selected);
+  return useMemo(
+    () => sceneFor({ layout, game, selected, language }),
+    [layout, game, selected, language],
+  );
+}
+
+const tileClass = (hex: SceneHex): string =>
+  hex.kind === 'homeSlot' || hex.back === 'home' ? 'tile-home' : `tile-${hex.back}`;
+
+interface TargetProps {
+  readonly hex: SceneHex;
+  readonly hovered: boolean;
+  readonly onHover: (key: string | null) => void;
+  readonly onPick: (hex: SceneHex) => void;
+}
+
+/** Unsichtbare Trefferfläche je Feld: Maus, Tastatur, Screenreader und E2E-Tests. */
+function HexTarget({ hex, hovered, onHover, onPick }: TargetProps): ReactElement {
+  const pickable = hex.systemId !== null;
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') onPick(hex);
+  };
   return (
-    <div className="galaxy" {...handlers}>
-      <svg ref={svg} viewBox={viewBox} aria-label="galaxy" role="img">
-        <g
-          transform={`translate(${viewport.panX} ${viewport.panY}) scale(${viewport.zoom})`}
-          className="zoom-layer"
-        >
-          {orderedForHover(slots, hovered).map((slot) => (
-            <HexTile
-              key={slot.key}
-              slot={slot}
-              highlighted={slot.key === hovered}
-              onHover={hover}
-            />
-          ))}
-        </g>
-      </svg>
-      {hoveredSlot !== undefined && (
-        <Tooltip slot={hoveredSlot} language={language} x={cursor.x} y={cursor.y} />
+    <polygon
+      points={toSvgPoints(hexCorners(hexToPixel(hex.position)))}
+      className={`hex ${tileClass(hex)} highlight-${hex.highlight}${hovered ? ' highlighted' : ''}`}
+      data-slot={hex.key}
+      data-system={hex.systemId ?? undefined}
+      data-anomaly={hex.anomaly}
+      data-seat={hex.seat ?? undefined}
+      role={pickable ? 'button' : undefined}
+      aria-label={hex.systemId ?? `${hex.kind} ${String(hex.seat)}`}
+      tabIndex={pickable ? 0 : undefined}
+      onPointerEnter={() => onHover(hex.key)}
+      onPointerLeave={() => onHover(null)}
+      onFocus={() => onHover(hex.key)}
+      onClick={() => onPick(hex)}
+      onKeyDown={onKeyDown}
+    />
+  );
+}
+
+interface TargetsProps {
+  readonly hexes: readonly SceneHex[];
+  readonly bounds: Bounds;
+  readonly viewport: Viewport;
+  readonly onPick: (hex: SceneHex) => void;
+}
+
+const viewBoxOf = (b: Bounds): string =>
+  [b.minX, b.minY, b.width, b.height].map((value) => String(value)).join(' ');
+
+/** SVG-Ebene über dem Pixi-Bild, mit derselben Abbildung wie `worldTransform`. */
+const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
+  { hexes, bounds, viewport, onPick },
+  svg,
+): ReactElement {
+  const { hovered, hover } = useGalaxyStore();
+  const { panX, panY, zoom } = viewport;
+  return (
+    <svg ref={svg} viewBox={viewBoxOf(bounds)} aria-label="galaxy">
+      <g transform={`translate(${String(panX)} ${String(panY)}) scale(${String(zoom)})`}>
+        {hexes.map((hex) => (
+          <HexTarget
+            key={hex.key}
+            hex={hex}
+            hovered={hex.key === hovered}
+            onHover={hover}
+            onPick={onPick}
+          />
+        ))}
+      </g>
+    </svg>
+  );
+});
+
+export function GalaxyMap(): ReactElement {
+  const { hovered, viewport } = useGalaxyStore();
+  const hexes = useScene();
+  const bounds = useMemo(() => boundsOf(hexes.map((hex) => hex.position)), [hexes]);
+  const svg = useRef<SVGSVGElement>(null);
+  const { cursor, wasDrag, ...handlers } = usePanZoom(svg, bounds.width);
+  const [flat, setFlat] = useState(false);
+  const onUnavailable = useCallback(() => setFlat(true), []);
+  const pick = (hex: SceneHex) => {
+    const { game, select } = useGameStore.getState();
+    if (!wasDrag() && game !== null) select(hex.systemId);
+  };
+  const hoveredHex = hexes.find((hex) => hex.key === hovered);
+  return (
+    <div className={flat ? 'galaxy flat' : 'galaxy'} {...handlers}>
+      {!flat && (
+        <Suspense fallback={null}>
+          <PixiCanvas {...{ hexes, bounds, viewport, onUnavailable }} />
+        </Suspense>
       )}
+      <HexTargets ref={svg} hexes={hexes} bounds={bounds} viewport={viewport} onPick={pick} />
+      {hoveredHex !== undefined && <HexTooltip hex={hoveredHex} x={cursor.x} y={cursor.y} />}
     </div>
   );
 }

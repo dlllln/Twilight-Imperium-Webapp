@@ -2,6 +2,8 @@ import { type PointerEvent, type RefObject, useRef, useState, type WheelEvent } 
 import { useGalaxyStore } from './store.ts';
 
 const WHEEL_ZOOM_STEP = 1.1;
+/** Ab so vielen Pixeln gilt ein Klick als Ziehen und wählt kein Feld. */
+const DRAG_THRESHOLD = 5;
 
 interface Point {
   readonly x: number;
@@ -10,6 +12,8 @@ interface Point {
 
 export interface PanZoomHandlers {
   readonly cursor: Point;
+  /** Ob die letzte Zeigerbewegung ein Verschieben der Karte war. */
+  readonly wasDrag: () => boolean;
   readonly onPointerDown: (event: PointerEvent<HTMLElement>) => void;
   readonly onPointerUp: () => void;
   readonly onPointerMove: (event: PointerEvent<HTMLElement>) => void;
@@ -24,19 +28,27 @@ const pointOf = (event: PointerEvent<HTMLElement>): Point => ({
 const wheelFactor = (event: WheelEvent<HTMLElement>): number =>
   event.deltaY < 0 ? WHEEL_ZOOM_STEP : 1 / WHEEL_ZOOM_STEP;
 
-type DragHandlers = Pick<PanZoomHandlers, 'onPointerDown' | 'onPointerUp'> & {
+type DragHandlers = Pick<PanZoomHandlers, 'onPointerDown' | 'onPointerUp' | 'wasDrag'> & {
   readonly dragTo: (event: PointerEvent<HTMLElement>) => void;
 };
 
 /** Meldet Zieh-Bewegungen in Bildschirm-Pixeln. */
 function useDrag(onDrag: (dx: number, dy: number) => void): DragHandlers {
   const drag = useRef<Point | null>(null);
+  const travelled = useRef(0);
   return {
-    onPointerDown: (event) => (drag.current = pointOf(event)),
+    onPointerDown: (event) => {
+      drag.current = pointOf(event);
+      travelled.current = 0;
+    },
     onPointerUp: () => (drag.current = null),
+    wasDrag: () => travelled.current > DRAG_THRESHOLD,
     dragTo: (event) => {
       if (drag.current === null) return;
-      onDrag(event.clientX - drag.current.x, event.clientY - drag.current.y);
+      const dx = event.clientX - drag.current.x;
+      const dy = event.clientY - drag.current.y;
+      travelled.current += Math.hypot(dx, dy);
+      onDrag(dx, dy);
       drag.current = pointOf(event);
     },
   };
