@@ -13,6 +13,7 @@ import {
   GroundRound,
   Landing,
 } from './InvasionEntries.tsx';
+import { BonusGranted, HitsCancelled } from './CardEntries.tsx';
 import { VolleyDice } from './VolleyDice.tsx';
 
 interface EntryProps<E extends CombatLogEvent = CombatLogEvent> {
@@ -135,6 +136,8 @@ const RENDERERS: Renderers = {
   GroundCombatEnded: GroundEnded,
   PlanetControlGained: ControlGained,
   CenterTokenRemoved: CenterToken,
+  CombatBonusGranted: BonusGranted,
+  HitsCancelled,
 };
 
 function Entry({ game, event }: EntryProps): ReactElement {

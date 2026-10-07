@@ -32,7 +32,7 @@ export class SetupPhase extends BasePhase {
 
 export class StrategyPhase extends BasePhase {
   readonly name = 'strategy';
-  protected readonly commands = ['PickStrategyCard', 'KeepSecretObjectives'];
+  protected readonly commands = ['PickStrategyCard', 'KeepSecretObjectives', 'DiscardActionCards'];
   next(): PhaseName {
     return 'action';
   }
@@ -58,6 +58,9 @@ export class ActionPhase extends BasePhase {
     'RejectTransaction',
     'ScoreObjective',
     'KeepSecretObjectives',
+    'PlayActionCard',
+    'PassReaction',
+    'DiscardActionCards',
   ];
   next(): PhaseName {
     return 'status';
@@ -72,6 +75,7 @@ export class StatusPhase extends BasePhase {
     'EndScoring',
     'AllocateCommandTokens',
     'KeepSecretObjectives',
+    'DiscardActionCards',
   ];
   /** RR 36: Die Agendaphase gibt es erst, wenn der Marker auf der Zentrumswelt entfernt wurde. */
   next(state: GameState): PhaseName {

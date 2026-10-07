@@ -3,8 +3,12 @@ import { useGameStore } from '../src/game-store.ts';
 import { createLocalGame, currentActor } from '../src/local-game.ts';
 import { useGalaxyStore } from '../src/store.ts';
 
+/** Feste Galaxie, damit Tests nicht von einer zufälligen Karte abhängen. */
+const GALAXY_SEED = 4242;
+
 export function threePlayerLayout() {
   useGalaxyStore.getState().setPlayerCount(3);
+  useGalaxyStore.getState().generate(GALAXY_SEED);
   return useGalaxyStore.getState().layout;
 }
 

@@ -76,8 +76,12 @@ describe('StartGame (RR 76.1: Sprecher und Kartenauslage)', () => {
       'SecretObjectivesDealt',
       'SecretObjectivesDealt',
       'SecretObjectivesDealt',
+      'ActionDeckPrepared',
       'StrategyPhaseStarted',
     ]);
+    // Spielaufbau Schritt 8: alle Exemplare gemischt, noch niemand hat Aktionskarten.
+    expect(state.actionDeck.deck).toHaveLength(38);
+    expect(state.players.every((player) => player.actionCards.length === 0)).toBe(true);
     const initiatives = Object.values(state.strategyCards).map((card) => card.initiative);
     expect(initiatives).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(Object.values(state.strategyCards).every((card) => card.holder === null)).toBe(true);

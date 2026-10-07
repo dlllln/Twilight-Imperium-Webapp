@@ -1,4 +1,10 @@
-import { objectiveText, planetName, technologyText, unitName } from '@stellar/content';
+import {
+  actionCardText,
+  objectiveText,
+  planetName,
+  technologyText,
+  unitName,
+} from '@stellar/content';
 import { type GameState, unitTypeId } from '@stellar/domain';
 import type { Language } from './i18n.ts';
 
@@ -25,3 +31,12 @@ export const objectiveLabel = (id: string, language: Language): string =>
 
 export const objectiveRequirement = (id: string, language: Language): string =>
   objectiveText(id)?.requirement[language] ?? '';
+
+export const actionCardLabel = (id: string, language: Language): string =>
+  actionCardText(id)?.name[language] ?? id;
+
+export const actionCardTiming = (id: string, language: Language): string =>
+  actionCardText(id)?.timing[language] ?? '';
+
+export const actionCardEffect = (id: string, language: Language): string =>
+  actionCardText(id)?.effect[language] ?? '';

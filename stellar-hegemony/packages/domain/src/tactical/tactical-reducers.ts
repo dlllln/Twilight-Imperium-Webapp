@@ -1,6 +1,7 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
 import type { SystemState } from '../galaxy/system-state.ts';
 import { type GameState, updatePlayer } from '../game/game-state.ts';
+import type { TacticalActionState } from '../phases/turn-state.ts';
 import type { PlanetState } from '../planet/planet-state.ts';
 import type { SystemId, UnitId } from '../shared/ids.ts';
 import type { Unit } from '../unit/unit.ts';
@@ -23,6 +24,16 @@ export function updateSystem(
   if (system !== undefined) systems[id] = update(system);
 }
 
+/** RR 79.1: Die Taktikaktion beginnt mit dem Bewegungsschritt im aktivierten System. */
+const freshTactical = (system: SystemId): TacticalActionState => ({
+  system,
+  step: 'movement',
+  pendingHits: [],
+  combat: null,
+  windows: [],
+  bonuses: [],
+});
+
 function activate(state: GameState, event: SystemActivated): GameState {
   const systems: Systems = { ...state.systems };
   updateSystem(systems, event.system, (s) => ({
@@ -35,13 +46,7 @@ function activate(state: GameState, event: SystemActivated): GameState {
   }));
   const turn = spent.actionPhase;
   if (turn === null) return spent;
-  const tactical = {
-    system: event.system,
-    step: 'movement',
-    pendingHits: [],
-    combat: null,
-  } as const;
-  return { ...spent, actionPhase: { ...turn, tactical } };
+  return { ...spent, actionPhase: { ...turn, tactical: freshTactical(event.system) } };
 }
 
 /** Nimmt Einheiten aus Weltraum und Planeten heraus und liefert sie zurück. */

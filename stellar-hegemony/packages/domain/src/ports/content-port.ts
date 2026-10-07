@@ -1,3 +1,4 @@
+import type { ActionCardDefinition } from '../action-card/action-card-definition.ts';
 import type { FactionDefinition } from '../faction/faction-definition.ts';
 import type { GalaxyTemplate } from '../galaxy/map-layout.ts';
 import type { ObjectiveDefinition } from '../objective/objective-definition.ts';
@@ -17,5 +18,6 @@ export interface ContentPort {
   readonly factions: readonly FactionDefinition[];
   readonly technologies: readonly TechnologyDefinition[];
   readonly objectives: readonly ObjectiveDefinition[];
+  readonly actionCards: readonly ActionCardDefinition[];
   galaxyTemplate(playerCount: number): GalaxyTemplate | undefined;
 }

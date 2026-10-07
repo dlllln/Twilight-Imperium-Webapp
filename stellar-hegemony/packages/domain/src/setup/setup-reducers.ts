@@ -1,5 +1,6 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
 import type { GameState } from '../game/game-state.ts';
+import { NO_ACTION_DECK } from '../action-card/action-card-state.ts';
 import { NO_OBJECTIVES, NO_ROUND_STATS } from '../objective/objective-state.ts';
 import type { PlayerState } from '../player/player-state.ts';
 import type { GameCreated, PlayerSeated, SetupEvent } from './setup-events.ts';
@@ -12,6 +13,9 @@ const NOT_STARTED = {
   statusPhase: null,
   objectives: NO_OBJECTIVES,
   centerTokenRemoved: false,
+  actionDeck: NO_ACTION_DECK,
+  reactionWindow: null,
+  pendingPlay: null,
   winner: null,
 } as const satisfies Partial<GameState>;
 
@@ -42,6 +46,7 @@ const FRESH_PLAYER = {
   victoryPoints: 0,
   secretObjectives: [],
   secretChoice: null,
+  actionCards: [],
   roundStats: NO_ROUND_STATS,
 } as const satisfies Partial<PlayerState>;
 

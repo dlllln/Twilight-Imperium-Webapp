@@ -1128,3 +1128,88 @@ input[type='checkbox'] {
   font-family: var(--title-font);
   color: var(--gold-bright);
 }
+
+/* Aktionskarten: Hand, Ziele, Reaktionen, Ablegen */
+.action-cards {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.action-card {
+  --card: #e07a5f;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--card) 55%, transparent);
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--card) 10%, rgba(12, 16, 34, 0.85));
+  font-size: 12px;
+}
+
+.action-card.idle {
+  opacity: 0.6;
+}
+
+.action-card.playable {
+  box-shadow: 0 0 8px color-mix(in srgb, var(--card) 45%, transparent);
+}
+
+.action-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.action-card .card-timing {
+  margin: 0;
+  color: var(--card);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.action-card p {
+  margin: 0;
+}
+
+.card-targets {
+  display: grid;
+  gap: 4px;
+}
+
+.card-target {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--gold-line);
+  border-radius: 4px;
+}
+
+.reaction-prompt {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(217, 180, 90, 0.35);
+}
+
+.pending-card .action-card {
+  max-width: 320px;
+}
+
+.discard-form label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.combat-footer .action-cards {
+  max-width: 360px;
+  margin-bottom: 8px;
+}
+
+.card-log {
+  color: #f0a58f;
+}

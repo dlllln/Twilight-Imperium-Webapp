@@ -138,7 +138,9 @@ describe('Politik (RR 61)', () => {
     content: {
       ...base.content,
       strategyCards: base.content.strategyCards.map((card) =>
-        card.id === CARD(3) ? { ...card, mechanic: 'politics' as const, parameters: {} } : card,
+        card.id === CARD(3)
+          ? { ...card, mechanic: 'politics' as const, parameters: { actionCards: 2 } }
+          : card,
       ),
     },
   };
@@ -147,17 +149,18 @@ describe('Politik (RR 61)', () => {
     return result.ok ? 'ok' : result.error.code;
   };
 
-  it('RR 61.2: ein Spieler ohne Sprechermarker wird Sprecher', () => {
+  it('RR 61.2: ein Spieler ohne Sprechermarker wird Sprecher und zieht 2 Aktionskarten', () => {
     const state = holding(3);
     const other = state.speaker === GREEN ? BLUE : GREEN;
     const { state: after } = step(state, act(3, politics(other)), context);
     expect(after.speaker).toBe(other);
+    expect(after.players.find((player) => player.id === RED)?.actionCards).toHaveLength(2);
     expect(politicsCode(state, state.speaker)).toBe('politics.speaker');
     expect(politicsCode(state, null)).toBe('politics.speaker');
     expect(politicsCode(state, 'ghost' as PlayerId)).toBe('politics.speaker');
   });
 
-  it('RR 61.3: die Sekundärfähigkeit lässt sich nutzen', () => {
+  it('RR 61.3: die Sekundärfähigkeit zieht 2 Aktionskarten', () => {
     const state = holding(3);
     const other = state.speaker === GREEN ? BLUE : GREEN;
     const { state: after } = step(state, act(3, politics(other)), context);
@@ -166,6 +169,9 @@ describe('Politik (RR 61)', () => {
       { type: 'ResolveSecondary', issuedBy: BLUE, choice: politics(null) },
       context,
     );
-    expect(result.ok && result.value.map((event) => event.type)).toEqual(['SecondaryResolved']);
+    expect(result.ok && result.value.map((event) => event.type)).toEqual([
+      'SecondaryResolved',
+      'ActionCardsDrawn',
+    ]);
   });
 });

@@ -21,7 +21,7 @@ import type { Volley } from './dice.ts';
 
 type Systems = Record<string, SystemState>;
 
-function withTactical(
+export function withTactical(
   state: GameState,
   change: (tactical: TacticalActionState) => TacticalActionState,
 ): GameState {

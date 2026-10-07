@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import {
+  actionCardId,
   adjacentSystemIds,
   type GameEvent,
   type GameState,
@@ -37,8 +38,17 @@ function frontier(state: GameState, player: PlayerId) {
 }
 
 /** Legt einen gegnerischen Kreuzer neben die Heimat des aktiven Spielers und greift an. */
-function attackNeighbour(): { readonly attacker: PlayerId; readonly defender: PlayerId } {
-  const state = pickAll(started());
+function attackNeighbour(cards: readonly string[] = []): {
+  readonly attacker: PlayerId;
+  readonly defender: PlayerId;
+} {
+  const picked = pickAll(started());
+  const players = picked.players.map((player) =>
+    player.id === picked.actionPhase?.active
+      ? { ...player, actionCards: cards.map(actionCardId) }
+      : player,
+  );
+  const state = { ...picked, players };
   const attacker = state.actionPhase?.active as PlayerId;
   const defender = state.players.find((player) => player.id !== attacker)?.id as PlayerId;
   const target = frontier(state, attacker);
@@ -135,5 +145,22 @@ describe('Kampfansicht', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Kampfansicht schließen' }));
     expect(store().combatOpen).toBe(false);
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+describe('Aktionskarten in der Kampfansicht (RR 3.10)', () => {
+  it('vor der Kampfrunde fragt die Ansicht nach Karten; der Bonus steht im Protokoll', () => {
+    useGalaxyStore.setState({ language: 'de' });
+    const { attacker } = attackNeighbour(['combat-drill']);
+    store().send({ type: 'DeclareRetreat', issuedBy: attacker, to: null });
+    expect(game().reactionWindow?.kind).toBe('combatRound');
+    const { rerender } = render(<CombatView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ausspielen' }));
+    expect(store().error).toBeNull();
+    rerender(<CombatView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Keine Karte spielen' }));
+    expect(store().error).toBeNull();
+    expect(game().reactionWindow).toBeNull();
+    expect(document.querySelector('.card-log')?.textContent).toContain('+1');
   });
 });

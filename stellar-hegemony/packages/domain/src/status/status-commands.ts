@@ -1,3 +1,4 @@
+import { drawForAll } from '../action-card/draw.ts';
 import type { Command, CommandHandler, DecisionContext } from '../eventsourcing/command.ts';
 import { evolveGame, type GameEvent } from '../game/game-events.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
@@ -43,15 +44,18 @@ function winnerByPoints(state: GameState): PlayerId | null {
   );
 }
 
-/** RR 73.2–73.4: Auftrag aufdecken (oder Spielende), Marker vom Spielplan, Markerschritt. */
-function afterScoring(state: GameState): readonly GameEvent[] {
+/** RR 73.2–73.4: Auftrag aufdecken (oder Spielende), Aktionskarten ziehen, Marker vom Plan. */
+function afterScoring(state: GameState, context: DecisionContext): readonly GameEvent[] {
   const next = state.objectives.public.find((slot) => !slot.revealed);
   if (next === undefined) {
     const winner = winnerByPoints(state);
     return winner === null ? [] : [{ type: 'GameWon', player: winner }];
   }
+  const order = state.statusPhase?.order ?? [];
+  const count = state.config.rules.statusPhaseActionCards;
   return [
     { type: 'PublicObjectiveRevealed', objective: next.id },
+    ...drawForAll(state, order, count, context.random),
     { type: 'CommandTokensCleared' },
     { type: 'TokenStepReached' },
   ];
@@ -59,12 +63,12 @@ function afterScoring(state: GameState): readonly GameEvent[] {
 
 export const endScoringHandler = {
   commandType: 'EndScoring',
-  decide(state: GameState, command: EndScoring): Events {
+  decide(state: GameState, command: EndScoring, context: DecisionContext): Events {
     const checked = stepCheck(state, command.issuedBy, 'scoring');
     if (!checked.ok) return checked;
     const finished: GameEvent = { type: 'ScoringFinished', player: command.issuedBy };
     const last = state.statusPhase?.waiting.length === 1;
-    return ok(last ? [finished, ...afterScoring(state)] : [finished]);
+    return ok(last ? [finished, ...afterScoring(state, context)] : [finished]);
   },
 } as const satisfies CommandHandler<GameState, EndScoring, GameEvent>;
 

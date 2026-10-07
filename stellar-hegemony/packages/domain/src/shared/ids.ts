@@ -25,3 +25,5 @@ export const unitTypeId = (value: string): UnitTypeId => value as UnitTypeId;
 export const technologyId = (value: string): TechnologyId => value as TechnologyId;
 export type ObjectiveId = Brand<string, 'ObjectiveId'>;
 export const objectiveId = (value: string): ObjectiveId => value as ObjectiveId;
+export type ActionCardId = Brand<string, 'ActionCardId'>;
+export const actionCardId = (value: string): ActionCardId => value as ActionCardId;

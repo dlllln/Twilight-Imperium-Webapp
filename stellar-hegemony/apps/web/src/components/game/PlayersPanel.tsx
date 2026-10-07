@@ -26,6 +26,9 @@ function PlayerRow({
       <span title={t('commodities')}>
         ◇ {player.commodities}/{player.commodityLimit}
       </span>
+      <span title={t('handSize')} data-testid={`hand-${player.id}`}>
+        ▤ {player.actionCards.length}
+      </span>
       {passed && <span className="badge">{t('passed')}</span>}
     </li>
   );

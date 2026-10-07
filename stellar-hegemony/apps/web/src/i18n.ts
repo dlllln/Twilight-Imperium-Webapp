@@ -115,9 +115,54 @@ const DICTIONARY = {
   noObjective: { de: 'Keinen werten', en: 'Score none' },
   drawSecret: { de: 'Geheimen Auftrag ziehen', en: 'Draw a secret objective' },
   chooseSpeaker: { de: 'Neuer Sprecher', en: 'New speaker' },
-  noEffectYet: {
-    de: 'Die Aktionskarten folgen in der nächsten Ausbaustufe; bis dahin bleibt dies ohne Wirkung.',
-    en: 'Action cards follow in the next stage; until then this has no effect.',
+  politicsDraw: {
+    de: 'Du ziehst 2 Aktionskarten.',
+    en: 'You draw 2 action cards.',
+  },
+  actionCards: { de: 'Aktionskarten', en: 'Action cards' },
+  handOf: { de: 'Hand von', en: 'Hand of' },
+  emptyHand: { de: 'Keine Aktionskarten auf der Hand.', en: 'No action cards in hand.' },
+  play: { de: 'Ausspielen', en: 'Play' },
+  playCard: { de: 'Karte ausspielen', en: 'Play card' },
+  targetPlanets: { de: 'Planeten (bis zu {n})', en: 'Planets (up to {n})' },
+  targetSystem: { de: 'System', en: 'System' },
+  targetPlayer: { de: 'Spieler', en: 'Player' },
+  targetPool: { de: 'Pool', en: 'Pool' },
+  reaction: { de: 'Reaktion', en: 'Reaction' },
+  'window.afterActivation': {
+    de: 'Ein System wurde aktiviert. Willst du darauf reagieren?',
+    en: 'A system was activated. Do you want to react?',
+  },
+  'window.combatRound': {
+    de: 'Eine Kampfrunde beginnt. Willst du eine Karte spielen?',
+    en: 'A combat round begins. Do you want to play a card?',
+  },
+  'window.invasion': {
+    de: 'Der Einmarsch beginnt. Willst du eine Karte spielen?',
+    en: 'The invasion begins. Do you want to play a card?',
+  },
+  cardPlayedBy: { de: 'hat eine Karte gespielt', en: 'played a card' },
+  allowCard: { de: 'Nicht verhindern', en: 'Do not cancel' },
+  passReaction: { de: 'Keine Karte spielen', en: 'Play no card' },
+  discardCards: { de: 'Aktionskarten ablegen', en: 'Discard action cards' },
+  discardHint: {
+    de: 'Du bist über dem Handkartenlimit. Lege genau {n} Karten ab.',
+    en: 'You are over the hand limit. Discard exactly {n} cards.',
+  },
+  discard: { de: 'Ablegen', en: 'Discard' },
+  spaceBonusLog: {
+    de: 'erhält +{n} auf die Kampfwürfe dieser Runde',
+    en: 'gains +{n} on combat rolls this round',
+  },
+  groundBonusLog: {
+    de: 'erhält +{n} auf die Würfe im Bodenkampf',
+    en: 'gains +{n} on ground combat rolls',
+  },
+  hitsCancelledLog: { de: 'hebt {n} Treffer auf', en: 'cancels {n} hits' },
+  handSize: { de: 'Aktionskarten auf der Hand', en: 'Action cards in hand' },
+  afterHitsCards: {
+    de: 'Karten, die jetzt gegen Treffer helfen',
+    en: 'Cards that help against hits now',
   },
   ruleError: { de: 'Nicht erlaubt', en: 'Not allowed' },
   'strategy.mechanicUnavailable': {
@@ -544,6 +589,47 @@ const DICTIONARY = {
   'status.notYourTurn': {
     de: 'Du bist in der Statusphase nicht dran.',
     en: 'It is not your turn in the status phase.',
+  },
+  'actionCard.discardCount': {
+    de: 'Lege genau so viele Karten ab, wie du über dem Limit bist.',
+    en: 'Discard exactly as many cards as you are over the limit.',
+  },
+  'actionCard.invalidTarget': {
+    de: 'Dieses Ziel lässt die Karte nicht zu.',
+    en: 'The card does not allow this target.',
+  },
+  'actionCard.noDiscard': {
+    de: 'Du bist nicht über dem Handkartenlimit.',
+    en: 'You are not over the hand limit.',
+  },
+  'actionCard.notInHand': {
+    de: 'Diese Karte hast du nicht auf der Hand.',
+    en: 'You do not hold this card.',
+  },
+  'actionCard.notUsable': {
+    de: 'Die Karte hätte gerade keine Wirkung.',
+    en: 'The card would have no effect right now.',
+  },
+  'actionCard.nothingToCancel': {
+    de: 'Es gibt keine Karte zu verhindern.',
+    en: 'There is no card to cancel.',
+  },
+  'actionCard.sameName': {
+    de: 'Eine gleichnamige Karte hast du in diesem Zeitfenster schon gespielt.',
+    en: 'You already played a card of this name in this window.',
+  },
+  'actionCard.unknown': { de: 'Unbekannte Aktionskarte.', en: 'Unknown action card.' },
+  'actionCard.wrongTiming': {
+    de: 'Diese Karte passt nicht zum jetzigen Zeitpunkt.',
+    en: 'This card does not fit the current timing.',
+  },
+  'reaction.notYourTurn': {
+    de: 'Im Zeitfenster bist du nicht an der Reihe.',
+    en: 'It is not your turn in this window.',
+  },
+  'reaction.open': {
+    de: 'Erst muss das offene Zeitfenster abgeschlossen werden.',
+    en: 'The open window must be closed first.',
   },
   'status.unknownPlayer': { de: 'Unbekannter Spieler.', en: 'Unknown player.' },
   'status.wrongStep': {

@@ -1,3 +1,4 @@
+import { bonusFor, boosted } from '../action-card/combat-bonus.ts';
 import { combatShooters } from '../combat/combat-queries.ts';
 import { rollVolley, type Shooter, type Volley } from '../combat/dice.ts';
 import { suggestHitAssignment } from '../combat/hit-assignment.ts';
@@ -58,6 +59,14 @@ function bothHit(
   };
 }
 
+/** Kampfwerte der Bodentruppen samt Kartenbonus für diesen Einmarsch. */
+const groundShooters = (
+  state: GameState,
+  units: readonly Unit[],
+  player: PlayerId,
+  catalog: UnitCatalog,
+) => boosted(combatShooters(units, catalog), bonusFor(state, player, 'ground', null));
+
 function groundRound(
   state: GameState,
   planet: PlanetId,
@@ -69,7 +78,7 @@ function groundRound(
   const { mine, theirs } = sides(state, planet, attacker, catalog);
   const defender = theirs[0]?.owner ?? attacker;
   const roll = (units: readonly Unit[], player: PlayerId, target: PlayerId) =>
-    rollVolley(random, state.config.rules.dieSides, combatShooters(units, catalog), {
+    rollVolley(random, state.config.rules.dieSides, groundShooters(state, units, player, catalog), {
       player,
       target,
     });

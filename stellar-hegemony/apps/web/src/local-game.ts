@@ -16,7 +16,9 @@ import {
   type GameEvent,
   type Result,
   andThen,
+  excessActionCards,
   map,
+  reactionActor,
   statusActor,
   tacticalDecider,
 } from '@stellar/domain';
@@ -105,11 +107,20 @@ function actionActor(state: GameState): PlayerId | null {
   );
 }
 
-/** Wer gerade am Bildschirm entscheiden muss (Hot-Seat); offene Geheimauftrags-Wahlen zuerst. */
-export function currentActor(state: GameState): PlayerId | null {
-  if (state.phase === 'gameOver') return null;
+/** Wer vor allem anderen dran ist: Geheimauftrags-Wahl, Reaktion, dann Ablegen über dem Limit. */
+function interruptingActor(state: GameState): PlayerId | null {
   const choosing = state.players.find((player) => player.secretChoice !== null);
   if (choosing !== undefined) return choosing.id;
+  const reacting = reactionActor(state);
+  if (reacting !== null) return reacting;
+  return state.players.find((player) => excessActionCards(state, player.id) > 0)?.id ?? null;
+}
+
+/** Wer gerade am Bildschirm entscheiden muss (Hot-Seat). */
+export function currentActor(state: GameState): PlayerId | null {
+  if (state.phase === 'gameOver') return null;
+  const interrupting = interruptingActor(state);
+  if (interrupting !== null) return interrupting;
   if (state.phase === 'strategy') return state.pickQueue[0] ?? null;
   if (state.phase === 'status') return statusActor(state);
   return state.phase === 'action' ? actionActor(state) : null;

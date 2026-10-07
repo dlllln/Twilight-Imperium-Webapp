@@ -1,4 +1,6 @@
 import type { GameState } from '../game/game-state.ts';
+import { usableCards } from '../action-card/card-timing.ts';
+import { windowEvents } from '../action-card/reaction-windows.ts';
 import { reachNext } from '../tactical/tactical-steps.ts';
 import { evolveGame, type GameEvent } from '../game/game-events.ts';
 import type { DecisionContext } from '../eventsourcing/command.ts';
@@ -56,6 +58,16 @@ function spaceCombatStep(
   return [...retreat, ...(ended ?? [nextRound(after, system, combat, catalog)])];
 }
 
+/** Wessen Treffer alle Schiffe erfassen, ohne dass eine Karte sie noch abwenden könnte. */
+function forcedHits(state: GameState, tactical: TacticalActionState, decision: DecisionContext) {
+  const catalog = decision.content.units;
+  return tactical.pendingHits.find(({ player, hits }) => {
+    const choice = usableCards(state, player, 'afterHits', decision.content).length > 0;
+    const ships = shipsOf(state, tactical.system, player, catalog);
+    return !choice && hits >= absorbableHits(ships, catalog);
+  });
+}
+
 /** Ohne Wahl (alle Treffer treffen alles) wird automatisch zugewiesen. */
 function forcedAssignment(
   state: GameState,
@@ -63,10 +75,7 @@ function forcedAssignment(
   decision: DecisionContext,
 ): Events {
   const catalog = decision.content.units;
-  const forced = tactical.pendingHits.find(({ player, hits }) => {
-    const ships = shipsOf(state, tactical.system, player, catalog);
-    return hits >= absorbableHits(ships, catalog);
-  });
+  const forced = forcedHits(state, tactical, decision);
   if (forced === undefined) return [];
   const ships = shipsOf(state, tactical.system, forced.player, catalog);
   const sustained = ships
@@ -78,16 +87,27 @@ function forcedAssignment(
   ];
 }
 
+function stepEvents(
+  state: GameState,
+  tactical: TacticalActionState,
+  active: PlayerId,
+  decision: DecisionContext,
+): Events {
+  if (tactical.step === 'spaceCannon') return spaceCannonOffense(state, tactical, active, decision);
+  if (tactical.step === 'spaceCombat') return spaceCombatStep(state, tactical, active, decision);
+  return [];
+}
+
+/** Ein offenes Zeitfenster oder eine Karte, die noch verhindert werden kann, hält alles an. */
+const paused = (state: GameState) => state.reactionWindow !== null || state.pendingPlay !== null;
+
 function automaticEvents(state: GameState, decision: DecisionContext): Events {
   const turn = state.actionPhase;
   const tactical = turn?.tactical;
-  if (turn?.active == null || tactical == null) return [];
+  if (turn?.active == null || tactical == null || paused(state)) return [];
   if (tactical.pendingHits.length > 0) return forcedAssignment(state, tactical, decision);
-  if (tactical.step === 'spaceCannon')
-    return spaceCannonOffense(state, tactical, turn.active, decision);
-  if (tactical.step === 'spaceCombat')
-    return spaceCombatStep(state, tactical, turn.active, decision);
-  return [];
+  const window = windowEvents(state, decision.content);
+  return window.length > 0 ? window : stepEvents(state, tactical, turn.active, decision);
 }
 
 /**

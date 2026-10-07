@@ -7,6 +7,11 @@ import type { ActionPhaseState } from '../phases/turn-state.ts';
 import type { StrategyCardState } from '../strategy/strategy-card.ts';
 import type { ObjectivesState, StatusPhaseState } from '../objective/objective-state.ts';
 import type { GameConfig } from './game-config.ts';
+import type {
+  ActionDeckState,
+  PendingPlay,
+  ReactionWindow,
+} from '../action-card/action-card-state.ts';
 
 export type PhaseName = 'setup' | 'strategy' | 'action' | 'status' | 'agenda' | 'gameOver';
 
@@ -39,6 +44,11 @@ export interface GameState {
   readonly objectives: ObjectivesState;
   /** Solange der Marker auf der Zentrumswelt liegt, entfällt die Agendaphase (RR 36). */
   readonly centerTokenRemoved: boolean;
+  readonly actionDeck: ActionDeckState;
+  /** Offenes Zeitfenster für Reaktionen; solange es offen ist, ruht der übrige Ablauf. */
+  readonly reactionWindow: ReactionWindow | null;
+  /** Gespielte Karte, die noch verhindert werden kann (RR 3.8). */
+  readonly pendingPlay: PendingPlay | null;
   readonly winner: PlayerId | null;
 }
 

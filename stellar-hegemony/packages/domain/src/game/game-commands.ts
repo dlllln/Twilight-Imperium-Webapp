@@ -1,6 +1,6 @@
 import type { CommandHandler, DecisionContext } from '../eventsourcing/command.ts';
-import { type DomainError, domainError } from '../shared/domain-error.ts';
-import { err, map, type Result } from '../shared/result.ts';
+import { type Check, type DomainError, firstFailure, guard } from '../shared/domain-error.ts';
+import { map, type Result } from '../shared/result.ts';
 import {
   generateGalaxyHandler,
   type GenerateGalaxy,
@@ -59,12 +59,21 @@ import {
   type EndScoring,
   endScoringHandler,
 } from '../status/status-commands.ts';
+import {
+  type DiscardActionCards,
+  discardActionCardsHandler,
+  type PassReaction,
+  passReactionHandler,
+  type PlayActionCard,
+  playActionCardHandler,
+} from '../action-card/action-card-commands.ts';
+import { progressTactical } from '../combat/tactical-flow.ts';
 import { phaseOf } from '../phases/game-phase.ts';
 import { withTechnologies } from '../technology/technology-catalog.ts';
 import { type StartGame, startGameHandler } from '../phases/start-game.ts';
 import { seatPlayerHandler, type SeatPlayer } from '../setup/setup-commands.ts';
 import { type PickStrategyCard, pickStrategyCardHandler } from '../strategy/pick-strategy-card.ts';
-import type { GameEvent } from './game-events.ts';
+import { evolveGame, type GameEvent } from './game-events.ts';
 import type { GameState } from './game-state.ts';
 
 /** Alle Commands einer laufenden Partie (CreateGame ist der Sonderfall davor). */
@@ -92,7 +101,10 @@ export type GameCommand =
   | KeepSecretObjectives
   | ScoreObjective
   | EndScoring
-  | AllocateCommandTokens;
+  | AllocateCommandTokens
+  | PlayActionCard
+  | PassReaction
+  | DiscardActionCards;
 
 type HandlerMap = {
   readonly [K in GameCommand['type']]: CommandHandler<
@@ -127,7 +139,44 @@ const handlers: HandlerMap = {
   ScoreObjective: scoreObjectiveHandler,
   EndScoring: endScoringHandler,
   AllocateCommandTokens: allocateCommandTokensHandler,
+  PlayActionCard: playActionCardHandler,
+  PassReaction: passReactionHandler,
+  DiscardActionCards: discardActionCardsHandler,
 };
+
+/** Während ein Zeitfenster offen ist, sind nur Reaktionen erlaubt (RR 3.10). */
+const REACTIONS: readonly string[] = ['PlayActionCard', 'PassReaction', 'DiscardActionCards'];
+
+const reactionOpen = (state: GameState) =>
+  state.reactionWindow !== null || state.pendingPlay !== null;
+
+/** Nach jedem Command läuft die Taktikaktion weiter, bis wieder jemand entscheiden muss. */
+function withFlow(
+  state: GameState,
+  events: readonly GameEvent[],
+  context: DecisionContext,
+): readonly GameEvent[] {
+  const after = events.reduce(evolveGame, state);
+  return [...events, ...progressTactical(after, context)];
+}
+
+/** Ob der Command überhaupt an der Reihe ist: Partie läuft, Phase passt, kein Zeitfenster offen. */
+function admission(state: GameState, command: GameCommand): Check {
+  return firstFailure([
+    guard(state.winner === null, 'game.over', 'Die Partie ist beendet'),
+    guard(
+      phaseOf(state).accepts(command.type),
+      'phase.commandNotAllowed',
+      `${command.type} ist in dieser Phase nicht erlaubt`,
+      { phase: state.phase },
+    ),
+    guard(
+      !reactionOpen(state) || REACTIONS.includes(command.type),
+      'reaction.open',
+      'Erst das offene Zeitfenster abschließen',
+    ),
+  ]);
+}
 
 /** Controller-Einstieg der Domain: wählt den passenden Handler (Command Pattern). */
 export function decideGameCommand(
@@ -135,20 +184,13 @@ export function decideGameCommand(
   command: GameCommand,
   context: DecisionContext,
 ): Result<readonly GameEvent[], DomainError> {
-  if (state.winner !== null) {
-    return err(domainError('game.over', 'Die Partie ist beendet'));
-  }
-  if (!phaseOf(state).accepts(command.type)) {
-    return err(
-      domainError('phase.commandNotAllowed', `${command.type} ist in dieser Phase nicht erlaubt`, {
-        phase: state.phase,
-      }),
-    );
-  }
+  const admitted = admission(state, command);
+  if (!admitted.ok) return admitted;
   // TypeScript kann command.type und den Handler-Typ nicht korrelieren.
   const handler = handlers[command.type] as CommandHandler<GameState, GameCommand, GameEvent>;
   // Alle Einheitenwerte kommen mit den Technologien der Spieler (RR 80.6, Aufwertungen).
-  const decided = handler.decide(state, command, withTechnologies(context, state));
+  const decision = withTechnologies(context, state);
+  const decided = handler.decide(state, command, decision);
   // RR 68.7: Wer das Siegpunktziel erreicht, beendet die Partie sofort.
-  return map(decided, (events) => withVictory(state, events));
+  return map(decided, (events) => withVictory(state, withFlow(state, events, decision)));
 }

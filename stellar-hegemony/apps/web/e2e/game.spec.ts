@@ -145,3 +145,21 @@ test('Hot-Seat: Aufträge und Siegpunkte sind sichtbar', async ({ page }) => {
   await pickCards(page);
   await expect(page.getByRole('heading', { name: /Geheime Aufträge von/ })).toBeVisible();
 });
+
+test('Hot-Seat: der Senat bringt Aktionskarten auf die Hand', async ({ page }) => {
+  await startThreePlayers(page);
+  await expect(page.locator('.hand-panel')).toContainText('Keine Aktionskarten');
+  const free = page.locator('.strategy-card button:not([disabled])');
+  for (let pick = 0; pick < 2; pick += 1) await free.first().click();
+  await page.locator('.strategy-card button', { hasText: 'Baukunst' }).click();
+  await page.locator('.strategy-card button', { hasText: 'Senat' }).click();
+  for (let pick = 0; pick < 2; pick += 1) await free.first().click();
+
+  await page.getByRole('button', { name: 'Strategische Aktion: Senat' }).click();
+  await page.getByRole('button', { name: 'Ausführen' }).click();
+  await expect(page.getByText('Du ziehst 2 Aktionskarten.')).toBeVisible();
+  await page.getByRole('button', { name: 'Ausführen' }).click();
+  await page.getByRole('button', { name: 'Ablehnen' }).click();
+  await expect(page.locator('[data-testid^="hand-p"]', { hasText: '▤ 2' })).toHaveCount(2);
+  await expect(page.locator('.hand-panel .action-card')).not.toHaveCount(0);
+});

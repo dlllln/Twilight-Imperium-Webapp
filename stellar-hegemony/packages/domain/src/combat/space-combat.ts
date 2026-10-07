@@ -1,3 +1,4 @@
+import { bonusFor, boosted } from '../action-card/combat-bonus.ts';
 import type { DecisionContext } from '../eventsourcing/command.ts';
 import { tokenSourceOf } from '../economy/token-source.ts';
 import { adjacentSystemIds } from '../galaxy/adjacency.ts';
@@ -97,13 +98,11 @@ export function rollRound(
   decision: DecisionContext,
 ): GameEvent {
   const catalog = decision.content.units;
-  const volleyOf = (player: PlayerId, target: PlayerId) =>
-    rollVolley(
-      decision.random,
-      state.config.rules.dieSides,
-      combatShooters(shipsOf(state, system, player, catalog), catalog),
-      { player, target },
-    );
+  const volleyOf = (player: PlayerId, target: PlayerId) => {
+    const ships = combatShooters(shipsOf(state, system, player, catalog), catalog);
+    const shooters = boosted(ships, bonusFor(state, player, 'space', combat.round));
+    return rollVolley(decision.random, state.config.rules.dieSides, shooters, { player, target });
+  };
   const volleys = [
     volleyOf(combat.attacker, combat.defender),
     volleyOf(combat.defender, combat.attacker),

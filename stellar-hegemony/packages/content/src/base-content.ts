@@ -1,4 +1,5 @@
 import { type ContentPort, StaticTileCatalog, StaticUnitCatalog } from '@stellar/domain';
+import { ACTION_CARDS } from './action-cards.ts';
 import { galaxyTemplate } from './galaxy-templates.ts';
 import { STRATEGY_CARDS } from './strategy-cards.ts';
 import { ALL_TILES, FACTIONS } from './factions.ts';
@@ -15,6 +16,7 @@ export function createBaseContent(): ContentPort {
     factions: FACTIONS,
     technologies: TECHNOLOGIES,
     objectives: OBJECTIVES,
+    actionCards: ACTION_CARDS,
     galaxyTemplate,
   };
 }

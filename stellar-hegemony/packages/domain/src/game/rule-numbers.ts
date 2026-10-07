@@ -28,6 +28,8 @@ export interface RuleNumbers {
   readonly centerTokenVictoryPoints: number;
   readonly agendasPerPhase: number;
   readonly actionCardHandLimit: number;
+  /** RR 73 Schritt 3: Aktionskarten je Spieler in der Statusphase. */
+  readonly statusPhaseActionCards: number;
   /** RR 57.2: Bewegungswert von Schiffen, die im Nebel starten. */
   readonly nebulaMoveValue: number;
   /** RR 33.1: Bonus je verlassenem Gravitationsstrudel. */

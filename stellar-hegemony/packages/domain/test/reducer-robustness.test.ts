@@ -149,4 +149,23 @@ describe('Status-Events außerhalb der Statusphase', () => {
       error: { code: 'status.wrongStep' },
     });
   });
+
+  it('Aktionskarten-Events ohne offenes Fenster, offene Karte oder Taktikaktion', () => {
+    const state = actionPhaseGame();
+    const after = apply(
+      state,
+      { type: 'ReactionPassed', player: RED },
+      { type: 'CancelDeclined', player: RED },
+      { type: 'HitsCancelled', player: RED, amount: 1 },
+      {
+        type: 'CombatBonusGranted',
+        bonus: { player: RED, kind: 'space', amount: 1, round: 1 },
+      },
+      { type: 'ReactionWindowOpened', kind: 'invasion', key: 'invasion', awaiting: [RED] },
+      { type: 'ReactionPassed', player: GREEN },
+    );
+    expect(after.actionPhase?.tactical).toBeNull();
+    expect(after.reactionWindow).toEqual({ kind: 'invasion', awaiting: [RED], played: [] });
+    expect(after.pendingPlay).toBeNull();
+  });
 });

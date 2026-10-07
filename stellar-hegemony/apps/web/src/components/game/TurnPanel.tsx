@@ -1,7 +1,9 @@
 import {
+  excessActionCards,
   findPlayer,
   type GameState,
   type PlayerId,
+  reactionActor,
   type StrategyCardDefinition,
   type StrategyCardId,
   type StrategyChoice,
@@ -15,6 +17,8 @@ import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { GameOverNotice, StatusTurn } from '../objectives/StatusTurn.tsx';
 import { SecretChoiceForm } from '../objectives/SecretChoiceForm.tsx';
+import { DiscardForm } from '../cards/DiscardForm.tsx';
+import { ReactionPrompt } from '../cards/ReactionPrompt.tsx';
 import { cardText } from './card-text.ts';
 import { ChoiceForm } from './ChoiceForm.tsx';
 import { ActivationBlock, TacticalTurn } from './TacticalPanel.tsx';
@@ -140,10 +144,20 @@ function TurnContent({ game, player }: TurnProps): ReactElement {
   return <ActiveTurn key={player} game={game} player={player} />;
 }
 
-/** Offene Geheimauftrags-Wahl zuerst, dann der Zug der jeweiligen Phase. */
-function PhaseContent({ game, player }: TurnProps): ReactElement | null {
+/** Was jede Phase unterbricht: Geheimauftrags-Wahl, Reaktion, Ablegen über dem Limit. */
+function interruption(game: GameState, player: PlayerId): ReactElement | null {
   if (findPlayer(game, player)?.secretChoice != null)
     return <SecretChoiceForm key={player} game={game} player={player} />;
+  if (reactionActor(game) === player) return <ReactionPrompt game={game} />;
+  if (excessActionCards(game, player) > 0)
+    return <DiscardForm key={player} game={game} player={player} />;
+  return null;
+}
+
+/** Erst die Unterbrechung, dann der Zug der jeweiligen Phase. */
+function PhaseContent({ game, player }: TurnProps): ReactElement | null {
+  const interrupting = interruption(game, player);
+  if (interrupting !== null) return interrupting;
   if (game.phase === 'status') return <StatusTurn game={game} player={player} />;
   return game.phase === 'action' ? <TurnContent game={game} player={player} /> : null;
 }
@@ -157,11 +171,9 @@ const PHASE_TITLE = {
   gameOver: 'phase.status',
 } as const satisfies Record<GameState['phase'], string>;
 
-/** Die Strategiephase wählt in der Kartenauslage; hier erscheint sie nur für Geheimaufträge. */
+/** Die Strategiephase wählt in der Kartenauslage; hier erscheint sie nur bei Unterbrechungen. */
 const hasTurnPanel = (game: GameState, actor: PlayerId): boolean =>
-  game.phase === 'action' ||
-  game.phase === 'status' ||
-  findPlayer(game, actor)?.secretChoice != null;
+  game.phase === 'action' || game.phase === 'status' || interruption(game, actor) !== null;
 
 /** Was der Spieler am Bildschirm gerade tun kann; nach dem Sieg nur noch das Ergebnis. */
 export function TurnPanel({ game }: { readonly game: GameState }): ReactElement | null {

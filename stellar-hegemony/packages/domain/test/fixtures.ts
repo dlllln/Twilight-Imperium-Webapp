@@ -1,4 +1,6 @@
 import {
+  type ActionCardDefinition,
+  actionCardId,
   type ContentPort,
   factionId,
   type FactionDefinition,
@@ -51,6 +53,7 @@ export const RULES: RuleNumbers = {
   centerTokenVictoryPoints: 1,
   agendasPerPhase: 2,
   actionCardHandLimit: 7,
+  statusPhaseActionCards: 1,
   nebulaMoveValue: 1,
   gravityRiftMoveBonus: 1,
   gravityRiftDestroyMaxRoll: 3,
@@ -428,6 +431,47 @@ export const OBJECTIVES: readonly ObjectiveDefinition[] = [
   objective('throne', 'secret', null, { kind: 'centerPlanet' }),
 ];
 
+const actionCard = (
+  id: string,
+  timing: ActionCardDefinition['timing'],
+  effect: ActionCardDefinition['effect'],
+): ActionCardDefinition => ({ id: actionCardId(id), copies: 2, timing, effect });
+
+/** Je Wirkungsart eine Karte in zwei Exemplaren. */
+export const ACTION_CARDS: readonly ActionCardDefinition[] = [
+  actionCard('goods', 'action', { kind: 'gainTradeGoods', amount: 2 }),
+  actionCard('convoy', 'action', { kind: 'replenishCommodities' }),
+  actionCard('ready', 'action', { kind: 'readyPlanets', count: 2 }),
+  actionCard('reserve', 'action', { kind: 'gainCommandTokens', amount: 1 }),
+  actionCard('recall', 'action', { kind: 'recallToken' }),
+  actionCard('recruit', 'action', {
+    kind: 'placeUnits',
+    unit: T.infantry,
+    count: 2,
+    where: 'homePlanet',
+  }),
+  actionCard('intel', 'action', { kind: 'drawActionCards', count: 2 }),
+  actionCard('unrest', 'action', { kind: 'exhaustForeignPlanet' }),
+  actionCard('marque', 'action', { kind: 'stealTradeGoods', amount: 2 }),
+  actionCard('raid', 'action', { kind: 'destroyGroundForce', count: 1 }),
+  actionCard('dock', 'action', { kind: 'repairUnits' }),
+  actionCard('mission', 'action', { kind: 'tradeGoodsPerNeighbor', amount: 1 }),
+  actionCard('counter', 'cancel', { kind: 'cancelCard' }),
+  actionCard('mobilize', 'afterActivation', {
+    kind: 'placeUnits',
+    unit: T.infantry,
+    count: 1,
+    where: 'activatedPlanet',
+  }),
+  actionCard('drill', 'combatRound', { kind: 'combatBonus', amount: 1 }),
+  actionCard('evade', 'afterHits', { kind: 'cancelHits', amount: 1 }),
+  actionCard('entrench', 'invasion', { kind: 'groundBonus', amount: 1, role: 'defender' }),
+  actionCard('landing', 'invasion', { kind: 'groundBonus', amount: 1, role: 'attacker' }),
+  actionCard('rider', 'secondary', { kind: 'freeSecondary' }),
+];
+
+export const AC = (id: string) => actionCardId(id);
+
 export const content: ContentPort = {
   units: catalog,
   tiles: new StaticTileCatalog(TILES),
@@ -435,6 +479,7 @@ export const content: ContentPort = {
   factions: FACTIONS,
   technologies: TECHNOLOGIES,
   objectives: OBJECTIVES,
+  actionCards: ACTION_CARDS,
   galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
 };
 

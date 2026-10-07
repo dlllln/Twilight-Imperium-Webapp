@@ -11,9 +11,10 @@ import {
   type Payment,
   planetId,
   type PlayerId,
+  scoringOptions,
   updatePlayer,
 } from '../src/index.ts';
-import { BLUE, contextWith, RED } from './fixtures.ts';
+import { BLUE, content, contextWith, RED } from './fixtures.ts';
 import { actionPhaseGame, GREEN, run, startedGame, statusPhaseGame, step } from './game-flow.ts';
 
 const id = objectiveId;
@@ -156,7 +157,7 @@ describe('Statusphase: Aufträge werten (RR 73.1, RR 12)', () => {
 describe('Statusphase: Marker und neue Runde (RR 73.2–73.8)', () => {
   const allEnded = () => run(statusPhaseGame(), [endScoring(RED), endScoring(BLUE)]);
 
-  it('RR 73.2/73.4: nach dem Werten Auftrag aufdecken, Marker vom Spielplan nehmen', () => {
+  it('RR 73.2–73.4: Auftrag aufdecken, je 1 Aktionskarte ziehen, Marker vom Spielplan', () => {
     const before = allEnded();
     const system = Object.keys(before.systems)[0] as string;
     const marked = {
@@ -173,9 +174,13 @@ describe('Statusphase: Marker und neue Runde (RR 73.2–73.8)', () => {
     expect(events.map((event) => event.type)).toEqual([
       'ScoringFinished',
       'PublicObjectiveRevealed',
+      'ActionCardsDrawn',
+      'ActionCardsDrawn',
+      'ActionCardsDrawn',
       'CommandTokensCleared',
       'TokenStepReached',
     ]);
+    expect(state.players.map((player) => player.actionCards.length)).toEqual([1, 1, 1]);
     expect(state.objectives.public.every((slot) => slot.revealed)).toBe(true);
     expect(state.systems[system]?.commandTokens).toEqual([]);
     expect(playerOf(state, GREEN)?.reinforcementTokens).toBe(
@@ -328,5 +333,24 @@ describe('Rundenzähler für Aufträge der Aktionsphase', () => {
       destroyed: ['x'] as never,
     });
     expect(after.players.map((p) => p.roundStats.shipsDestroyed)).toEqual([0, 0, 0]);
+  });
+});
+
+describe('Wertbare Aufträge für Clients (RR 61.10)', () => {
+  it('in der Strategiephase nichts; in der Statusphase nur Status-Aufträge des Spielers am Zug', () => {
+    expect(scoringOptions(startedGame(), RED, content)).toEqual([]);
+    const status = withSecrets(statusPhaseGame(), RED, ['goods-3', 'won-1']);
+    const options = scoringOptions(status, RED, content).map((option) => option.definition.id);
+    expect(options).toContain(id('goods-3'));
+    expect(options).not.toContain(id('won-1'));
+    expect(scoringOptions(status, BLUE, content)).toEqual([]);
+  });
+
+  it('in der Aktionsphase nur Aktions-Aufträge, mit Angabe, ob sie erfüllt sind', () => {
+    const state = withSecrets(actionPhaseGame(), RED, ['won-1', 'goods-3']);
+    const options = scoringOptions(state, RED, content);
+    expect(options.map((option) => [option.definition.id, option.met])).toEqual([
+      [id('won-1'), false],
+    ]);
   });
 });

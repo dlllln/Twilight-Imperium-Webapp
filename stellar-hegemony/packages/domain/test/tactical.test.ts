@@ -62,6 +62,8 @@ describe('Aktivierung (RR 79.1)', () => {
       step: 'movement',
       pendingHits: [],
       combat: null,
+      windows: [],
+      bonuses: [],
     });
   });
 

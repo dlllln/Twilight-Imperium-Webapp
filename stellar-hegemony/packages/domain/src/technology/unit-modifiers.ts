@@ -2,7 +2,7 @@ import type { UnitCapability, UnitDefinition } from '../unit/unit-definition.ts'
 import type { CapabilityChange, UnitChange, UnitSelector } from './technology-definition.ts';
 
 /** Kleinster sinnvoller Wert für Würfelziele und Bewegung. */
-const MIN_HIT_ON = 1;
+export const MIN_HIT_ON = 1;
 
 export function matches(selector: UnitSelector, unit: UnitDefinition): boolean {
   return (

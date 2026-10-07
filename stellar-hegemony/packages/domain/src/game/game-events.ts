@@ -32,6 +32,8 @@ import { objectiveReducers } from '../objective/objective-reducers.ts';
 import { trackRoundStats } from '../objective/round-stats.ts';
 import type { StatusEvent } from '../status/status-events.ts';
 import { statusReducers } from '../status/status-reducers.ts';
+import type { ActionCardEvent } from '../action-card/action-card-events.ts';
+import { actionCardReducers } from '../action-card/action-card-reducers.ts';
 import type { GameState } from './game-state.ts';
 
 /** Alle Events einer Partie. Jede Iteration erweitert diese Union um ihr Modul. */
@@ -50,6 +52,7 @@ export type GameEvent =
   | TechnologyEvent
   | ObjectiveEvent
   | StatusEvent
+  | ActionCardEvent
   | EconomyEvent;
 
 const gameReducers: ReducerMap<GameState, GameEvent> = {
@@ -68,6 +71,7 @@ const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...technologyReducers,
   ...objectiveReducers,
   ...statusReducers,
+  ...actionCardReducers,
 };
 
 /** Wendet ein Event an und erhöht die Version (Indirection über eine zentrale Stelle). */

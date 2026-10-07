@@ -1,3 +1,4 @@
+import type { CombatBonus } from '../action-card/action-card-state.ts';
 import type { PendingHits, SpaceCombatState, TacticalStep } from '../combat/combat-state.ts';
 import type { PlayerId, SystemId } from '../shared/ids.ts';
 import type { StrategyCardId } from '../strategy/strategy-card.ts';
@@ -18,6 +19,9 @@ export interface TacticalActionState {
   /** Offene Trefferzuweisungen; solange welche offen sind, ruht der Ablauf. */
   readonly pendingHits: readonly PendingHits[];
   readonly combat: SpaceCombatState | null;
+  /** Schon angebotene Zeitfenster dieser Taktikaktion. */
+  readonly windows: readonly string[];
+  readonly bonuses: readonly CombatBonus[];
 }
 
 /** Ablauf der Aktionsphase (RR 4, RR 40). */

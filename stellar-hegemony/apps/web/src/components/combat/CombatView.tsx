@@ -1,6 +1,7 @@
-import type { GameState, PlayerId, SystemId } from '@stellar/domain';
+import { type GameState, type PlayerId, reactionActor, type SystemId } from '@stellar/domain';
 import type { ReactElement } from 'react';
 import {
+  type CombatDecision,
   type CombatLogEvent,
   combatDecision,
   combatParties,
@@ -12,6 +13,8 @@ import { systemLabel } from '../../labels.ts';
 import { combatBackdrop } from '../../render/images.ts';
 import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { PlayableCards } from '../cards/PlayableCards.tsx';
+import { ReactionPrompt } from '../cards/ReactionPrompt.tsx';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { CombatLog } from './CombatLog.tsx';
 import { FleetColumn } from './FleetColumn.tsx';
@@ -35,10 +38,29 @@ function roleOf(game: GameState, log: readonly CombatLogEvent[], player: PlayerI
   return 'bystander';
 }
 
+/** Treffer zuweisen; Karten gegen Treffer stehen direkt daneben (RR 3.10). */
+function HitsDecision(props: {
+  readonly game: GameState;
+  readonly decision: Extract<CombatDecision, { kind: 'hits' }>;
+}): ReactElement {
+  const { game, decision } = props;
+  return (
+    <>
+      <PlayableCards game={game} player={decision.player} timings={['afterHits']} />
+      <HitAssignmentForm
+        key={`${decision.player}-${String(decision.hits)}`}
+        game={game}
+        {...decision}
+      />
+    </>
+  );
+}
+
 /** Aktuelle Entscheidung oder, wenn nichts mehr offen ist, der Knopf zum Schließen. */
 function DecisionArea({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const close = useGameStore((state) => state.closeCombat);
+  if (reactionActor(game) !== null) return <ReactionPrompt game={game} withCards />;
   const decision = combatDecision(game, content);
   if (decision === null)
     return (
@@ -52,11 +74,7 @@ function DecisionArea({ game }: { readonly game: GameState }): ReactElement {
         <PlayerTag game={game} id={decision.player} /> {t('decides')}
       </p>
       {decision.kind === 'hits' ? (
-        <HitAssignmentForm
-          key={`${decision.player}-${String(decision.hits)}`}
-          game={game}
-          {...decision}
-        />
+        <HitsDecision game={game} decision={decision} />
       ) : (
         <RetreatForm game={game} player={decision.player} targets={decision.targets} />
       )}

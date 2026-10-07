@@ -134,6 +134,8 @@ describe('Bombardement im Taktikpanel (RR 20)', () => {
       step: 'bombardment',
       pendingHits: [],
       combat: null,
+      windows: [],
+      bonuses: [],
     } as const;
     useGameStore.setState({
       combatLog: [],

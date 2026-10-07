@@ -57,13 +57,13 @@ function SpeakerPicker(props: PoliticsFormProps): ReactElement {
   );
 }
 
-/** Politik: Sprecher wechseln; die Sekundärfähigkeit wirkt erst mit den Aktionskarten. */
+/** Politik: Sprecher wechseln; die Sekundärfähigkeit zieht Aktionskarten (RR 61.3). */
 export function PoliticsForm(props: PoliticsFormProps): ReactElement {
   const t = useT();
   if (props.ability === 'primary') return <SpeakerPicker {...props} />;
   return (
     <div className="choice-form">
-      <p className="hint">{t('noEffectYet')}</p>
+      <p className="hint">{t('politicsDraw')}</p>
       <Actions
         label={t('confirm')}
         onClick={() => props.onSubmit({ mechanic: 'politics', speaker: null })}

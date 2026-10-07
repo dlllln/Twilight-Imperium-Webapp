@@ -33,7 +33,9 @@ export type CombatLogEvent = Extract<
       | 'GroundCombatRoundRolled'
       | 'GroundCombatEnded'
       | 'PlanetControlGained'
-      | 'CenterTokenRemoved';
+      | 'CenterTokenRemoved'
+      | 'CombatBonusGranted'
+      | 'HitsCancelled';
   }
 >;
 
@@ -57,6 +59,8 @@ const FOLLOWING = new Set<GameEvent['type']>([
   'ShipsRetreated',
   'SpaceCombatEnded',
   'UnitsDestroyed',
+  'CombatBonusGranted',
+  'HitsCancelled',
 ]);
 
 const logs = (log: readonly CombatLogEvent[], event: GameEvent): event is CombatLogEvent =>
