@@ -13,7 +13,7 @@ export function HandPanel({ game }: { readonly game: GameState }): ReactElement 
   if (player === null) return null;
   const cards = handCards(game, player, content);
   return (
-    <section className="game-section hand-panel">
+    <section className="game-section hand-panel" data-tutorial="hand">
       <h2>
         {t('actionCards')} · {t('handOf')} <PlayerTag game={game} id={player} />
       </h2>

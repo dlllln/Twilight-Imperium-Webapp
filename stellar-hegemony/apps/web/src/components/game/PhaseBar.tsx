@@ -17,7 +17,7 @@ export function PhaseBar({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const actor = currentActor(game);
   return (
-    <nav className="phase-bar glass" aria-label={t('round')}>
+    <nav className="phase-bar glass" aria-label={t('round')} data-tutorial="phases">
       <strong className="round">
         {t('round')} {game.round}
       </strong>

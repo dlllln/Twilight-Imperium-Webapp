@@ -47,7 +47,7 @@ export function StrategyCardGrid({ game }: { readonly game: GameState }): ReactE
       ? undefined
       : () => send({ type: 'PickStrategyCard', issuedBy: actor, card: card.id });
   return (
-    <section className="game-section">
+    <section className="game-section" data-tutorial="strategy">
       <h2>{t('strategyCards')}</h2>
       {actor !== null && <p className="hint">{t('pickHint')}</p>}
       <ul className="card-grid">

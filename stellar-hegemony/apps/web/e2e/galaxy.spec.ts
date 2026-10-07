@@ -24,3 +24,23 @@ test('Galaxie wird angezeigt, neu erzeugt und per Map-String importiert', async 
   await page.getByRole('button', { name: 'EN', exact: true }).click();
   await expect(page.getByRole('button', { name: 'New galaxy' })).toBeVisible();
 });
+
+test('Anleitung führt durch die Oberfläche; Einstellungen bleiben nach dem Neuladen', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Anleitung' }).click();
+  const guide = page.getByRole('dialog', { name: 'Anleitung' });
+  await expect(guide).toContainText('Willkommen');
+  await guide.getByRole('button', { name: 'Weiter' }).click();
+  await expect(page.locator('[data-tutorial="galaxy"]')).toHaveClass(/tutorial-focus/);
+  await guide.getByRole('button', { name: 'Schließen' }).click();
+  await expect(guide).toBeHidden();
+
+  const animations = page.getByRole('button', { name: 'Animationen' });
+  await animations.click();
+  await expect(page.locator('html')).toHaveClass(/motion-off/);
+  await page.reload();
+  await expect(animations).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('html')).toHaveClass(/motion-off/);
+});

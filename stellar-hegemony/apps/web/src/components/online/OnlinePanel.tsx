@@ -35,7 +35,7 @@ export function OnlinePanel(): ReactElement {
   const { layout, playerCount } = useGalaxyStore();
   const busy = status === 'connecting';
   return (
-    <section className="online-panel glass" aria-label={t('online')}>
+    <section className="online-panel glass" aria-label={t('online')} data-tutorial="online">
       <h2>{t('online')}</h2>
       <label>
         {t('yourName')}

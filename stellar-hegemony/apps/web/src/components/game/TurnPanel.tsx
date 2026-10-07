@@ -12,7 +12,9 @@ import {
 } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
 import { useOthersTurn, useGameStore, useHumanActor } from '../../game-store.ts';
+import { useSettingsStore } from '../../settings-store.ts';
 import { content } from '../../store.ts';
+import { PHASE_TIPS } from '../../tutorial/tutorial-steps.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { GameOverNotice, StatusTurn } from '../objectives/StatusTurn.tsx';
 import { SecretChoiceForm } from '../objectives/SecretChoiceForm.tsx';
@@ -182,12 +184,20 @@ function BotNotice({ game, player }: TurnProps): ReactElement {
   const t = useT();
   const bot = useGameStore((state) => state.bots.includes(player));
   return (
-    <section className="game-section bot-turn" aria-live="polite">
+    <section className="game-section bot-turn" aria-live="polite" data-tutorial="turn">
       <p>
         <PlayerTag game={game} id={player} /> {t(bot ? 'botThinking' : 'otherThinking')}
       </p>
     </section>
   );
+}
+
+/** Ein kurzer Satz zur Phase, solange Tipps eingeschaltet sind. */
+function PhaseTip({ game }: { readonly game: GameState }): ReactElement | null {
+  const language = useLanguage();
+  const tips = useSettingsStore((state) => state.tips);
+  if (!tips) return null;
+  return <p className="hint phase-tip">{PHASE_TIPS[game.phase][language]}</p>;
 }
 
 /** Was der Spieler am Bildschirm gerade tun kann; nach dem Sieg nur noch das Ergebnis. */
@@ -199,8 +209,9 @@ export function TurnPanel({ game }: { readonly game: GameState }): ReactElement 
   if (bot !== null) return <BotNotice game={game} player={bot} />;
   if (actor === null || !hasTurnPanel(game, actor)) return null;
   return (
-    <section className="game-section">
+    <section className="game-section your-turn" data-tutorial="turn">
       <h2>{t(PHASE_TITLE[game.phase])}</h2>
+      <PhaseTip game={game} />
       <PhaseContent game={game} player={actor} />
     </section>
   );

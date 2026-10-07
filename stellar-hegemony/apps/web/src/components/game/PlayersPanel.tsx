@@ -62,7 +62,7 @@ export function PlayersPanel({ game }: { readonly game: GameState }): ReactEleme
     game.actionPhase?.order ?? clockwiseFrom(game, game.speaker ?? game.host).map((p) => p.id);
   const players = order.flatMap((id) => game.players.filter((player) => player.id === id));
   return (
-    <section className="game-section">
+    <section className="game-section" data-tutorial="players">
       <h2>{t('initiativeOrder')}</h2>
       <ol className="player-list">
         {players.map((player) => (

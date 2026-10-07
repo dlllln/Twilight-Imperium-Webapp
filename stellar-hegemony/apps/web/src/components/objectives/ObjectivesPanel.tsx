@@ -85,7 +85,7 @@ export function ObjectivesPanel({ game }: { readonly game: GameState }): ReactEl
   const t = useT();
   const actor = useViewer(game);
   return (
-    <section className="game-section objectives-panel">
+    <section className="game-section objectives-panel" data-tutorial="objectives">
       <h2>{t('objectives')}</h2>
       <VictoryTrack game={game} />
       <PublicRow game={game} />

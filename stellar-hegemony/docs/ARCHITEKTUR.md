@@ -396,7 +396,30 @@ einem Verbindungsabbruch oder Neuladen auf seinen Platz zurück.
 | Web: `useGameStore` (`me`, `remote`, `receive`)                 | Strategy: im Hot-Seat entscheidet die Domain lokal, online schickt `send` an den Server; `useHumanActor` und `useViewer` zeigen online nur den eigenen Platz.                      |
 | Web: `OnlinePanel`, `LobbyPanel`, `ConnectionBanner`            | Eröffnen und Beitreten, Wartesaal mit Code und Verbindungsstatus, Hinweis bei Verbindungsabbruch; getrennte Mitspieler tragen in der Spielerliste ein Kennzeichen.                 |
 
-## 17. Iterationen
+## 17. Iteration 13 im Detail
+
+Züge werden sichtbar und hörbar. Die Karte zeigt kurze Effekte: ein Puls beim Aktivieren, eine
+Leuchtspur entlang der Flugroute, Explosionen, die Eroberung eines Planeten und neu gebaute Einheiten.
+Würfel rollen nacheinander aus, Treffer flammen auf, die aktuelle Phase leuchtet. Alle Klänge sind
+eigene Synthesizer-Klänge aus der Web Audio API, ohne Audiodateien. Klang, Lautstärke, Animationen
+und Phasentipps stellt jeder Spieler in der Werkzeugleiste ein; wer im System weniger Bewegung
+wünscht, startet ohne Animationen. Die Anleitung erklärt Bedienung und Ablauf in eigenen Worten und
+hebt dabei das jeweilige Bedienelement hervor.
+
+| Element                                   | Prinzip                                                                                                                                                         |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useGameStore.lastEvents`                 | Single Source: jeder Zug hinterlässt Zustand vorher und seine Events; Karte und Klang lesen beides, die Domain bleibt unberührt.                                |
+| `mapEffects` mit Tabelle `RULES`          | Open/Closed: ein neuer Effekt ist ein Tabelleneintrag je Event-Typ, keine Verzweigung. Reine Funktion, deshalb ohne Pixi testbar.                               |
+| `EffectLayer`                             | Single Responsibility: zeichnet nur laufende Effekte und meldet, wann sie enden. Die Szene erhöht die Bildrate nur so lange, danach ruht die Zeichenschleife.   |
+| `soundCues`, `turnCue` mit Tabelle `CUES` | Open/Closed und Information Expert: welcher Event welchen Klang auslöst, steht als Daten; höchstens vier Klänge je Zug, der Sieg übertönt alles.                |
+| `RECIPES`                                 | Klänge als Daten (Töne mit Gleitfrequenz, gefiltertes Rauschen). Ein neuer Klang braucht keinen neuen Code.                                                     |
+| `SoundPort`, `SynthSound`                 | Dependency Inversion und Interpreter: die Oberfläche kennt nur `play`; der Synthesizer übersetzt Rezepte in Web-Audio-Knoten und entsteht erst beim ersten Ton. |
+| `useSoundEffects`                         | Adapter zwischen Spielzustand und `SoundPort`; Tests setzen über `setSoundPort` eine Attrappe ein.                                                              |
+| `useSettingsStore`                        | Einstellungen je Spieler im `localStorage`; `motion-off` am Wurzelelement schaltet alle CSS-Bewegungen ab.                                                      |
+| `TUTORIAL_STEPS`, `PHASE_TIPS`            | Inhalte als Daten in eigenen Worten; `data-tutorial` verbindet einen Schritt mit seinem Bedienelement, ohne dass die Panels die Anleitung kennen.               |
+| `useTutorialStore`, `TutorialDialog`      | Zustand (offen, Schritt) getrennt von der Darstellung; fehlt ein Element gerade, bleibt der Schritt trotzdem lesbar.                                            |
+
+## 18. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -412,9 +435,9 @@ einem Verbindungsabbruch oder Neuladen auf seinen Platz zurück.
 | 10  | Agendaphase, Abstimmung                             | ✓     |
 | 11  | Fraktionsfähigkeiten, KI-Gegner                     | ✓     |
 | 12  | Multiplayer, Persistenz, Reconnect                  | ✓     |
-| 13  | Animationen, Sound-Hooks, Tutorial                  | offen |
+| 13  | Animationen, Sound-Hooks, Tutorial                  | ✓     |
 
-## 18. Befehle
+## 19. Befehle
 
 ```
 pnpm install

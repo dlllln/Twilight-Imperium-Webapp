@@ -6,9 +6,12 @@ import { PhaseBar } from './components/game/PhaseBar.tsx';
 import { ConnectionBanner } from './components/online/ConnectionBanner.tsx';
 import { SetupSidebar } from './components/online/SetupSidebar.tsx';
 import { Toolbar } from './components/Toolbar.tsx';
+import { TutorialDialog } from './components/tutorial/TutorialDialog.tsx';
+import { useSoundEffects } from './audio/use-sound-effects.ts';
 import { useGameStore } from './game-store.ts';
 import { handleShortcut } from './keyboard.ts';
 import { useOnlineStore } from './online/online-store.ts';
+import { useSettingsStore } from './settings-store.ts';
 import { useGalaxyStore } from './store.ts';
 import { useBotDriver } from './use-bot-driver.ts';
 
@@ -20,10 +23,20 @@ function onKey(event: KeyboardEvent): void {
   if (handleShortcut(event, shortcuts)) event.preventDefault();
 }
 
+/** Ohne Animationen schaltet eine Klasse am Wurzelelement alle CSS-Bewegungen ab. */
+function useMotionSetting(): void {
+  const animations = useSettingsStore((state) => state.animations);
+  useEffect(() => {
+    document.documentElement.classList.toggle('motion-off', !animations);
+  }, [animations]);
+}
+
 export function App(): ReactElement {
   const language = useGalaxyStore((state) => state.language);
   const game = useGameStore((state) => state.game);
   useBotDriver();
+  useSoundEffects();
+  useMotionSetting();
 
   useEffect(() => {
     useGalaxyStore.getState().generate();
@@ -46,6 +59,7 @@ export function App(): ReactElement {
         {game === null ? <SetupSidebar /> : <GameSidebar game={game} />}
       </main>
       {game !== null && <CombatView />}
+      <TutorialDialog />
     </div>
   );
 }

@@ -10,12 +10,14 @@ import {
   useRef,
   useState,
 } from 'react';
+import { type MapEffect, mapEffects } from '../animation/map-effects.ts';
 import { useGameStore } from '../game-store.ts';
 import { type Bounds, boundsOf, hexCorners, hexToPixel, toSvgPoints } from '../hex-geometry.ts';
 import type { Language } from '../i18n.ts';
 import { gameScene, layoutScene, type SceneHex } from '../render/scene-model.ts';
 import { content, useGalaxyStore, type Viewport } from '../store.ts';
 import { highlightsOf, movementChoices } from '../tactical-view.ts';
+import { useSettingsStore } from '../settings-store.ts';
 import { usePanZoom } from '../use-pan-zoom.ts';
 import { HexTooltip } from './HexTooltip.tsx';
 
@@ -46,6 +48,18 @@ function useScene(): readonly SceneHex[] {
   return useMemo(
     () => sceneFor({ layout, game, selected, language }),
     [layout, game, selected, language],
+  );
+}
+
+const NO_EFFECTS: readonly MapEffect[] = [];
+
+/** Effekte des letzten Zugs, wenn Animationen eingeschaltet sind. */
+function useMapEffects(): readonly MapEffect[] {
+  const last = useGameStore((state) => state.lastEvents);
+  const animations = useSettingsStore((state) => state.animations);
+  return useMemo(
+    () => (animations && last !== null ? mapEffects(last.before, last.events) : NO_EFFECTS),
+    [animations, last],
   );
 }
 
@@ -122,6 +136,7 @@ const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
 export function GalaxyMap(): ReactElement {
   const { hovered, viewport } = useGalaxyStore();
   const hexes = useScene();
+  const effects = useMapEffects();
   const bounds = useMemo(() => boundsOf(hexes.map((hex) => hex.position)), [hexes]);
   const svg = useRef<SVGSVGElement>(null);
   const { cursor, wasDrag, ...handlers } = usePanZoom(svg, bounds.width);
@@ -133,10 +148,10 @@ export function GalaxyMap(): ReactElement {
   };
   const hoveredHex = hexes.find((hex) => hex.key === hovered);
   return (
-    <div className={flat ? 'galaxy flat' : 'galaxy'} {...handlers}>
+    <div className={flat ? 'galaxy flat' : 'galaxy'} data-tutorial="galaxy" {...handlers}>
       {!flat && (
         <Suspense fallback={null}>
-          <PixiCanvas {...{ hexes, bounds, viewport, onUnavailable }} />
+          <PixiCanvas {...{ hexes, bounds, viewport, effects, onUnavailable }} />
         </Suspense>
       )}
       <HexTargets ref={svg} hexes={hexes} bounds={bounds} viewport={viewport} onPick={pick} />

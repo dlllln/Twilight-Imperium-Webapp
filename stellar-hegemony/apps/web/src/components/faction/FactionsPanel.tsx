@@ -36,7 +36,7 @@ function FactionEntry({
 export function FactionsPanel({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   return (
-    <details className="game-section factions-panel">
+    <details className="game-section factions-panel" data-tutorial="factions">
       <summary>
         <h2>{t('factions')}</h2>
       </summary>

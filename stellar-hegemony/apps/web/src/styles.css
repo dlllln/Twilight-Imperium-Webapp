@@ -109,8 +109,20 @@ button[aria-pressed='true'] {
   box-shadow: 0 0 10px rgba(255, 210, 120, 0.35);
 }
 
-.languages {
+.settings {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.settings input[type='range'] {
+  width: 80px;
+  padding: 0;
+  accent-color: var(--gold);
+}
+
+.languages {
   display: flex;
   gap: 4px;
 }
@@ -1441,4 +1453,181 @@ input[type='checkbox'] {
   border-radius: 8px;
   background: rgba(255, 138, 128, 0.15);
   color: #ffb4ab;
+}
+
+/* Iteration 13: Bewegung. Alles hier entfällt mit `motion-off` (Einstellung oder Systemwunsch). */
+
+@keyframes die-tumble {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) rotate(-200deg) scale(0.6);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(2px) rotate(12deg) scale(1.08);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes hit-flare {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 210, 120, 0);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(255, 230, 160, 0.95);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255, 210, 120, 0.6);
+  }
+}
+
+@keyframes phase-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(255, 210, 120, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(255, 210, 120, 0.55);
+  }
+}
+
+@keyframes combat-open {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes turn-arrive {
+  from {
+    border-color: var(--gold-bright);
+    box-shadow: 0 0 22px rgba(255, 210, 120, 0.55);
+  }
+  to {
+    box-shadow: none;
+  }
+}
+
+@keyframes focus-ring {
+  0%,
+  100% {
+    outline-color: rgba(255, 210, 120, 0.55);
+  }
+  50% {
+    outline-color: rgba(255, 236, 180, 1);
+  }
+}
+
+.die {
+  animation: die-tumble 420ms ease-out both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+.die.hit {
+  animation:
+    die-tumble 420ms ease-out both,
+    hit-flare 700ms ease-out 1;
+  animation-delay: calc(var(--i, 0) * 45ms), calc(var(--i, 0) * 45ms + 420ms);
+}
+
+.phases li[aria-current='step'] {
+  animation: phase-glow 2.6s ease-in-out infinite;
+}
+
+.combat-view {
+  animation: combat-open 320ms ease-out;
+}
+
+.bot-turn p {
+  animation: breathe 1.8s ease-in-out infinite;
+}
+
+.your-turn {
+  animation: turn-arrive 1.2s ease-out;
+}
+
+.phase-tip {
+  margin-bottom: 8px;
+  padding-left: 8px;
+  border-left: 2px solid var(--gold-line);
+}
+
+.tutorial {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  width: min(380px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--gold-line);
+  border-radius: 14px;
+  background: rgba(8, 11, 24, 0.96);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  animation: combat-open 260ms ease-out;
+}
+
+.tutorial h2 {
+  margin: 0;
+  font-family: var(--title-font);
+  color: var(--gold-bright);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+
+.tutorial p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.tutorial .tutorial-count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tutorial-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.tutorial-focus {
+  outline: 2px solid rgba(255, 210, 120, 0.8);
+  outline-offset: 3px;
+  border-radius: 10px;
+  animation: focus-ring 1.4s ease-in-out infinite;
+}
+
+@media (max-width: 720px) {
+  .tutorial {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    width: auto;
+  }
+}
+
+:root.motion-off *,
+:root.motion-off *::before,
+:root.motion-off *::after {
+  animation: none !important;
+  transition: none !important;
 }

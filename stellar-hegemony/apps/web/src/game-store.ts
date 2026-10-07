@@ -4,6 +4,7 @@ import {
   currentActor,
   type DomainError,
   type GameCommand,
+  type GameEvent,
   type GameState,
   type MapLayout,
   type PlayerId,
@@ -17,6 +18,12 @@ import {
   decisionContext,
 } from './local-game.ts';
 import { nextSeed } from './store.ts';
+
+export interface LastEvents {
+  readonly serial: number;
+  readonly before: GameState;
+  readonly events: readonly GameEvent[];
+}
 
 export interface GameStore {
   readonly game: GameState | null;
@@ -33,6 +40,8 @@ export interface GameStore {
   /** Protokoll der laufenden Taktikaktion für die Kampfansicht. */
   readonly combatLog: readonly CombatLogEvent[];
   readonly combatOpen: boolean;
+  /** Die Events des letzten Zugs samt Zustand davor; Animationen und Klänge hängen daran. */
+  readonly lastEvents: LastEvents | null;
   /** Startet eine lokale Partie auf der aktuellen Galaxie; KI-Gegner auf den letzten Plätzen. */
   readonly start: (
     layout: MapLayout,
@@ -56,7 +65,13 @@ export interface GameStore {
   readonly closeCombat: () => void;
 }
 
-const FRESH = { error: null, selected: null, combatLog: [], combatOpen: false } as const;
+const FRESH = {
+  error: null,
+  selected: null,
+  combatLog: [],
+  combatOpen: false,
+  lastEvents: null,
+} as const;
 
 type Set = StoreApi<GameStore>['setState'];
 type Get = StoreApi<GameStore>['getState'];
@@ -81,13 +96,14 @@ const absent = (game: GameState, me: PlayerId | null, bots: readonly PlayerId[])
 const advance =
   (set: Set, get: Get) =>
   (before: GameState, state: GameState, events: GameUpdate['events']): void => {
-    const { combatLog, combatOpen, bots, me } = get();
+    const { combatLog, combatOpen, bots, me, lastEvents } = get();
     const opens = opensCombat(events) && involvesHuman(before, events, absent(before, me, bots));
     set({
       game: state,
       error: null,
       combatLog: nextCombatLog(combatLog, events),
       combatOpen: combatOpen || opens,
+      lastEvents: { serial: (lastEvents?.serial ?? 0) + 1, before, events },
     });
   };
 
