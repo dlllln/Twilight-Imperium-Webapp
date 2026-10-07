@@ -31,6 +31,13 @@ import {
   type DeclareRetreat,
   declareRetreatHandler,
 } from '../combat/combat-commands.ts';
+import {
+  type Bombard,
+  bombardHandler,
+  type CommitGroundForces,
+  commitGroundForcesHandler,
+} from '../invasion/invasion-commands.ts';
+import { type ProduceUnits, produceUnitsHandler } from '../production/production-commands.ts';
 import { phaseOf } from '../phases/game-phase.ts';
 import { type StartGame, startGameHandler } from '../phases/start-game.ts';
 import { seatPlayerHandler, type SeatPlayer } from '../setup/setup-commands.ts';
@@ -53,7 +60,10 @@ export type GameCommand =
   | MoveShips
   | EndTacticalAction
   | AssignHits
-  | DeclareRetreat;
+  | DeclareRetreat
+  | Bombard
+  | CommitGroundForces
+  | ProduceUnits;
 
 type HandlerMap = {
   readonly [K in GameCommand['type']]: CommandHandler<
@@ -78,6 +88,9 @@ const handlers: HandlerMap = {
   EndTacticalAction: endTacticalActionHandler,
   AssignHits: assignHitsHandler,
   DeclareRetreat: declareRetreatHandler,
+  Bombard: bombardHandler,
+  CommitGroundForces: commitGroundForcesHandler,
+  ProduceUnits: produceUnitsHandler,
 };
 
 /** Controller-Einstieg der Domain: wählt den passenden Handler (Command Pattern). */

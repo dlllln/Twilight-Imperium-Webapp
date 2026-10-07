@@ -1,15 +1,12 @@
-import { clockwiseFrom, type GameState } from '../game/game-state.ts';
+import type { GameState } from '../game/game-state.ts';
+import { reachNext } from '../tactical/tactical-steps.ts';
 import { evolveGame, type GameEvent } from '../game/game-events.ts';
 import type { DecisionContext } from '../eventsourcing/command.ts';
 import type { TacticalActionState } from '../phases/turn-state.ts';
-import type { PlayerId, SystemId } from '../shared/ids.ts';
-import {
-  absorbableHits,
-  opponentWithShips,
-  shipsOf,
-  spaceCannonShooters,
-} from './combat-queries.ts';
-import { rollVolley, type Volley } from './dice.ts';
+import type { PlayerId } from '../shared/ids.ts';
+import { absorbableHits, shipsOf } from './combat-queries.ts';
+import { rollVolley } from './dice.ts';
+import { cannonPlans } from './space-cannon.ts';
 import {
   combatEnd,
   nextRound,
@@ -20,19 +17,6 @@ import {
 
 type Events = readonly GameEvent[];
 
-/** Ziel einer Weltraumkanone: der aktive Spieler beschießt den Gegner, alle anderen den aktiven Spieler. */
-function cannonTarget(
-  state: GameState,
-  system: SystemId,
-  player: PlayerId,
-  active: PlayerId,
-  decision: DecisionContext,
-) {
-  const catalog = decision.content.units;
-  if (player === active) return opponentWithShips(state, system, active, catalog);
-  return shipsOf(state, system, active, catalog).length > 0 ? active : null;
-}
-
 /** RR 87.3: Reihum ab dem aktiven Spieler feuern alle Weltraumkanonen in Reichweite. */
 function spaceCannonOffense(
   state: GameState,
@@ -42,16 +26,17 @@ function spaceCannonOffense(
 ): Events {
   const { system } = tactical;
   const { dieSides } = state.config.rules;
-  const volleys = clockwiseFrom(state, active).flatMap((player): Volley[] => {
-    const target = cannonTarget(state, system, player.id, active, decision);
-    const shooters = spaceCannonShooters(state, system, player.id, decision.content.units);
-    if (target === null || shooters.length === 0) return [];
-    return [rollVolley(decision.random, dieSides, shooters, { player: player.id, target })];
-  });
-  return [
-    ...volleys.map((volley) => ({ type: 'SpaceCannonFired', system, volley }) as const),
-    { type: 'TacticalStepReached', step: 'spaceCombat' },
-  ];
+  const fired = cannonPlans(state, system, active, decision.content.units).map(
+    ({ player, target, shooters }) =>
+      ({
+        type: 'SpaceCannonFired',
+        system,
+        volley: rollVolley(decision.random, dieSides, shooters, { player, target }),
+      }) as const,
+  );
+  // Der Raumkampf-Schritt entscheidet erst nach der Trefferzuweisung, ob gekämpft wird.
+  if (fired.length > 0) return [...fired, { type: 'TacticalStepReached', step: 'spaceCombat' }];
+  return [reachNext(state, 'spaceCannon', decision.content)];
 }
 
 function spaceCombatStep(
@@ -67,7 +52,7 @@ function spaceCombatStep(
   if (combat.round > 0 && !combat.rolled) return [rollRound(state, system, combat, decision)];
   const retreat = combat.round > 0 ? retreatEvents(state, system, combat, catalog) : [];
   const after = retreat.reduce(evolveGame, state);
-  const ended = combatEnd(after, system, combat, catalog);
+  const ended = combatEnd(after, system, combat, decision.content);
   return [...retreat, ...(ended ?? [nextRound(after, system, combat, catalog)])];
 }
 

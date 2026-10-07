@@ -2,7 +2,9 @@ import type { DecisionContext } from '../eventsourcing/command.ts';
 import { tokenSourceOf } from '../economy/token-source.ts';
 import { adjacentSystemIds } from '../galaxy/adjacency.ts';
 import { StarSystem } from '../galaxy/star-system.ts';
-import type { GameEvent } from '../game/game-events.ts';
+import { evolveGame, type GameEvent } from '../game/game-events.ts';
+import type { ContentPort } from '../ports/content-port.ts';
+import { reachNext } from '../tactical/tactical-steps.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
 import type { PlayerId, SystemId } from '../shared/ids.ts';
 import { isGroundForce } from '../unit/unit-capabilities.ts';
@@ -19,8 +21,6 @@ import type { SpaceCombatState } from './combat-state.ts';
 import { rollVolley } from './dice.ts';
 
 type Catalog = DecisionContext['content']['units'];
-
-const reached = (step: 'done') => ({ type: 'TacticalStepReached', step }) as const;
 
 /** RR 63.7: Ziel eines Rückzugs: angrenzend, ohne fremde Schiffe, mit eigener Einheit oder eigenem Planeten. */
 export function retreatTargets(
@@ -69,7 +69,7 @@ export function startSpaceCombat(
   const catalog = decision.content.units;
   const defender = opponentWithShips(state, system, attacker, catalog);
   if (defender === null || shipsOf(state, system, attacker, catalog).length === 0)
-    return [reached('done')];
+    return [reachNext(state, 'spaceCombat', decision.content)];
   return [
     { type: 'SpaceCombatStarted', system, attacker, defender },
     ...barrage(state, system, { player: attacker, target: defender }, decision),
@@ -176,15 +176,17 @@ export function combatEnd(
   state: GameState,
   system: SystemId,
   combat: SpaceCombatState,
-  catalog: Catalog,
+  content: ContentPort,
 ): readonly GameEvent[] | null {
   const fighting = [combat.attacker, combat.defender];
-  const remaining = playersWithShips(state, system, catalog).filter((p) => fighting.includes(p));
+  const remaining = playersWithShips(state, system, content.units).filter((p) =>
+    fighting.includes(p),
+  );
   if (remaining.length > 1) return null;
   const winner = remaining[0] ?? null;
-  return [
+  const ended: readonly GameEvent[] = [
     { type: 'SpaceCombatEnded', system, winner },
-    ...(winner === null ? [] : excessCargo(state, system, winner, catalog)),
-    reached('done'),
+    ...(winner === null ? [] : excessCargo(state, system, winner, content.units)),
   ];
+  return [...ended, reachNext(ended.reduce(evolveGame, state), 'spaceCombat', content)];
 }

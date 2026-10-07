@@ -3,6 +3,7 @@ import type { Command, CommandHandler, DecisionContext } from '../eventsourcing/
 import { StarSystem } from '../galaxy/star-system.ts';
 import { evolveGame, type GameEvent } from '../game/game-events.ts';
 import type { TacticalStep } from '../combat/combat-state.ts';
+import { reachNext } from './tactical-steps.ts';
 import { progressTactical } from '../combat/tactical-flow.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
 import { type RandomPort, rollDie } from '../ports/random-port.ts';
@@ -57,7 +58,7 @@ export const activateSystemHandler = {
   },
 } as const satisfies CommandHandler<GameState, ActivateSystem, GameEvent>;
 
-function tacticalStepCheck(state: GameState, command: Command, step: TacticalStep): Check {
+export function tacticalStepCheck(state: GameState, command: Command, step: TacticalStep): Check {
   const turn = state.actionPhase;
   return firstFailure([
     guard(turn?.active === command.issuedBy, 'action.notYourTurn', 'Du bist nicht am Zug'),
@@ -144,13 +145,10 @@ function movementEvents(
   const limits = limitsCheck(context, moved, decision.content.units);
   if (!limits.ok) return limits;
   const rolls = moves.flatMap((move) => riftRollsFor(context, move, decision.random));
-  const events: readonly GameEvent[] = [
-    ...rolls,
-    moved,
-    ...destroyedEvents(context, moves, rolls),
-    { type: 'TacticalStepReached', step: 'spaceCannon' },
-  ];
-  return ok([...events, ...progressTactical(events.reduce(evolveGame, context.state), decision)]);
+  const resolved = [...rolls, moved, ...destroyedEvents(context, moves, rolls)];
+  const after = resolved.reduce(evolveGame, context.state);
+  const reached = reachNext(after, 'movement', decision.content);
+  return ok([...resolved, reached, ...progressTactical(evolveGame(after, reached), decision)]);
 }
 
 /** RR 79.2: Bewegung ins aktive System (auch ohne Schiffe möglich). */

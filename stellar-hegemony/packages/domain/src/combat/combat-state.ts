@@ -24,8 +24,15 @@ export interface SpaceCombatState {
   readonly rolled: boolean;
 }
 
-/**
- * Schritte der Taktikaktion (RR 79). Einmarsch und Produktion schließen sich in
- * Iteration 6 zwischen Raumkampf und Ende an.
- */
-export type TacticalStep = 'movement' | 'spaceCannon' | 'spaceCombat' | 'done';
+/** Schritte der Taktikaktion in Regelreihenfolge (RR 79). */
+export const TACTICAL_STEPS = [
+  'movement',
+  'spaceCannon',
+  'spaceCombat',
+  'bombardment',
+  'invasion',
+  'production',
+  'done',
+] as const;
+
+export type TacticalStep = (typeof TACTICAL_STEPS)[number];

@@ -33,12 +33,8 @@ import { run, step } from './game-flow.ts';
 
 const PLANET_A = planetId('p-a');
 
-/** Ohne Weltraumkanonen und Gegner laufen die Schritte der Taktikaktion durch. */
-const STEPS_WITHOUT_COMBAT = [
-  'TacticalStepReached',
-  'TacticalStepReached',
-  'TacticalStepReached',
-] as const;
+/** Ohne Kanonen, Gegner, Einmarsch und Produktion springt die Taktikaktion direkt ans Ende. */
+const STEPS_WITHOUT_COMBAT = ['TacticalStepReached'] as const;
 
 /** Aktiviert das letzte System der Reihe und versucht die Bewegung. */
 function tryMove(state: GameState, active: string, ...orders: readonly ShipMoveOrder[]) {

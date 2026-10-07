@@ -15,6 +15,7 @@ import {
   type RuleNumbers,
   StaticUnitCatalog,
   systemId,
+  technologyId,
   type StrategyCardDefinition,
   strategyCardId,
   type SystemState,
@@ -67,6 +68,7 @@ export const T = {
   battery: unitTypeId('battery'),
   escort: unitTypeId('escort'),
   longBattery: unitTypeId('longBattery'),
+  breaker: unitTypeId('breaker'),
 };
 
 const definitions: readonly UnitDefinition[] = [
@@ -159,6 +161,22 @@ const definitions: readonly UnitDefinition[] = [
     isFighter: false,
     capabilities: [{ kind: 'spaceCannon', profile: { hitOn: 6, dice: 1 }, range: 1 }],
     componentLimit: 6,
+  },
+  {
+    id: T.breaker,
+    category: 'ship',
+    isFighter: false,
+    cost: { resources: 12, unitsPerCost: 1 },
+    combat: { hitOn: 3, dice: 3 },
+    move: 2,
+    capacity: 6,
+    capabilities: [
+      { kind: 'sustainDamage' },
+      { kind: 'bombardment', profile: { hitOn: 3, dice: 3 } },
+      { kind: 'ignoresPlanetaryShield' },
+    ],
+    componentLimit: 2,
+    requiresTechnology: technologyId('breaker-plans'),
   },
 ];
 

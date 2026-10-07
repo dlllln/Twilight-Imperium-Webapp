@@ -5,27 +5,10 @@ import type { GameState } from '../game/game-state.ts';
 import type { Hex } from '../hex/hex-coordinate.ts';
 import type { PlayerState } from '../player/player-state.ts';
 import { type DomainError, domainError } from '../shared/domain-error.ts';
-import { type PlayerId, unitId } from '../shared/ids.ts';
+import { UnitNumbering } from '../unit/unit-numbering.ts';
 import { combine, err, ok, type Result } from '../shared/result.ts';
-import type { Unit } from '../unit/unit.ts';
-import type { FactionDefinition, UnitStack } from './faction-definition.ts';
+import type { FactionDefinition } from './faction-definition.ts';
 import type { HomeSystemPlaced } from './home-events.ts';
-
-/** Vergibt fortlaufende Einheiten-Ids ab `next` (deterministisch für Replays). */
-class UnitNumbering {
-  constructor(private next: number) {}
-
-  create(owner: PlayerId, stacks: readonly UnitStack[]): readonly Unit[] {
-    return stacks.flatMap((stack) =>
-      Array.from({ length: stack.count }, () => ({
-        id: unitId(`u${String(this.next++)}`),
-        type: stack.type,
-        owner,
-        damaged: false,
-      })),
-    );
-  }
-}
 
 function placedTile(tile: SystemTile, position: Hex): PlacedSystem {
   return {

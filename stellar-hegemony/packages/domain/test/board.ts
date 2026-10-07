@@ -18,11 +18,13 @@ export interface Spec {
   readonly units?: readonly Unit[];
   readonly tokens?: readonly PlayerId[];
   readonly planet?: readonly Unit[];
-  readonly planetController?: PlayerId;
+  readonly planetController?: PlayerId | null;
+  /** Eigene Planeten-Id, z. B. um Stammdaten aus den Test-Tafeln zu nutzen. */
+  readonly planetId?: string;
 }
 
 export const S = (id: string) => systemId(id);
-const planetOf = (spec: Spec) => planetId(`p-${spec.id}`);
+export const planetOf = (spec: Spec) => planetId(spec.planetId ?? `p-${spec.id}`);
 
 const toSystem = (spec: Spec): SystemState => ({
   id: S(spec.id),
@@ -36,7 +38,7 @@ const toSystem = (spec: Spec): SystemState => ({
 
 const toPlanet = (spec: Spec) => ({
   id: planetOf(spec),
-  controller: spec.planetController ?? RED,
+  controller: spec.planetController === undefined ? RED : spec.planetController,
   exhausted: false,
   units: spec.planet ?? [],
 });
