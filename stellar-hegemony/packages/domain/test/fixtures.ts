@@ -50,6 +50,8 @@ export const RULES: RuleNumbers = {
   nebulaMoveValue: 1,
   gravityRiftMoveBonus: 1,
   gravityRiftDestroyMaxRoll: 3,
+  maxProductionStructuresPerPlanet: 1,
+  maxCannonStructuresPerPlanet: 2,
 };
 
 export const config = (playerCount = 6, victoryPointsToWin = 10): GameConfig => ({
@@ -311,8 +313,8 @@ export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
   strategyCard(1, 'commandTokens', { tokensGained: 3, influencePerToken: 3 }, false),
   strategyCard(2, 'commandTokens', { tokensGained: 2, influencePerToken: 2 }),
   strategyCard(3, 'diplomacy', { readyPlanets: 2 }),
-  strategyCard(4, 'construction'),
-  strategyCard(5, 'trade'),
+  strategyCard(4, 'construction', { structures: 2 }),
+  strategyCard(5, 'trade', { tradeGoods: 3 }),
   strategyCard(6, 'warfare'),
   strategyCard(7, 'technology'),
   strategyCard(8, 'imperial'),

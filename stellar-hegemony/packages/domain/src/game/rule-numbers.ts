@@ -34,4 +34,7 @@ export interface RuleNumbers {
   readonly gravityRiftMoveBonus: number;
   /** Wurf bis einschließlich dieses Werts zerstört ein Schiff, das einen Strudel verlässt. */
   readonly gravityRiftDestroyMaxRoll: number;
+  /** Gebäude je Planet: höchstens so viele mit Produktion bzw. mit Weltraumkanone. */
+  readonly maxProductionStructuresPerPlanet: number;
+  readonly maxCannonStructuresPerPlanet: number;
 }

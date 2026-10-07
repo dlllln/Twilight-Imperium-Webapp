@@ -4,7 +4,8 @@ import type { GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
 import type { PoolCounts } from '../player/command-sheet.ts';
 import { type DomainError, domainError } from '../shared/domain-error.ts';
-import type { PlanetId, PlayerId, SystemId } from '../shared/ids.ts';
+import type { PlanetId, PlayerId, SystemId, UnitTypeId } from '../shared/ids.ts';
+import type { ProductionRequest } from '../production/production.ts';
 import { err, ok, type Result } from '../shared/result.ts';
 import type { StrategyCardDefinition, StrategyMechanic } from './strategy-card.ts';
 
@@ -25,8 +26,38 @@ export interface DiplomacyChoice {
   readonly planets: readonly PlanetId[];
 }
 
+export interface StructurePlacement {
+  readonly type: UnitTypeId;
+  readonly planet: PlanetId;
+}
+
+/**
+ * „Bauen“: primär ein Gebäude und optional ein weiteres mit Weltraumkanone;
+ * sekundär ein Gebäude in `system`, wohin ein Marker aus dem Nachschub kommt.
+ */
+export interface ConstructionChoice {
+  readonly mechanic: 'construction';
+  readonly placements: readonly StructurePlacement[];
+  readonly system: SystemId | null;
+}
+
+/** „Handel“: wer die Sekundärfähigkeit ohne Strategiemarker nutzen darf. */
+export interface TradeChoice {
+  readonly mechanic: 'trade';
+  readonly freeFor: readonly PlayerId[];
+}
+
+/** „Kriegsführung“: primär Marker zurücknehmen und neu verteilen, sekundär produzieren. */
+export interface WarfareChoice {
+  readonly mechanic: 'warfare';
+  readonly system: SystemId | null;
+  readonly pools: PoolCounts;
+  readonly production: ProductionRequest | null;
+}
+
 /** Jede Mechanik ergänzt hier ihre Auswahl-Struktur. */
-export type StrategyChoice = CommandTokensChoice | DiplomacyChoice;
+export type StrategyChoice =
+  CommandTokensChoice | DiplomacyChoice | ConstructionChoice | TradeChoice | WarfareChoice;
 
 export interface EffectInput {
   readonly state: GameState;

@@ -42,10 +42,30 @@ export interface CommandTokensPlaced extends DomainEvent<'CommandTokensPlaced'> 
   readonly placements: readonly TokenPlacement[];
 }
 
+/** RR 23: Rohstoffe werden bis zum Rohstofflimit der Fraktion aufgefüllt. */
+export interface CommoditiesReplenished extends DomainEvent<'CommoditiesReplenished'> {
+  readonly player: PlayerId;
+}
+
+/** RR 49.1: ein eigener Marker wird vom Spielplan genommen und kommt auf die Kommandotafel. */
+export interface CommandTokenReturned extends DomainEvent<'CommandTokenReturned'> {
+  readonly player: PlayerId;
+  readonly system: SystemId;
+}
+
+/** Neue Verteilung der Kommandotafel (inklusive eines zurückgenommenen Markers). */
+export interface CommandTokensRedistributed extends DomainEvent<'CommandTokensRedistributed'> {
+  readonly player: PlayerId;
+  readonly pools: PoolCounts;
+}
+
 export type EconomyEvent =
   | CommandTokensGained
   | PlanetsExhausted
   | PlanetsReadied
   | TradeGoodsSpent
   | TradeGoodsGained
-  | CommandTokensPlaced;
+  | CommandTokensPlaced
+  | CommoditiesReplenished
+  | CommandTokenReturned
+  | CommandTokensRedistributed;

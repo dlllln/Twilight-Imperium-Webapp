@@ -4,6 +4,7 @@ import { COMMAND_POOLS } from '../player/command-sheet.ts';
 import type { PlayerState } from '../player/player-state.ts';
 import type { PlanetId } from '../shared/ids.ts';
 import type {
+  CommandTokenReturned,
   CommandTokensGained,
   CommandTokensPlaced,
   EconomyEvent,
@@ -55,6 +56,14 @@ function placeTokens(state: GameState, event: CommandTokensPlaced): GameState {
   };
 }
 
+/** RR 49.1: der Marker verlässt den Spielplan; wohin er kommt, sagt die Umverteilung. */
+function returnToken(state: GameState, event: CommandTokenReturned): GameState {
+  const system = state.systems[event.system];
+  if (system === undefined) return state;
+  const commandTokens = system.commandTokens.filter((id) => id !== event.player);
+  return { ...state, systems: { ...state.systems, [system.id]: { ...system, commandTokens } } };
+}
+
 export const economyReducers: ReducerMap<GameState, EconomyEvent> = {
   CommandTokensGained: gainTokens,
   PlanetsExhausted: (state, event) => setExhausted(state, event.planets, true),
@@ -64,4 +73,9 @@ export const economyReducers: ReducerMap<GameState, EconomyEvent> = {
     updatePlayer(state, event.player, (p) => ({ ...p, tradeGoods: p.tradeGoods - event.amount })),
   TradeGoodsGained: (state, event) =>
     updatePlayer(state, event.player, (p) => ({ ...p, tradeGoods: p.tradeGoods + event.amount })),
+  CommoditiesReplenished: (state, event) =>
+    updatePlayer(state, event.player, (p) => ({ ...p, commodities: p.commodityLimit })),
+  CommandTokenReturned: returnToken,
+  CommandTokensRedistributed: (state, event) =>
+    updatePlayer(state, event.player, (p) => ({ ...p, commandPools: event.pools })),
 };

@@ -87,7 +87,7 @@ export const productionCost = (resolved: readonly Resolved[]): number =>
 const totalCount = (resolved: readonly Resolved[]) =>
   resolved.reduce((sum, r) => sum + r.order.count, 0);
 
-function ownedOnBoard(state: GameState, player: PlayerId, type: UnitTypeId): number {
+export function ownedOnBoard(state: GameState, player: PlayerId, type: UnitTypeId): number {
   const units = [
     ...Object.values(state.systems).flatMap((system) => system.spaceUnits),
     ...Object.values(state.planets).flatMap((planet) => planet.units),

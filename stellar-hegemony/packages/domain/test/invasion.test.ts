@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   bombardablePlanets,
   bombardHandler,
+  bombardingShips,
   commitGroundForcesHandler,
   type GameEvent,
   type GameState,
+  groundForcesOn,
+  landingForces,
   type PlayerId,
   type Unit,
   updatePlayer,
@@ -92,6 +95,17 @@ describe('Bombardement (RR 20, RR 60)', () => {
       { ...enemyWorld([unit(T.infantry, BLUE), unit(T.battery, BLUE)]), units: [unit(T.breaker)] },
     );
     expect(bombardablePlanets(lifted, S('b'), RED, catalog)).toEqual([planetOf({ id: 'b', q: 1 })]);
+  });
+
+  it('unbekannte Systeme und Planeten ergeben leere Listen', () => {
+    const state = board({ id: 'a', q: 0 });
+    const nowhere = S('nirgendwo');
+    expect(bombardablePlanets(state, nowhere, RED, catalog)).toEqual([]);
+    expect(bombardingShips(state, nowhere, RED, catalog)).toEqual([]);
+    expect(landingForces(state, nowhere, RED, catalog)).toEqual([]);
+    expect(groundForcesOn(state, planetOf({ id: 'nirgendwo', q: 0 }), catalog, () => true)).toEqual(
+      [],
+    );
   });
 
   it('RR 20.1: nur eigene Einheiten mit Bombardement und nur erlaubte Planeten', () => {

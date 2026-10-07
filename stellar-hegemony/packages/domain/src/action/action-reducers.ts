@@ -23,7 +23,7 @@ function performStrategicAction(state: GameState, event: StrategicActionPerforme
   const exhausted = updateCard(state, event.card, (card) => ({ ...card, exhausted: true }));
   return withTurn(exhausted, (turn) => ({
     ...turn,
-    secondary: { card: event.card, awaiting: event.secondaryOrder },
+    secondary: { card: event.card, awaiting: event.secondaryOrder, free: [] },
   }));
 }
 
@@ -45,4 +45,10 @@ export const actionReducers: ReducerMap<GameState, ActionEvent> = {
     withTurn(state, (turn) => ({ ...turn, passed: [...turn.passed, event.player] })),
   TurnEnded: (state, event) =>
     withTurn(state, (turn) => ({ ...turn, active: event.next, secondary: null, tactical: null })),
+  SecondaryCostWaived: (state, event) =>
+    withTurn(state, (turn) =>
+      turn.secondary === null
+        ? turn
+        : { ...turn, secondary: { ...turn.secondary, free: event.players } },
+    ),
 };

@@ -1,6 +1,6 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
 import type { GameState } from '../game/game-state.ts';
-import type { ProductionEvent, UnitsProduced } from './production-events.ts';
+import type { ProductionEvent, StructuresPlaced, UnitsProduced } from './production-events.ts';
 
 function produce(state: GameState, event: UnitsProduced): GameState {
   const system = state.systems[event.system];
@@ -20,6 +20,16 @@ function produce(state: GameState, event: UnitsProduced): GameState {
   return { ...state, systems, planets, nextUnitNumber: state.nextUnitNumber + created };
 }
 
+function placeStructures(state: GameState, event: StructuresPlaced): GameState {
+  const planets = { ...state.planets };
+  for (const { planet, unit } of event.placements) {
+    const target = planets[planet];
+    if (target !== undefined) planets[planet] = { ...target, units: [...target.units, unit] };
+  }
+  return { ...state, planets, nextUnitNumber: state.nextUnitNumber + event.placements.length };
+}
+
 export const productionReducers: ReducerMap<GameState, ProductionEvent> = {
   UnitsProduced: produce,
+  StructuresPlaced: placeStructures,
 };

@@ -20,7 +20,7 @@ describe('Lokale Hot-Seat-Partie', () => {
       ...game,
       actionPhase: game.actionPhase && {
         ...game.actionPhase,
-        secondary: { card: 'vanguard' as never, awaiting: [seatPlayerId(2)] },
+        secondary: { card: 'vanguard' as never, awaiting: [seatPlayerId(2)], free: [] },
       },
     };
     expect(currentActor(window)).toBe(seatPlayerId(2));

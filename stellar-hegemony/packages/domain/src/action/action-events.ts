@@ -28,5 +28,15 @@ export interface TurnEnded extends DomainEvent<'TurnEnded'> {
   readonly next: PlayerId | null;
 }
 
+/** Die Sekundärfähigkeit kostet diese Spieler keinen Strategiemarker. */
+export interface SecondaryCostWaived extends DomainEvent<'SecondaryCostWaived'> {
+  readonly players: readonly PlayerId[];
+}
+
 export type ActionEvent =
-  StrategicActionPerformed | SecondaryResolved | SecondaryDeclined | PlayerPassed | TurnEnded;
+  | StrategicActionPerformed
+  | SecondaryResolved
+  | SecondaryDeclined
+  | PlayerPassed
+  | TurnEnded
+  | SecondaryCostWaived;

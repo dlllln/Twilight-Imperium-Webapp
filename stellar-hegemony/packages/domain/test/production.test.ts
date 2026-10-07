@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bombardHandler,
+  commitGroundForcesHandler,
   endTacticalActionHandler,
   type GameState,
   planetId,
@@ -12,7 +14,7 @@ import {
 } from '../src/index.ts';
 import { activate, board, moves, type Spec } from './board.ts';
 import { BLUE, contextWith, RED, T, unit, units } from './fixtures.ts';
-import { run, step } from './game-flow.ts';
+import { actionPhaseGame, run, step } from './game-flow.ts';
 
 const WORLD = planetId('gamma-1');
 
@@ -121,6 +123,23 @@ describe('Produktion (RR 62, RR 24)', () => {
     expect(tryProduce(state, produce([{ type: T.cruiser, count: 0 }], 0))).toBe(
       'production.invalidCount',
     );
+  });
+
+  it('ohne Taktikaktion gibt es weder Produktion noch Bombardement oder Landung', () => {
+    const state = actionPhaseGame();
+    expect(tryProduce(state, produce([], 0))).toBe('tactical.notActive');
+    const bombard = bombardHandler.decide(
+      state,
+      { type: 'Bombard', issuedBy: RED, targets: [] },
+      contextWith(),
+    );
+    expect(bombard).toMatchObject({ error: { code: 'tactical.notActive' } });
+    const land = commitGroundForcesHandler.decide(
+      state,
+      { type: 'CommitGroundForces', issuedBy: RED, landings: [], centerPayment: null },
+      contextWith(),
+    );
+    expect(land).toMatchObject({ error: { code: 'tactical.notActive' } });
   });
 
   it('RR 79.5: nach der Produktion (oder dem Verzicht) endet die Taktikaktion', () => {

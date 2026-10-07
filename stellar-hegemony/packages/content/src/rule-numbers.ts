@@ -23,4 +23,6 @@ export const BASE_RULE_NUMBERS: RuleNumbers = {
   nebulaMoveValue: 1,
   gravityRiftMoveBonus: 1,
   gravityRiftDestroyMaxRoll: 3,
+  maxProductionStructuresPerPlanet: 1,
+  maxCannonStructuresPerPlanet: 2,
 };

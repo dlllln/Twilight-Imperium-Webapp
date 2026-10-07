@@ -6,6 +6,8 @@ import type { StrategyCardId } from '../strategy/strategy-card.ts';
 export interface SecondaryWindow {
   readonly card: StrategyCardId;
   readonly awaiting: readonly PlayerId[];
+  /** Spieler, die die Sekundärfähigkeit ohne Strategiemarker nutzen (z. B. durch den Handel). */
+  readonly free: readonly PlayerId[];
 }
 
 /** Laufende Taktikaktion (RR 79): aktiviertes System und erreichter Schritt. */

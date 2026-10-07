@@ -10,6 +10,7 @@ import {
   type PoolCounts,
   previewCommandTokens,
   resolveSecondaryHandler,
+  type StrategyCardState,
   updatePlayer,
 } from '../src/index.ts';
 import { BLUE, CARD, content, contextWith, RED } from './fixtures.ts';
@@ -76,7 +77,11 @@ describe('Strategische Aktion: Kommandomarker (RR 29, RR 74)', () => {
     expect(red?.reinforcementTokens).toBe(3);
     expect(state.planets[THRONE]?.exhausted).toBe(true);
     expect(state.strategyCards[CARD(1)]?.exhausted).toBe(true);
-    expect(state.actionPhase?.secondary).toEqual({ card: CARD(1), awaiting: [BLUE, GREEN] });
+    expect(state.actionPhase?.secondary).toEqual({
+      card: CARD(1),
+      awaiting: [BLUE, GREEN],
+      free: [],
+    });
   });
 
   it('RR 29.2: angebrochene Einflussmengen zählen nicht; Handelswaren zählen als Einfluss', () => {
@@ -128,13 +133,15 @@ describe('Strategische Aktion: Kommandomarker (RR 29, RR 74)', () => {
   });
 
   it('Karten, deren Mechanik noch fehlt, sind gesperrt', () => {
+    const base = game();
+    const research = { ...base.strategyCards[CARD(7)], holder: RED } as StrategyCardState;
     const result = performStrategicActionHandler.decide(
-      game(),
-      { ...vanguard(pools(3), []), card: CARD(4) },
+      { ...base, strategyCards: { ...base.strategyCards, [CARD(7)]: research } },
+      { ...vanguard(pools(3), []), card: CARD(7) },
       contextWith(),
     );
     expect(result).toMatchObject({
-      error: { code: 'strategy.mechanicUnavailable', details: { mechanic: 'construction' } },
+      error: { code: 'strategy.mechanicUnavailable', details: { mechanic: 'technology' } },
     });
   });
 

@@ -137,6 +137,9 @@ function afterSecondary(state: GameState, player: PlayerId): readonly GameEvent[
 }
 
 /** RR 46.5: Die Sekundärfähigkeit kostet meist einen Marker aus dem Strategiepool. */
+const paysStrategyToken = (state: GameState, player: PlayerId, card: StrategyCardDefinition) =>
+  card.secondaryCostsStrategyToken && state.actionPhase?.secondary?.free.includes(player) !== true;
+
 function secondaryCostCheck(
   state: GameState,
   player: PlayerId,
@@ -144,7 +147,7 @@ function secondaryCostCheck(
 ): Check {
   const tokens = findPlayer(state, player)?.commandPools.strategy ?? 0;
   return guard(
-    !card.secondaryCostsStrategyToken || tokens > 0,
+    !paysStrategyToken(state, player, card) || tokens > 0,
     'action.noStrategyToken',
     'Kein Marker im Strategiepool',
   );
@@ -159,11 +162,11 @@ function secondaryEvents(
   const definition = definitionOf(context, state.actionPhase?.secondary?.card);
   return andThen(resolveEffect(definition), ({ card, effect }) =>
     andThen(secondaryCostCheck(state, player, card), () =>
-      map(effect.secondary({ state, player, card, choice, context }), (events) => [
-        { type: 'SecondaryResolved', player, paidStrategyToken: card.secondaryCostsStrategyToken },
-        ...events,
-        ...afterSecondary(state, player),
-      ]),
+      map(effect.secondary({ state, player, card, choice, context }), (events) => {
+        const paidStrategyToken = paysStrategyToken(state, player, card);
+        const resolved: GameEvent = { type: 'SecondaryResolved', player, paidStrategyToken };
+        return [resolved, ...events, ...afterSecondary(state, player)];
+      }),
     ),
   );
 }
