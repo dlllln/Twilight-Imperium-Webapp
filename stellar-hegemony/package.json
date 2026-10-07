@@ -8,14 +8,16 @@
     "node": ">=22"
   },
   "scripts": {
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:coverage",
-    "prepare": "cd .. && husky stellar-hegemony/.husky || true"
+    "prepare": "cd .. && husky stellar-hegemony/.husky || true",
+    "build": "pnpm --filter @stellar/web build",
+    "e2e": "pnpm --filter @stellar/web e2e"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

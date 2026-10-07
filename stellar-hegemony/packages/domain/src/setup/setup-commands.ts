@@ -27,7 +27,7 @@ export const createGameHandler = {
     command: CreateGame,
   ): Result<readonly GameCreated[], DomainError> {
     return map(validateGameConfig(command.config), (config) => [
-      { type: 'GameCreated', gameId: command.gameId, config },
+      { type: 'GameCreated', gameId: command.gameId, host: command.issuedBy, config },
     ]);
   },
 } as const satisfies CommandHandler<GameState | null, CreateGame, GameCreated>;

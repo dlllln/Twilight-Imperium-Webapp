@@ -1,3 +1,4 @@
+import type { Hex } from '../hex/hex-coordinate.ts';
 import type { GameId, PlayerId } from '../shared/ids.ts';
 import type { PlanetState } from '../planet/planet-state.ts';
 import type { PlayerState } from '../player/player-state.ts';
@@ -13,6 +14,8 @@ export type PhaseName = 'setup' | 'strategy' | 'action' | 'status' | 'agenda' | 
 export interface GameState {
   readonly id: GameId;
   readonly config: GameConfig;
+  /** Wer die Partie erstellt hat und den Aufbau steuert. */
+  readonly host: PlayerId;
   /** Anzahl angewendeter Events; dient als Versionsnummer für optimistische Sperren. */
   readonly version: number;
   readonly round: number;
@@ -22,6 +25,8 @@ export interface GameState {
   readonly players: readonly PlayerState[];
   readonly systems: Readonly<Record<string, SystemState>>;
   readonly planets: Readonly<Record<string, PlanetState>>;
+  /** Heimat-Plätze in Sitzreihenfolge, bis die Fraktionen ihre Heimat-Systeme setzen. */
+  readonly homeSlots: readonly Hex[];
   readonly nextUnitNumber: number;
   readonly winner: PlayerId | null;
 }

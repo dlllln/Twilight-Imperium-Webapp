@@ -1,6 +1,7 @@
 import {
   andThen,
   type ClockPort,
+  type ContentPort,
   createGameHandler,
   type CreateGame,
   decideGameCommand,
@@ -23,6 +24,7 @@ export interface GameControllerPorts {
   readonly publisher: EventPublisherPort;
   readonly random: RandomPort;
   readonly clock: ClockPort;
+  readonly content: ContentPort;
 }
 
 export interface CommandOutcome {
@@ -51,7 +53,8 @@ export class GameController {
   ): Promise<Result<CommandOutcome, DomainError>> {
     const state = await this.load(gameId);
     if (!state.ok) return state;
-    const context = { random: this.ports.random, now: this.ports.clock.now() };
+    const { random, clock, content } = this.ports;
+    const context = { random, now: clock.now(), content };
     const decided = decideGameCommand(state.value, command, context);
     if (!decided.ok) return decided;
     const next = decided.value.reduce(evolveGame, state.value);
