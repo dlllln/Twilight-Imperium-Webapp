@@ -1,0 +1,13 @@
+{
+  "name": "@stellar/content",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Spieldaten: Einheiten, Systeme, Fraktionen, Technologien und Karten",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@stellar/domain": "workspace:*"
+  }
+}

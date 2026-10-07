@@ -1,0 +1,17 @@
+{
+  "name": "@stellar/application",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Use Cases, Command-Handler und Ports",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@stellar/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@stellar/infrastructure": "workspace:*",
+    "@stellar/content": "workspace:*"
+  }
+}

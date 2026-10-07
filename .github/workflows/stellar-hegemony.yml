@@ -1,0 +1,30 @@
+name: Stellar Hegemony
+
+on:
+  push:
+    paths: ['stellar-hegemony/**', '.github/workflows/stellar-hegemony.yml']
+  pull_request:
+    paths: ['stellar-hegemony/**', '.github/workflows/stellar-hegemony.yml']
+
+defaults:
+  run:
+    working-directory: stellar-hegemony
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: stellar-hegemony/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: stellar-hegemony/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm test:coverage
