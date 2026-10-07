@@ -5,3 +5,4 @@ export * from './systems.ts';
 export * from './galaxy-templates.ts';
 export * from './base-content.ts';
 export * from './strategy-cards.ts';
+export * from './factions.ts';

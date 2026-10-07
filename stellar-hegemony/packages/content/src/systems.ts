@@ -12,7 +12,7 @@ import type { LocalizedText } from './localized.ts';
  * Eigene Systeme und Planeten (Namen und Werte frei erfunden). Verteilung und
  * Größenordnung orientieren sich am Spielgefühl, nicht an einer Vorlage.
  */
-interface PlanetSeed {
+export interface PlanetSeed {
   readonly name: string;
   readonly resources: number;
   readonly influence: number;
@@ -20,7 +20,7 @@ interface PlanetSeed {
   readonly specialty?: TechnologyColor;
 }
 
-const slug = (name: string): string =>
+export const slug = (name: string): string =>
   name
     .toLowerCase()
     .replace(/[äöü]/g, (char) => ({ ä: 'ae', ö: 'oe', ü: 'ue' })[char] ?? char)
@@ -40,7 +40,7 @@ function planet(seed: PlanetSeed): PlanetDefinition {
   };
 }
 
-const p = (
+export const p = (
   name: string,
   resources: number,
   influence: number,
@@ -120,6 +120,14 @@ export const RED_TILES: readonly SystemTile[] = [
   red('r12', { wormholes: ['beta'] }),
 ];
 
-export const ALL_TILES: readonly SystemTile[] = [CENTER_TILE, ...BLUE_TILES, ...RED_TILES];
+/** Heimatsystem einer Fraktion (Rückseite „home“, liegt nur auf Heimat-Plätzen). */
+export const homeTile = (id: string, ...planets: PlanetSeed[]): SystemTile => ({
+  id: systemId(id),
+  back: 'home',
+  planets: planets.map(planet),
+  wormholes: [],
+});
+
+export const GALAXY_TILES: readonly SystemTile[] = [CENTER_TILE, ...BLUE_TILES, ...RED_TILES];
 
 export const planetName = (id: string): LocalizedText | undefined => PLANET_NAMES[id];

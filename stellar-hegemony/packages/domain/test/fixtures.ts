@@ -1,5 +1,7 @@
 import {
   type ContentPort,
+  factionId,
+  type FactionDefinition,
   type GalaxyTemplate,
   hexRing,
   ORIGIN,
@@ -145,7 +147,7 @@ export const catalog = new StaticUnitCatalog(definitions);
 
 let sequence = 0;
 export const unit = (type: (typeof T)[keyof typeof T], owner = RED, damaged = false): Unit => ({
-  id: unitId(`u${++sequence}`),
+  id: unitId(`t${++sequence}`),
   type,
   owner,
   damaged,
@@ -210,8 +212,40 @@ export const TILES: readonly SystemTile[] = [
   tile('r1', 'red', { anomaly: 'nebula' }),
   tile('r2', 'red', { anomaly: 'asteroidField' }),
   tile('r3', 'red', { wormholes: ['alpha'] }),
+  tile('r4', 'red', { anomaly: 'gravityRift' }),
+  tile('r5', 'red', { anomaly: 'supernova' }),
+  tile('r6', 'red'),
+  tile('r7', 'red'),
   tile('home-x', 'home'),
+  ...['red', 'blue', 'green'].map((color) =>
+    tile(`home-${color}`, 'home', {
+      planets: [{ id: planetId(`${color}-prime`), resources: 3, influence: 2 }],
+    }),
+  ),
 ];
+
+/** Testfraktionen „f-red“, „f-blue“, „f-green“: Träger, 2 Kreuzer, 2 Jäger; 3 Infanterie und Dock. */
+export const FACTIONS: readonly FactionDefinition[] = ['red', 'blue', 'green'].map((color) => ({
+  id: factionId(`f-${color}`),
+  homeSystem: TILES.find((candidate) => candidate.id === `home-${color}`) as SystemTile,
+  startingForces: {
+    space: [
+      { type: T.carrier, count: 1 },
+      { type: T.cruiser, count: 2 },
+      { type: T.fighter, count: 2 },
+    ],
+    planets: [
+      {
+        planet: planetId(`${color}-prime`),
+        units: [
+          { type: T.infantry, count: 3 },
+          { type: T.dock, count: 1 },
+        ],
+      },
+    ],
+  },
+  commodityLimit: 3,
+}));
 
 /** Kleine Galaxie: Zentrum, Ring 1 mit sechs Tafeln, drei Heimat-Plätze in Ring 2. */
 export const TEMPLATE: GalaxyTemplate = {
@@ -253,7 +287,7 @@ export const content: ContentPort = {
   units: catalog,
   tiles: new StaticTileCatalog(TILES),
   strategyCards: STRATEGY_CARDS,
-  factions: [],
+  factions: FACTIONS,
   galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
 };
 

@@ -64,7 +64,13 @@ describe('StartGame (RR 76.1: Sprecher und Kartenauslage)', () => {
     expect(state.speaker).toBe(BLUE);
     expect(state.phase).toBe('strategy');
     expect(state.round).toBe(1);
-    expect(events.map((event) => event.type)).toEqual(['GameStarted', 'StrategyPhaseStarted']);
+    expect(events.map((event) => event.type)).toEqual([
+      'GameStarted',
+      'HomeSystemPlaced',
+      'HomeSystemPlaced',
+      'HomeSystemPlaced',
+      'StrategyPhaseStarted',
+    ]);
     const initiatives = Object.values(state.strategyCards).map((card) => card.initiative);
     expect(initiatives).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(Object.values(state.strategyCards).every((card) => card.holder === null)).toBe(true);

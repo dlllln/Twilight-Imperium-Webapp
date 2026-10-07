@@ -23,7 +23,6 @@ import { content } from './store.ts';
 
 /** Feste Farbreihenfolge der Plätze, passend zu den Heimat-Markierungen der Karte. */
 const COLORS: readonly PlayerColor[] = ['orange', 'blue', 'green', 'yellow', 'purple', 'red'];
-const COMMODITY_LIMIT = 3;
 const VICTORY_POINTS = 10;
 
 export const seatPlayerId = (seat: number): PlayerId => playerId(`p${String(seat + 1)}`);
@@ -50,8 +49,8 @@ function setupCommands(layout: MapLayout, playerCount: number): readonly GameCom
     issuedBy: seatPlayerId(seat),
     name: `P${String(seat + 1)}`,
     color: COLORS[seat] ?? 'black',
-    faction: factionId(`seat-${String(seat + 1)}`),
-    commodityLimit: COMMODITY_LIMIT,
+    faction: content.factions[seat]?.id ?? factionId('unbekannt'),
+    commodityLimit: content.factions[seat]?.commodityLimit ?? 0,
   }));
   return [
     ...seats,

@@ -9,7 +9,9 @@ import {
   guard,
 } from '../shared/domain-error.ts';
 import type { PlayerId } from '../shared/ids.ts';
-import { err, ok, type Result } from '../shared/result.ts';
+import { err, map, type Result } from '../shared/result.ts';
+import type { HomeSystemPlaced } from '../faction/home-events.ts';
+import { homeSystemEvents } from '../faction/home-placement.ts';
 import type { GameStarted, StrategyPhaseStarted } from './phase-events.ts';
 
 export type StartGame = Command<'StartGame'>;
@@ -31,23 +33,29 @@ function startChecks(state: GameState, command: StartGame, context: DecisionCont
   ]);
 }
 
+type StartEvent = GameStarted | HomeSystemPlaced | StrategyPhaseStarted;
+
+const startingCards = (context: DecisionContext): GameStarted['strategyCards'] =>
+  [...context.content.strategyCards]
+    .sort((a, b) => a.initiative - b.initiative)
+    .map(({ id, initiative, mechanic }) => ({ id, initiative, mechanic }));
+
+/** RR 76.1 und Spielaufbau: Sprecher auslosen, Heimatsysteme legen, Strategiephase beginnen. */
 export const startGameHandler = {
   commandType: 'StartGame',
   decide(
     state: GameState,
     command: StartGame,
     context: DecisionContext,
-  ): Result<readonly (GameStarted | StrategyPhaseStarted)[], DomainError> {
+  ): Result<readonly StartEvent[], DomainError> {
     const checked = startChecks(state, command, context);
     if (!checked.ok) return checked;
     const speaker = state.players[context.random.nextInt(0, state.players.length - 1)];
     if (speaker === undefined) return err(domainError('setup.noPlayers', 'Keine Spieler'));
-    const strategyCards = [...context.content.strategyCards]
-      .sort((a, b) => a.initiative - b.initiative)
-      .map(({ id, initiative, mechanic }) => ({ id, initiative, mechanic }));
-    return ok([
-      { type: 'GameStarted', speaker: speaker.id, strategyCards },
+    return map(homeSystemEvents(state, context), (homes) => [
+      { type: 'GameStarted', speaker: speaker.id, strategyCards: startingCards(context) },
+      ...homes,
       { type: 'StrategyPhaseStarted', round: 1, pickQueue: pickQueueFor(state, speaker.id) },
     ]);
   },
-} as const satisfies CommandHandler<GameState, StartGame, GameStarted | StrategyPhaseStarted>;
+} as const satisfies CommandHandler<GameState, StartGame, StartEvent>;
