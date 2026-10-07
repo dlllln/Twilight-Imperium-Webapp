@@ -45,6 +45,9 @@ export class ActionPhase extends BasePhase {
     'ResolveSecondary',
     'DeclineSecondary',
     'Pass',
+    'ActivateSystem',
+    'MoveShips',
+    'EndTacticalAction',
   ];
   next(): PhaseName {
     return 'status';

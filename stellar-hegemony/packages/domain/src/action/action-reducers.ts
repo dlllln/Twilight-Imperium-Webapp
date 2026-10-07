@@ -44,5 +44,5 @@ export const actionReducers: ReducerMap<GameState, ActionEvent> = {
   PlayerPassed: (state, event) =>
     withTurn(state, (turn) => ({ ...turn, passed: [...turn.passed, event.player] })),
   TurnEnded: (state, event) =>
-    withTurn(state, (turn) => ({ ...turn, active: event.next, secondary: null })),
+    withTurn(state, (turn) => ({ ...turn, active: event.next, secondary: null, tactical: null })),
 };

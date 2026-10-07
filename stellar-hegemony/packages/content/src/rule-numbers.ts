@@ -20,4 +20,7 @@ export const BASE_RULE_NUMBERS: RuleNumbers = {
   centerTokenVictoryPoints: 1,
   agendasPerPhase: 2,
   actionCardHandLimit: 7,
+  nebulaMoveValue: 1,
+  gravityRiftMoveBonus: 1,
+  gravityRiftDestroyMaxRoll: 3,
 };

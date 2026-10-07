@@ -28,4 +28,10 @@ export interface RuleNumbers {
   readonly centerTokenVictoryPoints: number;
   readonly agendasPerPhase: number;
   readonly actionCardHandLimit: number;
+  /** RR 57.2: Bewegungswert von Schiffen, die im Nebel starten. */
+  readonly nebulaMoveValue: number;
+  /** RR 33.1: Bonus je verlassenem Gravitationsstrudel. */
+  readonly gravityRiftMoveBonus: number;
+  /** Wurf bis einschließlich dieses Werts zerstört ein Schiff, das einen Strudel verlässt. */
+  readonly gravityRiftDestroyMaxRoll: number;
 }

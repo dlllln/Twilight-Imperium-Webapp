@@ -47,7 +47,8 @@ function resolveEffect(
 const definitionOf = (context: DecisionContext, id: StrategyCardId | undefined) =>
   context.content.strategyCards.find((card) => card.id === id);
 
-function activeTurnChecks(state: GameState, player: PlayerId): readonly Check[] {
+/** Eine neue Aktion beginnt nur, wenn keine andere mehr offen ist. */
+export function activeTurnChecks(state: GameState, player: PlayerId): readonly Check[] {
   return [
     guard(state.actionPhase?.active === player, 'action.notYourTurn', 'Du bist nicht am Zug'),
     guard(
@@ -55,11 +56,16 @@ function activeTurnChecks(state: GameState, player: PlayerId): readonly Check[] 
       'action.secondaryOpen',
       'Erst alle Sekundärfähigkeiten abwarten',
     ),
+    guard(
+      state.actionPhase?.tactical === null,
+      'action.tacticalOpen',
+      'Erst die Taktikaktion abschließen',
+    ),
   ];
 }
 
 /** Ende des Zugs: nächster aktiver Spieler oder Ende der Aktionsphase. */
-function endTurn(
+export function endTurn(
   state: GameState,
   player: PlayerId,
   passed: readonly PlayerId[],

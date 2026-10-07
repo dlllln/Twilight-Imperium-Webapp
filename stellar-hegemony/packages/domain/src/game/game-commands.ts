@@ -17,6 +17,14 @@ import {
   type ResolveSecondary,
   resolveSecondaryHandler,
 } from '../action/action-commands.ts';
+import {
+  type ActivateSystem,
+  activateSystemHandler,
+  type EndTacticalAction,
+  endTacticalActionHandler,
+  type MoveShips,
+  moveShipsHandler,
+} from '../tactical/tactical-commands.ts';
 import { phaseOf } from '../phases/game-phase.ts';
 import { type StartGame, startGameHandler } from '../phases/start-game.ts';
 import { seatPlayerHandler, type SeatPlayer } from '../setup/setup-commands.ts';
@@ -34,7 +42,10 @@ export type GameCommand =
   | PerformStrategicAction
   | ResolveSecondary
   | DeclineSecondary
-  | Pass;
+  | Pass
+  | ActivateSystem
+  | MoveShips
+  | EndTacticalAction;
 
 type HandlerMap = {
   readonly [K in GameCommand['type']]: CommandHandler<
@@ -54,6 +65,9 @@ const handlers: HandlerMap = {
   ResolveSecondary: resolveSecondaryHandler,
   DeclineSecondary: declineSecondaryHandler,
   Pass: passHandler,
+  ActivateSystem: activateSystemHandler,
+  MoveShips: moveShipsHandler,
+  EndTacticalAction: endTacticalActionHandler,
 };
 
 /** Controller-Einstieg der Domain: wählt den passenden Handler (Command Pattern). */

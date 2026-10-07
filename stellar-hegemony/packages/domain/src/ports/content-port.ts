@@ -1,3 +1,4 @@
+import type { FactionDefinition } from '../faction/faction-definition.ts';
 import type { GalaxyTemplate } from '../galaxy/map-layout.ts';
 import type { TileCatalog } from '../galaxy/tile-catalog.ts';
 import type { StrategyCardDefinition } from '../strategy/strategy-card.ts';
@@ -11,5 +12,6 @@ export interface ContentPort {
   readonly units: UnitCatalog;
   readonly tiles: TileCatalog;
   readonly strategyCards: readonly StrategyCardDefinition[];
+  readonly factions: readonly FactionDefinition[];
   galaxyTemplate(playerCount: number): GalaxyTemplate | undefined;
 }

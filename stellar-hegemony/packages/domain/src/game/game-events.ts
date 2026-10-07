@@ -13,11 +13,22 @@ import type { StrategyEvent } from '../strategy/strategy-events.ts';
 import { strategyReducers } from '../strategy/strategy-reducers.ts';
 import type { SetupEvent } from '../setup/setup-events.ts';
 import { initialGameState, setupReducers } from '../setup/setup-reducers.ts';
+import type { HomeEvent } from '../faction/home-events.ts';
+import { homeReducers } from '../faction/home-reducers.ts';
+import type { TacticalEvent } from '../tactical/tactical-events.ts';
+import { tacticalReducers } from '../tactical/tactical-reducers.ts';
 import type { GameState } from './game-state.ts';
 
 /** Alle Events einer Partie. Jede Iteration erweitert diese Union um ihr Modul. */
 export type GameEvent =
-  SetupEvent | GalaxyEvent | PhaseEvent | StrategyEvent | ActionEvent | EconomyEvent;
+  | SetupEvent
+  | GalaxyEvent
+  | HomeEvent
+  | PhaseEvent
+  | StrategyEvent
+  | ActionEvent
+  | TacticalEvent
+  | EconomyEvent;
 
 const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...setupReducers,
@@ -26,6 +37,8 @@ const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...strategyReducers,
   ...actionReducers,
   ...economyReducers,
+  ...homeReducers,
+  ...tacticalReducers,
 };
 
 /** Wendet ein Event an und erhöht die Version (Indirection über eine zentrale Stelle). */

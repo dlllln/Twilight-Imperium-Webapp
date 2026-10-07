@@ -229,7 +229,13 @@ describe('Passen und Ende der Aktionsphase (RR 4)', () => {
   });
 
   it('wer als Einziger nicht gepasst hat, ist weiter am Zug', () => {
-    const turn = { order: [RED, BLUE, GREEN], active: GREEN, passed: [RED, BLUE], secondary: null };
+    const turn = {
+      order: [RED, BLUE, GREEN],
+      active: GREEN,
+      passed: [RED, BLUE],
+      secondary: null,
+      tactical: null,
+    };
     expect(nextActivePlayer(turn, GREEN, [RED, BLUE])).toBe(GREEN);
     expect(nextActivePlayer(turn, BLUE, [RED])).toBe(GREEN);
   });

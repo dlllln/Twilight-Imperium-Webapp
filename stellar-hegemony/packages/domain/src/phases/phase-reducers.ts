@@ -29,6 +29,7 @@ export const phaseReducers: ReducerMap<GameState, PhaseEvent> = {
       active: event.order[0] ?? null,
       passed: [],
       secondary: null,
+      tactical: null,
     },
   }),
   StatusPhaseStarted: (state, event) => ({

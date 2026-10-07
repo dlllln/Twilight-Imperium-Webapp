@@ -73,6 +73,7 @@ describe('Strategiephase (RR 76)', () => {
       active: RED,
       passed: [],
       secondary: null,
+      tactical: null,
     });
   });
 

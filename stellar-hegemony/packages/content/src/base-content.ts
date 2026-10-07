@@ -10,6 +10,8 @@ export function createBaseContent(): ContentPort {
     units: new StaticUnitCatalog(BASE_UNITS),
     tiles: new StaticTileCatalog(ALL_TILES),
     strategyCards: STRATEGY_CARDS,
+    // Fraktionsdaten (Heimatsysteme, Startflotten) folgen im nächsten Commit dieser Iteration.
+    factions: [],
     galaxyTemplate,
   };
 }
