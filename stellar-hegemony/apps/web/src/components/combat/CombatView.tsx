@@ -1,6 +1,11 @@
 import type { GameState, PlayerId, SystemId } from '@stellar/domain';
 import type { ReactElement } from 'react';
-import { type CombatLogEvent, combatDecision, combatParties } from '../../combat-view.ts';
+import {
+  type CombatLogEvent,
+  combatDecision,
+  combatParties,
+  isSpaceBattle,
+} from '../../combat-view.ts';
 import { useGameStore } from '../../game-store.ts';
 import type { MessageKey } from '../../i18n.ts';
 import { systemLabel } from '../../labels.ts';
@@ -18,6 +23,10 @@ const systemOf = (log: readonly CombatLogEvent[]): SystemId | null => {
   const first = log[0];
   return first !== undefined && 'system' in first ? first.system : null;
 };
+
+/** Überschrift: Raumkampf, sobald im Weltraum gekämpft wurde, sonst Einmarsch. */
+const titleOf = (log: readonly CombatLogEvent[]): MessageKey =>
+  isSpaceBattle(log) ? 'spaceCombat' : 'invasion';
 
 function roleOf(game: GameState, log: readonly CombatLogEvent[], player: PlayerId): MessageKey {
   if (game.actionPhase?.active === player) return 'attacker';
@@ -94,13 +103,13 @@ export function CombatView(): ReactElement | null {
   if (game === null || !open || system === null) return null;
   const backdrop = combatBackdrop();
   return (
-    <div className="combat-overlay" role="dialog" aria-modal="true" aria-label={t('spaceCombat')}>
+    <div className="combat-overlay" role="dialog" aria-modal="true" aria-label={t(titleOf(log))}>
       <div
         className="combat-view"
         style={backdrop === null ? {} : { backgroundImage: `url(${backdrop})` }}
       >
         <header className="combat-header">
-          <h2>{t('spaceCombat')}</h2>
+          <h2>{t(titleOf(log))}</h2>
           <p>{systemLabel(game, system, language)}</p>
         </header>
         <Fleets game={game} system={system} log={log} />

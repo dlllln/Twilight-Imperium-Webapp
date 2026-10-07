@@ -23,6 +23,9 @@ function PlayerRow({
       </span>
       <span title={t('reinforcements')}>+{player.reinforcementTokens}</span>
       <span title={t('tradeGoods')}>◆ {player.tradeGoods}</span>
+      <span title={t('commodities')}>
+        ◇ {player.commodities}/{player.commodityLimit}
+      </span>
       {passed && <span className="badge">{t('passed')}</span>}
     </li>
   );

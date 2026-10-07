@@ -4,6 +4,15 @@ import type { CombatLogEvent } from '../../combat-view.ts';
 import { systemLabel } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
+import {
+  Bombardment,
+  CenterToken,
+  ControlGained,
+  DefenseFire,
+  GroundEnded,
+  GroundRound,
+  Landing,
+} from './InvasionEntries.tsx';
 import { VolleyDice } from './VolleyDice.tsx';
 
 interface EntryProps<E extends CombatLogEvent = CombatLogEvent> {
@@ -106,26 +115,35 @@ function Simple({ event }: EntryProps): ReactElement {
   );
 }
 
+type Renderers = {
+  readonly [T in CombatLogEvent['type']]?: (props: EntryProps<Of<T>>) => ReactElement;
+};
+
 /** Ein Eintrag je Ereignis; jede Ereignisart hat ihre eigene kleine Darstellung. */
+const RENDERERS: Renderers = {
+  SpaceCannonFired: Cannon,
+  AntiFighterBarrageFired: Barrage,
+  CombatRoundRolled: Round,
+  HitsAssigned: Assigned,
+  RetreatDeclared: Declared,
+  ShipsRetreated: Retreated,
+  SpaceCombatEnded: Ended,
+  BombardmentRolled: Bombardment,
+  GroundForcesCommitted: Landing,
+  SpaceCannonDefenseFired: DefenseFire,
+  GroundCombatRoundRolled: GroundRound,
+  GroundCombatEnded: GroundEnded,
+  PlanetControlGained: ControlGained,
+  CenterTokenRemoved: CenterToken,
+};
+
 function Entry({ game, event }: EntryProps): ReactElement {
-  switch (event.type) {
-    case 'SpaceCannonFired':
-      return <Cannon game={game} event={event} />;
-    case 'AntiFighterBarrageFired':
-      return <Barrage game={game} event={event} />;
-    case 'CombatRoundRolled':
-      return <Round game={game} event={event} />;
-    case 'HitsAssigned':
-      return <Assigned game={game} event={event} />;
-    case 'RetreatDeclared':
-      return <Declared game={game} event={event} />;
-    case 'ShipsRetreated':
-      return <Retreated game={game} event={event} />;
-    case 'SpaceCombatEnded':
-      return <Ended game={game} event={event} />;
-    default:
-      return <Simple game={game} event={event} />;
-  }
+  const Render = RENDERERS[event.type] as ((props: EntryProps) => ReactElement) | undefined;
+  return Render === undefined ? (
+    <Simple game={game} event={event} />
+  ) : (
+    <Render game={game} event={event} />
+  );
 }
 
 /** Kampfverlauf, neueste Einträge unten; scrollt automatisch mit. */

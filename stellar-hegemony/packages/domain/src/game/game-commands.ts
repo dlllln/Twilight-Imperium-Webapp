@@ -38,6 +38,14 @@ import {
   commitGroundForcesHandler,
 } from '../invasion/invasion-commands.ts';
 import { type ProduceUnits, produceUnitsHandler } from '../production/production-commands.ts';
+import {
+  type AcceptTransaction,
+  acceptTransactionHandler,
+  type ProposeTransaction,
+  proposeTransactionHandler,
+  type RejectTransaction,
+  rejectTransactionHandler,
+} from '../transaction/transaction-commands.ts';
 import { phaseOf } from '../phases/game-phase.ts';
 import { type StartGame, startGameHandler } from '../phases/start-game.ts';
 import { seatPlayerHandler, type SeatPlayer } from '../setup/setup-commands.ts';
@@ -63,7 +71,10 @@ export type GameCommand =
   | DeclareRetreat
   | Bombard
   | CommitGroundForces
-  | ProduceUnits;
+  | ProduceUnits
+  | ProposeTransaction
+  | AcceptTransaction
+  | RejectTransaction;
 
 type HandlerMap = {
   readonly [K in GameCommand['type']]: CommandHandler<
@@ -91,6 +102,9 @@ const handlers: HandlerMap = {
   Bombard: bombardHandler,
   CommitGroundForces: commitGroundForcesHandler,
   ProduceUnits: produceUnitsHandler,
+  ProposeTransaction: proposeTransactionHandler,
+  AcceptTransaction: acceptTransactionHandler,
+  RejectTransaction: rejectTransactionHandler,
 };
 
 /** Controller-Einstieg der Domain: wählt den passenden Handler (Command Pattern). */

@@ -242,6 +242,8 @@ describe('Passen und Ende der Aktionsphase (RR 4)', () => {
       passed: [RED, BLUE],
       secondary: null,
       tactical: null,
+      transaction: null,
+      transactedWith: [],
     };
     expect(nextActivePlayer(turn, GREEN, [RED, BLUE])).toBe(GREEN);
     expect(nextActivePlayer(turn, BLUE, [RED])).toBe(GREEN);

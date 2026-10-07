@@ -19,6 +19,18 @@ async function neighbourOfActiveHome(page: Page): Promise<Locator> {
   return hexes.nth(index);
 }
 
+/** Bombardement, Landung und Produktion auslassen, falls das Zielsystem sie anbietet. */
+async function skipRemainingSteps(page: Page) {
+  for (const name of [
+    'Ohne Bombardement weiter',
+    'Ohne Landung weiter',
+    'Ohne Produktion weiter',
+  ]) {
+    const button = page.getByRole('button', { name });
+    if (await button.isVisible()) await button.click();
+  }
+}
+
 async function pickCards(page: Page) {
   for (let pick = 0; pick < 6; pick += 1)
     await page.locator('.strategy-card button:not([disabled])').first().click();
@@ -58,7 +70,10 @@ test('Hot-Seat: Vorhut, Gesandtschaft und eine taktische Aktion mit Bewegung', a
   await expect(page.getByRole('heading', { name: /Aktiviertes System/ })).toBeVisible();
   await page.locator('.ship-choices input[type="checkbox"]').first().check();
   await page.getByRole('button', { name: 'Schiffe bewegen' }).click();
-  await expect(page.getByText(/Bewegung und Raumkampf sind abgeschlossen/)).toBeVisible();
+  await skipRemainingSteps(page);
+  await expect(
+    page.getByText(/Alle Schritte dieser taktischen Aktion sind erledigt/),
+  ).toBeVisible();
 
   const actorBefore = await page.getByTestId('actor').innerText();
   await page.getByRole('button', { name: 'Taktische Aktion beenden' }).click();
@@ -66,4 +81,28 @@ test('Hot-Seat: Vorhut, Gesandtschaft und eine taktische Aktion mit Bewegung', a
 
   await page.getByRole('button', { name: 'Zur Galaxie' }).click();
   await expect(page.getByRole('button', { name: 'Neue Galaxie' })).toBeVisible();
+});
+
+test('Hot-Seat: Produktion im eigenen Heimatsystem', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Spieler').selectOption('3');
+  await page.getByRole('button', { name: 'Partie starten' }).click();
+  await pickCards(page);
+
+  const actor = await page.getByTestId('actor').innerText();
+  const seat = /P(\d)/.exec(actor)?.[1] ?? '';
+  await page.locator(`[data-seat="${seat}"]`).click();
+  await page.getByRole('button', { name: 'System aktivieren' }).click();
+  await page.getByRole('button', { name: 'Ohne Bewegung weiter' }).click();
+  await expect(page.getByRole('heading', { name: 'Produktion' })).toBeVisible();
+  await page.getByRole('button', { name: 'Infanterie +' }).click();
+  await page.getByRole('button', { name: 'Infanterie +' }).click();
+  await expect(page.getByTestId('production-cost')).toHaveText('1');
+  await page.locator('.payment input[type="checkbox"]').first().check();
+  await page.getByRole('button', { name: 'Produzieren' }).click();
+  await expect(
+    page.getByText(/Alle Schritte dieser taktischen Aktion sind erledigt/),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Taktische Aktion beenden' }).click();
+  await expect(page.getByTestId('actor')).not.toHaveText(actor);
 });

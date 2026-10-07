@@ -1,6 +1,7 @@
 import type { PendingHits, SpaceCombatState, TacticalStep } from '../combat/combat-state.ts';
 import type { PlayerId, SystemId } from '../shared/ids.ts';
 import type { StrategyCardId } from '../strategy/strategy-card.ts';
+import type { PendingTransaction } from '../transaction/goods.ts';
 
 /** Nach einer Strategieaktion dürfen die anderen Spieler reihum die Sekundärfähigkeit nutzen. */
 export interface SecondaryWindow {
@@ -27,4 +28,8 @@ export interface ActionPhaseState {
   readonly passed: readonly PlayerId[];
   readonly secondary: SecondaryWindow | null;
   readonly tactical: TacticalActionState | null;
+  /** Offenes Tauschangebot des aktiven Spielers (RR 82). */
+  readonly transaction: PendingTransaction | null;
+  /** Nachbarn, mit denen der aktive Spieler in diesem Zug schon getauscht hat (RR 82.1). */
+  readonly transactedWith: readonly PlayerId[];
 }

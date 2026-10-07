@@ -25,12 +25,30 @@ export type CombatLogEvent = Extract<
       | 'HitsAssigned'
       | 'ShipsRetreated'
       | 'SpaceCombatEnded'
-      | 'UnitsDestroyed';
+      | 'UnitsDestroyed'
+      | 'BombardmentRolled'
+      | 'GroundForcesCommitted'
+      | 'SpaceCannonDefenseFired'
+      | 'GroundCombatRoundRolled'
+      | 'GroundCombatEnded'
+      | 'PlanetControlGained'
+      | 'CenterTokenRemoved';
   }
 >;
 
-const OPENING = new Set<GameEvent['type']>(['SpaceCannonFired', 'SpaceCombatStarted']);
+/** Ereignisse, die ein Protokoll eröffnen: Kanonenfeuer, Raumkampf, Bombardement, Einmarsch. */
+const OPENING = new Set<GameEvent['type']>([
+  'SpaceCannonFired',
+  'SpaceCombatStarted',
+  'BombardmentRolled',
+  'GroundForcesCommitted',
+]);
 const FOLLOWING = new Set<GameEvent['type']>([
+  'SpaceCannonDefenseFired',
+  'GroundCombatRoundRolled',
+  'GroundCombatEnded',
+  'PlanetControlGained',
+  'CenterTokenRemoved',
   'AntiFighterBarrageFired',
   'RetreatDeclared',
   'CombatRoundRolled',
@@ -57,16 +75,41 @@ export function nextCombatLog(
   }, log);
 }
 
+/** Die Ansicht öffnet sich nur, wenn gewürfelt wird; eine Landung ohne Kampf bleibt im Protokoll. */
+const ROLLS = new Set<GameEvent['type']>([
+  'SpaceCannonFired',
+  'SpaceCombatStarted',
+  'BombardmentRolled',
+  'SpaceCannonDefenseFired',
+  'GroundCombatRoundRolled',
+]);
+
 export const opensCombat = (events: readonly GameEvent[]): boolean =>
-  events.some((event) => OPENING.has(event.type));
+  events.some((event) => ROLLS.has(event.type));
+
+/** Spieler, die ein Protokolleintrag nennt (für die Seiten der Kampfansicht). */
+function namedIn(event: CombatLogEvent): readonly PlayerId[] {
+  switch (event.type) {
+    case 'SpaceCombatStarted':
+      return [event.attacker, event.defender];
+    case 'SpaceCannonFired':
+    case 'BombardmentRolled':
+    case 'SpaceCannonDefenseFired':
+      return [event.volley.player, event.volley.target];
+    case 'GroundCombatRoundRolled':
+      return event.volleys.map((volley) => volley.player);
+    default:
+      return [];
+  }
+}
+
+/** Gab es im Protokoll einen Raumkampf oder Kanonenfeuer im Weltraum? */
+export const isSpaceBattle = (log: readonly CombatLogEvent[]): boolean =>
+  log.some((event) => event.type === 'SpaceCombatStarted' || event.type === 'SpaceCannonFired');
 
 /** Seiten des Kampfs: der aktive Spieler zuerst, dann alle, die im Protokoll vorkommen. */
 export function combatParties(game: GameState, log: readonly CombatLogEvent[]): PlayerId[] {
-  const named = log.flatMap((event): PlayerId[] => {
-    if (event.type === 'SpaceCombatStarted') return [event.attacker, event.defender];
-    if (event.type === 'SpaceCannonFired') return [event.volley.player, event.volley.target];
-    return [];
-  });
+  const named = log.flatMap(namedIn);
   const active = game.actionPhase?.active;
   return [...new Set(active == null ? named : [active, ...named])];
 }

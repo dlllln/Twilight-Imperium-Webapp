@@ -7,13 +7,16 @@ import {
   planetId,
   type PlanetId,
   produceUnitsHandler,
+  producibleUnits,
+  productionQuote,
+  unitTypeId,
   type SystemState,
   productionCost,
   type UnitTypeId,
   updatePlayer,
 } from '../src/index.ts';
-import { activate, board, moves, type Spec } from './board.ts';
-import { BLUE, contextWith, RED, T, unit, units } from './fixtures.ts';
+import { activate, board, moves, S, type Spec } from './board.ts';
+import { BLUE, catalog, content, contextWith, RED, T, unit, units } from './fixtures.ts';
 import { actionPhaseGame, run, step } from './game-flow.ts';
 
 const WORLD = planetId('gamma-1');
@@ -123,6 +126,27 @@ describe('Produktion (RR 62, RR 24)', () => {
     expect(tryProduce(state, produce([{ type: T.cruiser, count: 0 }], 0))).toBe(
       'production.invalidCount',
     );
+  });
+
+  it('RR 62.1/24.2: die Vorschau für Clients rechnet wie die Regel', () => {
+    const state = atDock({ units: [unit(T.cruiser, BLUE)] });
+    const orders = [
+      { type: T.fighter, count: 3 },
+      { type: T.cruiser, count: 1 },
+      { type: unitTypeId('nix'), count: 1 },
+    ];
+    expect(productionQuote(state, S('b'), RED, orders, content)).toEqual({
+      limit: 5,
+      count: 5,
+      cost: 4,
+      blockaded: true,
+      groundPlanets: [WORLD],
+    });
+    expect(productionQuote(state, S('b'), RED, [], content).blockaded).toBe(false);
+    const types = producibleUnits(state, RED, catalog).map((definition) => definition.id);
+    expect(types).toContain(T.fighter);
+    expect(types).not.toContain(T.breaker);
+    expect(types).not.toContain(T.dock);
   });
 
   it('ohne Taktikaktion gibt es weder Produktion noch Bombardement oder Landung', () => {

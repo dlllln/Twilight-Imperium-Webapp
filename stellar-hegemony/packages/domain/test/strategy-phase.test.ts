@@ -74,6 +74,8 @@ describe('Strategiephase (RR 76)', () => {
       passed: [],
       secondary: null,
       tactical: null,
+      transaction: null,
+      transactedWith: [],
     });
   });
 

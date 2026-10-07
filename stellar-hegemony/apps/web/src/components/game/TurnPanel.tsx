@@ -15,6 +15,7 @@ import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from './card-text.ts';
 import { ChoiceForm } from './ChoiceForm.tsx';
 import { ActivationBlock, TacticalTurn } from './TacticalPanel.tsx';
+import { TransactionForm, TransactionReply } from './TransactionForm.tsx';
 
 const definitionOf = (id: StrategyCardId | undefined): StrategyCardDefinition | undefined =>
   content.strategyCards.find((card) => card.id === id);
@@ -116,6 +117,7 @@ function ActiveTurn({ game, player }: TurnProps): ReactElement {
         ))}
       </ul>
       <ActivationBlock game={game} player={player} />
+      <TransactionForm game={game} player={player} />
       <button
         type="button"
         disabled={unused.length > 0}
@@ -127,6 +129,14 @@ function ActiveTurn({ game, player }: TurnProps): ReactElement {
   );
 }
 
+/** Offene Sekundärfähigkeit, dann ein Tauschangebot, sonst der normale Zug. */
+function TurnContent({ game, player }: TurnProps): ReactElement {
+  if (game.actionPhase?.secondary != null) return <SecondaryPrompt game={game} player={player} />;
+  if (game.actionPhase?.transaction != null)
+    return <TransactionReply game={game} player={player} />;
+  return <ActiveTurn key={player} game={game} player={player} />;
+}
+
 /** Was der Spieler am Zug in der Aktionsphase tun kann. */
 export function TurnPanel({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
@@ -136,11 +146,7 @@ export function TurnPanel({ game }: { readonly game: GameState }): ReactElement 
   return (
     <section className="game-section">
       <h2>{t('phase.action')}</h2>
-      {game.actionPhase?.secondary == null ? (
-        <ActiveTurn key={actor} game={game} player={actor} />
-      ) : (
-        <SecondaryPrompt game={game} player={actor} />
-      )}
+      <TurnContent game={game} player={actor} />
     </section>
   );
 }

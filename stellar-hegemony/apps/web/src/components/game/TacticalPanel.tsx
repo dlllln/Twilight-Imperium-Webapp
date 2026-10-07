@@ -3,7 +3,9 @@ import {
   type MovementOption,
   type PlayerId,
   type ShipMoveOrder,
+  type SystemId,
   systemId,
+  type TacticalActionState,
   type UnitId,
 } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
@@ -12,6 +14,9 @@ import { systemLabel, unitLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
 import { cargoAtOrigin, movementChoices } from '../../tactical-view.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { BombardForm, LandingForm } from './InvasionForms.tsx';
+import { ProductionForm } from './ProductionForm.tsx';
+import { TransactionForm } from './TransactionForm.tsx';
 
 interface TurnProps {
   readonly game: GameState;
@@ -127,21 +132,17 @@ function MovementForm({ game, player }: TurnProps): ReactElement {
   const options = movementChoices(game, content);
   const api = useOrders();
   const moves = ordersFor(options, api.orders);
-  if (options.length === 0) return <p className="hint">{t('noMovableShips')}</p>;
   return (
     <div className="choice-form">
       <h3>{t('movement')}</h3>
+      {options.length === 0 && <p className="hint">{t('noMovableShips')}</p>}
       <ul className="ship-choices">
         {options.map((option) => (
           <ShipChoice key={option.ship.id} game={game} player={player} option={option} api={api} />
         ))}
       </ul>
-      <button
-        type="button"
-        disabled={moves.length === 0}
-        onClick={() => send({ type: 'MoveShips', issuedBy: player, moves })}
-      >
-        {t('moveShips')}
+      <button type="button" onClick={() => send({ type: 'MoveShips', issuedBy: player, moves })}>
+        {moves.length === 0 ? t('skipMovement') : t('moveShips')}
       </button>
     </div>
   );
@@ -161,7 +162,38 @@ function CombatPending(): ReactElement {
   );
 }
 
-/** Laufende taktische Aktion: Bewegung, Kampf (eigene Ansicht), dann beenden. */
+function ProductionStep({ game, player, system }: TurnProps & { readonly system: SystemId }) {
+  const send = useGameStore((state) => state.send);
+  return (
+    <ProductionForm
+      game={game}
+      player={player}
+      system={system}
+      onSubmit={(request) => send({ type: 'ProduceUnits', issuedBy: player, ...request })}
+    />
+  );
+}
+
+/** Das Formular zum aktuellen Schritt der Taktikaktion (Kampfschritte laufen in der Kampfansicht). */
+function StepForm({ game, player, step, system }: TurnProps & TacticalActionState) {
+  const t = useT();
+  switch (step) {
+    case 'movement':
+      return <MovementForm game={game} player={player} />;
+    case 'bombardment':
+      return <BombardForm game={game} player={player} />;
+    case 'invasion':
+      return <LandingForm game={game} player={player} />;
+    case 'production':
+      return <ProductionStep game={game} player={player} system={system} />;
+    case 'done':
+      return <p className="hint">{t('tacticalDone')}</p>;
+    default:
+      return <CombatPending />;
+  }
+}
+
+/** Laufende taktische Aktion: Bewegung, Kampf, Bombardement, Einmarsch, Produktion, dann beenden. */
 export function TacticalTurn({ game, player }: TurnProps): ReactElement | null {
   const t = useT();
   const language = useLanguage();
@@ -174,9 +206,8 @@ export function TacticalTurn({ game, player }: TurnProps): ReactElement | null {
       <h3>
         {t('activeSystem')}: {systemLabel(game, tactical.system, language)}
       </h3>
-      {tactical.step === 'movement' && <MovementForm game={game} player={player} />}
-      {done && <p className="hint">{t('fleetArrived')}</p>}
-      {!done && tactical.step !== 'movement' && <CombatPending />}
+      <StepForm game={game} player={player} {...tactical} />
+      <TransactionForm game={game} player={player} />
       <button
         type="button"
         disabled={!done}

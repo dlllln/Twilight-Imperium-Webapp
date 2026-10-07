@@ -532,6 +532,68 @@ input[type='checkbox'] {
   accent-color: var(--gold);
 }
 
+/* Formulare für Bombardement, Einmarsch, Produktion und Gebäude. */
+.target-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.target-choices label,
+.choice-form > label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.payment,
+.placement {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.payment legend,
+.placement legend {
+  padding: 0 4px;
+  color: var(--gold-bright);
+}
+
+.payment input[type='number'] {
+  width: 64px;
+  margin-left: 8px;
+}
+
+.production-form h3 {
+  margin: 0;
+}
+
+.warning {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(220, 80, 60, 0.18);
+  color: #ffb4a6;
+}
+
+.fleet-ground {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--gold-line);
+}
+
 /* Kampfansicht: eigene Bühne über der Karte mit prozeduralem Nebel-Hintergrund. */
 .combat-overlay {
   position: fixed;
@@ -765,4 +827,29 @@ input[type='checkbox'] {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
+}
+
+/* Tausch mit Nachbarn: eingeklappt, damit der Zug übersichtlich bleibt. */
+.transaction {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+}
+
+.transaction summary {
+  cursor: pointer;
+  color: var(--gold-bright);
+}
+
+.transaction[open] summary {
+  margin-bottom: 6px;
+}
+
+.partner-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }

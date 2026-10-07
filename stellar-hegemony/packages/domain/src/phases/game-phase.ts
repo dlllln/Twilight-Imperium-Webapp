@@ -53,6 +53,9 @@ export class ActionPhase extends BasePhase {
     'Bombard',
     'CommitGroundForces',
     'ProduceUnits',
+    'ProposeTransaction',
+    'AcceptTransaction',
+    'RejectTransaction',
   ];
   next(): PhaseName {
     return 'status';

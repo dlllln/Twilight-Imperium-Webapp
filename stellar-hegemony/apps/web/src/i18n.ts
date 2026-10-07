@@ -49,6 +49,21 @@ const DICTIONARY = {
   },
   initiativeOrder: { de: 'Initiative', en: 'Initiative' },
   tradeGoods: { de: 'Handelswaren', en: 'Trade goods' },
+  commodities: { de: 'Rohstoffe', en: 'Commodities' },
+  transaction: { de: 'Tausch mit Nachbarn', en: 'Trade with neighbours' },
+  partner: { de: 'Nachbar', en: 'Neighbour' },
+  give: { de: 'Geben', en: 'Give' },
+  ask: { de: 'Verlangen', en: 'Ask for' },
+  propose: { de: 'Angebot machen', en: 'Make offer' },
+  offers: { de: 'bietet', en: 'offers' },
+  asksFor: { de: 'und verlangt', en: 'and asks for' },
+  accept: { de: 'Annehmen', en: 'Accept' },
+  withdraw: { de: 'Zurückziehen', en: 'Withdraw' },
+  nothing: { de: 'nichts', en: 'nothing' },
+  transactionHint: {
+    de: 'Rohstoffe werden beim Empfänger zu Handelswaren. Mit jedem Nachbarn ist ein Tausch je Zug möglich.',
+    en: 'Commodities turn into trade goods for the receiver. One trade per neighbour per turn.',
+  },
   reinforcements: { de: 'Nachschub', en: 'Reinforcements' },
   tactic: { de: 'Taktik', en: 'Tactic' },
   fleet: { de: 'Flotte', en: 'Fleet' },
@@ -136,14 +151,58 @@ const DICTIONARY = {
   activeSystem: { de: 'Aktiviertes System', en: 'Activated system' },
   movement: { de: 'Bewegung', en: 'Movement' },
   moveShips: { de: 'Schiffe bewegen', en: 'Move ships' },
+  skipMovement: { de: 'Ohne Bewegung weiter', en: 'Continue without moving' },
   noMovableShips: {
     de: 'Keine eigenen Schiffe können dieses System erreichen.',
     en: 'None of your ships can reach this system.',
   },
-  fleetArrived: {
-    de: 'Bewegung und Raumkampf sind abgeschlossen. Invasion und Produktion folgen in der nächsten Ausbaustufe.',
-    en: 'Movement and space combat are done. Invasion and production follow in the next stage.',
+  tacticalDone: {
+    de: 'Alle Schritte dieser taktischen Aktion sind erledigt.',
+    en: 'All steps of this tactical action are done.',
   },
+  bombardment: { de: 'Bombardement', en: 'Bombardment' },
+  noBombardment: { de: 'nicht bombardieren', en: 'do not bombard' },
+  bombard: { de: 'Bombardieren', en: 'Bombard' },
+  skipBombardment: { de: 'Ohne Bombardement weiter', en: 'Continue without bombardment' },
+  invasion: { de: 'Einmarsch', en: 'Invasion' },
+  stayInSpace: { de: 'im Weltraum bleiben', en: 'stay in space' },
+  land: { de: 'Landen', en: 'Land' },
+  skipInvasion: { de: 'Ohne Landung weiter', en: 'Continue without landing' },
+  production: { de: 'Produktion', en: 'Production' },
+  productionLimit: { de: 'Einheiten', en: 'Units' },
+  cost: { de: 'Kosten', en: 'Cost' },
+  blockaded: {
+    de: 'Blockiert: Fremde Schiffe verhindern hier den Bau von Schiffen.',
+    en: 'Blockaded: enemy ships prevent building ships here.',
+  },
+  groundPlanet: { de: 'Bodentruppen auf', en: 'Ground forces to' },
+  produce: { de: 'Produzieren', en: 'Produce' },
+  skipProduction: { de: 'Ohne Produktion weiter', en: 'Continue without production' },
+  firstStructure: { de: 'Gebäude', en: 'Structure' },
+  secondStructure: {
+    de: 'Zusätzliches Gebäude mit Weltraumkanone',
+    en: 'Additional structure with space cannon',
+  },
+  structure: { de: 'Gebäude', en: 'Structure' },
+  build: { de: 'Bauen', en: 'Build' },
+  freeSecondary: {
+    de: 'Sekundärfähigkeit ohne Strategiemarker für',
+    en: 'Secondary ability without strategy token for',
+  },
+  takeBackToken: { de: 'Marker zurücknehmen aus', en: 'Take back token from' },
+  noHomeSystem: { de: 'Kein Heimatsystem gefunden.', en: 'No home system found.' },
+  landsOn: { de: 'landet auf', en: 'lands on' },
+  defenseFire: { de: 'Abwehrfeuer der Weltraumkanonen', en: 'Space cannon defense' },
+  groundCombat: { de: 'Bodenkampf', en: 'Ground combat' },
+  groundWinner: { de: 'Bodenkampf gewonnen von', en: 'Ground combat won by' },
+  noGroundSurvivors: {
+    de: 'Auf dem Planeten bleiben keine Bodentruppen.',
+    en: 'No ground forces remain on the planet.',
+  },
+  takesControl: { de: 'übernimmt', en: 'takes control of' },
+  structuresDestroyed: { de: 'Gebäude zerstört', en: 'structures destroyed' },
+  centerTaken: { de: 'nimmt den Marker der Thronwelt', en: 'takes the throne world token' },
+  onPlanets: { de: 'Auf Planeten', en: 'On planets' },
   spaceCombat: { de: 'Raumkampf', en: 'Space combat' },
   attacker: { de: 'Angreifer', en: 'Attacker' },
   defender: { de: 'Verteidiger', en: 'Defender' },
@@ -261,6 +320,119 @@ const DICTIONARY = {
   'diplomacy.noPlanet': {
     de: 'Du musst dort einen Planeten kontrollieren.',
     en: 'You must control a planet there.',
+  },
+  'production.noProductionUnit': {
+    de: 'Hier gibt es keine eigene Produktion.',
+    en: 'You have no production here.',
+  },
+  'production.limit': {
+    de: 'So viele Einheiten erlaubt der Produktionswert nicht.',
+    en: 'The production value does not allow that many units.',
+  },
+  'production.blockaded': {
+    de: 'Blockiert: hier können keine Schiffe gebaut werden.',
+    en: 'Blockaded: no ships can be built here.',
+  },
+  'production.componentLimit': {
+    de: 'Davon ist nichts mehr im Vorrat.',
+    en: 'None of these are left in your supply.',
+  },
+  'production.groundPlanet': {
+    de: 'Bodentruppen brauchen einen eigenen Planeten mit Produktion.',
+    en: 'Ground forces need an own planet with production.',
+  },
+  'production.cost': { de: 'Die Bezahlung reicht nicht.', en: 'The payment is not enough.' },
+  'production.fleetLimit': {
+    de: 'Das überschreitet dein Flottenlimit.',
+    en: 'That exceeds your fleet limit.',
+  },
+  'production.capacity': {
+    de: 'Nicht genug Kapazität für die neuen Jäger.',
+    en: 'Not enough capacity for the new fighters.',
+  },
+  'production.missingTechnology': {
+    de: 'Dafür fehlt dir die Technologie.',
+    en: 'You lack the technology for that.',
+  },
+  'production.notProducible': {
+    de: 'Diese Einheit kann nicht produziert werden.',
+    en: 'This unit cannot be produced.',
+  },
+  'invasion.cannotBombard': {
+    de: 'Diese Einheit kann nicht bombardieren.',
+    en: 'This unit cannot bombard.',
+  },
+  'invasion.invalidBombardTarget': {
+    de: 'Dieser Planet kann nicht bombardiert werden.',
+    en: 'This planet cannot be bombarded.',
+  },
+  'invasion.notLandable': {
+    de: 'Nur eigene Bodentruppen im Weltraum können landen.',
+    en: 'Only your ground forces in space can land.',
+  },
+  'invasion.centerPayment': {
+    de: 'Für die Thronwelt reicht der Einfluss nicht.',
+    en: 'Not enough influence for the throne world.',
+  },
+  'construction.notYourPlanet': {
+    de: 'Gebäude nur auf eigenen Planeten.',
+    en: 'Structures only on your own planets.',
+  },
+  'construction.planetFull': {
+    de: 'Auf diesem Planeten ist dafür kein Platz mehr.',
+    en: 'There is no room for that on this planet.',
+  },
+  'construction.componentLimit': {
+    de: 'Davon ist kein Gebäude mehr im Vorrat.',
+    en: 'No such structure left in your supply.',
+  },
+  'construction.secondCannon': {
+    de: 'Das zusätzliche Gebäude braucht eine Weltraumkanone.',
+    en: 'The additional structure needs a space cannon.',
+  },
+  'construction.wrongSystem': {
+    de: 'Das Gebäude muss in das gewählte System.',
+    en: 'The structure must go into the chosen system.',
+  },
+  'construction.tokenPresent': {
+    de: 'Dort liegt schon dein Marker.',
+    en: 'Your token is already there.',
+  },
+  'construction.noReinforcements': {
+    de: 'Du hast keinen Marker im Nachschub.',
+    en: 'You have no token in reinforcements.',
+  },
+  'warfare.noToken': {
+    de: 'Wähle ein System mit deinem Marker.',
+    en: 'Choose a system with your token.',
+  },
+  'warfare.noProduction': {
+    de: 'Gib an, was im Heimatsystem produziert wird.',
+    en: 'Say what to produce in your home system.',
+  },
+  'commandSheet.totalChanged': {
+    de: 'Verteile genau alle Marker.',
+    en: 'Place exactly all tokens.',
+  },
+  'transaction.notNeighbor': {
+    de: 'Tauschen geht nur mit Nachbarn.',
+    en: 'You can only trade with neighbours.',
+  },
+  'transaction.alreadyDone': {
+    de: 'Mit diesem Nachbarn hast du in diesem Zug schon getauscht.',
+    en: 'You already traded with this neighbour this turn.',
+  },
+  'transaction.notEnough': {
+    de: 'Dafür reichen die Waren nicht.',
+    en: 'Not enough goods for that.',
+  },
+  'transaction.pending': {
+    de: 'Es ist schon ein Angebot offen.',
+    en: 'An offer is already open.',
+  },
+  'planet.alreadyExhausted': {
+    de: 'Dieser Planet ist schon erschöpft.',
+    en: 'This planet is already exhausted.',
   },
 } as const satisfies Record<string, LocalizedText>;
 

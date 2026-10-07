@@ -1,7 +1,10 @@
 import type { GameState, PlayerId, StrategyCardDefinition, StrategyChoice } from '@stellar/domain';
 import type { ReactElement, ReactNode } from 'react';
+import { ConstructionForm } from './ConstructionForm.tsx';
 import { DiplomacyForm } from './DiplomacyForm.tsx';
 import { TokenForm } from './TokenForm.tsx';
+import { TradeForm } from './TradeForm.tsx';
+import { WarfareForm } from './WarfareForm.tsx';
 
 export interface ChoiceFormProps {
   readonly game: GameState;
@@ -14,9 +17,16 @@ export interface ChoiceFormProps {
 
 /** Wählt das passende Formular zur Mechanik der Strategiekarte (Polymorphie statt if-Ketten im Panel). */
 export function ChoiceForm(props: ChoiceFormProps): ReactElement {
-  return props.card.mechanic === 'diplomacy' ? (
-    <DiplomacyForm {...props} />
-  ) : (
-    <TokenForm {...props} />
-  );
+  switch (props.card.mechanic) {
+    case 'diplomacy':
+      return <DiplomacyForm {...props} />;
+    case 'construction':
+      return <ConstructionForm {...props} />;
+    case 'trade':
+      return <TradeForm {...props} />;
+    case 'warfare':
+      return <WarfareForm {...props} />;
+    default:
+      return <TokenForm {...props} />;
+  }
 }

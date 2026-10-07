@@ -23,6 +23,8 @@ import type { InvasionEvent } from '../invasion/invasion-events.ts';
 import { invasionReducers } from '../invasion/invasion-reducers.ts';
 import type { ProductionEvent } from '../production/production-events.ts';
 import { productionReducers } from '../production/production-reducers.ts';
+import type { TransactionEvent } from '../transaction/transaction-events.ts';
+import { transactionReducers } from '../transaction/transaction-reducers.ts';
 import type { GameState } from './game-state.ts';
 
 /** Alle Events einer Partie. Jede Iteration erweitert diese Union um ihr Modul. */
@@ -37,6 +39,7 @@ export type GameEvent =
   | CombatEvent
   | InvasionEvent
   | ProductionEvent
+  | TransactionEvent
   | EconomyEvent;
 
 const gameReducers: ReducerMap<GameState, GameEvent> = {
@@ -51,6 +54,7 @@ const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...combatReducers,
   ...invasionReducers,
   ...productionReducers,
+  ...transactionReducers,
 };
 
 /** Wendet ein Event an und erhöht die Version (Indirection über eine zentrale Stelle). */

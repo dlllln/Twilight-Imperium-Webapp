@@ -95,10 +95,17 @@ export function createLocalGame(
   );
 }
 
+/** In der Aktionsphase: Sekundärfähigkeit, Tauschangebot, Kampfentscheidung, sonst der Zug. */
+function actionActor(state: GameState): PlayerId | null {
+  const turn = state.actionPhase;
+  if (turn === null) return null;
+  return (
+    turn.secondary?.awaiting[0] ?? turn.transaction?.to ?? tacticalDecider(state) ?? turn.active
+  );
+}
+
 /** Wer gerade am Bildschirm entscheiden muss (Hot-Seat). */
 export function currentActor(state: GameState): PlayerId | null {
   if (state.phase === 'strategy') return state.pickQueue[0] ?? null;
-  const turn = state.actionPhase;
-  if (state.phase !== 'action' || turn === null) return null;
-  return turn.secondary?.awaiting[0] ?? tacticalDecider(state) ?? turn.active;
+  return state.phase === 'action' ? actionActor(state) : null;
 }
