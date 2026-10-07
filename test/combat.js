@@ -4,6 +4,7 @@ E.addPlayer(s, 'a', 'A'); E.addPlayer(s, 'b', 'B');
 E.act(s, 'a', { type: 'chooseFaction', faction: 'eisen' }); E.act(s, 'b', { type: 'chooseFaction', faction: 'glut' });
 E.act(s, 'a', { type: 'start' });
 const ok = (pid, a) => { const c = JSON.parse(JSON.stringify(s)); E.act(c, pid, a); Object.assign(s, c); };
+for (const id of [...s.wait.players]) ok(id, { type: 'secretPick', keep: E.player(s, id).secrets[0] });
 while (s.phase === 'strategy') ok(s.wait.players[0], { type: 'pick', card: s.strategyPool[0] });
 const att = s.turn.player, def = s.seat.find((x) => x !== att);
 // Feindflotte neben Angreifer-Heimat platzieren

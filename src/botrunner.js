@@ -5,10 +5,11 @@ const B = require('./bot');
 function stepBots(room) {
   const s = room.state;
   if (!s.wait || s.phase === 'ended' || s.phase === 'lobby') return false;
-  const botId = s.wait.players.find((id) => { const p = E.player(s, id); return p && p.bot; });
+  const cand = s.wait.sequential ? s.wait.players.slice(0, 1) : s.wait.players;
+  const botId = cand.find((id) => { const p = E.player(s, id); return p && p.bot; });
   if (!botId) return false;
   const cands = B.candidates(s, botId);
-  const fallback = [{ type: 'endTurn' }, { type: 'skipStage' }, { type: 'pass' }, { type: 'secondary', skip: true }, { type: 'vote', outcome: null }];
+  const fallback = [{ type: 'endTurn' }, { type: 'skipStage' }, { type: 'pass' }, { type: 'secondary', skip: true }, { type: 'vote', outcome: null }, { type: 'combat' }, { type: 'combat', auto: true }];
   for (const a of [...cands, ...fallback]) {
     const copy = JSON.parse(JSON.stringify(s));
     const { _plan, ...action } = a;

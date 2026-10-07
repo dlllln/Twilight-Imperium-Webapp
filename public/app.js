@@ -151,7 +151,7 @@ function render() {
   autoPrompt();
 }
 
-const PHASES = { strategy: 'Strategiephase', action: 'Aktionsphase', status: 'Statusphase', agenda: 'Ratsversammlung', ended: 'Spielende' };
+const PHASES = { setup: 'Vorbereitung', strategy: 'Strategiephase', action: 'Aktionsphase', status: 'Statusphase', agenda: 'Ratsversammlung', ended: 'Spielende' };
 function renderTop() {
   const G = S.G;
   const active = G.wait ? G.wait.players : [];
@@ -606,13 +606,24 @@ function strategyDialog(card, secondary) {
       // "type" kollidiert mit dem Aktionstyp; wird unten umbenannt
       break;
     }
+    case 5: {
+      if (!secondary) {
+        const c = h('<div class="group col"><b>Rohstoffe anderer Spieler kostenlos auffüllen</b></div>');
+        for (const x of S.G.players.filter((x) => x.id !== S.me)) c.append(h(`<label><input type="checkbox" value="${x.id}"> ${esc(x.name)}</label>`));
+        body.append(c);
+        get = () => ({ refresh: [...c.querySelectorAll('input:checked')].map((i) => i.value) });
+      }
+      break;
+    }
     case 6: {
       if (!secondary) {
         const opts = systems().filter((s) => s.tokens.includes(S.me)).map((s) => [s.key, sysName(s)]);
-        const sy = selectEl('Kommandomarker zurückholen aus', opts);
+        const sy = selectEl('Kommandomarker zurückholen aus', opts, '– keinen –');
         const pool = selectEl('In Vorrat', [['tactic', 'Taktik'], ['fleet', 'Flotte'], ['strategy', 'Strategie']]);
-        body.append(sy, pool);
-        get = () => ({ system: sy.get(), pool: pool.get() });
+        const redis = h('<label class="row"><input type="checkbox" id="redis"> Kommandomarker danach neu verteilen</label>');
+        const dist = tokenDist(() => p.tokens.tactic + p.tokens.fleet + p.tokens.strategy + (sy.get() ? 1 : 0), p.tokens);
+        body.append(sy, pool, redis, dist);
+        get = () => ({ system: sy.get() || undefined, pool: pool.get(), redistribute: $('#redis', redis).checked ? dist.get() : undefined });
       } else {
         const home = S.G.map[p.homeKey];
         const pr = productionForm(home);
@@ -772,19 +783,22 @@ function voteDialog() {
   const G = S.G, D = S.D, p = me();
   const def = D.AGENDAS.find((a) => a.id === G.agenda.current);
   const body = h(`<div class="col"><div><b>${esc(def.name)}</b></div><div>${esc(def.text)}</div></div>`);
+  const prev = Object.entries(G.wait.votes || {});
+  if (prev.length) body.append(h(`<div class="group">${prev.map(([pid, v]) => `${pnameC(pid)}: ${v.outcome ? esc(outcomeLabel(v.outcome)) + ' mit ' + v.votes + ' Stimmen' : 'Enthaltung'}`).join('<br>')}</div>`));
   const opts = def.kind === 'yesno' ? [['for', 'Dafür'], ['against', 'Dagegen']] : G.players.map((x) => [x.id, x.name]);
   const o = selectEl('Deine Stimme', opts, 'Enthaltung');
   body.append(o);
   const c = planetChecks('Planeten erschöpfen (Einfluss = Stimmen)', myPlanets().filter((x) => !x.exhausted));
   body.append(c);
   if (p.flags.voteBonus) body.append(h(`<div class="muted">Fraktionsbonus: +${p.flags.voteBonus} Stimmen</div>`));
+  body.append(h('<div class="muted" style="font-size:12px">Handelswaren zählen nicht als Stimmen. Bei Gleichstand entscheidet der Sprecher.</div>'));
   modal('Ratsversammlung', body, [['Später', () => {}], ['Abstimmen', () => act({ type: 'vote', outcome: o.get() || null, planets: c.get() }), true]]);
 }
 
 // Öffnet automatisch die passende Entscheidung, wenn sie neu ansteht
 function autoPrompt(force) {
   const G = S.G, w = G.wait;
-  if (!w || !w.players.includes(S.me) || w.type === 'turn' || w.type === 'pick') { S.openPrompt = null; return; }
+  if (!w || !w.players.includes(S.me) || w.type === 'turn' || w.type === 'pick' || (w.sequential && w.players[0] !== S.me)) { S.openPrompt = null; return; }
   const k = `${w.type}-${G.round}-${w.card || ''}-${G.agenda ? G.agenda.current : ''}-${G.combat ? G.combat.round + w.step : ''}`;
   if (!force && S.openPrompt === k) return;
   S.openPrompt = k;
@@ -792,6 +806,26 @@ function autoPrompt(force) {
   if (w.type === 'status') statusDialog();
   if (w.type === 'vote') voteDialog();
   if (w.type === 'combat') combatDialog();
+  if (w.type === 'secretPick') secretPickDialog();
+  if (w.type === 'tiebreak') tiebreakDialog();
+}
+
+function secretPickDialog() {
+  const p = me();
+  const body = h('<div class="col"><div>Du hast zwei geheime Ziele gezogen. Behalte eines, das andere geht zurück in den Stapel.</div></div>');
+  const opts = p.secrets.map((id) => { const o = S.D.SECRETS.find((x) => x.id === id); return [id, `${o.name}: ${o.text}`]; });
+  const sel = selectEl('Behalten', opts);
+  body.append(sel);
+  modal('Geheimes Ziel wählen', body, [['Behalten', () => act({ type: 'secretPick', keep: sel.get() }), true]]);
+}
+
+function outcomeLabel(o) { return o === 'for' ? 'Dafür' : o === 'against' ? 'Dagegen' : ((P(o) || {}).name || o); }
+function tiebreakDialog() {
+  const w = S.G.wait;
+  const body = h('<div class="col"><div>Bei der Abstimmung herrscht Gleichstand. Als Sprecher entscheidest du.</div></div>');
+  const sel = selectEl('Ergebnis', w.options.map((o) => [o, outcomeLabel(o)]));
+  body.append(sel);
+  modal('Gleichstand', body, [['Entscheiden', () => act({ type: 'tiebreak', outcome: sel.get() }), true]]);
 }
 
 function combatDialog() {
@@ -802,7 +836,9 @@ function combatDialog() {
   body.append(h(`<div>Deine Flotte: ${unitLine(sys.ships[S.me] || {})}</div>`));
   body.append(h(`<div>Gegner ${pnameC(foe)}: ${unitLine(sys.ships[foe] || {})}</div>`));
   if (G.wait.step === 'declare') {
-    const opts = (G.retreatOptions || []).map((k) => [k, sysName(G.map[k])]);
+    const blocked = c.att === S.me && c.retreat && c.retreat[c.def];
+    const opts = blocked ? [] : (G.retreatOptions || []).map((k) => [k, sysName(G.map[k])]);
+    if (blocked) body.append(h('<div class="muted">Der Verteidiger zieht sich nach dieser Runde zurück. Du kannst dich in dieser Runde nicht zurückziehen.</div>'));
     const r = selectEl('Nach dieser Runde zurückziehen nach', opts, 'Nicht zurückziehen');
     body.append(r);
     body.append(h('<div class="muted" style="font-size:12px">Ein Rückzug wird nach dem Würfeln dieser Runde ausgeführt. Ziel muss angrenzen, darf keine feindlichen Schiffe enthalten und muss eigene Schiffe oder Planeten haben.</div>'));

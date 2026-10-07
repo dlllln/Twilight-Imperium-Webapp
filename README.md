@@ -40,8 +40,16 @@ Hinweis: Im kostenlosen Tarif schläft der Server nach längerer Inaktivität ei
 
 In der Lobby fügt „+ KI-Gegner“ einen Bot mit zufälliger freier Fraktion hinzu. Bots wählen Strategiekarten, expandieren, kämpfen, forschen, stimmen ab und erfüllen Ziele. `BOT_DELAY` (ms) steuert, wie schnell sie ziehen.
 
-## Bekannte Vereinfachungen (Version 0.2)
+## Regelstand (Version 0.3)
 
-- Raumkampf läuft rundenweise mit Rückzug und eigener Verlustwahl; Bodenkampf und Geschützfeuer werden automatisch ausgewürfelt.
-- Abstimmungen im Rat laufen gleichzeitig und verdeckt.
-- Orbitalgeschütze feuern automatisch auf jede fremde Flotte, die in Reichweite einfliegt.
+- Bewegung: Nur fremde Kriegsschiffe (keine Jäger) versperren den Durchflug. Nebel, Asteroidenfelder, Supernovae und Schwerkraftrisse wirken wie beschrieben.
+- Orbitalgeschütze feuern nach jeder Bewegung, auch die des aktiven Spielers auf gegnerische Schiffe im aktivierten System.
+- Raumkampf: Flakfeuer in Runde 1, Rückzug wird angekündigt (erst Verteidiger, dann Angreifer; zieht sich der Verteidiger zurück, darf der Angreifer nicht), danach Würfeln, Verluste selbst zuordnen, Rückzug ausführen.
+- Produktion: Bei Blockade (nur fremde Schiffe im System) können nur noch Bodentruppen gebaut werden. Flottenlimit und Kapazität werden geprüft.
+- Forschung: Planeten mit Spezialisierung werden erschöpft, wenn sie eine Voraussetzung ersetzen.
+- Spielbeginn: Jeder zieht zwei geheime Ziele und behält eines.
+- Rat: Es wird reihum abgestimmt (links vom Sprecher beginnend, der Sprecher zuletzt), Stimmen sind sichtbar, bei Gleichstand entscheidet der Sprecher.
+- Statusphase: Wer nach dem Neuverteilen zu wenige Flottenmarker hat, verliert überzählige Schiffe.
+- Kontor kann andere Spieler kostenlos auffüllen, Rüstung erlaubt das Neuverteilen der Kommandomarker.
+
+Noch vereinfacht: Bodenkampf, Bombardement und Geschützfeuer werden automatisch ausgewürfelt und zugeordnet, und beim Transport werden Einheiten nur im Start- und Zielsystem aufgenommen.

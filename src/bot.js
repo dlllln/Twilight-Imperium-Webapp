@@ -240,9 +240,14 @@ function candidates(s, pid) {
       const foe = s.combat.att === pid ? s.combat.def : s.combat.att;
       const mine = E.countShips(sys, pid), theirs = E.countShips(sys, foe);
       const opts = [];
-      if (mine * 2 < theirs) { const t = E.retreatTargets(s, sys, p)[0]; if (t) opts.push({ type: 'combat', retreat: t }); }
+      if (mine * 2 < theirs && !(s.combat.att === pid && s.combat.retreat[s.combat.def])) { const t = E.retreatTargets(s, sys, p)[0]; if (t) opts.push({ type: 'combat', retreat: t }); }
       opts.push({ type: 'combat' });
       return opts;
+    }
+    case 'secretPick': return p.secrets.map((id) => ({ type: 'secretPick', keep: id })).sort(() => Math.random() - 0.5);
+    case 'tiebreak': {
+      const own = w.options.includes(pid) ? pid : w.options[0];
+      return [{ type: 'tiebreak', outcome: own }];
     }
     case 'turn': return turnActions(s, p);
   }

@@ -124,10 +124,19 @@ function startGame(s, hostId) {
   s.decks.agenda = shuffle(D.AGENDAS.map((a) => a.id));
   s.publicObjectives = [];
   revealObjective(s); revealObjective(s);
-  for (const p of s.players) { drawSecret(s, p); }
+  for (const p of s.players) { drawSecret(s, p); drawSecret(s, p); }
   s.round = 1;
-  log(s, 'Das Spiel beginnt. Sprecher: ' + pname(s, s.speaker));
-  beginStrategy(s);
+  log(s, 'Das Spiel beginnt. Sprecher: ' + pname(s, s.speaker) + '. Jeder behält eines von zwei geheimen Zielen.');
+  s.phase = 'setup';
+  s.wait = { type: 'secretPick', players: [...s.seat] };
+}
+function pickSecret(s, p, a) {
+  need(s.phase === 'setup' && s.wait.players.includes(p.id), 'Du hast dein geheimes Ziel schon gewählt.');
+  need(p.secrets.includes(a.keep), 'Wähle eines deiner beiden geheimen Ziele.');
+  for (const id of p.secrets) if (id !== a.keep) s.decks.secret.unshift(id);
+  p.secrets = [a.keep];
+  s.wait.players = s.wait.players.filter((x) => x !== p.id);
+  if (!s.wait.players.length) beginStrategy(s);
 }
 
 // ---------------------------------------------------------------- Hilfsfunktionen
@@ -471,6 +480,13 @@ function submitStatus(s, p, a) {
     q.tokens = done[pid].tokens;
   }
   for (const sys of Object.values(s.map)) { sys.tokens = []; sys.damaged = {}; }
+  for (const q of s.players) for (const sys of Object.values(s.map)) {
+    let over = countShips(sys, q.id, true) - q.tokens.fleet;
+    if (over <= 0) continue;
+    for (const t of SHIP_LOSS_ORDER) { if (t === 'fighter') continue; while (over > 0 && (shipsOf(sys, q.id)[t] || 0) > 0) { removeUnits(sys, q.id, t, 1); over--; } }
+    cleanSys(sys); enforceCapacity(s, sys, q);
+    log(s, `${q.name} hat in ${sysName(sys)} mehr Schiffe als Flottenmarker und muss überzählige auflösen.`);
+  }
   for (const sys of Object.values(s.map)) for (const pl of sys.planets) pl.exhausted = false;
   for (const q of s.players) { q.cards = []; q.used = []; }
   if (!s.custodians) beginAgenda(s);
@@ -499,10 +515,13 @@ function nextAgenda(s) {
   s.agenda.current = id;
   const def = D.AGENDAS.find((a) => a.id === id);
   log(s, `Ratsbeschluss zur Abstimmung: ${def.name}`);
-  s.wait = { type: 'vote', players: [...s.seat], votes: {} };
+  const i = s.seat.indexOf(s.speaker);
+  const order = [...s.seat.slice(i + 1), ...s.seat.slice(0, i + 1)];
+  s.wait = { type: 'vote', players: order, votes: {}, sequential: true };
 }
 function submitVote(s, p, a) {
-  need(s.phase === 'agenda' && s.wait.players.includes(p.id), 'Du hast bereits abgestimmt.');
+  need(s.phase === 'agenda' && s.wait.type === 'vote' && s.wait.players.includes(p.id), 'Du hast bereits abgestimmt.');
+  need(s.wait.players[0] === p.id, `Erst stimmt ${pname(s, s.wait.players[0])} ab.`);
   const def = D.AGENDAS.find((x) => x.id === s.agenda.current);
   let outcome = a.outcome || null;
   let votes = 0;
@@ -528,11 +547,23 @@ function resolveAgenda(s, def) {
   if (entries.length) {
     const max = Math.max(...entries.map((e) => e[1]));
     const top = entries.filter((e) => e[1] === max).map((e) => e[0]);
-    const sv = s.wait.votes[s.speaker];
-    result = top.length === 1 ? top[0] : (sv && top.includes(sv.outcome) ? sv.outcome : top[0]);
+    if (top.length > 1) {
+      log(s, `Gleichstand. ${pname(s, s.speaker)} entscheidet als Sprecher.`);
+      s.wait = { type: 'tiebreak', players: [s.speaker], options: top, agenda: def.id };
+      return;
+    }
+    result = top[0];
   }
   s.wait = null;
   applyAgenda(s, def, result);
+  nextAgenda(s);
+}
+function submitTiebreak(s, p, a) {
+  need(s.wait && s.wait.type === 'tiebreak' && s.wait.players[0] === p.id, 'Du musst keinen Gleichstand entscheiden.');
+  need(s.wait.options.includes(a.outcome), 'Wähle eine der gleichauf liegenden Optionen.');
+  const def = D.AGENDAS.find((x) => x.id === s.wait.agenda);
+  s.wait = null;
+  applyAgenda(s, def, a.outcome);
   nextAgenda(s);
 }
 function applyAgenda(s, def, result) {
@@ -649,9 +680,15 @@ function spaceCombat(s, sys, attId, defId) {
 }
 
 function spaceCannonOffense(s, sys, attacker) {
-  for (const pid of s.seat) {
-    if (pid === attacker.id) continue;
+  // Reihenfolge: aktiver Spieler zuerst, dann im Uhrzeigersinn
+  const i0 = s.seat.indexOf(attacker.id);
+  const order = [...s.seat.slice(i0), ...s.seat.slice(0, i0)];
+  for (const pid of order) {
     const P2 = player(s, pid);
+    // Ziel: Der aktive Spieler beschießt einen Gegner mit Schiffen hier, alle anderen beschießen den aktiven Spieler
+    const targetId = pid === attacker.id ? enemiesIn(sys, pid)[0] : attacker.id;
+    if (!targetId || !countShips(sys, targetId)) continue;
+    const T2 = player(s, targetId);
     const groups = [];
     const cands = [sys, ...neighbors(s, sys.key).map((k) => s.map[k])];
     for (const c of cands) for (const pl of c.planets) {
@@ -660,13 +697,13 @@ function spaceCannonOffense(s, sys, attacker) {
       if (c !== sys && !(u.cannon.range >= 1)) continue;
       groups.push({ type: 'pds', n: pl.pds, hit: u.cannon.hit, dice: P2.flags.pdsDice || u.cannon.dice });
     }
-    if (!groups.length || !countShips(sys, attacker.id)) continue;
+    if (!groups.length) continue;
     const r = rollUnits(s, P2, groups);
-    const k = assignShipHits(s, sys, attacker, r.hits);
-    log(s, `Orbitalgeschütze von ${P2.name} feuern: [${r.rolls.join(' ')}] → ${r.hits} Treffer.`);
+    const k = assignShipHits(s, sys, T2, r.hits);
+    log(s, `Orbitalgeschütze von ${P2.name} feuern auf ${T2.name}: [${r.rolls.join(' ')}] → ${r.hits} Treffer.`);
     if (k >= 3) P2.events.kill3 = true;
+    enforceCapacity(s, sys, T2);
   }
-  enforceCapacity(s, sys, attacker);
 }
 
 function sysName(sys) {
@@ -730,7 +767,7 @@ function nextCombatRound(s) {
   const c = s.combat; const sys = s.map[c.sys];
   if (!countShips(sys, c.att) || !countShips(sys, c.def)) return endCombat(s);
   c.round++; c.retreat = {}; c.hits = {};
-  s.wait = { type: 'combat', step: 'declare', players: [c.def, c.att] };
+  s.wait = { type: 'combat', step: 'declare', players: [c.def, c.att], sequential: true };
 }
 
 function retreatTargets(s, sys, p) {
@@ -745,9 +782,11 @@ function retreatTargets(s, sys, p) {
 function combatDeclare(s, p, a) {
   const c = s.combat; const sys = s.map[c.sys];
   if (a.retreat) {
-    need(retreatTargets(s, sys, p).includes(a.retreat), 'Rückzug nur in ein angrenzendes System mit eigenen Einheiten oder Planeten und ohne feindliche Schiffe.');
+    need(!(p.id === c.att && c.retreat[c.def]), 'Der Verteidiger zieht sich bereits zurück; in dieser Runde kannst du dich nicht zurückziehen.');
+    need(retreatTargets(s, sys, p).includes(a.retreat), 'Rückzug nur in ein angrenzendes System mit eigenen Einheiten oder Planeten und ohne fremde Schiffe.');
     c.retreat[p.id] = a.retreat;
   }
+  // Erst der Verteidiger, dann der Angreifer
   s.wait.players = s.wait.players.filter((x) => x !== p.id);
   if (s.wait.players.length) return;
   // Beide haben erklärt: würfeln
@@ -852,7 +891,7 @@ function pathInfo(s, p, from, to) {
       // Durchqueren erlaubt?
       if (cs.anomaly === 'supernova' || (cs.anomaly === 'nebula' && !p.flags.nebulaPass)) continue;
       if (cs.anomaly === 'asteroid' && !hasTech(p, 'b_drift')) continue;
-      if (enemiesIn(cs, p.id).length) continue;
+      if (Object.keys(cs.ships).some((o) => o !== p.id && countShips(cs, o, true) > 0)) continue;
     }
     for (const nk of neighbors(s, cur, p)) {
       const ns = s.map[nk];
@@ -936,7 +975,7 @@ function doMove(s, p, moves) {
     }
   }
   // Orbitalgeschütze und Raumkampf
-  if (plan.length) spaceCannonOffense(s, target, p);
+  spaceCannonOffense(s, target, p);
   const foes = enemiesIn(target, p.id);
   T.stage = 'invade';
   if (countShips(target, p.id) && foes.length) startCombat(s, target, p.id, foes[0]);
@@ -994,7 +1033,7 @@ function productionLimit(s, sys, p) {
 
 function doProduce(s, p, sys, a) {
   need(hasDock(s, sys, p.id), 'In diesem System hast du keine Raumwerft.');
-  need(!enemiesIn(sys, p.id).length, 'Feindliche Schiffe blockieren die Produktion.');
+  const blockaded = enemiesIn(sys, p.id).length > 0 && !countShips(sys, p.id);
   const build = a.build || {};
   let units = 0, cost = 0;
   const plan = {};
@@ -1003,6 +1042,7 @@ function doProduce(s, p, sys, a) {
     const u = unitStat(p, t);
     need(D.UNITS[t] && !D.UNITS[t].structure, 'Diese Einheit kann nicht produziert werden.');
     if (u.needsTech) need(hasTech(p, u.needsTech), `${u.name} erfordert ${D.UPGRADES[u.needsTech].name}.`);
+    if (blockaded) need(t === 'infantry', 'Die Raumwerft ist blockiert: Fremde Schiffe im System erlauben nur noch Bodentruppen.');
     units += n;
     cost += Math.ceil(n / (u.batch || 1)) * u.cost;
     plan[t] = n;
@@ -1017,7 +1057,9 @@ function doProduce(s, p, sys, a) {
   if (hasTech(p, 'g_regen')) dockPlanet.infantry += 1;
   log(s, `${p.name} produziert in ${sysName(sys)}: ${Object.entries(plan).map(([t, n]) => `${n} ${D.UNITS[t].name}`).join(', ')}.`);
   if (!fleetCheck(s, sys, p)) fail(`Flottenlimit (${p.tokens.fleet}) in diesem System überschritten.`);
-  enforceCapacity(s, sys, p);
+  const docks3 = sys.planets.filter((pl) => pl.owner === p.id).reduce((acc, pl) => acc + pl.dock, 0) * 3;
+  const fighters = unitStat(p, 'fighter').move > 0 ? 0 : Math.max(0, (shipsOf(sys, p.id).fighter || 0) - docks3);
+  need(fighters + (shipsOf(sys, p.id).infantry || 0) <= capacity(s, sys, p), 'Nicht genug Kapazität für so viele Jäger in diesem System.');
 }
 
 // ---------------------------------------------------------------- Strategiekarten
@@ -1035,6 +1077,16 @@ function canResearch(s, p, tech, ignoreOne) {
   need(missing <= allowed, `Für ${def.name} fehlen ${missing} Voraussetzung(en).`);
 }
 function research(s, p, tech) {
+  // Fehlende Voraussetzungen über bereite Planeten mit passender Spezialisierung decken (diese werden erschöpft)
+  const def0 = D.TECHS[tech] || D.UPGRADES[tech];
+  const own = techCountByColor(p);
+  for (const [c, n] of Object.entries(def0.prereq || {})) {
+    let gap = n - (own[c] || 0);
+    for (const { pl } of controlled(s, p.id)) {
+      if (gap <= 0) break;
+      if (pl.tech === c && !pl.exhausted) { pl.exhausted = true; gap--; log(s, `${p.name} erschöpft ${pl.name} für die Voraussetzung.`); }
+    }
+  }
   p.techs.push(tech);
   const def = D.TECHS[tech] || D.UPGRADES[tech];
   log(s, `${p.name} erforscht ${def.name}.`);
@@ -1098,6 +1150,7 @@ function strategyPrimary(s, p, card, a) {
     }
     case 5: {
       p.tg += 3 + (p.flags.tradeBonus || 0); p.comm = p.commMax;
+      for (const id of (a.refresh || [])) { const q = player(s, id); if (q && q.id !== p.id) { q.comm = q.commMax; log(s, `${p.name} füllt die Rohstoffe von ${q.name} kostenlos auf.`); } }
       log(s, `${p.name} erhält ${3 + (p.flags.tradeBonus || 0)} Handelswaren und füllt Rohstoffe auf.`);
       break;
     }
@@ -1109,6 +1162,12 @@ function strategyPrimary(s, p, card, a) {
       sys.tokens = sys.tokens.filter((x) => x !== p.id);
       p.tokens[a.pool]++;
       log(s, `${p.name} zieht einen Kommandomarker aus ${sysName(sys)} zurück.`);
+      if (a.redistribute) {
+        const r = a.redistribute; const tot = p.tokens.tactic + p.tokens.fleet + p.tokens.strategy;
+        const nt = { tactic: Math.max(0, r.tactic | 0), fleet: Math.max(0, r.fleet | 0), strategy: Math.max(0, r.strategy | 0) };
+        need(nt.tactic + nt.fleet + nt.strategy === tot, `Verteile genau ${tot} Kommandomarker.`);
+        p.tokens = nt;
+      }
       break;
     }
     case 7: {
@@ -1277,10 +1336,13 @@ function act(s, pid, a) {
     return;
   }
   if (a.type === 'pick') return pickStrategy(s, p, a.card | 0);
+  if (a.type === 'secretPick') return pickSecret(s, p, a);
+  if (a.type === 'tiebreak') return submitTiebreak(s, p, a);
   if (a.type === 'status') return submitStatus(s, p, a);
   if (a.type === 'vote') return submitVote(s, p, a);
   if (a.type === 'combat') {
     need(s.wait && s.wait.type === 'combat' && s.wait.players.includes(pid), 'Im Moment ist keine Kampfentscheidung von dir nötig.');
+    need(!s.wait.sequential || s.wait.players[0] === pid, 'Erst entscheidet der Verteidiger über einen Rückzug.');
     return s.wait.step === 'declare' ? combatDeclare(s, p, a) : combatAssign(s, p, a);
   }
   if (a.type === 'secondary') {
@@ -1374,10 +1436,7 @@ function view(s, pid) {
   if (s.wait && s.wait.type === 'combat' && s.wait.step === 'declare' && s.wait.players.includes(pid)) {
     v.retreatOptions = retreatTargets(s, s.map[s.combat.sys], player(s, pid));
   }
-  if (v.wait && v.wait.votes) {
-    // Stimmen bleiben geheim bis zur Auswertung
-    v.wait.voted = Object.keys(v.wait.votes); delete v.wait.votes;
-  }
+  if (v.wait && v.wait.votes) v.wait.voted = Object.keys(v.wait.votes);
   if (v.wait && v.wait.done) { v.wait.submitted = Object.keys(v.wait.done); delete v.wait.done; }
   return v;
 }

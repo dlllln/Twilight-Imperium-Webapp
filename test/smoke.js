@@ -4,6 +4,7 @@ const s = E.createGame('T');
 ['a','b','c'].forEach((id,i)=>{E.addPlayer(s,id,'Spieler '+id); E.act(s,id,{type:'chooseFaction',faction:Object.keys(D.FACTIONS)[i]});});
 E.act(s,'a',{type:'start'}); if(process.env.NOCUST){s.custodians=false;}
 const safe=(pid,a)=>{const c=JSON.parse(JSON.stringify(s));try{E.act(c,pid,a);Object.assign(s,c);return true;}catch(e){if(!(e instanceof E.RuleError))throw e;return e.message;}};
+for (const id of [...s.wait.players]) safe(id,{type:'secretPick',keep:E.player(s,id).secrets[0]});
 // strategy picks
 let cards=[1,2,3,4,5,6,7,8];
 while(s.phase==='strategy'){const pid=s.wait.players[0];const r=safe(pid,{type:'pick',card:s.strategyPool[0]});if(r!==true)throw r;}
@@ -28,6 +29,9 @@ for(let step=0;step<3000&&s.phase!=='ended';step++){
   if(w.type==='secondary'){safe(pid,{type:'secondary',skip:true});continue;}
   if(w.type==='status'){const tot=q.tokens.tactic+q.tokens.fleet+q.tokens.strategy+2+(q.techs.includes('g_spark')?1:0);const v=E.view(s,pid).players.find(x=>x.id===pid).eligible;
     const r=safe(pid,{type:'status',publicId:v.public[0],secretId:v.secret[0],tokens:{tactic:Math.max(0,tot-4),fleet:tot-Math.max(0,tot-4)-1,strategy:1}}); if(r!==true) throw new Error(r); continue;}
+  if(w.type==='secretPick'){safe(pid,{type:'secretPick',keep:q.secrets[0]});continue;}
+  if(w.type==='tiebreak'){safe(pid,{type:'tiebreak',outcome:w.options[0]});continue;}
+  if(w.type==='combat'){safe(pid,{type:'combat',auto:true});safe(pid,{type:'combat'});continue;}
   if(w.type==='vote'){const r=safe(pid,{type:'vote',outcome:Math.random()<.5?'for':s.seat[0],planets:Object.values(s.map).flatMap(x=>x.planets.filter(p=>p.owner===pid&&!p.exhausted).map(p=>p.name))}); if(r!==true) safe(pid,{type:'vote',outcome:null}); continue;}
   if(w.type==='turn'){
     const T=s.turn;
