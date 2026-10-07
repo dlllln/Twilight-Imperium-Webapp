@@ -4,6 +4,7 @@ import {
   type ContentPort,
   createGameHandler,
   type CreateGame,
+  type DecisionContext,
   decideGameCommand,
   type DomainError,
   evolveGame,
@@ -37,7 +38,16 @@ export interface CommandOutcome {
  * aus dem Event Store, lässt die Domain entscheiden und speichert die Events.
  */
 export class GameController {
+  /** Zuletzt bekannter Zustand je Partie; nach einem Neustart baut `load` ihn aus den Events neu. */
+  private readonly cache = new Map<GameId, GameState>();
+
   constructor(private readonly ports: GameControllerPorts) {}
+
+  /** Zufall, Zeit und Inhalte für eine Entscheidung (auch für KI-Gegner). */
+  context(): DecisionContext {
+    const { random, clock, content } = this.ports;
+    return { random, now: clock.now(), content };
+  }
 
   async create(command: CreateGame): Promise<Result<CommandOutcome, DomainError>> {
     const decided = andThen(createGameHandler.decide(null, command), (events) =>
@@ -53,15 +63,15 @@ export class GameController {
   ): Promise<Result<CommandOutcome, DomainError>> {
     const state = await this.load(gameId);
     if (!state.ok) return state;
-    const { random, clock, content } = this.ports;
-    const context = { random, now: clock.now(), content };
-    const decided = decideGameCommand(state.value, command, context);
+    const decided = decideGameCommand(state.value, command, this.context());
     if (!decided.ok) return decided;
     const next = decided.value.reduce(evolveGame, state.value);
     return this.persist(gameId, state.value.version, { state: next, events: decided.value });
   }
 
   async load(gameId: GameId): Promise<Result<GameState, DomainError>> {
+    const cached = this.cache.get(gameId);
+    if (cached !== undefined) return ok(cached);
     return replayGame(await this.ports.store.load(gameId));
   }
 
@@ -71,8 +81,12 @@ export class GameController {
     outcome: CommandOutcome,
   ): Promise<Result<CommandOutcome, DomainError>> {
     const appended = await this.ports.store.append(gameId, expectedVersion, outcome.events);
-    if (!appended.ok) return appended;
-    this.ports.publisher.publish(gameId, outcome.events);
+    if (!appended.ok) {
+      this.cache.delete(gameId);
+      return appended;
+    }
+    this.cache.set(gameId, outcome.state);
+    this.ports.publisher.publish(gameId, outcome.events, outcome.state);
     return ok(outcome);
   }
 }

@@ -3,15 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Adapter: Zufall, Uhr, Event Store, Logging",
+  "description": "Adapter: Zufall, Uhr, Event Store (Speicher, PostgreSQL), Lobby-Store (Speicher, Redis)",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
   },
   "dependencies": {
+    "@stellar/application": "workspace:*",
     "@stellar/domain": "workspace:*",
-    "@stellar/application": "workspace:*"
+    "ioredis": "^6.0.0",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
-    "@stellar/content": "workspace:*"
+    "@stellar/content": "workspace:*",
+    "@types/pg": "^8.23.1"
   }
 }

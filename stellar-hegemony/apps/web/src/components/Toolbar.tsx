@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { type Language, type MessageKey, translate } from '../i18n.ts';
 import { useGameStore } from '../game-store.ts';
+import { useOnlineStore } from '../online/online-store.ts';
 import { useGalaxyStore } from '../store.ts';
 
 const PLAYER_COUNTS = [3, 4, 5, 6] as const;
@@ -65,17 +66,20 @@ function LanguageSwitch(): ReactElement {
   );
 }
 
-function GameButton({ t }: { readonly t: (key: MessageKey) => string }): ReactElement {
+function GameButton({ t }: { readonly t: (key: MessageKey) => string }): ReactElement | null {
   const { game, start, leave } = useGameStore();
+  const online = useOnlineStore((state) => state.ticket !== null);
+  const leaveOnline = useOnlineStore((state) => state.leave);
   const { layout, playerCount, botCount } = useGalaxyStore();
   const begin = () => start(layout, playerCount, undefined, botCount);
+  if (online && game === null) return null;
   return game === null ? (
     <button type="button" className="primary" onClick={begin}>
       {t('startGame')}
     </button>
   ) : (
-    <button type="button" onClick={leave}>
-      {t('backToGalaxy')}
+    <button type="button" onClick={online ? leaveOnline : leave}>
+      {t(online ? 'leaveOnline' : 'backToGalaxy')}
     </button>
   );
 }
@@ -83,16 +87,20 @@ function GameButton({ t }: { readonly t: (key: MessageKey) => string }): ReactEl
 export function Toolbar(): ReactElement {
   const { language, generate } = useGalaxyStore();
   const playing = useGameStore((state) => state.game !== null);
+  const code = useOnlineStore((state) => state.ticket?.code ?? null);
+  const setup = !playing && code === null;
   const t = (key: MessageKey) => translate(language, key);
+  const subtitle =
+    code === null ? t(playing ? 'subtitleGame' : 'subtitle') : `${t('subtitleOnline')} · ${code}`;
   return (
     <header className="toolbar glass">
       <div className="brand">
         <h1>{t('title')}</h1>
-        <span>{t(playing ? 'subtitleGame' : 'subtitle')}</span>
+        <span>{subtitle}</span>
       </div>
-      {!playing && <PlayerCountSelect label={t('players')} />}
-      {!playing && <BotCountSelect label={t('botOpponents')} />}
-      {!playing && (
+      {setup && <PlayerCountSelect label={t('players')} />}
+      {setup && <BotCountSelect label={t('botOpponents')} />}
+      {setup && (
         <button type="button" onClick={() => generate()}>
           {t('newGalaxy')}
         </button>

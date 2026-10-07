@@ -11,7 +11,8 @@
     "@stellar/domain": "workspace:*"
   },
   "devDependencies": {
-    "@stellar/infrastructure": "workspace:*",
-    "@stellar/content": "workspace:*"
+    "@stellar/bots": "workspace:*",
+    "@stellar/content": "workspace:*",
+    "@stellar/infrastructure": "workspace:*"
   }
 }

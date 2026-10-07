@@ -46,18 +46,18 @@ stellar-hegemony/
 │   │       └── faction/       (It. 11) FactionAbility, Fraktionsregeln; galaxy/board-limits
 │   ├── application/         Use Cases: GameController, Ports (EventStorePort, EventPublisherPort)
 │   ├── infrastructure/      Adapter: SeededRandom, SystemClock, InMemoryEventStore, InProcessEventPublisher
-│   │                        → It. 12: PostgresEventStore, RedisLobbyStore, SocketIoGateway, Logger
+│   │                        CryptoRandom, CryptoIds, InMemoryLobbyStore; unter `/node` PostgresEventStore, RedisLobbyStore
 │   ├── content/             Daten: Regelzahlen, Einheiten, Systeme, Fraktionen, Techs, Karten
 │   └── bots/                (It. 11) KI-Gegner: Planer schlagen Commands vor, die Domain prüft
 └── apps/
-    ├── server/              (It. 12) Fastify + Socket.IO, Composition Root
+    ├── server/              (It. 12) Fastify + Socket.IO, Composition Root, SocketGateway, BotDriver
     └── web/                 React 18 + Vite + Zustand, i18n de/en, Playwright-E2E
         └── src/render/      (It. 4) PixiJS-Szene: prozeduraler Nebel, Planeten, Anomalien,
                              Schiffsminiaturen, Bloom-Glühen; darüber SVG-Trefferflächen
 ```
 
 Abhängigkeiten zeigen nur nach innen: `web → application → domain`, `infrastructure → application → domain`,
-`content → domain`, `bots → domain`. ESLint (`no-restricted-imports`) bricht den Build, wenn eine Schicht nach außen greift.
+`content → domain`, `bots → domain`. Nur `apps/server` (Composition Root) kennt alle Schichten. ESLint (`no-restricted-imports`) bricht den Build, wenn eine Schicht nach außen greift.
 
 ## 2. Architekturentscheidungen
 
@@ -369,7 +369,34 @@ dieselben Commands wie Menschen und kennen keine Sonderregeln.
 | Web: `useBotDriver`, `botStep`, `involvesHuman`         | Controller: ein Zeitgeber lässt die KI ziehen, solange sie dran ist; die Kampfansicht öffnet sich nur, wenn ein Mensch beteiligt ist.                                     |
 | Web: `FactionsPanel`, `BotCountSelect`, `BotNotice`     | Die Fähigkeiten jeder Fraktion in der Seitenleiste, die Zahl der KI-Gegner beim Start und ein Hinweis, solange die KI überlegt.                                           |
 
-## 16. Iterationen
+## 16. Iteration 12 im Detail
+
+Online-Partien laufen über einen eigenen Server (`apps/server`). Der Gastgeber eröffnet eine Lobby
+mit seiner Galaxie und bekommt einen sechsstelligen Code; Mitspieler treten mit dem Code bei. Beim
+Start übernimmt die KI alle freien Plätze und zieht auf dem Server. Jeder Browser bekommt nur, was
+sein Spieler sehen darf. Mit Code und geheimem Platzschlüssel (im Browser gespeichert) kehrt man nach
+einem Verbindungsabbruch oder Neuladen auf seinen Platz zurück.
+
+| Element                                                         | Prinzip                                                                                                                                                                            |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `playerView`, `visibleEvents` (Domain)                          | Information Expert: die Domain weiß, was verdeckt ist (RR 3.5, 12.13, 12.17). Fremde Hände, ungewertete Geheimaufträge und Stapel werden zu Platzhaltern, Anzahlen bleiben.        |
+| `setupCommands`, `seatPlayerId` (Anwendung)                     | Pure Fabrication: Hot-Seat und Server bauen eine Partie mit denselben Commands auf; nichts davon ist doppelt.                                                                      |
+| `Lobby`, `claimSeat`, `fillWithBots`                            | Reine Funktionen auf Daten: Plätze vergeben, Schlüssel prüfen, freie Plätze an die KI geben. Der Lobby-Store speichert nur das Ergebnis.                                           |
+| `OnlineGames`                                                   | GRASP Controller: Eröffnen, Beitreten, Zurückkehren, Starten, Commands und KI-Züge. Commands laufen immer im Namen des eigenen Platzes, egal was der Browser sendet.               |
+| `LobbyStorePort`, `IdGeneratorPort`, `BotPort`                  | Dependency Inversion: die Anwendung kennt weder Redis noch Zufallsquellen noch `@stellar/bots`, nur diese Schnittstellen.                                                          |
+| `SerialQueue`                                                   | Je Lobby eine Warteschlange: ein Spielerzug und ein KI-Zug greifen nie gleichzeitig auf den Event Store zu.                                                                        |
+| `GameController` (Cache, `publish` mit Zustand)                 | Der letzte Zustand bleibt im Speicher; nach einem Neustart entsteht er durch Replay aus dem Event Store.                                                                           |
+| `PostgresEventStore`, `RedisLobbyStore` (`infrastructure/node`) | Adapter: eine Zeile je Event mit optimistischer Sperre über Version und Primärschlüssel; Lobbys als JSON mit Ablaufzeit. Ohne `DATABASE_URL`/`REDIS_URL` laufen beide im Speicher. |
+| `CryptoRandom`, `CryptoIds`                                     | Würfe und Codes aus `crypto.getRandomValues`, ohne Modulo-Verzerrung; Platzschlüssel sind UUIDs.                                                                                   |
+| Server: `compose` (Composition Root)                            | Die einzige Stelle, an der Adapter und Anwendungsfälle verdrahtet werden.                                                                                                          |
+| Server: `SocketGateway`                                         | Adapter zwischen Socket.IO und `OnlineGames`: merkt sich den Platz je Verbindung, verteilt Lobby und Zustand je Spieler, fängt jeden Fehler ab.                                    |
+| Server: `BotDriver`                                             | Observer: nach jedem gespeicherten Zug ein Anstoß; die KI zieht mit kurzer Pause, bis ein Mensch dran ist.                                                                         |
+| Web: `OnlineConnection`, `socketConnector`                      | Port und Adapter zum Server; Tests setzen eine Attrappe ein.                                                                                                                       |
+| Web: `useOnlineStore`, `saved-seat`                             | Zustand der Verbindung; der Platzschlüssel liegt im `localStorage`, damit ein Neuladen zurückführt.                                                                                |
+| Web: `useGameStore` (`me`, `remote`, `receive`)                 | Strategy: im Hot-Seat entscheidet die Domain lokal, online schickt `send` an den Server; `useHumanActor` und `useViewer` zeigen online nur den eigenen Platz.                      |
+| Web: `OnlinePanel`, `LobbyPanel`, `ConnectionBanner`            | Eröffnen und Beitreten, Wartesaal mit Code und Verbindungsstatus, Hinweis bei Verbindungsabbruch; getrennte Mitspieler tragen in der Spielerliste ein Kennzeichen.                 |
+
+## 17. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -384,15 +411,31 @@ dieselben Commands wie Menschen und kennen keine Sonderregeln.
 | 9   | Effekt-System, Aktionskarten, Timing-Fenster        | ✓     |
 | 10  | Agendaphase, Abstimmung                             | ✓     |
 | 11  | Fraktionsfähigkeiten, KI-Gegner                     | ✓     |
-| 12  | Multiplayer, Persistenz, Reconnect                  | offen |
+| 12  | Multiplayer, Persistenz, Reconnect                  | ✓     |
 | 13  | Animationen, Sound-Hooks, Tutorial                  | offen |
 
-## 17. Befehle
+## 18. Befehle
 
 ```
 pnpm install
 pnpm check          # typecheck + lint + format + Tests mit Coverage
 pnpm test           # nur Tests
 pnpm --filter @stellar/web dev   # Web-App lokal (http://localhost:5173)
-pnpm e2e            # Playwright-Test gegen den Produktions-Build
+pnpm server         # Online-Server (Port 3000); im Dev-Modus leitet Vite /socket.io dorthin
+pnpm e2e            # Playwright gegen den Server, der den Produktions-Build ausliefert
 ```
+
+Der Online-Server liest seine Einstellungen aus der Umgebung:
+
+| Variable       | Bedeutung                                                                                     |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| `PORT`         | Port für HTTP und Socket.IO (Standard 3000)                                                   |
+| `WEB_DIST`     | Gebaute Web-App, die der Server mit ausliefert; relativ zu `apps/server`, z. B. `../web/dist` |
+| `DATABASE_URL` | PostgreSQL für den Event Store; ohne Angabe im Speicher                                       |
+| `REDIS_URL`    | Redis für Lobbys; ohne Angabe im Speicher                                                     |
+| `BOT_DELAY_MS` | Pause vor jedem KI-Zug (Standard 400)                                                         |
+| `LOG_LEVEL`    | Log-Stufe von Fastify (Standard `info`)                                                       |
+
+Für ein Hosting als ein Dienst: im Ordner `stellar-hegemony` mit `pnpm install --frozen-lockfile &&
+pnpm build` bauen und mit `WEB_DIST=../web/dist pnpm server` starten. Der Health-Check liegt unter
+`/health`.

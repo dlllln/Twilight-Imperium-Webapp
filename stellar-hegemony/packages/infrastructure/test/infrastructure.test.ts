@@ -1,9 +1,12 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { gameId, type GameEvent, playerId } from '@stellar/domain';
+import { gameId, type GameEvent, type GameState, playerId, replayGame } from '@stellar/domain';
 import { BASE_RULE_NUMBERS } from '@stellar/content';
 import {
+  CryptoIds,
+  CryptoRandom,
   InMemoryEventStore,
+  InMemoryLobbyStore,
   InProcessEventPublisher,
   SeededRandom,
   SystemClock,
@@ -68,9 +71,35 @@ describe('Uhr und Publisher', () => {
     const publisher = new InProcessEventPublisher();
     const received: number[] = [];
     const unsubscribe = publisher.subscribe((_, events) => received.push(events.length));
-    publisher.publish(gameId('g'), [created]);
+    const replayed = replayGame([created]);
+    const state = (replayed.ok ? replayed.value : null) as GameState;
+    publisher.publish(gameId('g'), [created], state);
     unsubscribe();
-    publisher.publish(gameId('g'), [created]);
+    publisher.publish(gameId('g'), [created], state);
     expect(received).toEqual([1]);
+  });
+});
+
+describe('Online-Adapter ohne Server', () => {
+  it('CryptoRandom würfelt gleichverteilt im Bereich', () => {
+    const random = new CryptoRandom();
+    const rolls = Array.from({ length: 600 }, () => random.nextInt(1, 6));
+    expect(rolls.every((roll) => roll >= 1 && roll <= 6)).toBe(true);
+    expect(new Set(rolls).size).toBe(6);
+  });
+
+  it('CryptoIds: sechsstellige Codes ohne verwechselbare Zeichen, eindeutige Schlüssel', () => {
+    const ids = new CryptoIds();
+    const codes = Array.from({ length: 200 }, () => ids.lobbyCode());
+    expect(codes.every((code) => /^[A-HJ-NP-Z2-9]{6}$/.test(code))).toBe(true);
+    expect(ids.seatToken()).not.toBe(ids.seatToken());
+  });
+
+  it('InMemoryLobbyStore speichert und lädt Lobbys', async () => {
+    const store = new InMemoryLobbyStore();
+    const lobby = { code: 'ABC234', gameId: gameId('g'), mapString: '', seats: [], started: false };
+    expect(await store.load('ABC234')).toBeNull();
+    await store.save(lobby);
+    expect(await store.load('ABC234')).toEqual(lobby);
   });
 });

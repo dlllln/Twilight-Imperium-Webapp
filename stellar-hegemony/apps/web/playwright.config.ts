@@ -10,9 +10,11 @@ export default defineConfig({
     baseURL: 'http://localhost:4173',
     ...(executablePath === undefined ? {} : { launchOptions: { executablePath } }),
   },
+  // Der Online-Server liefert die gebaute Seite aus, genau wie im Betrieb (ohne Datenbank).
   webServer: {
-    command: 'pnpm build && pnpm preview',
-    url: 'http://localhost:4173',
+    command: 'pnpm build && pnpm --filter @stellar/server start',
+    url: 'http://localhost:4173/health',
+    env: { PORT: '4173', WEB_DIST: '../web/dist', BOT_DELAY_MS: '60', LOG_LEVEL: 'warn' },
     reuseExistingServer: !process.env['CI'],
   },
 });

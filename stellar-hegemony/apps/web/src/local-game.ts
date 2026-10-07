@@ -1,17 +1,15 @@
+import { createGameCommand, seatPlayerId, setupCommands } from '@stellar/application';
 import {
   createGameHandler,
   decideGameCommand,
   type DecisionContext,
   type DomainError,
   evolveGame,
-  factionId,
-  formatMapString,
   gameId,
   type GameCommand,
   type GameState,
   type MapLayout,
-  type PlayerColor,
-  playerId,
+  formatMapString,
   type PlayerId,
   replayGame,
   type GameEvent,
@@ -23,11 +21,9 @@ import { BASE_RULE_NUMBERS } from '@stellar/content';
 import { SeededRandom } from '@stellar/infrastructure';
 import { content } from './store.ts';
 
-/** Feste Farbreihenfolge der Plätze, passend zu den Heimat-Markierungen der Karte. */
-const COLORS: readonly PlayerColor[] = ['orange', 'blue', 'green', 'yellow', 'purple', 'red'];
 const VICTORY_POINTS = 10;
 
-export const seatPlayerId = (seat: number): PlayerId => playerId(`p${String(seat + 1)}`);
+export { seatPlayerId };
 
 /**
  * Lokales Hot-Seat-Spiel: dieselbe Domain wie der Server, nur ohne Netzwerk.
@@ -71,32 +67,11 @@ export const botSeats = (playerCount: number, botCount: number): readonly Player
     .slice(Math.max(1, playerCount - botCount))
     .map(seatPlayerId);
 
-function seatCommand(seat: number, bots: readonly PlayerId[]): GameCommand {
-  const id = seatPlayerId(seat);
-  return {
-    type: 'SeatPlayer',
-    issuedBy: id,
-    name: `${bots.includes(id) ? 'KI' : 'P'}${String(seat + 1)}`,
-    color: COLORS[seat] ?? 'black',
-    faction: content.factions[seat]?.id ?? factionId('unbekannt'),
-    commodityLimit: content.factions[seat]?.commodityLimit ?? 0,
-  };
-}
-
-function setupCommands(
-  layout: MapLayout,
-  playerCount: number,
-  botCount: number,
-): readonly GameCommand[] {
-  const host = seatPlayerId(0);
-  const bots = botSeats(playerCount, botCount);
-  const seats = Array.from({ length: playerCount }, (_, seat) => seatCommand(seat, bots));
-  return [
-    ...seats,
-    { type: 'ImportMap', issuedBy: host, mapString: formatMapString(layout) },
-    { type: 'StartGame', issuedBy: host },
-  ];
-}
+const seatNames = (playerCount: number, bots: readonly PlayerId[]): readonly string[] =>
+  Array.from({ length: playerCount }, (_, seat) => {
+    const prefix = bots.includes(seatPlayerId(seat)) ? 'KI' : 'P';
+    return `${prefix}${String(seat + 1)}`;
+  });
 
 /** Erstellt die Partie, besetzt alle Plätze, übernimmt die Galaxie und startet. */
 export function createLocalGame(
@@ -105,15 +80,14 @@ export function createLocalGame(
   seed: number,
   botCount = 0,
 ): Result<GameState, DomainError> {
-  const config = { playerCount, victoryPointsToWin: VICTORY_POINTS, rules: BASE_RULE_NUMBERS };
-  const command = {
-    type: 'CreateGame',
-    issuedBy: seatPlayerId(0),
+  const table = {
     gameId: gameId('lokal'),
-    config,
-  } as const;
-  const created = andThen(createGameHandler.decide(null, command), replayGame);
-  return setupCommands(layout, playerCount, botCount).reduce<Result<GameState, DomainError>>(
+    config: { playerCount, victoryPointsToWin: VICTORY_POINTS, rules: BASE_RULE_NUMBERS },
+    mapString: formatMapString(layout),
+    names: seatNames(playerCount, botSeats(playerCount, botCount)),
+  };
+  const created = andThen(createGameHandler.decide(null, createGameCommand(table)), replayGame);
+  return setupCommands(table, content.factions).reduce<Result<GameState, DomainError>>(
     (state, next) => andThen(state, (current) => applyCommand(current, next, seed)),
     created,
   );

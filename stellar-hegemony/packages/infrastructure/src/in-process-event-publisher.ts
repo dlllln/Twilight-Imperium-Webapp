@@ -1,7 +1,11 @@
 import type { EventPublisherPort } from '@stellar/application';
-import type { GameEvent, GameId } from '@stellar/domain';
+import type { GameEvent, GameId, GameState } from '@stellar/domain';
 
-export type EventListener = (gameId: GameId, events: readonly GameEvent[]) => void;
+export type EventListener = (
+  gameId: GameId,
+  events: readonly GameEvent[],
+  state: GameState,
+) => void;
 
 /** Einfacher Observer: verteilt gespeicherte Events an registrierte Listener. */
 export class InProcessEventPublisher implements EventPublisherPort {
@@ -12,7 +16,7 @@ export class InProcessEventPublisher implements EventPublisherPort {
     return () => this.listeners.delete(listener);
   }
 
-  publish(gameId: GameId, events: readonly GameEvent[]): void {
-    for (const listener of this.listeners) listener(gameId, events);
+  publish(gameId: GameId, events: readonly GameEvent[], state: GameState): void {
+    for (const listener of this.listeners) listener(gameId, events, state);
   }
 }

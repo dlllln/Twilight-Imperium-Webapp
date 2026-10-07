@@ -1,6 +1,6 @@
 import { findPlayer, type GameState, type PlayerId, scoringOptions } from '@stellar/domain';
 import type { ReactElement } from 'react';
-import { useHumanActor } from '../../game-store.ts';
+import { useViewer } from '../../game-store.ts';
 import { content } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
@@ -33,11 +33,14 @@ function PublicRow({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   return (
     <ol className="objective-row">
-      {game.objectives.public.map((slot) => {
+      {game.objectives.public.map((slot, index) => {
         const definition = definitionOf(slot.id);
         if (!slot.revealed || definition === undefined)
           return (
-            <li key={slot.id} className={`objective-card hidden stage-${String(slot.stage)}`}>
+            <li
+              key={`${slot.id}-${String(index)}`}
+              className={`objective-card hidden stage-${String(slot.stage)}`}
+            >
               {slot.stage === 1 ? t('stageOne') : t('stageTwo')}
             </li>
           );
@@ -80,7 +83,7 @@ function SecretList({ game, player }: { readonly game: GameState; readonly playe
 /** Seitenleiste: Siegpunkte, öffentliche Aufträge und die eigenen geheimen. */
 export function ObjectivesPanel({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
-  const actor = useHumanActor(game);
+  const actor = useViewer(game);
   return (
     <section className="game-section objectives-panel">
       <h2>{t('objectives')}</h2>

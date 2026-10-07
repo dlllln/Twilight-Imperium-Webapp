@@ -147,3 +147,5 @@ export * from './agenda/agenda-effects.ts';
 export * from './faction/faction-ability.ts';
 export * from './phases/current-actor.ts';
 export * from './galaxy/board-limits.ts';
+export * from './visibility/player-view.ts';
+export * from './visibility/visible-events.ts';

@@ -1,15 +1,15 @@
 import { type GameState, handCards } from '@stellar/domain';
 import type { ReactElement } from 'react';
-import { useHumanActor } from '../../game-store.ts';
+import { useViewer } from '../../game-store.ts';
 import { content } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { CardItem } from './CardItem.tsx';
 
-/** Hot-Seat: die Hand des Spielers, der gerade am Bildschirm entscheidet (RR 3). */
+/** Die eigene Hand (online) bzw. die des Spielers, der gerade am Bildschirm entscheidet (RR 3). */
 export function HandPanel({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
-  const player = useHumanActor(game);
+  const player = useViewer(game);
   if (player === null) return null;
   const cards = handCards(game, player, content);
   return (

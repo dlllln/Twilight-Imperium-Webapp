@@ -1,6 +1,8 @@
 import { clockwiseFrom, type GameState, type PlayerState, strategyCardsOf } from '@stellar/domain';
 import type { ReactElement } from 'react';
+import { seatPlayerId } from '@stellar/application';
 import { useGameStore } from '../../game-store.ts';
+import { useOnlineStore } from '../../online/online-store.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from './PlayerTag.tsx';
 
@@ -36,6 +38,11 @@ function PlayerRow({
   const cards = strategyCardsOf(game, player.id).map((card) => card.initiative);
   const passed = game.actionPhase?.passed.includes(player.id) ?? false;
   const bot = useGameStore((state) => state.bots.includes(player.id));
+  const offline = useOnlineStore((state) =>
+    (state.lobby?.seats ?? []).some(
+      (seat) => seatPlayerId(seat.seat) === player.id && seat.kind === 'human' && !seat.connected,
+    ),
+  );
   return (
     <li className={game.actionPhase?.active === player.id ? 'active' : undefined}>
       <PlayerTag game={game} id={player.id} />
@@ -43,6 +50,7 @@ function PlayerRow({
       <span className="initiatives">{cards.join(' · ')}</span>
       <PlayerCounters player={player} />
       {passed && <span className="badge">{t('passed')}</span>}
+      {offline && <span className="badge offline-badge">{t('offline')}</span>}
     </li>
   );
 }

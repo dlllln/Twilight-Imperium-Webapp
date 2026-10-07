@@ -1,6 +1,7 @@
-import type { GameEvent, GameId } from '@stellar/domain';
+import type { GameEvent, GameId, GameState } from '@stellar/domain';
 
 /** Observer/Event-Bus zwischen Anwendung und Präsentation (Indirection). */
 export interface EventPublisherPort {
-  publish(gameId: GameId, events: readonly GameEvent[]): void;
+  /** `state` ist der Zustand nach den Events; Empfänger müssen nichts neu berechnen. */
+  publish(gameId: GameId, events: readonly GameEvent[], state: GameState): void;
 }

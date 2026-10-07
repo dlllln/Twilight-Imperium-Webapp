@@ -1,0 +1,25 @@
+{
+  "name": "@stellar/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Online-Server: Fastify, Socket.IO, Lobby, Event Store und KI-Gegner",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "dev": "tsx watch src/main.ts"
+  },
+  "dependencies": {
+    "@fastify/static": "^10.1.5",
+    "@stellar/application": "workspace:*",
+    "@stellar/bots": "workspace:*",
+    "@stellar/content": "workspace:*",
+    "@stellar/domain": "workspace:*",
+    "@stellar/infrastructure": "workspace:*",
+    "fastify": "^5.12.5",
+    "socket.io": "^4.8.4",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
+}

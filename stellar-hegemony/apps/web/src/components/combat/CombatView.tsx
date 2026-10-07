@@ -7,7 +7,7 @@ import {
   combatParties,
   isSpaceBattle,
 } from '../../combat-view.ts';
-import { useBotTurn, useGameStore } from '../../game-store.ts';
+import { useOthersTurn, useGameStore } from '../../game-store.ts';
 import type { MessageKey } from '../../i18n.ts';
 import { systemLabel } from '../../labels.ts';
 import { combatBackdrop } from '../../render/images.ts';
@@ -58,9 +58,10 @@ function HitsDecision(props: {
 
 function BotDeciding(props: { readonly game: GameState; readonly player: PlayerId }): ReactElement {
   const t = useT();
+  const bot = useGameStore((state) => state.bots.includes(props.player));
   return (
     <p className="decider">
-      <PlayerTag game={props.game} id={props.player} /> {t('botThinking')}
+      <PlayerTag game={props.game} id={props.player} /> {t(bot ? 'botThinking' : 'otherThinking')}
     </p>
   );
 }
@@ -69,7 +70,7 @@ function BotDeciding(props: { readonly game: GameState; readonly player: PlayerI
 function DecisionArea({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const close = useGameStore((state) => state.closeCombat);
-  const bot = useBotTurn(game);
+  const bot = useOthersTurn(game);
   if (bot !== null) return <BotDeciding game={game} player={bot} />;
   if (reactionActor(game) !== null) return <ReactionPrompt game={game} withCards />;
   const decision = combatDecision(game, content);

@@ -11,7 +11,7 @@ import {
   strategyEffectFor,
 } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
-import { useBotTurn, useGameStore, useHumanActor } from '../../game-store.ts';
+import { useOthersTurn, useGameStore, useHumanActor } from '../../game-store.ts';
 import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { GameOverNotice, StatusTurn } from '../objectives/StatusTurn.tsx';
@@ -177,13 +177,14 @@ const PHASE_TITLE = {
 const hasTurnPanel = (game: GameState, actor: PlayerId): boolean =>
   game.phase !== 'strategy' || interruption(game, actor) !== null;
 
-/** Während die KI zieht, gibt es nichts zu entscheiden, nur einen Hinweis. */
+/** Während die KI oder ein Mitspieler zieht, gibt es hier nichts zu entscheiden, nur einen Hinweis. */
 function BotNotice({ game, player }: TurnProps): ReactElement {
   const t = useT();
+  const bot = useGameStore((state) => state.bots.includes(player));
   return (
     <section className="game-section bot-turn" aria-live="polite">
       <p>
-        <PlayerTag game={game} id={player} /> {t('botThinking')}
+        <PlayerTag game={game} id={player} /> {t(bot ? 'botThinking' : 'otherThinking')}
       </p>
     </section>
   );
@@ -193,7 +194,7 @@ function BotNotice({ game, player }: TurnProps): ReactElement {
 export function TurnPanel({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
   const actor = useHumanActor(game);
-  const bot = useBotTurn(game);
+  const bot = useOthersTurn(game);
   if (game.phase === 'gameOver') return <GameOverNotice game={game} />;
   if (bot !== null) return <BotNotice game={game} player={bot} />;
   if (actor === null || !hasTurnPanel(game, actor)) return null;

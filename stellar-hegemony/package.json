@@ -8,7 +8,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json && tsc -p apps/server/tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -17,7 +17,8 @@
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:coverage",
     "prepare": "cd .. && husky stellar-hegemony/.husky || true",
     "build": "pnpm --filter @stellar/web build",
-    "e2e": "pnpm --filter @stellar/web e2e"
+    "e2e": "pnpm --filter @stellar/web e2e",
+    "server": "pnpm --filter @stellar/server start"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
