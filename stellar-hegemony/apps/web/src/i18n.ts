@@ -91,9 +91,33 @@ const DICTIONARY = {
     de: 'Diese Karte wird in einer späteren Ausbaustufe spielbar.',
     en: 'This card becomes playable in a later stage.',
   },
-  statusReached: {
-    de: 'Die Aktionsphase ist vorbei. Die Statusphase folgt in einer späteren Ausbaustufe.',
-    en: 'The action phase is over. The status phase follows in a later stage.',
+  objectives: { de: 'Aufträge und Siegpunkte', en: 'Objectives and victory points' },
+  secretObjectives: { de: 'Geheime Aufträge von', en: 'Secret objectives of' },
+  stageOne: { de: 'Stufe I (verdeckt)', en: 'Stage I (hidden)' },
+  stageTwo: { de: 'Stufe II (verdeckt)', en: 'Stage II (hidden)' },
+  chooseSecret: { de: 'Geheime Aufträge wählen', en: 'Choose secret objectives' },
+  chooseSecretHint: {
+    de: 'Behalte genau {n}. Die übrigen kommen zurück in den Stapel.',
+    en: 'Keep exactly {n}. The rest go back into the deck.',
+  },
+  keep: { de: 'Behalten', en: 'Keep' },
+  score: { de: 'Werten', en: 'Score' },
+  scoreObjectives: { de: 'Aufträge werten', en: 'Score objectives' },
+  nothingToScore: {
+    de: 'Gerade ist kein Auftrag wertbar.',
+    en: 'No objective can be scored right now.',
+  },
+  doneScoring: { de: 'Wertung beenden', en: 'Finish scoring' },
+  allocateTokens: { de: 'Kommandomarker verteilen', en: 'Place command tokens' },
+  gameOver: { de: 'Die Partie ist entschieden', en: 'The game is decided' },
+  victoryPoints: { de: 'Siegpunkte', en: 'victory points' },
+  chooseObjective: { de: 'Öffentlichen Auftrag werten', en: 'Score a public objective' },
+  noObjective: { de: 'Keinen werten', en: 'Score none' },
+  drawSecret: { de: 'Geheimen Auftrag ziehen', en: 'Draw a secret objective' },
+  chooseSpeaker: { de: 'Neuer Sprecher', en: 'New speaker' },
+  noEffectYet: {
+    de: 'Die Aktionskarten folgen in der nächsten Ausbaustufe; bis dahin bleibt dies ohne Wirkung.',
+    en: 'Action cards follow in the next stage; until then this has no effect.',
   },
   ruleError: { de: 'Nicht erlaubt', en: 'Not allowed' },
   'strategy.mechanicUnavailable': {
@@ -466,6 +490,65 @@ const DICTIONARY = {
   'planet.alreadyExhausted': {
     de: 'Dieser Planet ist schon erschöpft.',
     en: 'This planet is already exhausted.',
+  },
+  'objective.alreadyScored': {
+    de: 'Diesen Auftrag hast du schon gewertet.',
+    en: 'You already scored this objective.',
+  },
+  'objective.homeLost': {
+    de: 'Ohne alle Planeten deines Heimatsystems wertest du keine öffentlichen Aufträge.',
+    en: 'Without all planets of your home system you cannot score public objectives.',
+  },
+  'objective.keepCount': {
+    de: 'Wähle genau so viele Aufträge, wie du behalten darfst.',
+    en: 'Pick exactly as many objectives as you may keep.',
+  },
+  'objective.limit': {
+    de: 'In dieser Phase hast du schon einen Auftrag dieser Art gewertet.',
+    en: 'You already scored an objective of this kind in this phase.',
+  },
+  'objective.noChoice': { de: 'Du musst gerade nichts wählen.', en: 'You have nothing to choose.' },
+  'objective.notAvailable': {
+    de: 'Dieser Auftrag steht dir nicht zur Verfügung.',
+    en: 'This objective is not available to you.',
+  },
+  'objective.notMet': {
+    de: 'Die Anforderung ist nicht erfüllt.',
+    en: 'The requirement is not met.',
+  },
+  'objective.notOffered': {
+    de: 'Dieser Auftrag stand nicht zur Wahl.',
+    en: 'This objective was not offered.',
+  },
+  'objective.notPublic': {
+    de: 'Hier zählt nur ein öffentlicher Auftrag.',
+    en: 'Only a public objective counts here.',
+  },
+  'objective.payment': {
+    de: 'Die Bezahlung reicht nicht für diesen Auftrag.',
+    en: 'The payment does not cover this objective.',
+  },
+  'objective.unknown': { de: 'Unbekannter Auftrag.', en: 'Unknown objective.' },
+  'objective.wrongTiming': {
+    de: 'Dieser Auftrag wird zu einem anderen Zeitpunkt gewertet.',
+    en: 'This objective is scored at another time.',
+  },
+  'politics.speaker': {
+    de: 'Wähle einen anderen Spieler als neuen Sprecher.',
+    en: 'Choose another player as the new speaker.',
+  },
+  'status.fleetLimit': {
+    de: 'Mit so wenigen Flottenmarkern wären Systeme über dem Flottenlimit.',
+    en: 'With so few fleet tokens some systems would exceed the fleet limit.',
+  },
+  'status.notYourTurn': {
+    de: 'Du bist in der Statusphase nicht dran.',
+    en: 'It is not your turn in the status phase.',
+  },
+  'status.unknownPlayer': { de: 'Unbekannter Spieler.', en: 'Unknown player.' },
+  'status.wrongStep': {
+    de: 'Das gehört zu einem anderen Schritt der Statusphase.',
+    en: 'That belongs to another status phase step.',
   },
 } as const satisfies Record<string, LocalizedText>;
 

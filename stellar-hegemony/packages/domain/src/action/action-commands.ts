@@ -73,7 +73,10 @@ export function endTurn(
   const turn = state.actionPhase;
   const next = turn === null ? null : nextActivePlayer(turn, player, passed);
   const ended: GameEvent = { type: 'TurnEnded', player, next };
-  return next === null ? [ended, { type: 'StatusPhaseStarted', round: state.round }] : [ended];
+  const order = turn?.order ?? [];
+  return next === null
+    ? [ended, { type: 'StatusPhaseStarted', round: state.round, order }]
+    : [ended];
 }
 
 function strategicActionChecks(state: GameState, command: PerformStrategicAction): Check {

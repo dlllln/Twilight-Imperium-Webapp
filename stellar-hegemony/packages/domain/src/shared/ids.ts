@@ -23,3 +23,5 @@ export const planetId = (value: string): PlanetId => value as PlanetId;
 export const unitId = (value: string): UnitId => value as UnitId;
 export const unitTypeId = (value: string): UnitTypeId => value as UnitTypeId;
 export const technologyId = (value: string): TechnologyId => value as TechnologyId;
+export type ObjectiveId = Brand<string, 'ObjectiveId'>;
+export const objectiveId = (value: string): ObjectiveId => value as ObjectiveId;

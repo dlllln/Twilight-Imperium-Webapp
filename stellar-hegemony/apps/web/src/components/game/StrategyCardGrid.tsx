@@ -39,7 +39,8 @@ function StrategyCardTile({ card, game, onPick }: TileProps): ReactElement {
 export function StrategyCardGrid({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const send = useGameStore((state) => state.send);
-  const actor = game.phase === 'strategy' ? currentActor(game) : null;
+  const choosing = game.players.some((player) => player.secretChoice !== null);
+  const actor = game.phase === 'strategy' && !choosing ? currentActor(game) : null;
   const cards = Object.values(game.strategyCards).sort((a, b) => a.initiative - b.initiative);
   const pick = (card: StrategyCardState) =>
     actor === null || card.holder !== null

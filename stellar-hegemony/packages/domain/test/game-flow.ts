@@ -82,3 +82,15 @@ export const actionPhaseGame = (): GameState =>
     pick(BLUE, 5),
     pick(GREEN, 6),
   ]);
+
+/** Alle Karten genutzt, alle haben gepasst: Statusphase der ersten Runde. */
+export function statusPhaseGame(state: GameState = actionPhaseGame()): GameState {
+  const used = {
+    ...state,
+    strategyCards: Object.fromEntries(
+      Object.entries(state.strategyCards).map(([id, card]) => [id, { ...card, exhausted: true }]),
+    ),
+  };
+  const pass = (issuedBy: GameState['host']): GameCommand => ({ type: 'Pass', issuedBy });
+  return run(used, [pass(RED), pass(BLUE), pass(GREEN)]);
+}

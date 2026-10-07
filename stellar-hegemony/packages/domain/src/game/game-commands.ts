@@ -1,6 +1,6 @@
 import type { CommandHandler, DecisionContext } from '../eventsourcing/command.ts';
 import { type DomainError, domainError } from '../shared/domain-error.ts';
-import { err, type Result } from '../shared/result.ts';
+import { err, map, type Result } from '../shared/result.ts';
 import {
   generateGalaxyHandler,
   type GenerateGalaxy,
@@ -46,6 +46,19 @@ import {
   type RejectTransaction,
   rejectTransactionHandler,
 } from '../transaction/transaction-commands.ts';
+import {
+  type KeepSecretObjectives,
+  keepSecretObjectivesHandler,
+  type ScoreObjective,
+  scoreObjectiveHandler,
+} from '../objective/objective-commands.ts';
+import { withVictory } from '../objective/victory.ts';
+import {
+  type AllocateCommandTokens,
+  allocateCommandTokensHandler,
+  type EndScoring,
+  endScoringHandler,
+} from '../status/status-commands.ts';
 import { phaseOf } from '../phases/game-phase.ts';
 import { withTechnologies } from '../technology/technology-catalog.ts';
 import { type StartGame, startGameHandler } from '../phases/start-game.ts';
@@ -75,7 +88,11 @@ export type GameCommand =
   | ProduceUnits
   | ProposeTransaction
   | AcceptTransaction
-  | RejectTransaction;
+  | RejectTransaction
+  | KeepSecretObjectives
+  | ScoreObjective
+  | EndScoring
+  | AllocateCommandTokens;
 
 type HandlerMap = {
   readonly [K in GameCommand['type']]: CommandHandler<
@@ -106,6 +123,10 @@ const handlers: HandlerMap = {
   ProposeTransaction: proposeTransactionHandler,
   AcceptTransaction: acceptTransactionHandler,
   RejectTransaction: rejectTransactionHandler,
+  KeepSecretObjectives: keepSecretObjectivesHandler,
+  ScoreObjective: scoreObjectiveHandler,
+  EndScoring: endScoringHandler,
+  AllocateCommandTokens: allocateCommandTokensHandler,
 };
 
 /** Controller-Einstieg der Domain: wählt den passenden Handler (Command Pattern). */
@@ -127,5 +148,7 @@ export function decideGameCommand(
   // TypeScript kann command.type und den Handler-Typ nicht korrelieren.
   const handler = handlers[command.type] as CommandHandler<GameState, GameCommand, GameEvent>;
   // Alle Einheitenwerte kommen mit den Technologien der Spieler (RR 80.6, Aufwertungen).
-  return handler.decide(state, command, withTechnologies(context, state));
+  const decided = handler.decide(state, command, withTechnologies(context, state));
+  // RR 68.7: Wer das Siegpunktziel erreicht, beendet die Partie sofort.
+  return map(decided, (events) => withVictory(state, events));
 }

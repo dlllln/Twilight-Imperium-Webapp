@@ -14,17 +14,30 @@ export function started(): GameState {
   return game.value;
 }
 
+/** Jeder Spieler behält die ersten angebotenen geheimen Aufträge. */
+export function keepSecrets(game: GameState): GameState {
+  useGameStore.setState({ game, seed: 7, error: null });
+  for (const player of game.players) {
+    const choice = player.secretChoice;
+    if (choice === null) continue;
+    const keep = choice.options.slice(0, choice.keep);
+    useGameStore.getState().send({ type: 'KeepSecretObjectives', issuedBy: player.id, keep });
+  }
+  return useGameStore.getState().game as GameState;
+}
+
 /** Wählt der Reihe nach die Karten mit der niedrigsten freien Initiative. */
 export function pickAll(game: GameState): GameState {
   const store = useGameStore.getState();
-  useGameStore.setState({ game, seed: 7, error: null });
+  keepSecrets(game);
   while (useGameStore.getState().game?.phase === 'strategy') {
     const state = useGameStore.getState().game as GameState;
     const free = Object.values(state.strategyCards)
       .filter((card) => card.holder === null)
       .sort((a: StrategyCardState, b: StrategyCardState) => a.initiative - b.initiative)[0];
     const actor = currentActor(state);
-    if (free === undefined || actor === null) throw new Error('keine Wahl');
+    if (free === undefined || actor === null || useGameStore.getState().error !== null)
+      throw new Error('keine Wahl');
     store.send({ type: 'PickStrategyCard', issuedBy: actor, card: free.id });
   }
   return useGameStore.getState().game as GameState;

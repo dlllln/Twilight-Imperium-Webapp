@@ -135,13 +135,16 @@ describe('Strategische Aktion: Kommandomarker (RR 29, RR 74)', () => {
   it('Karten, deren Mechanik noch fehlt, sind gesperrt', () => {
     const base = game();
     const imperial = { ...base.strategyCards[CARD(8)], holder: RED } as StrategyCardState;
+    const unknown = content.strategyCards.map((card) =>
+      card.id === CARD(8) ? { ...card, mechanic: 'unknown' as never } : card,
+    );
     const result = performStrategicActionHandler.decide(
       { ...base, strategyCards: { ...base.strategyCards, [CARD(8)]: imperial } },
       { ...vanguard(pools(3), []), card: CARD(8) },
-      contextWith(),
+      { ...contextWith(), content: { ...content, strategyCards: unknown } },
     );
     expect(result).toMatchObject({
-      error: { code: 'strategy.mechanicUnavailable', details: { mechanic: 'imperial' } },
+      error: { code: 'strategy.mechanicUnavailable', details: { mechanic: 'unknown' } },
     });
   });
 
@@ -229,7 +232,7 @@ describe('Passen und Ende der Aktionsphase (RR 4)', () => {
     const end = step(afterBlue, pass(GREEN));
     expect(end.events.slice(-2)).toEqual([
       { type: 'TurnEnded', player: GREEN, next: null },
-      { type: 'StatusPhaseStarted', round: 1 },
+      { type: 'StatusPhaseStarted', round: 1, order: [RED, BLUE, GREEN] },
     ]);
     expect(end.state.phase).toBe('status');
     expect(end.state.actionPhase).toBeNull();

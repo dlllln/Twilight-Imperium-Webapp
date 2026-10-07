@@ -1,8 +1,10 @@
 import type { GameState, PlayerId, StrategyCardDefinition, StrategyChoice } from '@stellar/domain';
 import type { ReactElement, ReactNode } from 'react';
+import { ImperialForm } from '../objectives/ImperialForm.tsx';
 import { TechnologyForm } from '../technology/TechnologyForm.tsx';
 import { ConstructionForm } from './ConstructionForm.tsx';
 import { DiplomacyForm } from './DiplomacyForm.tsx';
+import { PoliticsForm } from './PoliticsForm.tsx';
 import { TokenForm } from './TokenForm.tsx';
 import { TradeForm } from './TradeForm.tsx';
 import { WarfareForm } from './WarfareForm.tsx';
@@ -29,6 +31,10 @@ export function ChoiceForm(props: ChoiceFormProps): ReactElement {
       return <WarfareForm {...props} />;
     case 'technology':
       return <TechnologyForm {...props} />;
+    case 'imperial':
+      return <ImperialForm {...props} />;
+    case 'politics':
+      return <PoliticsForm {...props} />;
     default:
       return <TokenForm {...props} />;
   }

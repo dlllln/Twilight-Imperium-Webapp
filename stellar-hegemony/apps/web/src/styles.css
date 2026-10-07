@@ -1001,3 +1001,130 @@ input[type='checkbox'] {
   font-size: 11px;
   cursor: help;
 }
+
+/* Aufträge, Siegpunkte und Statusphase (Iteration 8). */
+.victory-track {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.victory-track li {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.vp-bar {
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid var(--gold-line);
+  border-radius: 4px;
+  background: rgba(5, 6, 13, 0.6);
+}
+
+.vp-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-bright) 100%);
+  transition: width 0.4s ease;
+}
+
+.objective-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.objective-card {
+  --stage: var(--resources);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px 6px 28px;
+  border: 1px solid color-mix(in srgb, var(--stage) 55%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--stage) 10%, rgba(12, 16, 34, 0.8));
+  font-size: 12px;
+}
+
+.objective-card.stage-2 {
+  --stage: var(--influence);
+}
+
+.objective-card.secret {
+  --stage: #c27ee8;
+}
+
+.objective-card.hidden {
+  justify-content: center;
+  padding: 3px 6px;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+}
+
+.objective-card .points {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--stage);
+  color: var(--space-deep);
+  font-weight: 700;
+}
+
+.objective-card .requirement {
+  color: var(--muted);
+}
+
+.objective-card .scorers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.objective-card .score,
+.score-spend button {
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.secret-choice .objective-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  margin-bottom: 6px;
+}
+
+.secret-choice .objective-option .hint {
+  grid-column: 2;
+}
+
+.game-over {
+  padding: 14px;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  background: radial-gradient(circle at top, rgba(217, 180, 90, 0.25), rgba(12, 16, 34, 0.9));
+  text-align: center;
+}
+
+.game-over h2 {
+  margin: 0 0 6px;
+  font-family: var(--title-font);
+  color: var(--gold-bright);
+}

@@ -30,7 +30,7 @@ export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
   card('exchange', 5, 'trade', { tradeGoods: 3 }),
   card('armament', 6, 'warfare'),
   card('research', 7, 'technology', { extraResearchCost: 6, secondaryResearchCost: 4 }),
-  card('crown', 8, 'imperial'),
+  card('crown', 8, 'imperial', { throneVictoryPoints: 1 }),
 ];
 
 export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {

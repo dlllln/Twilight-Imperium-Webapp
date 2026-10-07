@@ -31,15 +31,29 @@ async function skipRemainingSteps(page: Page) {
   }
 }
 
+/** RR 12.20: jeder Spieler behält einen der beiden gezogenen geheimen Aufträge. */
+async function keepSecrets(page: Page) {
+  for (let player = 0; player < 3; player += 1) {
+    await page.locator('.secret-choice input[type="checkbox"]').first().check();
+    await page.getByRole('button', { name: 'Behalten' }).click();
+  }
+  await expect(page.locator('.secret-choice')).toHaveCount(0);
+}
+
+async function startThreePlayers(page: Page) {
+  await page.goto('/');
+  await page.getByLabel('Spieler').selectOption('3');
+  await page.getByRole('button', { name: 'Partie starten' }).click();
+  await keepSecrets(page);
+}
+
 async function pickCards(page: Page) {
   for (let pick = 0; pick < 6; pick += 1)
     await page.locator('.strategy-card button:not([disabled])').first().click();
 }
 
 test('Hot-Seat: Vorhut, Gesandtschaft und eine taktische Aktion mit Bewegung', async ({ page }) => {
-  await page.goto('/');
-  await page.getByLabel('Spieler').selectOption('3');
-  await page.getByRole('button', { name: 'Partie starten' }).click();
+  await startThreePlayers(page);
 
   const phase = page.locator('.phases [aria-current="step"]');
   await expect(phase).toHaveText('Strategie');
@@ -84,9 +98,7 @@ test('Hot-Seat: Vorhut, Gesandtschaft und eine taktische Aktion mit Bewegung', a
 });
 
 test('Hot-Seat: Produktion im eigenen Heimatsystem', async ({ page }) => {
-  await page.goto('/');
-  await page.getByLabel('Spieler').selectOption('3');
-  await page.getByRole('button', { name: 'Partie starten' }).click();
+  await startThreePlayers(page);
   await pickCards(page);
 
   const actor = await page.getByTestId('actor').innerText();
@@ -108,9 +120,7 @@ test('Hot-Seat: Produktion im eigenen Heimatsystem', async ({ page }) => {
 });
 
 test('Hot-Seat: Forschung bringt eine neue Technologie', async ({ page }) => {
-  await page.goto('/');
-  await page.getByLabel('Spieler').selectOption('3');
-  await page.getByRole('button', { name: 'Partie starten' }).click();
+  await startThreePlayers(page);
   const free = page.locator('.strategy-card button:not([disabled])');
   for (let pick = 0; pick < 3; pick += 1) await free.first().click();
   await page.locator('.strategy-card button', { hasText: 'Forschung' }).click();
@@ -126,4 +136,12 @@ test('Hot-Seat: Forschung bringt eine neue Technologie', async ({ page }) => {
   await expect(chips).toHaveCount(before + 1);
   await page.getByRole('button', { name: 'Ablehnen' }).click();
   await page.getByRole('button', { name: 'Ablehnen' }).click();
+});
+
+test('Hot-Seat: Aufträge und Siegpunkte sind sichtbar', async ({ page }) => {
+  await startThreePlayers(page);
+  await expect(page.locator('.victory-track li')).toHaveCount(3);
+  await expect(page.locator('.objective-row .objective-card:not(.hidden)')).not.toHaveCount(0);
+  await pickCards(page);
+  await expect(page.getByRole('heading', { name: /Geheime Aufträge von/ })).toBeVisible();
 });

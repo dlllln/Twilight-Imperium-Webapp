@@ -27,6 +27,11 @@ import type { TransactionEvent } from '../transaction/transaction-events.ts';
 import { transactionReducers } from '../transaction/transaction-reducers.ts';
 import type { TechnologyEvent } from '../technology/technology-events.ts';
 import { technologyReducers } from '../technology/technology-reducers.ts';
+import type { ObjectiveEvent } from '../objective/objective-events.ts';
+import { objectiveReducers } from '../objective/objective-reducers.ts';
+import { trackRoundStats } from '../objective/round-stats.ts';
+import type { StatusEvent } from '../status/status-events.ts';
+import { statusReducers } from '../status/status-reducers.ts';
 import type { GameState } from './game-state.ts';
 
 /** Alle Events einer Partie. Jede Iteration erweitert diese Union um ihr Modul. */
@@ -43,6 +48,8 @@ export type GameEvent =
   | ProductionEvent
   | TransactionEvent
   | TechnologyEvent
+  | ObjectiveEvent
+  | StatusEvent
   | EconomyEvent;
 
 const gameReducers: ReducerMap<GameState, GameEvent> = {
@@ -59,11 +66,13 @@ const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...productionReducers,
   ...transactionReducers,
   ...technologyReducers,
+  ...objectiveReducers,
+  ...statusReducers,
 };
 
 /** Wendet ein Event an und erhöht die Version (Indirection über eine zentrale Stelle). */
 export function evolveGame(state: GameState, event: GameEvent): GameState {
-  const next = applyEvent(gameReducers, state, event);
+  const next = trackRoundStats(state, applyEvent(gameReducers, state, event), event);
   return { ...next, version: state.version + 1 };
 }
 

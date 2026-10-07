@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  decideGameCommand,
   evolveGame,
   type GameEvent,
   type GameState,
@@ -7,8 +8,8 @@ import {
   systemId,
   unitId,
 } from '../src/index.ts';
-import { CARD, RED, T, unit } from './fixtures.ts';
-import { actionPhaseGame, GREEN, startedGame } from './game-flow.ts';
+import { CARD, contextWith, RED, T, unit } from './fixtures.ts';
+import { actionPhaseGame, GREEN, startedGame, statusPhaseGame } from './game-flow.ts';
 
 const NOWHERE = systemId('nirgendwo');
 const NO_PLANET = planetId('nirgendwo');
@@ -109,5 +110,43 @@ describe('Reducer bei unbekannten Verweisen', () => {
     const units = after.planets[RED_PRIME]?.units ?? [];
     expect(units.find((u) => u.id === hit?.id)?.damaged).toBe(true);
     expect(units.find((u) => u.id === spared?.id)?.damaged).toBe(false);
+  });
+});
+
+describe('Status-Events außerhalb der Statusphase', () => {
+  it('ohne laufende Statusphase ändern Schritt-Events nur, was sie selbst betreffen', () => {
+    const state = actionPhaseGame();
+    const after = apply(
+      state,
+      { type: 'ScoringFinished', player: RED },
+      { type: 'TokenStepReached' },
+      {
+        type: 'CommandTokensAllocated',
+        player: RED,
+        gained: 0,
+        pools: { tactic: 3, fleet: 3, strategy: 2 },
+      },
+    );
+    expect(after.statusPhase).toBeNull();
+    expect(after.players).toEqual(state.players);
+  });
+
+  it('Befehle der Statusphase prüfen den Schritt', () => {
+    const status = statusPhaseGame();
+    const allocate = decideGameCommand(
+      status,
+      { type: 'AllocateCommandTokens', issuedBy: RED, pools: { tactic: 3, fleet: 3, strategy: 2 } },
+      contextWith(),
+    );
+    expect(allocate).toMatchObject({ error: { code: 'status.wrongStep' } });
+    const scoring = {
+      ...status,
+      statusPhase: status.statusPhase && { ...status.statusPhase, step: 'tokens' as const },
+    };
+    expect(
+      decideGameCommand(scoring, { type: 'EndScoring', issuedBy: RED }, contextWith()),
+    ).toMatchObject({
+      error: { code: 'status.wrongStep' },
+    });
   });
 });

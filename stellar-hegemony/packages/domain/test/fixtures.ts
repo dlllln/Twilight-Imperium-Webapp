@@ -8,6 +8,9 @@ import {
   StaticTileCatalog,
   type SystemTile,
   type GameConfig,
+  type ObjectiveCondition,
+  type ObjectiveDefinition,
+  objectiveId,
   planetId,
   playerId,
   type PlanetState,
@@ -323,7 +326,7 @@ export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
   strategyCard(5, 'trade', { tradeGoods: 3 }),
   strategyCard(6, 'warfare'),
   strategyCard(7, 'technology', { extraResearchCost: 6, secondaryResearchCost: 4 }),
-  strategyCard(8, 'imperial'),
+  strategyCard(8, 'imperial', { throneVictoryPoints: 1 }),
 ];
 
 export const CARD = (initiative: number) => strategyCardId(`card-${String(initiative)}`);
@@ -383,12 +386,55 @@ export const TECHNOLOGIES: readonly TechnologyDefinition[] = [
   research('breaker-plans', 'warfare', ['warfare']),
 ];
 
+const objective = (
+  id: string,
+  category: ObjectiveDefinition['category'],
+  stage: ObjectiveDefinition['stage'],
+  condition: ObjectiveCondition,
+  timing: ObjectiveDefinition['timing'] = 'status',
+): ObjectiveDefinition => ({
+  id: objectiveId(id),
+  category,
+  stage,
+  points: stage === 2 ? 2 : 1,
+  timing,
+  condition,
+});
+
+/** Zwei Aufträge der Stufe I, einer der Stufe II, acht geheime. */
+export const OBJECTIVES: readonly ObjectiveDefinition[] = [
+  objective('two-worlds', 'public', 1, { kind: 'planets', count: 2 }),
+  objective('pay-three', 'public', 1, { kind: 'spend', currency: 'resources', amount: 3 }),
+  objective('hold-center', 'public', 2, { kind: 'systemsWithShips', where: 'center', count: 1 }),
+  objective('goods-3', 'secret', null, { kind: 'tradeGoods', count: 3 }),
+  objective('fleet-4', 'secret', null, { kind: 'fleetPool', count: 4 }),
+  objective(
+    'won-1',
+    'secret',
+    null,
+    { kind: 'roundStat', stat: 'spaceCombatsWon', count: 1 },
+    'action',
+  ),
+  objective('tokens-1', 'secret', null, { kind: 'systemsWithTokens', count: 1 }),
+  objective(
+    'gained-1',
+    'secret',
+    null,
+    { kind: 'roundStat', stat: 'planetsGained', count: 1 },
+    'action',
+  ),
+  objective('fighters-2', 'secret', null, { kind: 'units', type: T.fighter, count: 2 }),
+  objective('upgrade-1', 'secret', null, { kind: 'unitUpgrades', count: 1 }),
+  objective('throne', 'secret', null, { kind: 'centerPlanet' }),
+];
+
 export const content: ContentPort = {
   units: catalog,
   tiles: new StaticTileCatalog(TILES),
   strategyCards: STRATEGY_CARDS,
   factions: FACTIONS,
   technologies: TECHNOLOGIES,
+  objectives: OBJECTIVES,
   galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
 };
 

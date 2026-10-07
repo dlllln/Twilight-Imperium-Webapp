@@ -1,5 +1,6 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
 import type { GameState } from '../game/game-state.ts';
+import { NO_OBJECTIVES, NO_ROUND_STATS } from '../objective/objective-state.ts';
 import type { PlayerState } from '../player/player-state.ts';
 import type { GameCreated, PlayerSeated, SetupEvent } from './setup-events.ts';
 
@@ -8,6 +9,8 @@ const NOT_STARTED = {
   strategyCards: {},
   pickQueue: [],
   actionPhase: null,
+  statusPhase: null,
+  objectives: NO_OBJECTIVES,
   centerTokenRemoved: false,
   winner: null,
 } as const satisfies Partial<GameState>;
@@ -31,6 +34,17 @@ export function initialGameState(event: GameCreated): GameState {
   };
 }
 
+/** Was jeder Spieler zu Beginn noch nicht hat. */
+const FRESH_PLAYER = {
+  tradeGoods: 0,
+  commodities: 0,
+  technologies: [],
+  victoryPoints: 0,
+  secretObjectives: [],
+  secretChoice: null,
+  roundStats: NO_ROUND_STATS,
+} as const satisfies Partial<PlayerState>;
+
 function seatPlayer(state: GameState, event: PlayerSeated): GameState {
   const { rules } = state.config;
   const pools = rules.startingCommandPools;
@@ -42,11 +56,8 @@ function seatPlayer(state: GameState, event: PlayerSeated): GameState {
     seat: state.players.length,
     commandPools: pools,
     reinforcementTokens: rules.commandTokensPerPlayer - pools.tactic - pools.fleet - pools.strategy,
-    tradeGoods: 0,
-    commodities: 0,
     commodityLimit: event.commodityLimit,
-    technologies: [],
-    victoryPoints: 0,
+    ...FRESH_PLAYER,
   };
   return { ...state, players: [...state.players, player] };
 }

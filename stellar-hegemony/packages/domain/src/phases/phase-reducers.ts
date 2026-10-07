@@ -34,10 +34,12 @@ export const phaseReducers: ReducerMap<GameState, PhaseEvent> = {
       transactedWith: [],
     },
   }),
+  SpeakerChanged: (state, event) => ({ ...state, speaker: event.player }),
   StatusPhaseStarted: (state, event) => ({
     ...state,
     phase: 'status',
     round: event.round,
     actionPhase: null,
+    statusPhase: { step: 'scoring', order: event.order, waiting: event.order, scored: {} },
   }),
 };

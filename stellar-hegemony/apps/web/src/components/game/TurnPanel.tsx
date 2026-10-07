@@ -1,4 +1,5 @@
 import {
+  findPlayer,
   type GameState,
   type PlayerId,
   type StrategyCardDefinition,
@@ -12,6 +13,8 @@ import { useGameStore } from '../../game-store.ts';
 import { currentActor } from '../../local-game.ts';
 import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { GameOverNotice, StatusTurn } from '../objectives/StatusTurn.tsx';
+import { SecretChoiceForm } from '../objectives/SecretChoiceForm.tsx';
 import { cardText } from './card-text.ts';
 import { ChoiceForm } from './ChoiceForm.tsx';
 import { ActivationBlock, TacticalTurn } from './TacticalPanel.tsx';
@@ -137,16 +140,39 @@ function TurnContent({ game, player }: TurnProps): ReactElement {
   return <ActiveTurn key={player} game={game} player={player} />;
 }
 
-/** Was der Spieler am Zug in der Aktionsphase tun kann. */
+/** Offene Geheimauftrags-Wahl zuerst, dann der Zug der jeweiligen Phase. */
+function PhaseContent({ game, player }: TurnProps): ReactElement | null {
+  if (findPlayer(game, player)?.secretChoice != null)
+    return <SecretChoiceForm key={player} game={game} player={player} />;
+  if (game.phase === 'status') return <StatusTurn game={game} player={player} />;
+  return game.phase === 'action' ? <TurnContent game={game} player={player} /> : null;
+}
+
+const PHASE_TITLE = {
+  strategy: 'phase.strategy',
+  action: 'phase.action',
+  status: 'phase.status',
+  agenda: 'phase.agenda',
+  setup: 'phase.strategy',
+  gameOver: 'phase.status',
+} as const satisfies Record<GameState['phase'], string>;
+
+/** Die Strategiephase wählt in der Kartenauslage; hier erscheint sie nur für Geheimaufträge. */
+const hasTurnPanel = (game: GameState, actor: PlayerId): boolean =>
+  game.phase === 'action' ||
+  game.phase === 'status' ||
+  findPlayer(game, actor)?.secretChoice != null;
+
+/** Was der Spieler am Bildschirm gerade tun kann; nach dem Sieg nur noch das Ergebnis. */
 export function TurnPanel({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
   const actor = currentActor(game);
-  if (game.phase === 'status') return <p className="notice">{t('statusReached')}</p>;
-  if (game.phase !== 'action' || actor === null) return null;
+  if (game.phase === 'gameOver') return <GameOverNotice game={game} />;
+  if (actor === null || !hasTurnPanel(game, actor)) return null;
   return (
     <section className="game-section">
-      <h2>{t('phase.action')}</h2>
-      <TurnContent game={game} player={actor} />
+      <h2>{t(PHASE_TITLE[game.phase])}</h2>
+      <PhaseContent game={game} player={actor} />
     </section>
   );
 }

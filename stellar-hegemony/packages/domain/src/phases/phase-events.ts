@@ -24,9 +24,16 @@ export interface ActionPhaseStarted extends DomainEvent<'ActionPhaseStarted'> {
   readonly order: readonly PlayerId[];
 }
 
+/** RR 73: Statusphase; `order` ist die Initiativreihenfolge der abgelaufenen Aktionsphase. */
 export interface StatusPhaseStarted extends DomainEvent<'StatusPhaseStarted'> {
   readonly round: number;
+  readonly order: readonly PlayerId[];
+}
+
+/** RR 72: Der Sprechermarker wechselt (z. B. durch Politik, RR 61.2). */
+export interface SpeakerChanged extends DomainEvent<'SpeakerChanged'> {
+  readonly player: PlayerId;
 }
 
 export type PhaseEvent =
-  GameStarted | StrategyPhaseStarted | ActionPhaseStarted | StatusPhaseStarted;
+  GameStarted | StrategyPhaseStarted | ActionPhaseStarted | StatusPhaseStarted | SpeakerChanged;

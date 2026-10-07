@@ -32,7 +32,7 @@ export class SetupPhase extends BasePhase {
 
 export class StrategyPhase extends BasePhase {
   readonly name = 'strategy';
-  protected readonly commands = ['PickStrategyCard'];
+  protected readonly commands = ['PickStrategyCard', 'KeepSecretObjectives'];
   next(): PhaseName {
     return 'action';
   }
@@ -56,16 +56,23 @@ export class ActionPhase extends BasePhase {
     'ProposeTransaction',
     'AcceptTransaction',
     'RejectTransaction',
+    'ScoreObjective',
+    'KeepSecretObjectives',
   ];
   next(): PhaseName {
     return 'status';
   }
 }
 
-/** Status-Schritte (Ziele, Marker, Bereitmachen) folgen in Iteration 8. */
+/** RR 73: Aufträge werten, Marker erhalten und umverteilen; der Rest läuft automatisch. */
 export class StatusPhase extends BasePhase {
   readonly name = 'status';
-  protected readonly commands: readonly string[] = [];
+  protected readonly commands = [
+    'ScoreObjective',
+    'EndScoring',
+    'AllocateCommandTokens',
+    'KeepSecretObjectives',
+  ];
   /** RR 36: Die Agendaphase gibt es erst, wenn der Marker auf der Zentrumswelt entfernt wurde. */
   next(state: GameState): PhaseName {
     return state.centerTokenRemoved ? 'agenda' : 'strategy';

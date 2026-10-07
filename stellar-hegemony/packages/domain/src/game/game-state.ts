@@ -5,6 +5,7 @@ import type { PlayerState } from '../player/player-state.ts';
 import type { SystemState } from '../galaxy/system-state.ts';
 import type { ActionPhaseState } from '../phases/turn-state.ts';
 import type { StrategyCardState } from '../strategy/strategy-card.ts';
+import type { ObjectivesState, StatusPhaseState } from '../objective/objective-state.ts';
 import type { GameConfig } from './game-config.ts';
 
 export type PhaseName = 'setup' | 'strategy' | 'action' | 'status' | 'agenda' | 'gameOver';
@@ -34,6 +35,8 @@ export interface GameState {
   /** Wer in der Strategiephase noch wählen muss, in Reihenfolge. */
   readonly pickQueue: readonly PlayerId[];
   readonly actionPhase: ActionPhaseState | null;
+  readonly statusPhase: StatusPhaseState | null;
+  readonly objectives: ObjectivesState;
   /** Solange der Marker auf der Zentrumswelt liegt, entfällt die Agendaphase (RR 36). */
   readonly centerTokenRemoved: boolean;
   readonly winner: PlayerId | null;

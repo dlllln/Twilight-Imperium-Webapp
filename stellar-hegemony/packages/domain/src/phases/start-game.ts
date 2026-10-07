@@ -12,6 +12,7 @@ import type { PlayerId } from '../shared/ids.ts';
 import { err, map, type Result } from '../shared/result.ts';
 import type { HomeSystemPlaced } from '../faction/home-events.ts';
 import { homeSystemEvents } from '../faction/home-placement.ts';
+import { objectiveSetupEvents, type ObjectiveSetupEvent } from '../objective/objective-setup.ts';
 import type { TechnologiesGranted } from '../technology/technology-events.ts';
 import type { GameStarted, StrategyPhaseStarted } from './phase-events.ts';
 
@@ -34,7 +35,8 @@ function startChecks(state: GameState, command: StartGame, context: DecisionCont
   ]);
 }
 
-type StartEvent = GameStarted | HomeSystemPlaced | TechnologiesGranted | StrategyPhaseStarted;
+type StartEvent =
+  GameStarted | HomeSystemPlaced | TechnologiesGranted | ObjectiveSetupEvent | StrategyPhaseStarted;
 
 /** Starttechnologien jeder Fraktion (RR 80.5: erhalten, ohne Voraussetzungen). */
 const grants = (state: GameState, context: DecisionContext): readonly TechnologiesGranted[] =>
@@ -67,6 +69,7 @@ export const startGameHandler = {
       { type: 'GameStarted', speaker: speaker.id, strategyCards: startingCards(context) },
       ...homes,
       ...grants(state, context),
+      ...objectiveSetupEvents(state, context),
       { type: 'StrategyPhaseStarted', round: 1, pickQueue: pickQueueFor(state, speaker.id) },
     ]);
   },

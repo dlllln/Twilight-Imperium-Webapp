@@ -17,6 +17,7 @@ import {
   type Result,
   andThen,
   map,
+  statusActor,
   tacticalDecider,
 } from '@stellar/domain';
 import { BASE_RULE_NUMBERS } from '@stellar/content';
@@ -104,8 +105,12 @@ function actionActor(state: GameState): PlayerId | null {
   );
 }
 
-/** Wer gerade am Bildschirm entscheiden muss (Hot-Seat). */
+/** Wer gerade am Bildschirm entscheiden muss (Hot-Seat); offene Geheimauftrags-Wahlen zuerst. */
 export function currentActor(state: GameState): PlayerId | null {
+  if (state.phase === 'gameOver') return null;
+  const choosing = state.players.find((player) => player.secretChoice !== null);
+  if (choosing !== undefined) return choosing.id;
   if (state.phase === 'strategy') return state.pickQueue[0] ?? null;
+  if (state.phase === 'status') return statusActor(state);
   return state.phase === 'action' ? actionActor(state) : null;
 }

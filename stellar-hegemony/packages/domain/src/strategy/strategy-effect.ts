@@ -4,7 +4,14 @@ import type { GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
 import type { PoolCounts } from '../player/command-sheet.ts';
 import { type DomainError, domainError } from '../shared/domain-error.ts';
-import type { PlanetId, PlayerId, SystemId, TechnologyId, UnitTypeId } from '../shared/ids.ts';
+import type {
+  ObjectiveId,
+  PlanetId,
+  PlayerId,
+  SystemId,
+  TechnologyId,
+  UnitTypeId,
+} from '../shared/ids.ts';
 import type { ProductionRequest } from '../production/production.ts';
 import { err, ok, type Result } from '../shared/result.ts';
 import type { StrategyCardDefinition, StrategyMechanic } from './strategy-card.ts';
@@ -66,6 +73,22 @@ export interface TechnologyChoice {
   readonly payment: Payment;
 }
 
+/**
+ * „Imperium“: primär optional ein öffentlicher Auftrag (mit Bezahlung bei Ausgabe-Aufträgen),
+ * sekundär ohne Auswahl.
+ */
+export interface ImperialChoice {
+  readonly mechanic: 'imperial';
+  readonly objective: ObjectiveId | null;
+  readonly payment: Payment;
+}
+
+/** „Politik“: primär der neue Sprecher (RR 61.2). */
+export interface PoliticsChoice {
+  readonly mechanic: 'politics';
+  readonly speaker: PlayerId | null;
+}
+
 /** Jede Mechanik ergänzt hier ihre Auswahl-Struktur. */
 export type StrategyChoice =
   | CommandTokensChoice
@@ -73,7 +96,9 @@ export type StrategyChoice =
   | ConstructionChoice
   | TradeChoice
   | WarfareChoice
-  | TechnologyChoice;
+  | TechnologyChoice
+  | ImperialChoice
+  | PoliticsChoice;
 
 export interface EffectInput {
   readonly state: GameState;
