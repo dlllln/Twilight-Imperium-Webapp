@@ -3,6 +3,8 @@ import type { GameId, PlayerId } from '../shared/ids.ts';
 import type { PlanetState } from '../planet/planet-state.ts';
 import type { PlayerState } from '../player/player-state.ts';
 import type { SystemState } from '../galaxy/system-state.ts';
+import type { ActionPhaseState } from '../phases/turn-state.ts';
+import type { StrategyCardState } from '../strategy/strategy-card.ts';
 import type { GameConfig } from './game-config.ts';
 
 export type PhaseName = 'setup' | 'strategy' | 'action' | 'status' | 'agenda' | 'gameOver';
@@ -28,6 +30,12 @@ export interface GameState {
   /** Heimat-Plätze in Sitzreihenfolge, bis die Fraktionen ihre Heimat-Systeme setzen. */
   readonly homeSlots: readonly Hex[];
   readonly nextUnitNumber: number;
+  readonly strategyCards: Readonly<Record<string, StrategyCardState>>;
+  /** Wer in der Strategiephase noch wählen muss, in Reihenfolge. */
+  readonly pickQueue: readonly PlayerId[];
+  readonly actionPhase: ActionPhaseState | null;
+  /** Solange der Marker auf der Zentrumswelt liegt, entfällt die Agendaphase (RR 36). */
+  readonly centerTokenRemoved: boolean;
   readonly winner: PlayerId | null;
 }
 
@@ -52,3 +60,6 @@ export function updatePlayer(
     players: state.players.map((player) => (player.id === id ? update(player) : player)),
   };
 }
+
+export const strategyCardsOf = (state: GameState, player: PlayerId): readonly StrategyCardState[] =>
+  Object.values(state.strategyCards).filter((card) => card.holder === player);

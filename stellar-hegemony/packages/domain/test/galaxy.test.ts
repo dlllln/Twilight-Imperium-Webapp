@@ -228,7 +228,7 @@ describe('Commands ImportMap und GenerateGalaxy', () => {
     const started = { ...state, phase: 'strategy' } as const;
     expect(
       decideGameCommand(started, { type: 'GenerateGalaxy', issuedBy: RED }, contextWith()),
-    ).toMatchObject({ ok: false, error: { code: 'setup.notInSetup' } });
+    ).toMatchObject({ ok: false, error: { code: 'phase.commandNotAllowed' } });
   });
 
   it('GenerateGalaxy nutzt die Vorlage für die Spielerzahl', () => {

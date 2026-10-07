@@ -13,6 +13,8 @@ import {
   type RuleNumbers,
   StaticUnitCatalog,
   systemId,
+  type StrategyCardDefinition,
+  strategyCardId,
   type SystemState,
   type Unit,
   unitId,
@@ -217,9 +219,37 @@ export const TEMPLATE: GalaxyTemplate = {
   redTiles: 2,
 };
 
+const strategyCard = (
+  initiative: number,
+  mechanic: StrategyCardDefinition['mechanic'],
+  parameters: Record<string, number> = {},
+  secondaryCostsStrategyToken = true,
+): StrategyCardDefinition => ({
+  id: strategyCardId(`card-${String(initiative)}`),
+  initiative,
+  mechanic,
+  secondaryCostsStrategyToken,
+  parameters,
+});
+
+/** Karte 1 hat eine Wirkung, Karte 2 eine Sekundärwirkung mit Strategiemarker-Kosten. */
+export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
+  strategyCard(1, 'commandTokens', { tokensGained: 3, influencePerToken: 3 }, false),
+  strategyCard(2, 'commandTokens', { tokensGained: 2, influencePerToken: 2 }),
+  strategyCard(3, 'politics'),
+  strategyCard(4, 'construction'),
+  strategyCard(5, 'trade'),
+  strategyCard(6, 'warfare'),
+  strategyCard(7, 'technology'),
+  strategyCard(8, 'imperial'),
+];
+
+export const CARD = (initiative: number) => strategyCardId(`card-${String(initiative)}`);
+
 export const content: ContentPort = {
   units: catalog,
   tiles: new StaticTileCatalog(TILES),
+  strategyCards: STRATEGY_CARDS,
   galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
 };
 

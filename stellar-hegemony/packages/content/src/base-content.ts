@@ -1,5 +1,6 @@
 import { type ContentPort, StaticTileCatalog, StaticUnitCatalog } from '@stellar/domain';
 import { galaxyTemplate } from './galaxy-templates.ts';
+import { STRATEGY_CARDS } from './strategy-cards.ts';
 import { ALL_TILES } from './systems.ts';
 import { BASE_UNITS } from './units.ts';
 
@@ -8,6 +9,7 @@ export function createBaseContent(): ContentPort {
   return {
     units: new StaticUnitCatalog(BASE_UNITS),
     tiles: new StaticTileCatalog(ALL_TILES),
+    strategyCards: STRATEGY_CARDS,
     galaxyTemplate,
   };
 }

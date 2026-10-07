@@ -3,16 +3,29 @@ import { type DomainError, domainError } from '../shared/domain-error.ts';
 import { err, ok, type Result } from '../shared/result.ts';
 import type { GalaxyEvent } from '../galaxy/galaxy-events.ts';
 import { galaxyReducers } from '../galaxy/galaxy-reducers.ts';
+import type { ActionEvent } from '../action/action-events.ts';
+import { actionReducers } from '../action/action-reducers.ts';
+import type { EconomyEvent } from '../economy/economy-events.ts';
+import { economyReducers } from '../economy/economy-reducers.ts';
+import type { PhaseEvent } from '../phases/phase-events.ts';
+import { phaseReducers } from '../phases/phase-reducers.ts';
+import type { StrategyEvent } from '../strategy/strategy-events.ts';
+import { strategyReducers } from '../strategy/strategy-reducers.ts';
 import type { SetupEvent } from '../setup/setup-events.ts';
 import { initialGameState, setupReducers } from '../setup/setup-reducers.ts';
 import type { GameState } from './game-state.ts';
 
 /** Alle Events einer Partie. Jede Iteration erweitert diese Union um ihr Modul. */
-export type GameEvent = SetupEvent | GalaxyEvent;
+export type GameEvent =
+  SetupEvent | GalaxyEvent | PhaseEvent | StrategyEvent | ActionEvent | EconomyEvent;
 
 const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...setupReducers,
   ...galaxyReducers,
+  ...phaseReducers,
+  ...strategyReducers,
+  ...actionReducers,
+  ...economyReducers,
 };
 
 /** Wendet ein Event an und erhöht die Version (Indirection über eine zentrale Stelle). */
