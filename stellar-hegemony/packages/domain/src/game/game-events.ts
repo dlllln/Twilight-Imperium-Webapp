@@ -33,6 +33,8 @@ import { trackRoundStats } from '../objective/round-stats.ts';
 import type { StatusEvent } from '../status/status-events.ts';
 import { statusReducers } from '../status/status-reducers.ts';
 import type { ActionCardEvent } from '../action-card/action-card-events.ts';
+import type { AgendaEvent } from '../agenda/agenda-events.ts';
+import { agendaReducers } from '../agenda/agenda-reducers.ts';
 import { actionCardReducers } from '../action-card/action-card-reducers.ts';
 import type { GameState } from './game-state.ts';
 
@@ -53,6 +55,7 @@ export type GameEvent =
   | ObjectiveEvent
   | StatusEvent
   | ActionCardEvent
+  | AgendaEvent
   | EconomyEvent;
 
 const gameReducers: ReducerMap<GameState, GameEvent> = {
@@ -72,6 +75,7 @@ const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...objectiveReducers,
   ...statusReducers,
   ...actionCardReducers,
+  ...agendaReducers,
 };
 
 /** Wendet ein Event an und erhöht die Version (Indirection über eine zentrale Stelle). */

@@ -1,6 +1,7 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
 import type { GameState } from '../game/game-state.ts';
 import { NO_ACTION_DECK } from '../action-card/action-card-state.ts';
+import { NO_AGENDA_DECK } from '../agenda/agenda-state.ts';
 import { NO_OBJECTIVES, NO_ROUND_STATS } from '../objective/objective-state.ts';
 import type { PlayerState } from '../player/player-state.ts';
 import type { GameCreated, PlayerSeated, SetupEvent } from './setup-events.ts';
@@ -16,6 +17,9 @@ const NOT_STARTED = {
   actionDeck: NO_ACTION_DECK,
   reactionWindow: null,
   pendingPlay: null,
+  agendaDeck: NO_AGENDA_DECK,
+  agendaPhase: null,
+  laws: [],
   winner: null,
 } as const satisfies Partial<GameState>;
 

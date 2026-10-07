@@ -17,6 +17,7 @@ import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { GameOverNotice, StatusTurn } from '../objectives/StatusTurn.tsx';
 import { SecretChoiceForm } from '../objectives/SecretChoiceForm.tsx';
+import { AgendaTurn } from '../agenda/AgendaTurn.tsx';
 import { DiscardForm } from '../cards/DiscardForm.tsx';
 import { ReactionPrompt } from '../cards/ReactionPrompt.tsx';
 import { cardText } from './card-text.ts';
@@ -159,6 +160,7 @@ function PhaseContent({ game, player }: TurnProps): ReactElement | null {
   const interrupting = interruption(game, player);
   if (interrupting !== null) return interrupting;
   if (game.phase === 'status') return <StatusTurn game={game} player={player} />;
+  if (game.phase === 'agenda') return <AgendaTurn game={game} player={player} />;
   return game.phase === 'action' ? <TurnContent game={game} player={player} /> : null;
 }
 
@@ -173,7 +175,7 @@ const PHASE_TITLE = {
 
 /** Die Strategiephase wählt in der Kartenauslage; hier erscheint sie nur bei Unterbrechungen. */
 const hasTurnPanel = (game: GameState, actor: PlayerId): boolean =>
-  game.phase === 'action' || game.phase === 'status' || interruption(game, actor) !== null;
+  game.phase !== 'strategy' || interruption(game, actor) !== null;
 
 /** Was der Spieler am Bildschirm gerade tun kann; nach dem Sieg nur noch das Ergebnis. */
 export function TurnPanel({ game }: { readonly game: GameState }): ReactElement | null {

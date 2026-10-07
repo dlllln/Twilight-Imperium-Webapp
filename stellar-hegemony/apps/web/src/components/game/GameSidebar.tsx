@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { useGameStore } from '../../game-store.ts';
 import { errorText } from '../../i18n.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { LawsPanel } from '../agenda/LawsPanel.tsx';
 import { HandPanel } from '../cards/HandPanel.tsx';
 import { ObjectivesPanel } from '../objectives/ObjectivesPanel.tsx';
 import { TechnologyPanel } from '../technology/TechnologyPanel.tsx';
@@ -25,6 +26,7 @@ export function GameSidebar({ game }: { readonly game: GameState }): ReactElemen
       <HandPanel game={game} />
       <StrategyCardGrid game={game} />
       <ObjectivesPanel game={game} />
+      <LawsPanel game={game} />
       <PlayersPanel game={game} />
       <TechnologyPanel game={game} />
     </aside>

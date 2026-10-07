@@ -27,3 +27,5 @@ export type ObjectiveId = Brand<string, 'ObjectiveId'>;
 export const objectiveId = (value: string): ObjectiveId => value as ObjectiveId;
 export type ActionCardId = Brand<string, 'ActionCardId'>;
 export const actionCardId = (value: string): ActionCardId => value as ActionCardId;
+export type AgendaId = Brand<string, 'AgendaId'>;
+export const agendaId = (value: string): AgendaId => value as AgendaId;

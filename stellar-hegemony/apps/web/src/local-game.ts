@@ -1,4 +1,5 @@
 import {
+  agendaActor,
   createGameHandler,
   decideGameCommand,
   type DomainError,
@@ -123,5 +124,6 @@ export function currentActor(state: GameState): PlayerId | null {
   if (interrupting !== null) return interrupting;
   if (state.phase === 'strategy') return state.pickQueue[0] ?? null;
   if (state.phase === 'status') return statusActor(state);
+  if (state.phase === 'agenda') return agendaActor(state);
   return state.phase === 'action' ? actionActor(state) : null;
 }

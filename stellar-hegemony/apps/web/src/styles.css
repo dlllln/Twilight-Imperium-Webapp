@@ -1213,3 +1213,91 @@ input[type='checkbox'] {
 .card-log {
   color: #f0a58f;
 }
+
+/* Agendaphase: offene Agenda, Stimmabgabe, geltende Gesetze */
+.agenda-card {
+  --agenda: var(--influence);
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--agenda) 55%, transparent);
+  border-top-width: 4px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--agenda) 10%, rgba(12, 16, 34, 0.85));
+  font-size: 12px;
+}
+
+.agenda-card.law {
+  --agenda: var(--gold);
+}
+
+.agenda-card header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.agenda-card h3 {
+  margin: 0;
+  font-family: var(--title-font);
+  color: var(--agenda);
+}
+
+.agenda-card p {
+  margin: 0;
+}
+
+.agenda-kind {
+  color: var(--agenda);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.agenda-tally {
+  display: grid;
+  gap: 2px;
+  margin: 4px 0 0;
+  padding: 4px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--gold-line);
+}
+
+.agenda-tally li {
+  display: flex;
+  justify-content: space-between;
+}
+
+.vote-planets {
+  display: grid;
+  gap: 2px;
+}
+
+.vote-planets label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.vote-planets .influence {
+  margin-left: auto;
+  color: var(--influence);
+  font-weight: 600;
+}
+
+.laws-panel ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.laws-panel li {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 6px;
+  border-left: 3px solid var(--gold);
+  background: rgba(217, 180, 90, 0.08);
+  font-size: 12px;
+}

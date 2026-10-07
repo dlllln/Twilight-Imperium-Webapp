@@ -4,6 +4,7 @@ import { evolveGame, type GameEvent } from '../game/game-events.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
 import { StarSystem } from '../galaxy/star-system.ts';
 import { pickQueueFor } from '../phases/start-game.ts';
+import { agendaPhaseEvents } from '../agenda/agenda-flow.ts';
 import { CommandSheet, type PoolCounts } from '../player/command-sheet.ts';
 import {
   type Check,
@@ -85,6 +86,13 @@ export function nextRoundEvents(state: GameState): readonly GameEvent[] {
   ];
 }
 
+/** RR 36.4/71.1: ohne Zentrumsmarker folgt die Agendaphase, sonst gleich die nächste Runde. */
+function roundEndEvents(state: GameState, context: DecisionContext): readonly GameEvent[] {
+  if (!state.centerTokenRemoved) return nextRoundEvents(state);
+  const ended: GameEvent = { type: 'RoundEnded' };
+  return [ended, ...agendaPhaseEvents(evolveGame(state, ended), context)];
+}
+
 /** RR 73.6 Hinweis: nach dem Umverteilen darf kein System das Flottenlimit überschreiten. */
 function fleetCheck(after: GameState, player: PlayerId, context: DecisionContext): Check {
   const fleet = fleetLimitOf(after, player, context.content);
@@ -132,7 +140,7 @@ export const allocateCommandTokensHandler = {
       const after = evolveGame(state, allocated);
       const last = state.statusPhase?.waiting.length === 1;
       return map(fleetCheck(after, command.issuedBy, context), () =>
-        last ? [allocated, ...nextRoundEvents(after)] : [allocated],
+        last ? [allocated, ...roundEndEvents(after, context)] : [allocated],
       );
     });
   },

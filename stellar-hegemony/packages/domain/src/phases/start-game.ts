@@ -12,6 +12,8 @@ import type { PlayerId } from '../shared/ids.ts';
 import { err, map, type Result } from '../shared/result.ts';
 import type { ActionDeckPrepared } from '../action-card/action-card-events.ts';
 import { actionDeckEvent } from '../action-card/action-deck-setup.ts';
+import type { AgendaDeckPrepared } from '../agenda/agenda-events.ts';
+import { shuffle } from '../ports/random-port.ts';
 import type { HomeSystemPlaced } from '../faction/home-events.ts';
 import { homeSystemEvents } from '../faction/home-placement.ts';
 import { objectiveSetupEvents, type ObjectiveSetupEvent } from '../objective/objective-setup.ts';
@@ -43,6 +45,7 @@ type StartEvent =
   | TechnologiesGranted
   | ObjectiveSetupEvent
   | ActionDeckPrepared
+  | AgendaDeckPrepared
   | StrategyPhaseStarted;
 
 /** Starttechnologien jeder Fraktion (RR 80.5: erhalten, ohne Voraussetzungen). */
@@ -59,6 +62,15 @@ const startingCards = (context: DecisionContext): GameStarted['strategyCards'] =
   [...context.content.strategyCards]
     .sort((a, b) => a.initiative - b.initiative)
     .map(({ id, initiative, mechanic }) => ({ id, initiative, mechanic }));
+
+/** RR 7: der Agendastapel wird gemischt bereitgelegt. */
+const agendaDeckEvent = (context: DecisionContext): AgendaDeckPrepared => ({
+  type: 'AgendaDeckPrepared',
+  deck: shuffle(
+    context.random,
+    context.content.agendas.map((agenda) => agenda.id),
+  ),
+});
 
 /** RR 76.1 und Spielaufbau: Sprecher auslosen, Heimatsysteme legen, Strategiephase beginnen. */
 export const startGameHandler = {
@@ -78,6 +90,7 @@ export const startGameHandler = {
       ...grants(state, context),
       ...objectiveSetupEvents(state, context),
       actionDeckEvent(context),
+      agendaDeckEvent(context),
       { type: 'StrategyPhaseStarted', round: 1, pickQueue: pickQueueFor(state, speaker.id) },
     ]);
   },

@@ -12,6 +12,7 @@ import type {
   PendingPlay,
   ReactionWindow,
 } from '../action-card/action-card-state.ts';
+import type { AgendaDeckState, AgendaPhaseState, EnactedLaw } from '../agenda/agenda-state.ts';
 
 export type PhaseName = 'setup' | 'strategy' | 'action' | 'status' | 'agenda' | 'gameOver';
 
@@ -49,6 +50,11 @@ export interface GameState {
   readonly reactionWindow: ReactionWindow | null;
   /** Gespielte Karte, die noch verhindert werden kann (RR 3.8). */
   readonly pendingPlay: PendingPlay | null;
+  readonly agendaDeck: AgendaDeckState;
+  /** Laufende Abstimmung der Agendaphase (RR 8). */
+  readonly agendaPhase: AgendaPhaseState | null;
+  /** Beschlossene Gesetze in der Reihenfolge ihres Inkrafttretens (RR 7.3). */
+  readonly laws: readonly EnactedLaw[];
   readonly winner: PlayerId | null;
 }
 

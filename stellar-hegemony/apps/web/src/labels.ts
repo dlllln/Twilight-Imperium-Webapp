@@ -1,5 +1,6 @@
 import {
   actionCardText,
+  agendaText,
   objectiveText,
   planetName,
   technologyText,
@@ -40,3 +41,12 @@ export const actionCardTiming = (id: string, language: Language): string =>
 
 export const actionCardEffect = (id: string, language: Language): string =>
   actionCardText(id)?.effect[language] ?? '';
+
+export const agendaLabel = (id: string, language: Language): string =>
+  agendaText(id)?.name[language] ?? id;
+
+export const agendaPassedText = (id: string, language: Language): string =>
+  agendaText(id)?.passed[language] ?? '';
+
+export const agendaRejectedText = (id: string, language: Language): string =>
+  agendaText(id)?.rejected[language] ?? '';

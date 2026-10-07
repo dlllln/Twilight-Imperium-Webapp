@@ -7,7 +7,7 @@ import {
   playerId,
   startGameHandler,
 } from '../src/index.ts';
-import { BLUE, config, content, contextWith, RED, ScriptedRandom } from './fixtures.ts';
+import { AGENDAS, BLUE, config, content, contextWith, RED, ScriptedRandom } from './fixtures.ts';
 import { GREEN, setupGame, startedGame, step } from './game-flow.ts';
 
 describe('Phasen als Zustandsautomat (RR 61: Rundenablauf)', () => {
@@ -77,11 +77,15 @@ describe('StartGame (RR 76.1: Sprecher und Kartenauslage)', () => {
       'SecretObjectivesDealt',
       'SecretObjectivesDealt',
       'ActionDeckPrepared',
+      'AgendaDeckPrepared',
       'StrategyPhaseStarted',
     ]);
     // Spielaufbau Schritt 8: alle Exemplare gemischt, noch niemand hat Aktionskarten.
     expect(state.actionDeck.deck).toHaveLength(38);
     expect(state.players.every((player) => player.actionCards.length === 0)).toBe(true);
+    // RR 1: der Agendastapel liegt gemischt bereit, noch gilt kein Gesetz.
+    expect(state.agendaDeck.deck).toHaveLength(AGENDAS.length);
+    expect(state.laws).toEqual([]);
     const initiatives = Object.values(state.strategyCards).map((card) => card.initiative);
     expect(initiatives).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(Object.values(state.strategyCards).every((card) => card.holder === null)).toBe(true);

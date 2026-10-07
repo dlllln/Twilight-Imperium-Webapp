@@ -83,9 +83,16 @@ export class StatusPhase extends BasePhase {
   }
 }
 
+/** RR 8: zwei Agenden aufdecken, abstimmen und abhandeln. */
 export class AgendaPhase extends BasePhase {
   readonly name = 'agenda';
-  protected readonly commands: readonly string[] = [];
+  protected readonly commands = [
+    'CastVotes',
+    'Abstain',
+    'BreakTie',
+    'KeepSecretObjectives',
+    'DiscardActionCards',
+  ];
   next(): PhaseName {
     return 'strategy';
   }

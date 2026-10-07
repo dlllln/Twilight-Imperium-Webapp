@@ -67,6 +67,14 @@ import {
   type PlayActionCard,
   playActionCardHandler,
 } from '../action-card/action-card-commands.ts';
+import {
+  type Abstain,
+  abstainHandler,
+  type BreakTie,
+  breakTieHandler,
+  type CastVotes,
+  castVotesHandler,
+} from '../agenda/agenda-commands.ts';
 import { progressTactical } from '../combat/tactical-flow.ts';
 import { phaseOf } from '../phases/game-phase.ts';
 import { withTechnologies } from '../technology/technology-catalog.ts';
@@ -104,7 +112,10 @@ export type GameCommand =
   | AllocateCommandTokens
   | PlayActionCard
   | PassReaction
-  | DiscardActionCards;
+  | DiscardActionCards
+  | CastVotes
+  | Abstain
+  | BreakTie;
 
 type HandlerMap = {
   readonly [K in GameCommand['type']]: CommandHandler<
@@ -142,6 +153,9 @@ const handlers: HandlerMap = {
   PlayActionCard: playActionCardHandler,
   PassReaction: passReactionHandler,
   DiscardActionCards: discardActionCardsHandler,
+  CastVotes: castVotesHandler,
+  Abstain: abstainHandler,
+  BreakTie: breakTieHandler,
 };
 
 /** Während ein Zeitfenster offen ist, sind nur Reaktionen erlaubt (RR 3.10). */

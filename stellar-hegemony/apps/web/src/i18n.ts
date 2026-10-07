@@ -159,6 +159,28 @@ const DICTIONARY = {
     en: 'gains +{n} on ground combat rolls',
   },
   hitsCancelledLog: { de: 'hebt {n} Treffer auf', en: 'cancels {n} hits' },
+  agenda: { de: 'Agenda', en: 'Agenda' },
+  agendaNumber: { de: 'Agenda {n} von 2', en: 'Agenda {n} of 2' },
+  law: { de: 'Gesetz', en: 'Law' },
+  directive: { de: 'Direktive', en: 'Directive' },
+  ifPassed: { de: 'Dafür bzw. gewählt', en: 'For or elected' },
+  ifRejected: { de: 'Dagegen', en: 'Against' },
+  'outcome.for': { de: 'Dafür', en: 'For' },
+  'outcome.against': { de: 'Dagegen', en: 'Against' },
+  voteFor: { de: 'Stimmen für', en: 'Vote for' },
+  votesOf: { de: 'Stimmen', en: 'Votes' },
+  castVotes: { de: 'Abstimmen', en: 'Cast votes' },
+  abstain: { de: 'Enthalten', en: 'Abstain' },
+  lawBonusVotes: { de: 'Zusätzliche Stimmen aus Gesetzen', en: 'Extra votes from laws' },
+  voteHint: {
+    de: 'Erschöpfe Planeten: ihr Einfluss zählt als Stimmen. Handelswaren zählen nicht.',
+    en: 'Exhaust planets: their influence counts as votes. Trade goods do not count.',
+  },
+  tieBreak: { de: 'Gleichstand: der Sprecher entscheidet', en: 'Tie: the speaker decides' },
+  decide: { de: 'Entscheiden', en: 'Decide' },
+  lawsInForce: { de: 'Geltende Gesetze', en: 'Laws in force' },
+  noLaws: { de: 'Noch gilt kein Gesetz.', en: 'No law is in force yet.' },
+  abstained: { de: 'enthalten', en: 'abstained' },
   handSize: { de: 'Aktionskarten auf der Hand', en: 'Action cards in hand' },
   afterHitsCards: {
     de: 'Karten, die jetzt gegen Treffer helfen',
@@ -589,6 +611,23 @@ const DICTIONARY = {
   'status.notYourTurn': {
     de: 'Du bist in der Statusphase nicht dran.',
     en: 'It is not your turn in the status phase.',
+  },
+  'agenda.notYourTurn': {
+    de: 'Du bist bei dieser Abstimmung nicht dran.',
+    en: 'It is not your turn in this vote.',
+  },
+  'agenda.invalidOutcome': {
+    de: 'Dafür kann man bei dieser Agenda nicht stimmen.',
+    en: 'You cannot vote for that on this agenda.',
+  },
+  'agenda.noVotes': {
+    de: 'Ohne Stimmen kannst du dich nur enthalten.',
+    en: 'Without votes you can only abstain.',
+  },
+  'agenda.noTie': { de: 'Es gibt keinen Gleichstand.', en: 'There is no tie.' },
+  'agenda.notSpeaker': {
+    de: 'Nur der Sprecher entscheidet einen Gleichstand.',
+    en: 'Only the speaker breaks a tie.',
   },
   'actionCard.discardCount': {
     de: 'Lege genau so viele Karten ab, wie du über dem Limit bist.',

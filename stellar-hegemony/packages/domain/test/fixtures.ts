@@ -1,5 +1,11 @@
 import {
   type ActionCardDefinition,
+  type AgendaDefinition,
+  type AgendaEffect,
+  agendaId,
+  type Election,
+  type LawEffect,
+  type Recipients,
   actionCardId,
   type ContentPort,
   factionId,
@@ -243,10 +249,12 @@ const tile = (
 
 export const TILES: readonly SystemTile[] = [
   tile('center', 'center', { planets: [{ id: planetId('throne'), resources: 1, influence: 6 }] }),
-  tile('b1', 'blue', { planets: [{ id: planetId('alpha-1'), resources: 2, influence: 1 }] }),
+  tile('b1', 'blue', {
+    planets: [{ id: planetId('alpha-1'), resources: 2, influence: 1, trait: 'industrial' }],
+  }),
   tile('b2', 'blue', {
     planets: [
-      { id: planetId('beta-1'), resources: 1, influence: 2 },
+      { id: planetId('beta-1'), resources: 1, influence: 2, trait: 'cultural' },
       { id: planetId('beta-2'), resources: 0, influence: 1 },
     ],
   }),
@@ -472,6 +480,100 @@ export const ACTION_CARDS: readonly ActionCardDefinition[] = [
 
 export const AC = (id: string) => actionCardId(id);
 
+const FOR_AGAINST: Election = { kind: 'forAgainst' };
+const ELECT_PLAYER: Election = { kind: 'player' };
+type Step = readonly [Recipients, AgendaEffect];
+const steps = (list: readonly Step[]) =>
+  list.map(([recipients, effect]) => ({ recipients, effect }));
+
+const testLaw = (
+  id: string,
+  election: Election,
+  effect: LawEffect,
+  rejected: readonly Step[] = [],
+): AgendaDefinition => ({
+  id: agendaId(id),
+  kind: 'law',
+  election,
+  passed: { steps: [], law: effect },
+  rejected: steps(rejected),
+});
+
+const testDirective = (
+  id: string,
+  election: Election,
+  passed: readonly Step[],
+  rejected: readonly Step[] = [],
+): AgendaDefinition => ({
+  id: agendaId(id),
+  kind: 'directive',
+  election,
+  passed: { steps: steps(passed) },
+  rejected: steps(rejected),
+});
+
+/** Eine Agenda je Wirkungsart und je Gesetzesart. */
+export const AGENDAS: readonly AgendaDefinition[] = [
+  testLaw('charter', FOR_AGAINST, { kind: 'commodityLimitAll', delta: 1 }, [
+    ['supporters', { kind: 'gainTradeGoods', amount: 1 }],
+  ]),
+  testLaw('quota', FOR_AGAINST, { kind: 'ruleChange', rule: 'actionCardHandLimit', delta: -2 }, [
+    ['all', { kind: 'drawActionCards', count: 1 }],
+  ]),
+  testLaw('seat', ELECT_PLAYER, { kind: 'ownerVotes', amount: 2 }),
+  testLaw('chancellor', ELECT_PLAYER, { kind: 'ownerVictoryPoints', amount: 1 }),
+  testLaw('guild', ELECT_PLAYER, { kind: 'ownerCommodityLimit', amount: 2 }),
+  testDirective(
+    'stimulus',
+    FOR_AGAINST,
+    [['all', { kind: 'gainTradeGoods', amount: 2 }]],
+    [['all', { kind: 'replenishCommodities' }]],
+  ),
+  testDirective(
+    'audit',
+    FOR_AGAINST,
+    [['all', { kind: 'loseTradeGoods', amount: 2 }]],
+    [['opponents', { kind: 'gainTradeGoods', amount: 1 }]],
+  ),
+  testDirective('medal', ELECT_PLAYER, [['elected', { kind: 'gainVictoryPoints', amount: 1 }]]),
+  testDirective('leak', ELECT_PLAYER, [['elected', { kind: 'drawActionCards', count: 2 }]]),
+  testDirective('mandate', ELECT_PLAYER, [['elected', { kind: 'drawSecretObjective' }]]),
+  testDirective(
+    'mobilize',
+    FOR_AGAINST,
+    [['all', { kind: 'gainCommandTokens', pool: 'tactic', amount: 1 }]],
+    [['opponents', { kind: 'loseCommandTokens', pool: 'fleet', amount: 1 }]],
+  ),
+  testDirective('blackout', FOR_AGAINST, [
+    ['all', { kind: 'exhaustPlanets', trait: 'industrial' }],
+  ]),
+  testDirective('survey', { kind: 'planet', filter: { kind: 'nonHome' } }, [
+    ['elected', { kind: 'placeUnits', unit: T.infantry, count: 2, where: 'electedPlanet' }],
+  ]),
+  testDirective('cleanup', { kind: 'planet', filter: { kind: 'any' } }, [
+    ['speaker', { kind: 'destroyStructures' }],
+  ]),
+  testDirective('culture', { kind: 'planet', filter: { kind: 'trait', trait: 'cultural' } }, [
+    ['elected', { kind: 'gainTradeGoods', amount: 1 }],
+  ]),
+  testDirective(
+    'amnesty',
+    FOR_AGAINST,
+    [['all', { kind: 'drawActionCards', count: 1 }]],
+    [['all', { kind: 'discardActionCards', count: 1 }]],
+  ),
+  testDirective('reform', FOR_AGAINST, [['speaker', { kind: 'repealLaws' }]]),
+  testDirective('conscript', ELECT_PLAYER, [
+    ['elected', { kind: 'placeUnits', unit: T.infantry, count: 3, where: 'homeSystem' }],
+  ]),
+  testDirective('review', FOR_AGAINST, [['all', { kind: 'repairUnits' }]]),
+  testDirective('tribunal', ELECT_PLAYER, [
+    ['elected', { kind: 'discardActionCards', count: null }],
+  ]),
+];
+
+export const AG = (id: string) => agendaId(id);
+
 export const content: ContentPort = {
   units: catalog,
   tiles: new StaticTileCatalog(TILES),
@@ -480,6 +582,7 @@ export const content: ContentPort = {
   technologies: TECHNOLOGIES,
   objectives: OBJECTIVES,
   actionCards: ACTION_CARDS,
+  agendas: AGENDAS,
   galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
 };
 

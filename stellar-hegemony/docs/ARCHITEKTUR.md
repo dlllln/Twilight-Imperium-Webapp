@@ -42,7 +42,7 @@ stellar-hegemony/
 │   │       ├── technology/    (It. 7) TechTree, UpgradeResolver
 │   │       ├── objectives/    (It. 8) ObjectiveEvaluator, VictoryChecker
 │   │       ├── action-card/   (It. 9) Aktionskarten als Daten, Wirkungsregeln, Zeitfenster, Verhindern
-│   │       ├── agenda/        (It. 10) VotingTally, AgendaResolver
+│   │       ├── agenda/        (It. 10) Agenden als Daten, Abstimmung, Gesetze, Direktiven
 │   │       └── factions/      (It. 11) FactionAbility-Strategien
 │   ├── application/         Use Cases: GameController, Ports (EventStorePort, EventPublisherPort)
 │   ├── infrastructure/      Adapter: SeededRandom, SystemClock, InMemoryEventStore, InProcessEventPublisher
@@ -144,7 +144,7 @@ Commands sind Absichten (Imperativ), Events sind Tatsachen (Partizip). ✓ = umg
 | Transaktion         | ✓ ProposeTransaction, ✓ AcceptTransaction, ✓ RejectTransaction                                                                      | ✓ TransactionProposed, ✓ TransactionCompleted, ✓ TransactionRejected                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Passen              | ✓ Pass                                                                                                                              | ✓ PlayerPassed, ✓ TurnEnded, ✓ StatusPhaseStarted                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Statusphase         | ✓ ScoreObjective, ✓ EndScoring, ✓ DiscardActionCards, ✓ AllocateCommandTokens                                                       | ✓ ObjectiveScored, ✓ ScoringFinished, ✓ PublicObjectiveRevealed, ✓ ActionCardsDrawn, ✓ ActionCardsDiscarded, ✓ CommandTokensCleared, ✓ TokenStepReached, ✓ CommandTokensAllocated, ✓ RoundEnded (Planeten bereit, Reparatur, Karten zurück)                                                                                                                                                                                                                                                                                                   |
-| Agendaphase         | CastVotes, Abstain, BreakTie                                                                                                        | AgendaRevealed, VotesCast, PlayerAbstained, LawEnacted, DirectiveResolved, AgendaDiscarded, AgendaPhaseEnded                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Agendaphase         | ✓ CastVotes, ✓ Abstain, ✓ BreakTie                                                                                                  | ✓ AgendaDeckPrepared, ✓ AgendaDeckReshuffled, ✓ AgendaPhaseStarted, ✓ AgendaRevealed, ✓ VotesCast, ✓ PlayerAbstained, ✓ AgendaTied, ✓ AgendaResolved, ✓ LawEnacted, ✓ LawsRepealed, ✓ AgendaDiscarded, ✓ CommandTokensLost, ✓ AgendaPhaseEnded                                                                                                                                                                                                                                                                                                |
 | Reaktionsfenster    | ✓ PlayActionCard, ✓ PassReaction                                                                                                    | ✓ ReactionWindowOpened, ✓ ActionCardPlayed, ✓ ReactionPassed (schließt das Fenster nach dem Letzten)                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Sieg                | –                                                                                                                                   | ✓ VictoryPointsGained, ✓ GameWon                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
@@ -328,7 +328,26 @@ aber nur, wenn jemand eine passende Karte spielen könnte.
 | Web: `HandPanel`, `CardItem`, `TargetFields`          | Die Hand des Spielers am Bildschirm; spielbare Karten bekommen genau die Zielfelder, die ihre Wirkung verlangt.                                                          |
 | Web: `ReactionPrompt`, `DiscardForm`, `PlayableCards` | `currentActor` stellt Reaktionen und Ablegen vor den Zug; die Kampfansicht fragt Fenster und Karten gegen Treffer direkt neben der Trefferverteilung ab.                 |
 
-## 14. Iterationen
+## 14. Iteration 10 im Detail
+
+Agenden sind Daten (`AgendaDefinition`): Art (Gesetz oder Direktive), Wahl (Dafür/Dagegen,
+Spieler oder Planet mit Filter) und je Ergebnis Schritte aus Empfänger und Wirkung. Unser eigener
+Satz des Sternenrats hat 9 Gesetze und 15 Direktiven. Gesetze wirken über umkehrbare Wirkungen auf
+Regelwerte, Rohstofflimits, Siegpunkte oder Zusatzstimmen; die Wirkung wird beim Beschluss
+mitgespeichert, damit eine Aufhebung sie exakt zurücknimmt.
+
+| Element                                                  | Prinzip                                                                                                                                                          |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AgendaEffect`, `EFFECTS` (`agenda-effects.ts`)          | Interpreter: je Wirkungsart eine reine Funktion; Empfänger (`all`, `supporters`, `opponents`, `elected`, `speaker`) bestimmt der Ablauf, nicht die Wirkung.      |
+| `LawEffect`, `APPLIERS` (`law-effects.ts`)               | Strategy mit Richtung (+1/−1): Beschließen und Aufheben nutzen dieselbe Funktion; Regelwerte ändert ein Gesetz nur über `AdjustableRule` (Protected Variations). |
+| `voting.ts`                                              | Information Expert für Abstimmungen: Reihenfolge ab links vom Sprecher (RR 72.2), wählbare Ergebnisse, Auszählung und Gleichstand.                               |
+| `agenda-flow.ts`                                         | Pure Fabrication für den Ablauf: aufdecken, auszählen, abhandeln, nächste Agenda oder Rundenende; jeder Abschnitt sieht den Zustand des vorigen (`chain`).       |
+| `CastVotes`, `Abstain`, `BreakTie`                       | Command Pattern: die Stimmen kommen aus derselben Bezahlprüfung wie Einfluss sonst (`evaluatePayment`), Handelswaren sind ausgeschlossen (RR 2.13).              |
+| `roundEndEvents` in der Statusphase                      | State Pattern: nach dem letzten Marker folgt die Agendaphase nur, wenn der Zentrumsmarker entfernt ist (RR 36.4); sonst direkt die nächste Runde.                |
+| `agendaActor`, `currentAgenda`, `votingPower`            | Information Expert für Clients: wer entscheidet, Zwischenstand und die eigenen bereiten Planeten samt Gesetzesstimmen.                                           |
+| Web: `AgendaTurn`, `AgendaCard`, `VoteForm`, `LawsPanel` | Offene Agenda mit Wirkung bei Annahme und Ablehnung, Stimmabgabe mit Planeten und Summe, Stichentscheid des Sprechers und geltende Gesetze in der Seitenleiste.  |
+
+## 15. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -341,12 +360,12 @@ aber nur, wenn jemand eine passende Karte spielen könnte.
 | 7   | Technologie, Einheiten-Upgrades                     | ✓     |
 | 8   | Ziele, Statusphase, Sieg                            | ✓     |
 | 9   | Effekt-System, Aktionskarten, Timing-Fenster        | ✓     |
-| 10  | Agendaphase, Abstimmung                             | offen |
+| 10  | Agendaphase, Abstimmung                             | ✓     |
 | 11  | Fraktionsfähigkeiten (3 eigene Fraktionen)          | offen |
 | 12  | Multiplayer, Persistenz, Reconnect                  | offen |
 | 13  | Animationen, Sound-Hooks, Tutorial                  | offen |
 
-## 15. Befehle
+## 16. Befehle
 
 ```
 pnpm install
