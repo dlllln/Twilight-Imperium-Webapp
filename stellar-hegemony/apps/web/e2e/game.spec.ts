@@ -58,7 +58,7 @@ test('Hot-Seat: Vorhut, Gesandtschaft und eine taktische Aktion mit Bewegung', a
   await expect(page.getByRole('heading', { name: /Aktiviertes System/ })).toBeVisible();
   await page.locator('.ship-choices input[type="checkbox"]').first().check();
   await page.getByRole('button', { name: 'Schiffe bewegen' }).click();
-  await expect(page.getByText(/Die Bewegung ist abgeschlossen/)).toBeVisible();
+  await expect(page.getByText(/Bewegung und Raumkampf sind abgeschlossen/)).toBeVisible();
 
   const actorBefore = await page.getByTestId('actor').innerText();
   await page.getByRole('button', { name: 'Taktische Aktion beenden' }).click();

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   activateSystemHandler,
-  type AnomalyKind,
   endTacticalActionHandler,
   evolveGame,
   findShipPath,
@@ -11,9 +10,7 @@ import {
   moveShipsHandler,
   passHandler,
   planetId,
-  type PlayerId,
   type ShipMoveOrder,
-  systemId,
   type SystemState,
   type Unit,
   unitId,
@@ -31,68 +28,27 @@ import {
   unit,
   units,
 } from './fixtures.ts';
-import { actionPhaseGame, run, step } from './game-flow.ts';
+import { activate, board, moves, order, S } from './board.ts';
+import { run, step } from './game-flow.ts';
 
-interface Spec {
-  readonly id: string;
-  readonly q: number;
-  readonly anomaly?: AnomalyKind;
-  readonly units?: readonly Unit[];
-  readonly tokens?: readonly PlayerId[];
-  readonly planet?: readonly Unit[];
-}
+const PLANET_A = planetId('p-a');
 
-const S = (id: string) => systemId(id);
-const PLANET_A = planetId('pa');
-
-const toSystem = (spec: Spec): SystemState => ({
-  id: S(spec.id),
-  position: { q: spec.q, r: 0 },
-  planetIds: spec.planet === undefined ? [] : [PLANET_A],
-  wormholes: [],
-  spaceUnits: spec.units ?? [],
-  commandTokens: spec.tokens ?? [],
-  ...(spec.anomaly === undefined ? {} : { anomaly: spec.anomaly }),
-});
-
-/** Systeme in einer Reihe (q = 0, 1, 2, …); Rot ist am Zug. */
-function board(...specs: readonly Spec[]): GameState {
-  const base = actionPhaseGame();
-  const withPlanet = specs.find((spec) => spec.planet !== undefined);
-  const planets =
-    withPlanet?.planet === undefined
-      ? base.planets
-      : {
-          ...base.planets,
-          [PLANET_A]: { id: PLANET_A, controller: RED, exhausted: false, units: withPlanet.planet },
-        };
-  return {
-    ...base,
-    planets,
-    systems: Object.fromEntries(specs.map((spec) => [spec.id, toSystem(spec)])),
-  };
-}
-
-const activate = (system: string, issuedBy = RED) =>
-  ({ type: 'ActivateSystem', issuedBy, system: S(system) }) as const;
-
-const moves = (...orders: readonly ShipMoveOrder[]) =>
-  ({ type: 'MoveShips', issuedBy: RED, moves: orders }) as const;
-
-const order = (
-  ship: Unit,
-  path: readonly string[],
-  cargo: readonly Unit[] = [],
-): ShipMoveOrder => ({
-  ship: ship.id,
-  path: path.map(S),
-  cargo: cargo.map((entry) => entry.id),
-});
+/** Ohne Weltraumkanonen und Gegner laufen die Schritte der Taktikaktion durch. */
+const STEPS_WITHOUT_COMBAT = [
+  'TacticalStepReached',
+  'TacticalStepReached',
+  'TacticalStepReached',
+] as const;
 
 /** Aktiviert das letzte System der Reihe und versucht die Bewegung. */
 function tryMove(state: GameState, active: string, ...orders: readonly ShipMoveOrder[]) {
   const activated = run(state, [activate(active)]);
-  return moveShipsHandler.decide(activated, moves(...orders), contextWith());
+  // Treffer bei jedem Wurf, damit ausgelöste Raumkämpfe schnell enden.
+  return moveShipsHandler.decide(
+    activated,
+    moves(...orders),
+    contextWith(new ScriptedRandom([10])),
+  );
 }
 
 const codeOf = (result: { ok: boolean; error?: { code: string } }) =>
@@ -105,7 +61,12 @@ describe('Aktivierung (RR 79.1)', () => {
     expect(events).toEqual([{ type: 'SystemActivated', player: RED, system: S('b') }]);
     expect(after.systems.b?.commandTokens).toEqual([RED]);
     expect(after.players[0]?.commandPools.tactic).toBe(2);
-    expect(after.actionPhase?.tactical).toEqual({ system: S('b'), moved: false });
+    expect(after.actionPhase?.tactical).toEqual({
+      system: S('b'),
+      step: 'movement',
+      pendingHits: [],
+      combat: null,
+    });
   });
 
   it('nicht ohne Taktikmarker, nicht doppelt, nur im bekannten System und nur am Zug', () => {
@@ -138,10 +99,10 @@ describe('Bewegung (RR 15, RR 79.2)', () => {
     const state = board({ id: 'a', q: 0, units: [cruiser] }, { id: 'b', q: 1 }, { id: 'c', q: 2 });
     const activated = run(state, [activate('c')]);
     const { state: after, events } = step(activated, moves(order(cruiser, ['b', 'c'])));
-    expect(events.map((event) => event.type)).toEqual(['ShipsMoved']);
+    expect(events.map((event) => event.type)).toEqual(['ShipsMoved', ...STEPS_WITHOUT_COMBAT]);
     expect(locateUnit(after, cruiser.id)?.system).toBe(S('c'));
     expect(after.systems.a?.spaceUnits).toEqual([]);
-    expect(after.actionPhase?.tactical?.moved).toBe(true);
+    expect(after.actionPhase?.tactical?.step).toBe('done');
   });
 
   it('RR 16: Bewegungswert, Nachbarschaft und Ziel werden geprüft', () => {
@@ -258,13 +219,14 @@ describe('Anomalien (RR 11, RR 33, RR 57, RR 77)', () => {
     expect(survive.ok && survive.value.map((event) => event.type)).toEqual([
       'GravityRiftRolled',
       'ShipsMoved',
+      ...STEPS_WITHOUT_COMBAT,
     ]);
     const lost = step(
       activated,
       moves(order(carrier, ['b', 'c'], [fighter])),
       contextWith(new ScriptedRandom([3])),
     );
-    expect(lost.events.at(-1)).toEqual({
+    expect(lost.events.find((event) => event.type === 'UnitsDestroyed')).toEqual({
       type: 'UnitsDestroyed',
       system: S('c'),
       units: [carrier.id, fighter.id],

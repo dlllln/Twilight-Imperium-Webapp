@@ -1,3 +1,4 @@
+import type { PendingHits, SpaceCombatState, TacticalStep } from '../combat/combat-state.ts';
 import type { PlayerId, SystemId } from '../shared/ids.ts';
 import type { StrategyCardId } from '../strategy/strategy-card.ts';
 
@@ -10,7 +11,10 @@ export interface SecondaryWindow {
 /** Laufende Taktikaktion (RR 79): aktiviertes System und erreichter Schritt. */
 export interface TacticalActionState {
   readonly system: SystemId;
-  readonly moved: boolean;
+  readonly step: TacticalStep;
+  /** Offene Trefferzuweisungen; solange welche offen sind, ruht der Ablauf. */
+  readonly pendingHits: readonly PendingHits[];
+  readonly combat: SpaceCombatState | null;
 }
 
 /** Ablauf der Aktionsphase (RR 4, RR 40). */

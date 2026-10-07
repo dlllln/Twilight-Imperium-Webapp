@@ -147,24 +147,41 @@ function MovementForm({ game, player }: TurnProps): ReactElement {
   );
 }
 
-/** Laufende taktische Aktion: Bewegung ins aktivierte System, dann beenden. */
+/** Hinweis, solange im aktivierten System Weltraumkanonen oder Raumkampf laufen. */
+function CombatPending(): ReactElement {
+  const t = useT();
+  const openCombat = useGameStore((state) => state.openCombat);
+  return (
+    <>
+      <p className="hint">{t('combatRunning')}</p>
+      <button type="button" onClick={openCombat}>
+        {t('openCombat')}
+      </button>
+    </>
+  );
+}
+
+/** Laufende taktische Aktion: Bewegung, Kampf (eigene Ansicht), dann beenden. */
 export function TacticalTurn({ game, player }: TurnProps): ReactElement | null {
   const t = useT();
   const language = useLanguage();
   const send = useGameStore((state) => state.send);
   const tactical = game.actionPhase?.tactical;
   if (tactical == null) return null;
+  const done = tactical.step === 'done';
   return (
     <div className="turn-block">
       <h3>
         {t('activeSystem')}: {systemLabel(game, tactical.system, language)}
       </h3>
-      {tactical.moved ? (
-        <p className="hint">{t('fleetArrived')}</p>
-      ) : (
-        <MovementForm game={game} player={player} />
-      )}
-      <button type="button" onClick={() => send({ type: 'EndTacticalAction', issuedBy: player })}>
+      {tactical.step === 'movement' && <MovementForm game={game} player={player} />}
+      {done && <p className="hint">{t('fleetArrived')}</p>}
+      {!done && tactical.step !== 'movement' && <CombatPending />}
+      <button
+        type="button"
+        disabled={!done}
+        onClick={() => send({ type: 'EndTacticalAction', issuedBy: player })}
+      >
         {t('endTactical')}
       </button>
     </div>

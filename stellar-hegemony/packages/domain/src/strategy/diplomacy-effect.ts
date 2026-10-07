@@ -1,9 +1,8 @@
-import type { TokenPlacement, TokenSource } from '../economy/economy-events.ts';
+import type { TokenPlacement } from '../economy/economy-events.ts';
 import type { SystemState } from '../galaxy/system-state.ts';
 import type { GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
-import { COMMAND_POOLS } from '../player/command-sheet.ts';
-import type { PlayerState } from '../player/player-state.ts';
+import { tokenSourceOf } from '../economy/token-source.ts';
 import { type DomainError, domainError, firstFailure, guard } from '../shared/domain-error.ts';
 import type { PlanetId, PlayerId } from '../shared/ids.ts';
 import { andThen, err, map, ok, type Result } from '../shared/result.ts';
@@ -22,18 +21,6 @@ const controls = (state: GameState, player: PlayerId, planet: PlanetId): boolean
 const exhaustedOwn = (state: GameState, player: PlayerId, planets: readonly PlanetId[]) =>
   planets.filter((id) => controls(state, player, id) && state.planets[id]?.exhausted === true);
 
-/**
- * RR 21.2: Marker aus dem Nachschub; ist er leer, aus dem vollsten Pool der
- * Kommandotafel (Voreinstellung, siehe REGELFRAGEN). Ohne Marker entfällt die Platzierung.
- */
-function tokenSource(player: PlayerState): TokenSource | null {
-  if (player.reinforcementTokens > 0) return 'reinforcements';
-  const fullest = [...COMMAND_POOLS].sort(
-    (a, b) => player.commandPools[b] - player.commandPools[a],
-  )[0];
-  return fullest !== undefined && player.commandPools[fullest] > 0 ? fullest : null;
-}
-
 function placements(
   state: GameState,
   system: SystemState,
@@ -42,7 +29,7 @@ function placements(
   return state.players
     .filter((player) => player.id !== active && !system.commandTokens.includes(player.id))
     .flatMap((player) => {
-      const source = tokenSource(player);
+      const source = tokenSourceOf(player);
       return source === null ? [] : [{ player: player.id, source }];
     });
 }

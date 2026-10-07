@@ -1,4 +1,5 @@
 import { type ReactElement, useEffect } from 'react';
+import { CombatView } from './components/combat/CombatView.tsx';
 import { GalaxyMap } from './components/GalaxyMap.tsx';
 import { GameSidebar } from './components/game/GameSidebar.tsx';
 import { PhaseBar } from './components/game/PhaseBar.tsx';
@@ -38,6 +39,7 @@ export function App(): ReactElement {
         <GalaxyMap />
         {game === null ? <MapStringPanel /> : <GameSidebar game={game} />}
       </main>
+      {game !== null && <CombatView />}
     </div>
   );
 }

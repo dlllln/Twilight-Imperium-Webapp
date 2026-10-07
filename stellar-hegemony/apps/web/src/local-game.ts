@@ -13,9 +13,11 @@ import {
   playerId,
   type PlayerId,
   replayGame,
+  type GameEvent,
   type Result,
   andThen,
-  ok,
+  map,
+  tacticalDecider,
 } from '@stellar/domain';
 import { BASE_RULE_NUMBERS } from '@stellar/content';
 import { SeededRandom } from '@stellar/infrastructure';
@@ -31,16 +33,30 @@ export const seatPlayerId = (seat: number): PlayerId => playerId(`p${String(seat
  * Lokales Hot-Seat-Spiel: dieselbe Domain wie der Server, nur ohne Netzwerk.
  * Alle Commands laufen über `decideGameCommand`, das Ergebnis über `evolveGame`.
  */
-export function applyCommand(
+export interface Applied {
+  readonly state: GameState;
+  readonly events: readonly GameEvent[];
+}
+
+/** Wie `applyCommand`, liefert aber auch die Events (für Kampfansicht und Protokoll). */
+export function applyCommandWithEvents(
   state: GameState,
   command: GameCommand,
   seed: number,
-): Result<GameState, DomainError> {
+): Result<Applied, DomainError> {
   const context = { random: new SeededRandom(seed + state.version), now: Date.now(), content };
-  return andThen(decideGameCommand(state, command, context), (events) =>
-    ok(events.reduce(evolveGame, state)),
-  );
+  return map(decideGameCommand(state, command, context), (events) => ({
+    state: events.reduce(evolveGame, state),
+    events,
+  }));
 }
+
+export const applyCommand = (
+  state: GameState,
+  command: GameCommand,
+  seed: number,
+): Result<GameState, DomainError> =>
+  map(applyCommandWithEvents(state, command, seed), (applied) => applied.state);
 
 function setupCommands(layout: MapLayout, playerCount: number): readonly GameCommand[] {
   const host = seatPlayerId(0);
@@ -84,5 +100,5 @@ export function currentActor(state: GameState): PlayerId | null {
   if (state.phase === 'strategy') return state.pickQueue[0] ?? null;
   const turn = state.actionPhase;
   if (state.phase !== 'action' || turn === null) return null;
-  return turn.secondary?.awaiting[0] ?? turn.active;
+  return turn.secondary?.awaiting[0] ?? tacticalDecider(state) ?? turn.active;
 }

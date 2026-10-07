@@ -48,6 +48,8 @@ export class ActionPhase extends BasePhase {
     'ActivateSystem',
     'MoveShips',
     'EndTacticalAction',
+    'AssignHits',
+    'DeclareRetreat',
   ];
   next(): PhaseName {
     return 'status';

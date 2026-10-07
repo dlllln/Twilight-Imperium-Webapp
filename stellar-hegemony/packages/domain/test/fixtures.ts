@@ -65,6 +65,8 @@ export const T = {
   infantry: unitTypeId('infantry'),
   dock: unitTypeId('dock'),
   battery: unitTypeId('battery'),
+  escort: unitTypeId('escort'),
+  longBattery: unitTypeId('longBattery'),
 };
 
 const definitions: readonly UnitDefinition[] = [
@@ -139,6 +141,23 @@ const definitions: readonly UnitDefinition[] = [
       { kind: 'spaceCannon', profile: { hitOn: 6, dice: 1 }, range: 0 },
       { kind: 'planetaryShield' },
     ],
+    componentLimit: 6,
+  },
+  {
+    id: T.escort,
+    category: 'ship',
+    isFighter: false,
+    cost: { resources: 1, unitsPerCost: 1 },
+    combat: { hitOn: 9, dice: 1 },
+    move: 2,
+    capabilities: [{ kind: 'antiFighterBarrage', profile: { hitOn: 9, dice: 2 } }],
+    componentLimit: 8,
+  },
+  {
+    id: T.longBattery,
+    category: 'structure',
+    isFighter: false,
+    capabilities: [{ kind: 'spaceCannon', profile: { hitOn: 6, dice: 1 }, range: 1 }],
     componentLimit: 6,
   },
 ];

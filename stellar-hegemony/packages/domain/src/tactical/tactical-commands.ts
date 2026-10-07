@@ -1,7 +1,9 @@
 import { activeTurnChecks, endTurn } from '../action/action-commands.ts';
 import type { Command, CommandHandler, DecisionContext } from '../eventsourcing/command.ts';
 import { StarSystem } from '../galaxy/star-system.ts';
-import type { GameEvent } from '../game/game-events.ts';
+import { evolveGame, type GameEvent } from '../game/game-events.ts';
+import type { TacticalStep } from '../combat/combat-state.ts';
+import { progressTactical } from '../combat/tactical-flow.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
 import { type RandomPort, rollDie } from '../ports/random-port.ts';
 import {
@@ -55,16 +57,14 @@ export const activateSystemHandler = {
   },
 } as const satisfies CommandHandler<GameState, ActivateSystem, GameEvent>;
 
-function tacticalStepCheck(state: GameState, command: Command, moved: boolean): Check {
+function tacticalStepCheck(state: GameState, command: Command, step: TacticalStep): Check {
   const turn = state.actionPhase;
   return firstFailure([
     guard(turn?.active === command.issuedBy, 'action.notYourTurn', 'Du bist nicht am Zug'),
     guard(turn?.tactical != null, 'tactical.notActive', 'Keine Taktikaktion aktiv'),
-    guard(
-      turn?.tactical?.moved === moved,
-      'tactical.wrongStep',
-      moved ? 'Erst die Bewegung abschließen' : 'Die Bewegung ist bereits erfolgt',
-    ),
+    guard(turn?.tactical?.step === step, 'tactical.wrongStep', 'Dieser Schritt ist nicht dran', {
+      step: turn?.tactical?.step ?? 'none',
+    }),
   ]);
 }
 
@@ -139,16 +139,18 @@ function movementEvents(
   decision: DecisionContext,
 ): Events {
   const movements = moves.map(({ ship, from, path, cargo }) => ({ ship, from, path, cargo }));
-  const moved: ShipsMoved = {
-    type: 'ShipsMoved',
-    player: context.player,
-    system: context.active,
-    movements,
-  };
+  const { player, active: system } = context;
+  const moved: ShipsMoved = { type: 'ShipsMoved', player, system, movements };
   const limits = limitsCheck(context, moved, decision.content.units);
   if (!limits.ok) return limits;
   const rolls = moves.flatMap((move) => riftRollsFor(context, move, decision.random));
-  return ok([...rolls, moved, ...destroyedEvents(context, moves, rolls)]);
+  const events: readonly GameEvent[] = [
+    ...rolls,
+    moved,
+    ...destroyedEvents(context, moves, rolls),
+    { type: 'TacticalStepReached', step: 'spaceCannon' },
+  ];
+  return ok([...events, ...progressTactical(events.reduce(evolveGame, context.state), decision)]);
 }
 
 /** RR 79.2: Bewegung ins aktive System (auch ohne Schiffe möglich). */
@@ -156,7 +158,7 @@ export const moveShipsHandler = {
   commandType: 'MoveShips',
   decide(state: GameState, command: MoveShips, decision: DecisionContext): Events {
     const checked = firstFailure([
-      tacticalStepCheck(state, command, false),
+      tacticalStepCheck(state, command, 'movement'),
       uniqueUnits(command.moves),
     ]);
     const active = state.actionPhase?.tactical?.system;
@@ -174,11 +176,11 @@ export const moveShipsHandler = {
   },
 } as const satisfies CommandHandler<GameState, MoveShips, GameEvent>;
 
-/** Weitere Schritte (Kampf, Einmarsch, Produktion) folgen in Iteration 5 und 6. */
+/** Nach Raumkampf (und ab Iteration 6 Einmarsch und Produktion) endet die Taktikaktion. */
 export const endTacticalActionHandler = {
   commandType: 'EndTacticalAction',
   decide(state: GameState, command: EndTacticalAction): Events {
-    const checked = tacticalStepCheck(state, command, true);
+    const checked = tacticalStepCheck(state, command, 'done');
     const passed = state.actionPhase?.passed ?? [];
     return map(checked, () => [
       { type: 'TacticalActionEnded', player: command.issuedBy } as const,

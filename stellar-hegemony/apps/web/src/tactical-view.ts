@@ -14,7 +14,7 @@ import type { Highlight } from './render/scene-model.ts';
 export function moveContextOf(game: GameState, content: ContentPort): MoveContext | null {
   const turn = game.actionPhase;
   const tactical = turn?.tactical;
-  if (turn?.active == null || tactical == null || tactical.moved) return null;
+  if (turn?.active == null || tactical == null || tactical.step !== 'movement') return null;
   return {
     state: game,
     player: turn.active,

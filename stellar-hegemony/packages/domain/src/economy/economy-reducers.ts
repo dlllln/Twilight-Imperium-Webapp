@@ -32,7 +32,7 @@ function setExhausted(state: GameState, ids: readonly PlanetId[], exhausted: boo
   return { ...state, planets };
 }
 
-function takeToken(player: PlayerState, source: TokenSource): PlayerState {
+export function takeToken(player: PlayerState, source: TokenSource): PlayerState {
   if (source === 'reinforcements')
     return { ...player, reinforcementTokens: player.reinforcementTokens - 1 };
   return {
