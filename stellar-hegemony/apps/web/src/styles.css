@@ -2340,3 +2340,93 @@ select option {
   font-size: 12px;
   color: var(--muted);
 }
+
+/* Iteration 15: schlichtere Darstellung — eine Kopfzeile, Reiter in der Seitenleiste */
+
+.toolbar .phase-bar {
+  flex: 1;
+  min-width: 0;
+  gap: 14px;
+  padding: 0;
+  justify-content: center;
+}
+
+.toolbar .phase-bar .actor {
+  margin-left: 6px;
+}
+
+.phases li {
+  padding: 6px 10px;
+}
+
+.phases li:not([aria-current='step']) .phase-label {
+  display: none;
+}
+
+.speaker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.brand h1 {
+  font-size: 19px;
+}
+
+.toolbar-end .round-button {
+  width: 38px;
+  height: 38px;
+}
+
+.ui-popover .languages {
+  display: inline-flex;
+}
+
+.game-sidebar {
+  gap: 10px;
+}
+
+.tab-list {
+  position: sticky;
+  top: -12px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  margin: -2px 0 2px;
+  border-radius: 12px;
+  background: rgba(10, 14, 32, 0.92);
+  border: 1px solid var(--border);
+}
+
+.tab-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+}
+
+.tab-trigger[data-state='active'] {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  color: #fff;
+}
+
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tab-panel[data-state='inactive'] {
+  display: none;
+}

@@ -21,7 +21,9 @@ test('Galaxie wird angezeigt, neu erzeugt und per Map-String importiert', async 
   await page.getByRole('button', { name: 'Importieren' }).click();
   await expect(page.getByRole('alert')).toContainText('doppelt');
 
+  await page.getByRole('button', { name: 'Einstellungen' }).click();
   await page.getByRole('button', { name: 'EN', exact: true }).click();
+  await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'New galaxy' })).toBeVisible();
 });
 

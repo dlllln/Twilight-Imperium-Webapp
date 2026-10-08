@@ -195,7 +195,7 @@ export const TECHNOLOGY_TEXTS: Readonly<Record<string, TechnologyText>> = {
     'Lebende Werften',
     'Living Shipyards',
     'Raumdocks produzieren 2 Einheiten mehr.',
-    'Orbital docks produce 2 more units.',
+    'Space docks produce 2 more units.',
   ),
   'ion-drive': text(
     'Ionenantrieb',
@@ -237,7 +237,7 @@ export const TECHNOLOGY_TEXTS: Readonly<Record<string, TechnologyText>> = {
     'Hangar-Automatik',
     'Hangar Automation',
     'Raumdocks versorgen 2 Jäger mehr.',
-    'Orbital docks support 2 more fighters.',
+    'Space docks support 2 more fighters.',
   ),
   'battle-computers': text(
     'Gefechtsrechner',
@@ -261,13 +261,13 @@ export const TECHNOLOGY_TEXTS: Readonly<Record<string, TechnologyText>> = {
     'Durchschlagsgeschosse',
     'Penetrator Shells',
     'Bombardement mit 1 Würfel mehr; Schlachtschiffe durchdringen Planetare Schilde.',
-    'Bombardment rolls 1 more die; battleships pierce planetary shields.',
+    'Bombardment rolls 1 more die; dreadnoughts pierce planetary shields.',
   ),
   'assault-doctrine': text(
     'Sturmdoktrin',
     'Assault Doctrine',
     'Schlachtschiffe und Kreuzer werfen im Kampf 1 Würfel mehr.',
-    'Battleships and cruisers roll 1 more combat die.',
+    'Dreadnoughts and cruisers roll 1 more combat die.',
   ),
   'heavy-carrier': text(
     'Schwerlast-Träger',
@@ -289,9 +289,9 @@ export const TECHNOLOGY_TEXTS: Readonly<Record<string, TechnologyText>> = {
   ),
   'bastion-battleship': text(
     'Bastion-Schlachtschiff',
-    'Bastion Battleship',
+    'Bastion Dreadnought',
     'Schlachtschiff: Bewegung 2.',
-    'Battleship: move 2.',
+    'Dreadnought: move 2.',
   ),
   'swarm-fighter': text('Schwarmjäger', 'Swarm Fighter', 'Jäger: Kampf 8.', 'Fighter: combat 8.'),
   'veteran-infantry': text(
@@ -303,14 +303,14 @@ export const TECHNOLOGY_TEXTS: Readonly<Record<string, TechnologyText>> = {
   'fortress-battery': text(
     'Festungsgeschütz',
     'Fortress Battery',
-    'Orbitalgeschütz: Weltraumkanone 5 mit Reichweite 1.',
-    'Orbital battery: space cannon 5 with range 1.',
+    'PVS: Weltraumkanone 5 mit Reichweite 1.',
+    'PDS: space cannon 5 with range 1.',
   ),
   'grand-dock': text(
     'Großwerft',
     'Grand Dock',
     'Raumdock: Produktion +4, versorgt 5 Jäger.',
-    'Orbital dock: production +4, supports 5 fighters.',
+    'Space dock: production +4, supports 5 fighters.',
   ),
   'sunbreaker-blueprint': text(
     'Sonnenbrecher-Baupläne',

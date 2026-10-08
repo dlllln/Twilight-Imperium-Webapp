@@ -123,12 +123,12 @@ export const UNIT_NAMES: Readonly<Record<string, LocalizedText>> = {
   [UNIT_TYPES.carrier]: { de: 'Träger', en: 'Carrier' },
   [UNIT_TYPES.cruiser]: { de: 'Kreuzer', en: 'Cruiser' },
   [UNIT_TYPES.destroyer]: { de: 'Zerstörer', en: 'Destroyer' },
-  [UNIT_TYPES.dreadnought]: { de: 'Schlachtschiff', en: 'Battleship' },
+  [UNIT_TYPES.dreadnought]: { de: 'Schlachtschiff', en: 'Dreadnought' },
   [UNIT_TYPES.fighter]: { de: 'Jäger', en: 'Fighter' },
   [UNIT_TYPES.sunbreaker]: { de: 'Sonnenbrecher', en: 'Sunbreaker' },
   [UNIT_TYPES.infantry]: { de: 'Infanterie', en: 'Infantry' },
-  [UNIT_TYPES.orbitalBattery]: { de: 'Orbitalgeschütz', en: 'Orbital Battery' },
-  [UNIT_TYPES.orbitalDock]: { de: 'Raumdock', en: 'Orbital Dock' },
+  [UNIT_TYPES.orbitalBattery]: { de: 'PVS', en: 'PDS' },
+  [UNIT_TYPES.orbitalDock]: { de: 'Raumdock', en: 'Space Dock' },
 };
 
 export const unitName = (type: UnitTypeId): LocalizedText | undefined => UNIT_NAMES[type];

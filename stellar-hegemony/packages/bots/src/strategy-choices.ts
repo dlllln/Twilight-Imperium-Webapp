@@ -111,7 +111,7 @@ const PRIMARY: Readonly<Record<StrategyMechanic, ChoicePlanner>> = {
 /** Primärfähigkeit: gültige Auswahlen in der Reihenfolge, die dem Bot am meisten bringt. */
 export const primaryChoices: ChoicePlanner = (view, card) => PRIMARY[card.mechanic](view, card);
 
-/** Sekundärfähigkeit für Forschung: eine Technologie gegen Ressourcen. */
+/** Sekundärfähigkeit für Technologie: eine Technologie gegen Ressourcen. */
 function researchSecondary(view: BotView, card: StrategyCardDefinition) {
   const cost = card.parameters['secondaryResearchCost'] ?? 0;
   const payment = planPayment(view, 'resources', cost);

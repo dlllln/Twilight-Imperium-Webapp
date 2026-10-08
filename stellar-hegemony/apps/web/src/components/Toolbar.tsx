@@ -1,14 +1,15 @@
 import { BookOpen, LogOut, Play, Shuffle } from 'lucide-react';
 import type { ReactElement } from 'react';
+import { PhaseBar } from './game/PhaseBar.tsx';
 import { SettingsMenu } from './SettingsMenu.tsx';
-import { type Language, type MessageKey, translate } from '../i18n.ts';
+import { IconButton } from './ui/IconButton.tsx';
+import { type MessageKey, translate } from '../i18n.ts';
 import { useGameStore } from '../game-store.ts';
 import { useOnlineStore } from '../online/online-store.ts';
 import { useGalaxyStore } from '../store.ts';
 import { useTutorialStore } from '../tutorial/tutorial-store.ts';
 
 const PLAYER_COUNTS = [3, 4, 5, 6] as const;
-const LANGUAGES: readonly Language[] = ['de', 'en'];
 
 /** Eigenes Zeichen: ein Sechseck mit Stern, passend zur Karte. */
 function BrandMark(): ReactElement {
@@ -61,33 +62,11 @@ function BotCountSelect({ label }: { readonly label: string }): ReactElement {
   );
 }
 
-function LanguageSwitch(): ReactElement {
-  const { language, setLanguage } = useGalaxyStore();
-  return (
-    <div className="languages" role="group">
-      {LANGUAGES.map((option) => (
-        <button
-          key={option}
-          type="button"
-          aria-pressed={option === language}
-          onClick={() => setLanguage(option)}
-        >
-          {option.toUpperCase()}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 type Translate = (key: MessageKey) => string;
 
 function GuideButton({ t }: { readonly t: Translate }): ReactElement {
   const startGuide = useTutorialStore((state) => state.start);
-  return (
-    <button type="button" className="icon-button" onClick={startGuide}>
-      <BookOpen size={18} aria-hidden="true" /> {t('guide')}
-    </button>
-  );
+  return <IconButton icon={BookOpen} label={t('guide')} onClick={startGuide} side="bottom" />;
 }
 
 function GameButton({ t }: { readonly t: Translate }): ReactElement | null {
@@ -102,9 +81,12 @@ function GameButton({ t }: { readonly t: Translate }): ReactElement | null {
       <Play size={18} aria-hidden="true" /> {t('startGame')}
     </button>
   ) : (
-    <button type="button" className="icon-button" onClick={online ? leaveOnline : leave}>
-      <LogOut size={18} aria-hidden="true" /> {t(online ? 'leaveOnline' : 'backToGalaxy')}
-    </button>
+    <IconButton
+      icon={LogOut}
+      label={t(online ? 'leaveOnline' : 'backToGalaxy')}
+      onClick={online ? leaveOnline : leave}
+      side="bottom"
+    />
   );
 }
 
@@ -122,27 +104,32 @@ function SetupControls({ t }: { readonly t: Translate }): ReactElement {
   );
 }
 
+/** Untertitel nur, wo er etwas sagt: vor der Partie und mit Lobby-Code. */
+function subtitleOf(t: Translate, playing: boolean, code: string | null): string | null {
+  if (code !== null) return `${t('subtitleOnline')} · ${code}`;
+  return playing ? null : t('subtitle');
+}
+
+/** Eine Kopfzeile: Marke, in der Partie die Phasen, rechts Anleitung und Einstellungen. */
 export function Toolbar(): ReactElement {
   const language = useGalaxyStore((state) => state.language);
-  const playing = useGameStore((state) => state.game !== null);
+  const game = useGameStore((state) => state.game);
   const code = useOnlineStore((state) => state.ticket?.code ?? null);
-  const setup = !playing && code === null;
   const t = (key: MessageKey) => translate(language, key);
-  const subtitle =
-    code === null ? t(playing ? 'subtitleGame' : 'subtitle') : `${t('subtitleOnline')} · ${code}`;
+  const subtitle = subtitleOf(t, game !== null, code);
   return (
     <header className="toolbar glass" data-tutorial="toolbar">
       <div className="brand">
         <BrandMark />
         <h1>{t('title')}</h1>
-        <span>{subtitle}</span>
+        {subtitle !== null && <span>{subtitle}</span>}
       </div>
-      {setup && <SetupControls t={t} />}
-      <GameButton t={t} />
+      {game === null && code === null && <SetupControls t={t} />}
+      {game !== null && <PhaseBar game={game} />}
       <div className="toolbar-end">
+        <GameButton t={t} />
         <GuideButton t={t} />
         <SettingsMenu />
-        <LanguageSwitch />
       </div>
     </header>
   );

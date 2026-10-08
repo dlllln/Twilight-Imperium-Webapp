@@ -30,7 +30,7 @@ const defaults = (): Settings => ({
   sound: true,
   volume: DEFAULT_VOLUME,
   animations: !prefersReducedMotion(),
-  tips: true,
+  tips: false,
 });
 
 function load(): Settings {

@@ -52,7 +52,7 @@ async function pickCards(page: Page) {
     await page.locator('.strategy-card button:not([disabled])').first().click();
 }
 
-test('Hot-Seat: Vorhut, Gesandtschaft und eine taktische Aktion mit Bewegung', async ({ page }) => {
+test('Hot-Seat: Führung, Diplomatie und eine taktische Aktion mit Bewegung', async ({ page }) => {
   await startThreePlayers(page);
 
   const phase = page.locator('.phases [aria-current="step"]');
@@ -61,7 +61,7 @@ test('Hot-Seat: Vorhut, Gesandtschaft und eine taktische Aktion mit Bewegung', a
   await pickCards(page);
   await expect(phase).toHaveText('Aktion');
 
-  await page.getByRole('button', { name: 'Strategische Aktion: Vorhut' }).click();
+  await page.getByRole('button', { name: 'Strategische Aktion: Führung' }).click();
   await expect(page.getByTestId('tokens-gained')).toHaveText('3');
   await page.getByRole('button', { name: 'Taktik +' }).click();
   await page.getByRole('button', { name: 'Taktik +' }).click();
@@ -71,7 +71,7 @@ test('Hot-Seat: Vorhut, Gesandtschaft und eine taktische Aktion mit Bewegung', a
   await page.getByRole('button', { name: 'Ablehnen' }).click();
   await page.getByRole('button', { name: 'Ablehnen' }).click();
 
-  await page.getByRole('button', { name: 'Strategische Aktion: Gesandtschaft' }).click();
+  await page.getByRole('button', { name: 'Strategische Aktion: Diplomatie' }).click();
   await expect(page.getByLabel('System wählen')).toBeVisible();
   await page.getByRole('button', { name: 'Ausführen' }).click();
   await page.getByRole('button', { name: 'Ablehnen' }).click();
@@ -119,16 +119,16 @@ test('Hot-Seat: Produktion im eigenen Heimatsystem', async ({ page }) => {
   await expect(page.getByTestId('actor')).not.toHaveText(actor);
 });
 
-test('Hot-Seat: Forschung bringt eine neue Technologie', async ({ page }) => {
+test('Hot-Seat: Technologie bringt eine neue Technologie', async ({ page }) => {
   await startThreePlayers(page);
   const free = page.locator('.strategy-card button:not([disabled])');
   for (let pick = 0; pick < 3; pick += 1) await free.first().click();
-  await page.locator('.strategy-card button', { hasText: 'Forschung' }).click();
+  await page.locator('.strategy-card button', { hasText: 'Technologie' }).click();
   for (let pick = 0; pick < 2; pick += 1) await free.first().click();
 
   const chips = page.locator('.tech-owners .tech-chip');
   const before = await chips.count();
-  await page.getByRole('button', { name: 'Strategische Aktion: Forschung' }).click();
+  await page.getByRole('button', { name: 'Strategische Aktion: Technologie' }).click();
   await page.locator('.tech-option:not(.locked) input').first().check();
   await expect(page.getByTestId('paid')).toHaveCount(0);
   await page.getByRole('button', { name: 'Erforschen' }).click();
@@ -143,19 +143,20 @@ test('Hot-Seat: Aufträge und Siegpunkte sind sichtbar', async ({ page }) => {
   await expect(page.locator('.victory-track li')).toHaveCount(3);
   await expect(page.locator('.objective-row .objective-card:not(.hidden)')).not.toHaveCount(0);
   await pickCards(page);
+  await page.getByRole('tab', { name: 'Wertung' }).click();
   await expect(page.getByRole('heading', { name: /Geheime Aufträge von/ })).toBeVisible();
 });
 
-test('Hot-Seat: der Senat bringt Aktionskarten auf die Hand', async ({ page }) => {
+test('Hot-Seat: Politik bringt Aktionskarten auf die Hand', async ({ page }) => {
   await startThreePlayers(page);
   await expect(page.locator('.hand-panel')).toContainText('Keine Aktionskarten');
   const free = page.locator('.strategy-card button:not([disabled])');
   for (let pick = 0; pick < 2; pick += 1) await free.first().click();
-  await page.locator('.strategy-card button', { hasText: 'Baukunst' }).click();
-  await page.locator('.strategy-card button', { hasText: 'Senat' }).click();
+  await page.locator('.strategy-card button', { hasText: 'Konstruktion' }).click();
+  await page.locator('.strategy-card button', { hasText: 'Politik' }).click();
   for (let pick = 0; pick < 2; pick += 1) await free.first().click();
 
-  await page.getByRole('button', { name: 'Strategische Aktion: Senat' }).click();
+  await page.getByRole('button', { name: 'Strategische Aktion: Politik' }).click();
   await page.getByRole('button', { name: 'Ausführen' }).click();
   await expect(page.getByText('Du ziehst 2 Aktionskarten.')).toBeVisible();
   await page.getByRole('button', { name: 'Ausführen' }).click();

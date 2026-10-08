@@ -36,7 +36,7 @@ stellar-hegemony/
 │   │       ├── phases/        (It. 3) State Pattern: Setup/Strategy/Action/Status/Agenda/GameOver
 │   │       ├── faction/       (It. 4) FactionDefinition, Heimatsysteme und Startflotten
 │   │       ├── tactical/      (It. 4) Aktivieren, ShipMoveValidator, ShipPathfinder, Transport, Anomalien
-│   │       ├── strategy/      (It. 3/4) Strategiekarten als Strategy Pattern (Vorhut, Gesandtschaft)
+│   │       ├── strategy/      (It. 3/4) Strategiekarten als Strategy Pattern (Führung, Diplomatie)
 │   │       ├── combat/        (It. 5) CombatResolver, HitAssignment, SpaceCannon, Bombardment, GroundCombat
 │   │       ├── economy/       (It. 6) ProductionCalculator, PaymentPlanner, Transaction
 │   │       ├── technology/    (It. 7) TechTree, UpgradeResolver
@@ -441,7 +441,25 @@ Motion für Übergänge und Lucide-Symbole; alle Grafiken bleiben eigene, prozed
 | `paintStar`, `paintGlow`, Detail-Texturen      | Flyweight wie bisher, zusätzlich in hoher Auflösung für die Nahansicht; Planeten- und Schiffsmaler zeichnen mehr Einzelheiten.                     |
 | `Panel`, `IconButton`, `SettingsMenu`, Phasen  | Wiederverwendbare Bausteine (Komposition): einklappbare Abschnitte mit Symbol, Tooltips, Einstellungsmenü; die Phasenpille gleitet mit Motion.     |
 
-## 19. Iterationen
+## 19. Iteration 15 im Detail (Namen, schlichtere Oberfläche)
+
+Allgemeine Spielbegriffe tragen jetzt die gängigen Namen: die Strategiekarten heißen Führung,
+Diplomatie, Politik, Konstruktion, Handel, Kriegsführung, Technologie und Imperium, die Einheiten
+Schlachtschiff (Dreadnought), PVS (PDS) und Raumdock (Space Dock). Eigene Namen bleiben überall dort,
+wo Namen geschützt sind: Spieltitel, Fraktionen, Planeten, Thronwelt, Sonnenbrecher, Technologien,
+Aktionskarten, Aufträge und Agenden. Die Oberfläche zeigt weniger auf einmal: Phasen, Runde und
+Sprecher stehen in der Kopfzeile, die Seitenleiste hat drei Reiter (Zug, Wertung, Reich), Anleitung
+und Einstellungen sind Symbolknöpfe, die Sprache steht im Einstellungsmenü, Tipps sind anfangs aus
+und die Karte zeigt keine Systemkennungen mehr (der Tooltip nennt sie).
+
+| Element                           | Prinzip                                                                                                                           |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `GameSidebar`, `TabPanel`         | Komposition: dieselben Abschnitte, auf drei Reiter verteilt; der Inhalt bleibt im DOM, damit Formulare ihren Stand behalten.      |
+| `useSidebarStore`                 | Information Expert für den offenen Reiter; `reveal` öffnet den Reiter, in dem ein Element der Anleitung steht (geringe Kopplung). |
+| `PhaseBar` in der `Toolbar`       | Eine Zeile statt zwei; nur die aktuelle Phase zeigt ihren Namen, die anderen erklären sich per Tooltip.                           |
+| `IconButton` mit eigenem Provider | Selbstständiger Baustein: funktioniert auch außerhalb des App-Providers, etwa in Tests einzelner Leisten.                         |
+
+## 20. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -459,8 +477,9 @@ Motion für Übergänge und Lucide-Symbole; alle Grafiken bleiben eigene, prozed
 | 12  | Multiplayer, Persistenz, Reconnect                  | ✓     |
 | 13  | Animationen, Sound-Hooks, Tutorial                  | ✓     |
 | 14  | Systemansicht mit Kamerafahrt, moderne Oberfläche   | ✓     |
+| 15  | Gängige Namen, schlichtere Oberfläche mit Reitern   | ✓     |
 
-## 20. Befehle
+## 21. Befehle
 
 ```
 pnpm install

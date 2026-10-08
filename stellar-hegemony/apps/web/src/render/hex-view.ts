@@ -12,7 +12,7 @@ import {
 } from './hex-pieces.ts';
 import { FRAME, GOLD, GOLD_BRIGHT, hexOf } from './palette.ts';
 import type { Highlight, SceneHex } from './scene-model.ts';
-import { GLYPH_STYLE, label, LABEL_STYLE, SEAT_STYLE } from './text-styles.ts';
+import { GLYPH_STYLE, label, SEAT_STYLE } from './text-styles.ts';
 import { anomalyTexture, tileTexture } from './textures.ts';
 
 /** Drei Ebenen: Grund (Fläche, Anomalie), Glühen (mit Bloom-Filter), Inhalt (Planeten, Flotten). */
@@ -111,8 +111,6 @@ function contents(hex: SceneHex): Container {
   hex.wormholes.forEach((kind, index) => layer.addChild(wormholeGlyph(kind, index)));
   if (hex.kind === 'homeSlot' && hex.seat !== null)
     layer.addChild(label(String(hex.seat), SEAT_STYLE, 0, 0));
-  if (hex.systemId !== null && hex.ships.length === 0 && hex.seat === null)
-    layer.addChild(label(hex.systemId.toUpperCase(), LABEL_STYLE, 0, 46));
   layer.addChild(shipRows(hex.ships), tokenChips(hex.tokens));
   return layer;
 }

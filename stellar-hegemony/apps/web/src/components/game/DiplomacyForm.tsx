@@ -104,7 +104,7 @@ function PlanetPicker(props: DiplomacyFormProps): ReactElement {
   );
 }
 
-/** Gesandtschaft: Primär ein System wählen, sekundär erschöpfte Planeten bereitmachen. */
+/** Diplomatie: Primär ein System wählen, sekundär erschöpfte Planeten bereitmachen. */
 export function DiplomacyForm(props: DiplomacyFormProps): ReactElement {
   return props.ability === 'primary' ? <SystemPicker {...props} /> : <PlanetPicker {...props} />;
 }

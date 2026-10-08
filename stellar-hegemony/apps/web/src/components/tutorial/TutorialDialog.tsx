@@ -1,4 +1,5 @@
 import { type ReactElement, useEffect } from 'react';
+import { useSidebarStore } from '../game/sidebar-store.ts';
 import { TUTORIAL_STEPS } from '../../tutorial/tutorial-steps.ts';
 import { useTutorialStore } from '../../tutorial/tutorial-store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
@@ -9,6 +10,7 @@ const FOCUS = 'tutorial-focus';
 function useSpotlight(anchor: string | null): void {
   useEffect(() => {
     if (anchor === null) return;
+    useSidebarStore.getState().reveal(anchor);
     const target = document.querySelector(`[data-tutorial="${anchor}"]`);
     if (target === null) return;
     target.classList.add(FOCUS);

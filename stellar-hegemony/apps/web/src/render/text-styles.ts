@@ -25,13 +25,6 @@ export const COUNT_STYLE: TextStyleOptions = {
   stroke: OUTLINE,
 };
 
-export const LABEL_STYLE: TextStyleOptions = {
-  fontFamily: UI_FONT,
-  fontSize: 7,
-  fill: 0x9aa6c8,
-  letterSpacing: 1,
-};
-
 export const SEAT_STYLE: TextStyleOptions = {
   fontFamily: TITLE_FONT,
   fontSize: 30,

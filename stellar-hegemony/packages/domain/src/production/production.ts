@@ -188,7 +188,7 @@ function limitsAfter(input: ProductionInput, events: readonly GameEvent[]): Chec
 }
 
 /**
- * Pure Fabrication für alle Produktionswege (Taktikaktion, Rüstung sekundär):
+ * Pure Fabrication für alle Produktionswege (Taktikaktion, Kriegsführung sekundär):
  * prüft Bestellung, Bezahlung und Grenzen und liefert die Events.
  */
 export function productionEvents(

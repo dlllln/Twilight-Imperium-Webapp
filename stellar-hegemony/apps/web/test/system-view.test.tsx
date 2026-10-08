@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../src/App.tsx';
+import { useSidebarStore } from '../src/components/game/sidebar-store.ts';
 import { useGameStore } from '../src/game-store.ts';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
@@ -77,6 +78,26 @@ describe('Systemansicht', () => {
 });
 
 describe('Moderne Seitenleiste', () => {
+  it('drei Reiter: Zug, Wertung, Reich; der Zug ist vorgewählt', () => {
+    render(<App />);
+    act(() => void keepSecrets(started()));
+    const panel = (name: string) =>
+      screen.getByText(name, { selector: '.panel-label' }).closest('.tab-panel');
+    expect(panel('Strategiekarten')?.getAttribute('data-state')).toBe('active');
+    expect(panel('Aufträge und Siegpunkte')?.getAttribute('data-state')).toBe('inactive');
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Wertung' }));
+    expect(panel('Aufträge und Siegpunkte')?.getAttribute('data-state')).toBe('active');
+    expect(panel('Strategiekarten')?.getAttribute('data-state')).toBe('inactive');
+  });
+
+  it('die Anleitung öffnet den Reiter, in dem ihr Element liegt', () => {
+    useSidebarStore.getState().setTab('turn');
+    useSidebarStore.getState().reveal('players');
+    expect(useSidebarStore.getState().tab).toBe('score');
+    useSidebarStore.getState().reveal('galaxy');
+    expect(useSidebarStore.getState().tab).toBe('score');
+  });
+
   it('Abschnitte lassen sich einklappen; der Inhalt bleibt erhalten', () => {
     render(<App />);
     act(() => void keepSecrets(started()));
@@ -84,7 +105,7 @@ describe('Moderne Seitenleiste', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     fireEvent.click(trigger);
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
-    expect(screen.getByText('Vorhut').closest('[data-state="closed"]')).not.toBeNull();
+    expect(screen.getByText('Führung').closest('[data-state="closed"]')).not.toBeNull();
   });
 
   it('das Einstellungsmenü schaltet Klang und Tipps', () => {
@@ -93,7 +114,7 @@ describe('Moderne Seitenleiste', () => {
     fireEvent.click(screen.getByRole('switch', { name: 'Klang' }));
     fireEvent.click(screen.getByRole('switch', { name: 'Tipps' }));
     const { sound, tips } = useSettingsStore.getState();
-    expect([sound, tips]).toEqual([false, false]);
+    expect([sound, tips]).toEqual([false, true]);
     expect(screen.getByRole('slider', { name: 'Lautstärke' })).toBeTruthy();
   });
 });

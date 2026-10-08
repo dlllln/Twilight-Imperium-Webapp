@@ -1,10 +1,11 @@
 import * as Popover from '@radix-ui/react-popover';
 import * as Slider from '@radix-ui/react-slider';
 import * as Switch from '@radix-ui/react-switch';
-import { Lightbulb, type LucideIcon, Settings2, Sparkles, Volume2 } from 'lucide-react';
+import { Languages, Lightbulb, type LucideIcon, Settings2, Sparkles, Volume2 } from 'lucide-react';
 import type { ReactElement } from 'react';
-import type { MessageKey } from '../i18n.ts';
+import type { Language, MessageKey } from '../i18n.ts';
 import { type Settings, useSettingsStore } from '../settings-store.ts';
+import { useGalaxyStore } from '../store.ts';
 import { useT } from '../use-translation.ts';
 
 type Toggle = 'sound' | 'animations' | 'tips';
@@ -64,13 +65,39 @@ function VolumeSlider(): ReactElement {
   );
 }
 
-/** Klang, Lautstärke, Animationen und Tipps in einem aufklappbaren Menü. */
+const LANGUAGES: readonly Language[] = ['de', 'en'];
+
+function LanguageSwitch(): ReactElement {
+  const t = useT();
+  const { language, setLanguage } = useGalaxyStore();
+  return (
+    <div className="volume-row">
+      <span>
+        <Languages size={16} aria-hidden="true" /> {t('language')}
+      </span>
+      <div className="languages" role="group" aria-label={t('language')}>
+        {LANGUAGES.map((option) => (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={option === language}
+            onClick={() => setLanguage(option)}
+          >
+            {option.toUpperCase()}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Klang, Lautstärke, Animationen, Tipps und Sprache in einem aufklappbaren Menü. */
 export function SettingsMenu(): ReactElement {
   const t = useT();
   return (
     <Popover.Root>
-      <Popover.Trigger className="icon-button">
-        <Settings2 size={18} aria-hidden="true" /> {t('settings')}
+      <Popover.Trigger className="round-button" aria-label={t('settings')} title={t('settings')}>
+        <Settings2 size={18} aria-hidden="true" />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content className="ui-popover glass" sideOffset={8} align="end">
@@ -81,6 +108,7 @@ export function SettingsMenu(): ReactElement {
             <span>{t('volume')}</span>
             <VolumeSlider />
           </div>
+          <LanguageSwitch />
           <Popover.Arrow className="ui-popover-arrow" />
         </Popover.Content>
       </Popover.Portal>

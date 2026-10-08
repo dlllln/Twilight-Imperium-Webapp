@@ -11,7 +11,7 @@ export interface UnitsProduced extends DomainEvent<'UnitsProduced'> {
   readonly ground: readonly Unit[];
 }
 
-/** Gebäude werden direkt auf Planeten gesetzt (z. B. durch Baukunst), ohne Kosten. */
+/** Gebäude werden direkt auf Planeten gesetzt (z. B. durch Konstruktion), ohne Kosten. */
 export interface StructuresPlaced extends DomainEvent<'StructuresPlaced'> {
   readonly player: PlayerId;
   readonly placements: readonly { readonly planet: PlanetId; readonly unit: Unit }[];

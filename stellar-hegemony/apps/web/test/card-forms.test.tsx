@@ -17,7 +17,7 @@ const unitsOn = (planet: string, type: string) =>
   game().planets[planet]?.units.filter((unit) => unit.type === unitTypeId(type)).length ?? 0;
 
 describe('Infrastruktur (RR 39)', () => {
-  it('primär ein Orbitalgeschütz auf dem Heimatplaneten, sekundär eines beim Nächsten', () => {
+  it('primär ein PVS auf dem Heimatplaneten, sekundär eines beim Nächsten', () => {
     const { player, card, home } = holding('construction');
     const planet = game().systems[home]?.planetIds[0] as string;
     const before = unitsOn(planet, 'orbitalBattery');

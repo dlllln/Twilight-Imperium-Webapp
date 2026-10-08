@@ -94,8 +94,8 @@ export const FACTION_ABILITY_TEXTS: Readonly<Record<string, FactionAbilityText>>
   'trade-network': text(
     { de: 'Handelsnetz', en: 'Trade Network' },
     {
-      de: 'Die Sekundärfähigkeiten von Kontor und Gesandtschaft kosten dich keinen Strategiemarker.',
-      en: 'The secondary abilities of Exchange and Embassy cost you no strategy token.',
+      de: 'Die Sekundärfähigkeiten von Handel und Diplomatie kosten dich keinen Strategiemarker.',
+      en: 'The secondary abilities of Trade and Diplomacy cost you no strategy token.',
     },
   ),
   'merchant-council': text(
@@ -123,7 +123,7 @@ export const FACTION_ABILITY_TEXTS: Readonly<Record<string, FactionAbilityText>>
     { de: 'Wachtürme', en: 'Watchtowers' },
     {
       de: 'Deine Orbitalbatterien würfeln bei der Weltraumkanone 1 Würfel mehr.',
-      en: 'Your orbital batteries roll 1 more die for space cannon.',
+      en: 'Your PDS roll 1 more die for space cannon.',
     },
   ),
   'star-charts': text(

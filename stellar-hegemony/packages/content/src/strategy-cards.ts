@@ -1,7 +1,7 @@
 import { strategyCardId, type StrategyCardDefinition } from '@stellar/domain';
 import type { LocalizedText } from './localized.ts';
 
-/** Eigene Namen und Texte; Initiative und Zahlenwerte folgen der Spielmechanik. */
+/** Gängige Kartennamen, eigene Texte; Initiative und Zahlenwerte folgen der Spielmechanik. */
 export interface StrategyCardText {
   readonly name: LocalizedText;
   readonly primary: LocalizedText;
@@ -35,7 +35,7 @@ export const STRATEGY_CARDS: readonly StrategyCardDefinition[] = [
 
 export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
   vanguard: {
-    name: { de: 'Vorhut', en: 'Vanguard' },
+    name: { de: 'Führung', en: 'Leadership' },
     primary: {
       de: 'Erhalte 3 Kommandomarker. Für je 3 ausgegebenen Einfluss erhältst du 1 weiteren.',
       en: 'Gain 3 command tokens. Gain 1 more for every 3 influence you spend.',
@@ -46,7 +46,7 @@ export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
     },
   },
   embassy: {
-    name: { de: 'Gesandtschaft', en: 'Embassy' },
+    name: { de: 'Diplomatie', en: 'Diplomacy' },
     primary: {
       de: 'Wähle ein System, in dem dir ein Planet gehört (nicht das Thronwelt-System). Mache deine erschöpften Planeten dort bereit. Jeder andere Spieler legt dort einen Kommandomarker ab.',
       en: 'Choose a system where you control a planet (not the throne world system). Ready your exhausted planets there. Every other player places a command token there.',
@@ -57,7 +57,7 @@ export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
     },
   },
   senate: {
-    name: { de: 'Senat', en: 'Senate' },
+    name: { de: 'Politik', en: 'Politics' },
     primary: {
       de: 'Bestimme einen neuen Sprecher, ziehe 2 Aktionskarten und sieh dir die obersten 2 Agenden an.',
       en: 'Choose a new speaker, draw 2 action cards and look at the top 2 agendas.',
@@ -65,10 +65,10 @@ export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
     secondary: { de: 'Ziehe 2 Aktionskarten.', en: 'Draw 2 action cards.' },
   },
   engineering: {
-    name: { de: 'Baukunst', en: 'Engineering' },
+    name: { de: 'Konstruktion', en: 'Construction' },
     primary: {
-      de: 'Errichte ein Orbitalgeschütz oder Raumdock auf einem deiner Planeten, danach ein weiteres Orbitalgeschütz.',
-      en: 'Build an orbital battery or dock on one of your planets, then another orbital battery.',
+      de: 'Errichte ein PVS oder Raumdock auf einem deiner Planeten, danach ein weiteres PVS.',
+      en: 'Build a PDS or space dock on one of your planets, then another PDS.',
     },
     secondary: {
       de: 'Lege einen Marker aus dem Nachschub in ein System und errichte dort ein Gebäude.',
@@ -76,7 +76,7 @@ export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
     },
   },
   exchange: {
-    name: { de: 'Kontor', en: 'Exchange' },
+    name: { de: 'Handel', en: 'Trade' },
     primary: {
       de: 'Erhalte 3 Handelswaren, fülle deine Rohstoffe auf und erlaube anderen das Auffüllen ohne Kosten.',
       en: 'Gain 3 trade goods, refill your commodities and let others refill for free.',
@@ -84,7 +84,7 @@ export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
     secondary: { de: 'Fülle deine Rohstoffe auf.', en: 'Refill your commodities.' },
   },
   armament: {
-    name: { de: 'Rüstung', en: 'Armament' },
+    name: { de: 'Kriegsführung', en: 'Warfare' },
     primary: {
       de: 'Nimm einen deiner Marker vom Spielplan zurück und verteile deine Marker neu.',
       en: 'Take back one of your tokens from the board and redistribute your tokens.',
@@ -92,7 +92,7 @@ export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
     secondary: { de: 'Produziere in deinem Heimatsystem.', en: 'Produce in your home system.' },
   },
   research: {
-    name: { de: 'Forschung', en: 'Research' },
+    name: { de: 'Technologie', en: 'Technology' },
     primary: {
       de: 'Erforsche 1 Technologie und danach eine weitere gegen Ressourcen.',
       en: 'Research 1 technology, then another for resources.',
@@ -103,7 +103,7 @@ export const STRATEGY_CARD_TEXTS: Readonly<Record<string, StrategyCardText>> = {
     },
   },
   crown: {
-    name: { de: 'Krone', en: 'Crown' },
+    name: { de: 'Imperium', en: 'Imperial' },
     primary: {
       de: 'Werte sofort ein öffentliches Ziel. Kontrollierst du die Thronwelt, erhältst du 1 Siegpunkt, sonst ein geheimes Ziel.',
       en: 'Score a public objective now. Gain 1 victory point if you control the throne world, otherwise draw a secret objective.',

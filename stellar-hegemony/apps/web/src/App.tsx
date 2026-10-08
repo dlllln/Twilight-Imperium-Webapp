@@ -3,7 +3,6 @@ import { type ReactElement, useEffect } from 'react';
 import { CombatView } from './components/combat/CombatView.tsx';
 import { GalaxyMap } from './components/GalaxyMap.tsx';
 import { GameSidebar } from './components/game/GameSidebar.tsx';
-import { PhaseBar } from './components/game/PhaseBar.tsx';
 import { ConnectionBanner } from './components/online/ConnectionBanner.tsx';
 import { SetupSidebar } from './components/online/SetupSidebar.tsx';
 import { Toolbar } from './components/Toolbar.tsx';
@@ -58,7 +57,6 @@ export function App(): ReactElement {
       <div className="app">
         <Toolbar />
         <ConnectionBanner />
-        {game !== null && <PhaseBar game={game} />}
         <main className={game === null ? 'board' : 'board playing'}>
           <GalaxyMap />
           {game === null ? <SetupSidebar /> : <GameSidebar game={game} />}
