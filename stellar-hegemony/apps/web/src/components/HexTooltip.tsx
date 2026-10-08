@@ -1,6 +1,7 @@
 import { unitName } from '@stellar/content';
 import { unitTypeId } from '@stellar/domain';
 import type { ReactElement } from 'react';
+import { useGameStore } from '../game-store.ts';
 import type { MessageKey } from '../i18n.ts';
 import type { SceneHex, ScenePlanet, UnitCount } from '../render/scene-model.ts';
 import { seatColor } from '../seat-colors.ts';
@@ -123,6 +124,7 @@ interface HexTooltipProps {
 /** Details zum Feld unter dem Mauszeiger: Planeten, Truppen, Flotten, Marker. */
 export function HexTooltip({ hex, x, y }: HexTooltipProps): ReactElement {
   const t = useT();
+  const playing = useGameStore((state) => state.game !== null);
   return (
     <div className="tooltip glass" role="tooltip" style={{ left: x + 16, top: y + 16 }}>
       {hex.kind === 'homeSlot' ? (
@@ -132,7 +134,7 @@ export function HexTooltip({ hex, x, y }: HexTooltipProps): ReactElement {
       ) : (
         <>
           <SystemDetails hex={hex} t={t} />
-          <span className="tooltip-hint">{t('systemHint')}</span>
+          <span className="tooltip-hint">{t(playing ? 'systemHintGame' : 'systemHint')}</span>
         </>
       )}
     </div>

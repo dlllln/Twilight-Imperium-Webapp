@@ -44,6 +44,7 @@ function hex(overrides: Partial<SceneHex> = {}): SceneHex {
     ships: [],
     tokens: [],
     highlight: 'none',
+    control: null,
     ...overrides,
   };
 }

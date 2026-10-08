@@ -6,6 +6,7 @@ import { IconButton } from './ui/IconButton.tsx';
 import { type MessageKey, translate } from '../i18n.ts';
 import { useGameStore } from '../game-store.ts';
 import { useOnlineStore } from '../online/online-store.ts';
+import { useDraftStore } from '../setup/draft-store.ts';
 import { useSimulatorStore } from '../simulator/simulator-store.ts';
 import { useGalaxyStore } from '../store.ts';
 import { useTutorialStore } from '../tutorial/tutorial-store.ts';
@@ -71,11 +72,10 @@ function GuideButton({ t }: { readonly t: Translate }): ReactElement {
 }
 
 function GameButton({ t }: { readonly t: Translate }): ReactElement | null {
-  const { game, start, leave } = useGameStore();
+  const { game, leave } = useGameStore();
   const online = useOnlineStore((state) => state.ticket !== null);
   const leaveOnline = useOnlineStore((state) => state.leave);
-  const { layout, playerCount, botCount } = useGalaxyStore();
-  const begin = () => start(layout, playerCount, undefined, botCount);
+  const begin = useDraftStore((state) => state.begin);
   if (online && game === null) return null;
   return game === null ? (
     <button type="button" className="primary icon-button" onClick={begin}>

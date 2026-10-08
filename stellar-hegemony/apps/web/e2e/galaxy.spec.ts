@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseFactions } from './draft.ts';
 
 test('Galaxie wird angezeigt, neu erzeugt und per Map-String importiert', async ({ page }) => {
   await page.goto('/');
@@ -50,12 +51,14 @@ test('Anleitung führt durch die Oberfläche; Einstellungen bleiben nach dem Neu
   await expect(page.locator('html')).toHaveClass(/motion-off/);
 });
 
-test('Ein Klick zoomt ohne Fenster ins System; Mausrad und Escape fahren zurück', async ({
+test('Ein Klick zeigt die Knöpfe am System, Ansehen zoomt ohne Fenster hinein; Mausrad und Escape fahren zurück', async ({
   page,
 }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Partie starten' }).click();
+  await chooseFactions(page);
   await page.locator('[data-seat="1"][data-system]').click();
+  await page.getByRole('button', { name: 'System ansehen' }).click();
   const view = page.getByRole('region', { name: 'Systemansicht' });
   await expect(view).toBeVisible();
   await expect(view.getByRole('list', { name: 'Im System' })).toContainText('Raumdock');

@@ -74,10 +74,8 @@ function wormholeRing(kind: WormholeKind, index: number): Graphics {
 function glow(hex: SceneHex): { readonly layer: Container; readonly pulse: Graphics | null } {
   const layer = new Container();
   if (hex.anomaly === 'supernova') layer.addChild(supernovaGlow());
-  if (hex.seat !== null)
-    layer.addChild(
-      new Graphics().poly(corners(0.9)).stroke({ width: 3, color: hexOf(seatColor(hex.seat)) }),
-    );
+  const border = controlBorder(hex);
+  if (border !== null) layer.addChild(border);
   const spots = planetSpots(hex.planets.length);
   hex.planets.forEach((planet, index) => {
     const spot = spots[index] ?? ORIGIN;
@@ -90,6 +88,18 @@ function glow(hex: SceneHex): { readonly layer: Container; readonly pulse: Graph
   const pulse = highlightFrame(hex.highlight);
   if (pulse !== null) layer.addChild(pulse);
   return { layer, pulse };
+}
+
+/** Heimatsysteme tragen die Farbe ihres Platzes, sonst färbt der alleinige Besitzer den Rand. */
+function controlBorder(hex: SceneHex): Graphics | null {
+  if (hex.seat !== null)
+    return new Graphics()
+      .poly(corners(0.9))
+      .stroke({ width: 3, color: hexOf(seatColor(hex.seat)) });
+  if (hex.control === null) return null;
+  return new Graphics()
+    .poly(corners(0.955))
+    .stroke({ width: 2.5, color: hexOf(seatColor(hex.control)), alpha: 0.85 });
 }
 
 function highlightFrame(highlight: Highlight): Graphics | null {

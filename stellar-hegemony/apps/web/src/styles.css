@@ -3499,3 +3499,516 @@ select option {
     margin: 0 calc(-20px - var(--crowd, 0) * 6px);
   }
 }
+
+/* Iteration 18: Spieltisch über der Karte — Spieler, Vorräte, Phase, Hex-Knöpfe, Übersicht als Schublade */
+
+.board.playing {
+  position: relative;
+  grid-template-columns: 1fr;
+  overflow: clip;
+}
+
+.hud-players,
+.hud-resources,
+.turn-float,
+.hud-phase {
+  position: absolute;
+  z-index: 24;
+  pointer-events: auto;
+}
+
+/* Spielerporträts links oben */
+
+.hud-players {
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hud-portrait button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 6px;
+  min-width: 190px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px 26px 26px 12px;
+  background: linear-gradient(90deg, rgba(8, 12, 28, 0.88) 0%, rgba(8, 12, 28, 0.6) 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+  text-align: left;
+}
+
+.hud-portrait button:hover:not(:disabled) {
+  background: linear-gradient(90deg, rgba(20, 28, 60, 0.95) 0%, rgba(20, 28, 60, 0.7) 100%);
+}
+
+.hud-portrait .faction-emblem {
+  grid-row: 1 / span 2;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--seat);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.5));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--seat) 45%, transparent);
+}
+
+.portrait-name {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--seat) 70%, #000) 0%,
+    transparent 100%
+  );
+  font-weight: 700;
+  font-size: 13px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.portrait-name small {
+  padding: 0 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.portrait-vp,
+.portrait-initiative {
+  grid-row: 1;
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  margin-right: 4px;
+  font-family: var(--title-font);
+  font-weight: 700;
+}
+
+.portrait-vp {
+  grid-column: 2;
+  justify-self: start;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #f6dc8c 0%, #c99a35 100%);
+  color: #1b1405;
+}
+
+.portrait-initiative {
+  grid-column: 2;
+  justify-self: start;
+  margin-left: 30px;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: #1d2748;
+  color: var(--gold-bright);
+}
+
+.portrait-initiative + .portrait-initiative {
+  margin-left: 58px;
+}
+
+.portrait-speaker {
+  position: absolute;
+  left: 38px;
+  top: 2px;
+  color: var(--gold-bright);
+  filter: drop-shadow(0 1px 2px #000);
+}
+
+.hud-portrait.active button {
+  border-color: var(--gold-bright);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.45),
+    0 0 16px rgba(255, 224, 138, 0.35);
+}
+
+.hud-portrait.passed button {
+  opacity: 0.6;
+}
+
+/* Eigene Vorräte oben in der Mitte */
+
+.hud-resources {
+  top: 10px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100% - 440px);
+  margin: 0;
+  padding: 6px 18px;
+  list-style: none;
+  border-radius: 0 0 18px 18px;
+  border-color: var(--gold-line);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.hud-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.hud-stat svg {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.hud-stat.res svg {
+  color: var(--resources);
+  fill: color-mix(in srgb, var(--resources) 35%, transparent);
+}
+
+.hud-stat.inf svg {
+  color: var(--influence);
+  fill: color-mix(in srgb, var(--influence) 35%, transparent);
+}
+
+.hud-stat.goods svg {
+  color: var(--gold-bright);
+}
+
+.hud-stat.comm svg {
+  color: #8fd6c8;
+}
+
+.hud-stat.tech.propulsion svg {
+  color: var(--propulsion);
+}
+
+.hud-stat.tech.biotic svg {
+  color: var(--biotic);
+}
+
+.hud-stat.tech.cybernetic svg {
+  color: var(--cybernetic);
+}
+
+.hud-stat.tech.warfare svg {
+  color: var(--warfare);
+}
+
+.hud-stat.vp svg {
+  color: var(--gold-bright);
+  fill: var(--gold);
+}
+
+.hud-pools {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  align-items: start;
+  gap: 2px;
+}
+
+.hud-pools .pool {
+  display: grid;
+  place-items: center;
+  min-width: 46px;
+  padding: 1px 6px 3px;
+  background: linear-gradient(180deg, #24305a 0%, #141b36 100%);
+  border: 1px solid var(--gold-line);
+  font-family: var(--title-font);
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.hud-pools .pool small {
+  font-family: inherit;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hud-pools .tactic {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%);
+}
+
+.hud-pools .fleet {
+  margin-top: 10px;
+  clip-path: polygon(0 0, 100% 0, 82% 100%, 18% 100%);
+}
+
+.hud-pools .strategy {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+}
+
+/* Offene Entscheidungen rechts oben */
+
+.turn-float {
+  top: 64px;
+  right: 72px;
+  width: 360px;
+  max-height: calc(100% - 300px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.turn-float:empty {
+  display: none;
+}
+
+.turn-float .game-section {
+  background: rgba(10, 14, 32, 0.9);
+  border-color: var(--gold-line);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+/* Phase unten rechts */
+
+.hud-phase {
+  right: 72px;
+  bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 10px 16px 12px 28px;
+  background: linear-gradient(270deg, rgba(8, 12, 28, 0.92) 0%, rgba(8, 12, 28, 0.6) 100%);
+  border-right: 3px solid var(--gold);
+  clip-path: polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px);
+}
+
+.hud-phase small {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hud-phase strong {
+  font-family: var(--title-font);
+  font-size: 24px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.hud-phase .hex-button {
+  margin-top: 4px;
+}
+
+/* Sechseckige Knöpfe über dem gewählten System */
+
+.system-actions-host {
+  overflow: visible;
+}
+
+.system-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.7));
+}
+
+.hex-action {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.18), transparent 60%),
+    linear-gradient(180deg, #2a3768 0%, #121933 100%);
+  color: #dfe8ff;
+  box-shadow: inset 0 0 0 2px rgba(159, 180, 255, 0.6);
+  cursor: pointer;
+}
+
+.hex-action.activate {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 240, 200, 0.3), transparent 60%),
+    linear-gradient(180deg, #8a6420 0%, #3a2a0c 100%);
+  color: var(--gold-bright);
+}
+
+.galaxy .hex-action:hover:not(:disabled) {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.35), transparent 60%),
+    linear-gradient(180deg, #3b4c8f 0%, #1a2348 100%);
+}
+
+.galaxy .hex-action.activate:hover:not(:disabled) {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 245, 210, 0.45), transparent 60%),
+    linear-gradient(180deg, #b0822c 0%, #4d3810 100%);
+}
+
+/* Übersicht als Schublade am rechten Rand */
+
+.game-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.game-drawer > div {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: stretch;
+  height: 100%;
+}
+
+.drawer-tabs.tab-list {
+  position: static;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 6px;
+  padding: 6px;
+  pointer-events: auto;
+}
+
+.drawer-tabs .tab-trigger {
+  flex-direction: column;
+  gap: 2px;
+  width: 48px;
+  padding: 8px 2px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.drawer-tabs .tab-trigger span {
+  max-width: 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.game-drawer:not(.open) .tab-trigger[data-state='active'] {
+  background: transparent;
+  color: var(--muted);
+}
+
+.drawer-body {
+  position: relative;
+  width: 400px;
+  margin: 8px 0;
+  padding: 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.game-drawer:not(.open) .drawer-body {
+  transform: translateX(110%);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.drawer-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+}
+
+/* Fraktionswahl vor der Partie */
+
+.faction-grid button {
+  position: relative;
+}
+
+.faction-grid button.taken {
+  filter: grayscale(0.85);
+  opacity: 0.55;
+}
+
+.seat-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  color: #0b0f22;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.faction-commodities {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.faction-commodities b {
+  margin-left: 6px;
+  color: var(--gold-bright);
+  font-size: 18px;
+}
+
+.faction-details {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.faction-details dt {
+  margin-top: 10px;
+  color: var(--hud-gold, var(--gold));
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.faction-details dd {
+  margin: 0;
+}
+
+.faction-details .res,
+.faction-details .inf {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  margin-left: 4px;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  color: #0b0f22;
+}
+
+.faction-details .res {
+  background: var(--resources);
+}
+
+.faction-details .inf {
+  background: var(--influence);
+}
+
+/* In der Partie rückt die Kopfzeile der Systemansicht neben die Spieler und unter die Vorräte. */
+.board.playing .system-header {
+  top: 72px;
+  left: 232px;
+  right: 440px;
+}

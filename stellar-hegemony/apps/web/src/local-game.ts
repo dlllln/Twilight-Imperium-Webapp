@@ -19,6 +19,7 @@ import {
 } from '@stellar/domain';
 import { BASE_RULE_NUMBERS } from '@stellar/content';
 import { SeededRandom } from '@stellar/infrastructure';
+import { seatFactions } from './setup/faction-draft.ts';
 import { content } from './store.ts';
 
 const VICTORY_POINTS = 10;
@@ -73,12 +74,13 @@ const seatNames = (playerCount: number, bots: readonly PlayerId[]): readonly str
     return `${prefix}${String(seat + 1)}`;
   });
 
-/** Erstellt die Partie, besetzt alle Plätze, übernimmt die Galaxie und startet. */
+/** Erstellt die Partie, besetzt alle Plätze mit den gewählten Fraktionen, übernimmt die Galaxie und startet. */
 export function createLocalGame(
   layout: MapLayout,
   playerCount: number,
   seed: number,
   botCount = 0,
+  factionPicks: readonly string[] = [],
 ): Result<GameState, DomainError> {
   const table = {
     gameId: gameId('lokal'),
@@ -87,7 +89,8 @@ export function createLocalGame(
     names: seatNames(playerCount, botSeats(playerCount, botCount)),
   };
   const created = andThen(createGameHandler.decide(null, createGameCommand(table)), replayGame);
-  return setupCommands(table, content.factions).reduce<Result<GameState, DomainError>>(
+  const factions = seatFactions(content.factions, factionPicks);
+  return setupCommands(table, factions).reduce<Result<GameState, DomainError>>(
     (state, next) => andThen(state, (current) => applyCommand(current, next, seed)),
     created,
   );

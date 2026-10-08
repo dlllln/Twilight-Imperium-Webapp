@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseFactions } from './draft.ts';
 
 test('KI-Gegner: zwei Bots wählen Strategiekarten und ziehen, bis der Mensch dran ist', async ({
   page,
@@ -7,6 +8,7 @@ test('KI-Gegner: zwei Bots wählen Strategiekarten und ziehen, bis der Mensch dr
   await page.getByLabel('Spieler').selectOption('3');
   await page.getByLabel('KI-Gegner').selectOption('2');
   await page.getByRole('button', { name: 'Partie starten' }).click();
+  await chooseFactions(page);
 
   await page.locator('.secret-choice input[type="checkbox"]').first().check();
   await page.getByRole('button', { name: 'Behalten' }).click();

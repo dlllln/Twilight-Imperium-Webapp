@@ -11,7 +11,6 @@ import { useT } from '../../use-translation.ts';
 import { PlayControls } from '../cards/CardItem.tsx';
 import { hasTargets, initialTarget } from '../cards/TargetFields.tsx';
 import { PlayerTag } from '../game/PlayerTag.tsx';
-import { useSidebarStore } from '../game/sidebar-store.ts';
 import { HandFace, useEntryName } from './HandFaces.tsx';
 
 /** Fächer: Drehung je Karte, Absenkung zum Rand hin, Zugweg zum Ausspielen. */
@@ -56,16 +55,14 @@ function commandFor(entry: HandEntry, actor: PlayerId | null, selected: string |
   return actor === null ? null : turnCommand(entry, actor, selected);
 }
 
-/** Ausspielen: Befehl senden; die strategische Aktion öffnet ihr Formular in der Seitenleiste. */
+/** Ausspielen: Befehl senden; die strategische Aktion öffnet ihr Formular auf der Karte. */
 function usePlay(game: GameState): (entry: HandEntry) => void {
   const send = useGameStore((state) => state.send);
   const actor = useHumanActor(game);
   const selected = useGameStore((state) => state.selected);
   return (entry) => {
-    if (entry.kind === 'strategic' && actor !== null) {
+    if (entry.kind === 'strategic' && actor !== null)
       useHandStore.getState().choose({ player: actor, card: entry.card.id });
-      useSidebarStore.getState().setTab('turn');
-    }
     const command = commandFor(entry, actor, selected);
     if (command !== null) send(command);
   };

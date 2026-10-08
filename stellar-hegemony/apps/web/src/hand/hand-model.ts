@@ -69,7 +69,8 @@ function turnActions(input: HandInput, actor: PlayerId): readonly HandEntry[] {
   ];
 }
 
-const freeTurn = (game: GameState): boolean => {
+/** Kein Schritt einer taktischen Aktion, keine Sekundärfähigkeit und kein Tausch offen. */
+export const freeTurn = (game: GameState): boolean => {
   const phase = game.actionPhase;
   return phase?.tactical == null && phase?.secondary == null && phase?.transaction == null;
 };

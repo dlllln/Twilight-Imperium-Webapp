@@ -12,7 +12,14 @@ import {
 } from 'react';
 import { type MapEffect, mapEffects } from '../animation/map-effects.ts';
 import { useGameStore } from '../game-store.ts';
-import { type Bounds, boundsOf, hexCorners, hexToPixel, toSvgPoints } from '../hex-geometry.ts';
+import {
+  type Bounds,
+  boundsOf,
+  hexCorners,
+  hexToPixel,
+  padBounds,
+  toSvgPoints,
+} from '../hex-geometry.ts';
 import type { Language } from '../i18n.ts';
 import { gameScene, layoutScene, type SceneHex } from '../render/scene-model.ts';
 import { content, useGalaxyStore, type Viewport } from '../store.ts';
@@ -25,6 +32,11 @@ import { SystemView } from './system/SystemView.tsx';
 import { useSystemViewStore } from '../system/system-view-store.ts';
 import { focusViewport, reachesSystem, viewCenter } from '../system/viewport-tween.ts';
 import { HandDock } from './hand/HandDock.tsx';
+import { PhaseDock } from './hud/PhaseDock.tsx';
+import { PlayerRail } from './hud/PlayerRail.tsx';
+import { ResourceBar } from './hud/ResourceBar.tsx';
+import { SystemActions } from './hud/SystemActions.tsx';
+import { TurnFloat } from './hud/TurnFloat.tsx';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
 const PixiCanvas = lazy(() =>
@@ -57,6 +69,17 @@ function useScene(): readonly SceneHex[] {
 }
 
 const NO_EFFECTS: readonly MapEffect[] = [];
+
+/** In der Partie liegen Spieler links, Vorräte oben und die Hand unten über der Karte; dafür bleibt Platz. */
+const HUD_MARGINS = { top: 80, bottom: 150, left: 230, right: 80 } as const;
+
+function useBounds(hexes: readonly SceneHex[]): Bounds {
+  const playing = useGameStore((state) => state.game !== null);
+  return useMemo(() => {
+    const bounds = boundsOf(hexes.map((hex) => hex.position));
+    return playing ? padBounds(bounds, HUD_MARGINS) : bounds;
+  }, [hexes, playing]);
+}
 
 /** Effekte des letzten Zugs, wenn Animationen eingeschaltet sind. */
 function useMapEffects(): readonly MapEffect[] {
@@ -109,14 +132,32 @@ interface TargetsProps {
   readonly bounds: Bounds;
   readonly viewport: Viewport;
   readonly onPick: (hex: SceneHex) => void;
+  readonly onView: (hex: SceneHex) => void;
 }
 
 const viewBoxOf = (b: Bounds): string =>
   [b.minX, b.minY, b.width, b.height].map((value) => String(value)).join(' ');
 
+/** Knöpfe über dem in der Partie gewählten System. */
+function ChosenActions({ hexes, bounds, viewport, onView }: Omit<TargetsProps, 'onPick'>) {
+  const game = useGameStore((state) => state.game);
+  const selected = useGameStore((state) => state.selected);
+  const chosen = hexes.find((hex) => hex.systemId !== null && hex.systemId === selected);
+  if (game === null || chosen === undefined) return null;
+  return (
+    <SystemActions
+      game={game}
+      hex={chosen}
+      viewport={viewport}
+      top={bounds.minY + HUD_MARGINS.top}
+      onView={onView}
+    />
+  );
+}
+
 /** SVG-Ebene über dem Pixi-Bild, mit derselben Abbildung wie `worldTransform`. */
 const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
-  { hexes, bounds, viewport, onPick },
+  { hexes, bounds, viewport, onPick, onView },
   svg,
 ): ReactElement {
   const { hovered, hover } = useGalaxyStore();
@@ -134,11 +175,12 @@ const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
           />
         ))}
       </g>
+      <ChosenActions {...{ hexes, bounds, viewport, onView }} />
     </svg>
   );
 });
 
-/** Kamerafahrt in ein System, das in der Partie zugleich ausgewählt wird; Heimat-Plätze vor der Partie haben keinen Inhalt. */
+/** Kamerafahrt in ein System, das in der Partie zugleich ausgewählt bleibt; Heimat-Plätze vor der Partie haben keinen Inhalt. */
 function useOpenSystem(bounds: Bounds) {
   return useCallback(
     (hex: SceneHex) => {
@@ -152,10 +194,16 @@ function useOpenSystem(bounds: Bounds) {
   );
 }
 
-/** Ein Klick fährt in das Feld hinein; wer dabei die Karte gezogen hat, verschiebt sie nur. */
+/**
+ * In der Partie wählt ein Klick das System und zeigt seine Knöpfe; ein zweiter Klick fährt
+ * hinein. Vor der Partie fährt schon der erste Klick hinein. Wer die Karte zieht, verschiebt sie nur.
+ */
 function usePicking(wasDrag: () => boolean, open: (hex: SceneHex) => void) {
   return (hex: SceneHex) => {
-    if (!wasDrag()) open(hex);
+    if (wasDrag()) return;
+    const { game, selected, select } = useGameStore.getState();
+    if (game === null || hex.systemId === selected) open(hex);
+    else select(hex.systemId);
   };
 }
 
@@ -190,13 +238,26 @@ function stop(event: { stopPropagation: () => void }) {
   event.stopPropagation();
 }
 
-/** Oberhalb der Karte: Systemansicht und Hand; ihre Gesten verschieben die Karte nicht. */
+/** Anzeigen der Partie über der Karte: Spieler, Vorräte, Phase, offene Entscheidungen, Hand. */
+function Hud({ game }: { readonly game: GameState }): ReactElement {
+  return (
+    <>
+      <PlayerRail game={game} />
+      <ResourceBar game={game} />
+      <TurnFloat game={game} />
+      <PhaseDock game={game} />
+      <HandDock game={game} />
+    </>
+  );
+}
+
+/** Oberhalb der Karte: Systemansicht und Anzeigen; ihre Gesten verschieben die Karte nicht. */
 function Overlays({ hexes }: { readonly hexes: readonly SceneHex[] }): ReactElement {
   const game = useGameStore((state) => state.game);
   return (
     <div className="system-shield" {...shield}>
       <SystemView hexes={hexes} />
-      {game !== null && <HandDock game={game} />}
+      {game !== null && <Hud game={game} />}
     </div>
   );
 }
@@ -205,7 +266,7 @@ export function GalaxyMap(): ReactElement {
   const { hovered, viewport } = useGalaxyStore();
   const hexes = useScene();
   const effects = useMapEffects();
-  const bounds = useMemo(() => boundsOf(hexes.map((hex) => hex.position)), [hexes]);
+  const bounds = useBounds(hexes);
   const svg = useRef<SVGSVGElement>(null);
   const open = useOpenSystem(bounds);
   const zoom = useZoom(hexes, bounds, open);
@@ -222,7 +283,7 @@ export function GalaxyMap(): ReactElement {
           <PixiCanvas {...{ hexes, bounds, viewport, effects, onUnavailable }} />
         </Suspense>
       )}
-      <HexTargets {...{ hexes, bounds, viewport }} ref={svg} onPick={pick} />
+      <HexTargets {...{ hexes, bounds, viewport }} ref={svg} onPick={pick} onView={open} />
       {hoveredHex !== undefined && <HexTooltip hex={hoveredHex} x={cursor.x} y={cursor.y} />}
       <MapControls onZoom={zoom} onReset={() => useGalaxyStore.getState().resetView()} />
       <Overlays hexes={hexes} />

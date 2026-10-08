@@ -49,3 +49,18 @@ export function boundsOf(hexes: readonly Hex[], size = HEX_SIZE): Bounds {
     height: Math.max(...ys) + size - minY,
   };
 }
+
+/** Rand um die Karte, damit Anzeigen (Spieler links, Vorräte oben, Hand unten) keine Felder verdecken. */
+export interface Margins {
+  readonly top: number;
+  readonly bottom: number;
+  readonly left: number;
+  readonly right: number;
+}
+
+export const padBounds = (bounds: Bounds, margins: Margins): Bounds => ({
+  minX: bounds.minX - margins.left,
+  minY: bounds.minY - margins.top,
+  width: bounds.width + margins.left + margins.right,
+  height: bounds.height + margins.top + margins.bottom,
+});

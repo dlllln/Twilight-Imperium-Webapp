@@ -57,7 +57,9 @@ stellar-hegemony/
         │                    Schiffsminiaturen, Bloom-Glühen; darüber SVG-Trefferflächen
         ├── src/battle/      (It. 16) Aufstellung und Choreografie der Kampfbühne (reine Funktionen)
         ├── src/simulator/   (It. 16) Ablauf des Kampfsimulators
-        └── src/hand/        (It. 17) Handkarten als reine Daten und gewählte strategische Aktion
+        ├── src/hand/        (It. 17) Handkarten als reine Daten und gewählte strategische Aktion
+        ├── src/hud/         (It. 18) Anzeigen über der Karte: Vorräte, Spieler, Zug beenden, Hex-Knöpfe
+        └── src/setup/       (It. 18) Fraktionswahl vor der Partie
 ```
 
 Abhängigkeiten zeigen nur nach innen: `web → application → domain`, `infrastructure → application → domain`,
@@ -517,7 +519,32 @@ Tiefe; alles ist eigene Grafik aus CSS und SVG.
 | `lookOf`, `specksOf`, `CardArt`          | Aussehen als Daten (Open/Closed): Motiv je Mechanik oder Zeitpunkt, Farben im Stylesheet, Sterne deterministisch aus der Karten-Id.             |
 | `SystemView` randlos                     | Gleiche Kamerafahrt wie zuvor, nur ohne Rahmen; Herauszoomen schließt. Die Inhaltsliste bleibt für Screenreader im Baum (Barrierefreiheit).     |
 
-## 22. Iterationen
+## 22. Iteration 18 im Detail (Spieltisch über der Karte, Fraktionswahl)
+
+Die Partie spielt jetzt auf der ganzen Karte. Vor dem Start wählt jeder Mensch am Bildschirm
+seine Fraktion (Wappen links, rechts Name, Komplexität, Rohstoffe und die Reiter Übersicht,
+Details mit Heimatwelten, Startaufstellung und Starttechnologien, Hintergrund); vergebene
+Fraktionen tragen das Platzkürzel, die KI bekommt die übrigen. Während der Partie liegen über der
+Karte: links die Spielerporträts (Wappen, Siegpunkte, Initiative, wer am Zug ist, gepasst),
+oben die eigenen Vorräte (Ressourcen und Einfluss bereit/gesamt, Handelswaren, Rohstoffe,
+Kommandotafel als Dreieck, Technologien je Farbe, Siegpunkte), rechts oben die offenen
+Entscheidungen, unten rechts die Phase mit „Zug beenden“ oder „Passen“. Ein Klick auf ein System
+wählt es und zeigt sechseckige Knöpfe darüber: „System ansehen“ fährt hinein, „System aktivieren“
+erscheint nur, wenn die Domain die Aktivierung gerade erlaubt. Systeme mit nur einem Besitzer
+tragen dessen Farbe am Rand. Wertung, Reich und Kartenauslage sind eine Schublade am rechten Rand.
+
+| Element                                    | Prinzip                                                                                                                                      |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `seatFactions`, `takenSeats`, `firstFree`  | Reine Funktionen: die Wahl ordnet nur die Fraktionsliste; `setupCommands` bleibt für Hot-Seat und Server gleich (Open/Closed, DRY).          |
+| `useDraftStore`                            | Controller (GRASP) für den Ablauf der Wahl; nach dem letzten Menschen startet er die Partie über den bestehenden `start`.                    |
+| `FactionChooser`                           | Eine Auswahl für Simulator und Partie (DRY); was sie anzeigt und wohin ihre Knöpfe führen, kommt über Props (Dependency Inversion).          |
+| `empireSummary`, `playerRail`, `endTurnOf` | Information Expert ohne React: Vorräte, Reihenfolge und der passende Abschlussknopf entstehen aus dem Spielstand und sind einzeln getestet.  |
+| `systemActions`                            | Die Domain entscheidet: „Aktivieren“ wird an einer Kopie des Spielstands erprobt, die Oberfläche kennt keine eigene Regel (Low Coupling).    |
+| `SystemActions` im SVG                     | Gleiche Abbildung wie die Trefferflächen (`foreignObject`), daher keine Messung von DOM-Größen; reicht der Platz oben nicht, unter dem Feld. |
+| `control` im Szenenmodell                  | Die Szene liefert den alleinigen Besitzer, Pixi zeichnet nur den Rand (Single Responsibility).                                               |
+| `GameSidebar` als Schublade                | Gleiche Panels, andere Anordnung; der Sidebar-Store merkt sich Reiter und Offen-Zustand, die Anleitung öffnet beides.                        |
+
+## 23. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -538,8 +565,9 @@ Tiefe; alles ist eigene Grafik aus CSS und SVG.
 | 15  | Gängige Namen, schlichtere Oberfläche mit Reitern   | ✓     |
 | 16  | Kampfsimulator, Kampfbühne auch in der Partie       | ✓     |
 | 17  | Handkarten statt Knöpfe, Systemzoom ohne Fenster    | ✓     |
+| 18  | Spieltisch über der Karte, Fraktionswahl            | ✓     |
 
-## 23. Befehle
+## 24. Befehle
 
 ```
 pnpm install

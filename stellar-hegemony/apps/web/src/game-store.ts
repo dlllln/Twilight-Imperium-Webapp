@@ -48,6 +48,7 @@ export interface GameStore {
     playerCount: number,
     seed?: number,
     botCount?: number,
+    factionPicks?: readonly string[],
   ) => void;
   /** Schickt einen Command an die Domain; liefert false bei Regelverstoß. */
   readonly send: (command: GameCommand) => boolean;
@@ -78,8 +79,8 @@ type Get = StoreApi<GameStore>['getState'];
 
 const startGame =
   (set: Set): GameStore['start'] =>
-  (layout, playerCount, seed = nextSeed(), botCount = 0) => {
-    const created = createLocalGame(layout, playerCount, seed, botCount);
+  (layout, playerCount, seed = nextSeed(), botCount = 0, factionPicks = []) => {
+    const created = createLocalGame(layout, playerCount, seed, botCount, factionPicks);
     const bots = botSeats(playerCount, botCount);
     set(
       created.ok

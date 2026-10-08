@@ -3,6 +3,7 @@ import { type ReactElement, useEffect } from 'react';
 import { CombatView } from './components/combat/CombatView.tsx';
 import { GalaxyMap } from './components/GalaxyMap.tsx';
 import { GameSidebar } from './components/game/GameSidebar.tsx';
+import { FactionDraft } from './components/faction/FactionDraft.tsx';
 import { ConnectionBanner } from './components/online/ConnectionBanner.tsx';
 import { SetupSidebar } from './components/online/SetupSidebar.tsx';
 import { SimulatorScreen } from './components/simulator/SimulatorScreen.tsx';
@@ -65,6 +66,7 @@ export function App(): ReactElement {
         {game !== null && <CombatView />}
         <TutorialDialog />
         <SimulatorScreen />
+        <FactionDraft />
       </div>
     </Tooltip.Provider>
   );

@@ -50,6 +50,8 @@ export interface SceneHex {
   readonly ships: readonly UnitCount[];
   readonly tokens: readonly number[];
   readonly highlight: Highlight;
+  /** Sitz (1-basiert), dem allein Schiffe oder Planeten im System gehören; sonst `null`. */
+  readonly control: number | null;
 }
 
 export const hexKey = (position: Hex): string => `${String(position.q)},${String(position.r)}`;
@@ -103,7 +105,7 @@ const tileFields = (tile: SystemTile) => ({
   ...(tile.anomaly === undefined ? {} : { anomaly: tile.anomaly }),
 });
 
-const EMPTY = { ships: [], tokens: [], highlight: 'none' } as const;
+const EMPTY = { ships: [], tokens: [], highlight: 'none', control: null } as const;
 
 const homeSlotHex = (position: Hex, seat: number): SceneHex => ({
   ...EMPTY,
@@ -160,11 +162,21 @@ function homeSeat(lookup: GameLookup, system: SystemState): number | null {
   return player === undefined ? null : player.seat + 1;
 }
 
+/** Ein einziger Besitzer von Schiffen und Planeten färbt den Rand des Systems. */
+function controlOf(ships: readonly UnitCount[], planets: readonly ScenePlanet[]): number | null {
+  const seats = new Set([
+    ...ships.map((ship) => ship.seat),
+    ...planets.flatMap((planet) => planet.controllerSeat ?? []),
+  ]);
+  return seats.size === 1 ? ([...seats][0] ?? null) : null;
+}
+
 function gameHex(lookup: GameLookup, system: SystemState, tile: SystemTile): SceneHex {
   const { game, language, seatOf } = lookup;
   const planets = tile.planets.map((planet) =>
     scenePlanet(planet, tile.back, language, game.planets[planet.id], seatOf),
   );
+  const ships = countUnits(system.spaceUnits, unitSeat(seatOf));
   return {
     ...tileFields(tile),
     key: hexKey(system.position),
@@ -172,9 +184,10 @@ function gameHex(lookup: GameLookup, system: SystemState, tile: SystemTile): Sce
     kind: 'system',
     seat: homeSeat(lookup, system),
     planets,
-    ships: countUnits(system.spaceUnits, unitSeat(seatOf)),
+    ships,
     tokens: system.commandTokens.flatMap((player) => seatOf(player) ?? []),
     highlight: lookup.highlights.get(system.id) ?? 'none',
+    control: controlOf(ships, planets),
   };
 }
 

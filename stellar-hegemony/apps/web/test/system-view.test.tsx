@@ -1,15 +1,17 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { GameState } from '@stellar/domain';
 import { App } from '../src/App.tsx';
 import { useSidebarStore } from '../src/components/game/sidebar-store.ts';
 import { useGameStore } from '../src/game-store.ts';
+import { currentActor } from '../src/local-game.ts';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
 import { useSystemViewStore } from '../src/system/system-view-store.ts';
 import { FOCUS_ZOOM } from '../src/system/viewport-tween.ts';
 import { installDomPolyfills } from './dom-polyfills.ts';
-import { keepSecrets, started } from './game-helpers.ts';
+import { keepSecrets, pickAll, started } from './game-helpers.ts';
 
 installDomPolyfills();
 
@@ -35,13 +37,15 @@ function openHome() {
   render(<App />);
   act(() => void keepSecrets(started()));
   fireEvent.click(homeOfFirstSeat());
+  expect(systemView()).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'System ansehen' }));
   const view = systemView();
   if (view === null) throw new Error('Systemansicht fehlt');
   return view;
 }
 
 describe('Systemansicht', () => {
-  it('ein Klick fährt ohne Fenster ins System, wählt es aus und zeigt Flotten und Planeten', () => {
+  it('ein Klick wählt das System, „Ansehen“ fährt ohne Fenster hinein und zeigt Flotten und Planeten', () => {
     const view = openHome();
     expect(useGalaxyStore.getState().viewport.zoom).toBe(FOCUS_ZOOM);
     expect(useGameStore.getState().selected).toBe(homeOfFirstSeat().getAttribute('data-system'));
@@ -67,6 +71,28 @@ describe('Systemansicht', () => {
     await waitFor(() => expect(systemView()).toBeNull());
   });
 
+  it('ein zweiter Klick auf das gewählte System fährt ebenfalls hinein', () => {
+    render(<App />);
+    act(() => void keepSecrets(started()));
+    fireEvent.click(homeOfFirstSeat());
+    fireEvent.click(homeOfFirstSeat());
+    expect(systemView()).not.toBeNull();
+  });
+
+  it('RR 89: über dem gewählten System erscheint „System aktivieren“, wenn der Zug es erlaubt', () => {
+    render(<App />);
+    act(() => void pickAll(started()));
+    const game = useGameStore.getState().game as GameState;
+    const actor = currentActor(game);
+    const home = Object.values(game.systems).find((system) =>
+      system.spaceUnits.some((unit) => unit.owner === actor),
+    );
+    act(() => useGameStore.getState().select(home?.id ?? null));
+    fireEvent.click(screen.getByRole('button', { name: 'System aktivieren' }));
+    expect(useGameStore.getState().game?.actionPhase?.tactical?.system).toBe(home?.id);
+    expect(screen.queryByRole('button', { name: 'System aktivieren' })).toBeNull();
+  });
+
   it('tiefes Hineinzoomen öffnet das System in der Bildmitte von selbst', () => {
     render(<App />);
     const zoomIn = screen.getByRole('button', { name: 'Hineinzoomen' });
@@ -77,23 +103,27 @@ describe('Systemansicht', () => {
   });
 });
 
-describe('Moderne Seitenleiste', () => {
-  it('drei Reiter: Zug, Wertung, Reich; der Zug ist vorgewählt', () => {
+describe('Übersicht als Schublade', () => {
+  it('drei Reiter am Rand; ein Reiter öffnet die Schublade, ein zweites Antippen schließt sie', () => {
+    useSidebarStore.setState({ tab: 'turn', open: false });
     render(<App />);
     act(() => void keepSecrets(started()));
+    const drawer = () => document.querySelector('.game-drawer');
     const panel = (name: string) =>
       screen.getByText(name, { selector: '.panel-label' }).closest('.tab-panel');
-    expect(panel('Strategiekarten')?.getAttribute('data-state')).toBe('active');
-    expect(panel('Aufträge und Siegpunkte')?.getAttribute('data-state')).toBe('inactive');
+    expect(drawer()?.classList.contains('open')).toBe(false);
     fireEvent.mouseDown(screen.getByRole('tab', { name: 'Wertung' }));
+    expect(drawer()?.classList.contains('open')).toBe(true);
     expect(panel('Aufträge und Siegpunkte')?.getAttribute('data-state')).toBe('active');
     expect(panel('Strategiekarten')?.getAttribute('data-state')).toBe('inactive');
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Wertung' }));
+    expect(drawer()?.classList.contains('open')).toBe(false);
   });
 
   it('die Anleitung öffnet den Reiter, in dem ihr Element liegt', () => {
-    useSidebarStore.getState().setTab('turn');
+    useSidebarStore.setState({ tab: 'turn', open: false });
     useSidebarStore.getState().reveal('players');
-    expect(useSidebarStore.getState().tab).toBe('score');
+    expect(useSidebarStore.getState()).toMatchObject({ tab: 'score', open: true });
     useSidebarStore.getState().reveal('galaxy');
     expect(useSidebarStore.getState().tab).toBe('score');
   });

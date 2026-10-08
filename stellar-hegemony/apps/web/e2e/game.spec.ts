@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
+import { chooseFactions } from './draft.ts';
 
 /** Eine freie Strategiekarte in der Hand, die nicht gerade ausfliegt. */
 const FREE_PICK = '.hand-card[data-kind="pick"]:not([data-leaving])';
@@ -47,6 +48,7 @@ async function startThreePlayers(page: Page) {
   await page.goto('/');
   await page.getByLabel('Spieler').selectOption('3');
   await page.getByRole('button', { name: 'Partie starten' }).click();
+  await chooseFactions(page);
   await keepSecrets(page);
 }
 
@@ -82,7 +84,7 @@ test('Hot-Seat: Führung, Diplomatie und eine taktische Aktion mit Bewegung', as
   const target = await neighbourOfActiveHome(page);
   await target.click();
   await expect(page.getByText(/^Gewählt:/)).toBeVisible();
-  await page.getByRole('button', { name: 'System aktivieren' }).click();
+  await page.getByRole('button', { name: 'System aktivieren', exact: true }).click();
   await expect(page.getByRole('heading', { name: /Aktiviertes System/ })).toBeVisible();
   await page.locator('.ship-choices input[type="checkbox"]').first().check();
   await page.getByRole('button', { name: 'Schiffe bewegen' }).click();
@@ -106,7 +108,7 @@ test('Hot-Seat: Produktion im eigenen Heimatsystem', async ({ page }) => {
   const actor = await page.getByTestId('actor').innerText();
   const seat = /P(\d)/.exec(actor)?.[1] ?? '';
   await page.locator(`[data-seat="${seat}"]`).click();
-  await page.getByRole('button', { name: 'System aktivieren' }).click();
+  await page.getByRole('button', { name: 'System aktivieren', exact: true }).click();
   await page.getByRole('button', { name: 'Ohne Bewegung weiter' }).click();
   await expect(page.getByRole('heading', { name: 'Produktion' })).toBeVisible();
   await page.getByRole('button', { name: 'Infanterie +' }).click();

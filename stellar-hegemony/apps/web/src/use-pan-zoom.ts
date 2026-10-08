@@ -61,11 +61,13 @@ export function usePanZoom(
   zoomBy: (factor: number) => void,
 ): PanZoomHandlers {
   const panBy = useGalaxyStore((state) => state.panBy);
+  /** Relativ zur Karte, nicht zum Element unter dem Zeiger (z. B. einem Knopf über dem System). */
   const [cursor, setCursor] = useState<Point>({ x: 0, y: 0 });
   const scale = () => viewWidth / Math.max(1, svg.current?.clientWidth ?? 1);
   const { dragTo, ...drag } = useDrag((dx, dy) => panBy(dx * scale(), dy * scale()));
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
-    setCursor({ x: event.nativeEvent.offsetX, y: event.nativeEvent.offsetY });
+    const box = event.currentTarget.getBoundingClientRect();
+    setCursor({ x: event.clientX - box.left, y: event.clientY - box.top });
     dragTo(event);
   };
   return { cursor, ...drag, onPointerMove, onWheel: (event) => zoomBy(wheelFactor(event)) };

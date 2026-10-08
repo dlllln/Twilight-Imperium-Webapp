@@ -1,21 +1,20 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import type { GameState } from '@stellar/domain';
-import { Compass, Flag, type LucideIcon, Trophy } from 'lucide-react';
+import { Flag, Layers, type LucideIcon, Trophy, X } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
-import { useGameStore } from '../../game-store.ts';
-import { errorText, type MessageKey } from '../../i18n.ts';
-import { useLanguage, useT } from '../../use-translation.ts';
+import type { MessageKey } from '../../i18n.ts';
+import { useT } from '../../use-translation.ts';
 import { LawsPanel } from '../agenda/LawsPanel.tsx';
 import { FactionsPanel } from '../faction/FactionsPanel.tsx';
 import { ObjectivesPanel } from '../objectives/ObjectivesPanel.tsx';
 import { TechnologyPanel } from '../technology/TechnologyPanel.tsx';
+import { IconButton } from '../ui/IconButton.tsx';
 import { PlayersPanel } from './PlayersPanel.tsx';
 import { type SidebarTab, useSidebarStore } from './sidebar-store.ts';
 import { StrategyCardGrid } from './StrategyCardGrid.tsx';
-import { TurnPanel } from './TurnPanel.tsx';
 
 const TABS: readonly (readonly [SidebarTab, MessageKey, LucideIcon])[] = [
-  ['turn', 'tabTurn', Compass],
+  ['turn', 'strategyCards', Layers],
   ['score', 'tabScore', Trophy],
   ['empire', 'tabEmpire', Flag],
 ];
@@ -37,55 +36,61 @@ function TabPanel({
   );
 }
 
-function RuleError(): ReactElement | null {
-  const t = useT();
-  const language = useLanguage();
-  const error = useGameStore((state) => state.error);
-  if (error === null) return null;
-  return (
-    <p className="error" role="alert">
-      {t('ruleError')}: {errorText(language, error.code)}
-    </p>
-  );
-}
-
+/** Reiter als Leiste am rechten Kartenrand; ein Reiter öffnet und schließt die Schublade. */
 function TabList(): ReactElement {
   const t = useT();
+  const toggle = useSidebarStore((state) => state.toggle);
   return (
-    <Tabs.List className="tab-list" aria-label={t('sidebar')}>
+    <Tabs.List className="tab-list drawer-tabs" aria-label={t('sidebar')}>
       {TABS.map(([value, key, Icon]) => (
-        <Tabs.Trigger key={value} value={value} className="tab-trigger">
-          <Icon size={16} aria-hidden="true" /> {t(key)}
+        <Tabs.Trigger
+          key={value}
+          value={value}
+          className="tab-trigger"
+          onMouseDown={() => toggle(value)}
+        >
+          <Icon size={18} aria-hidden="true" /> <span>{t(key)}</span>
         </Tabs.Trigger>
       ))}
     </Tabs.List>
   );
 }
 
-/** Seitenleiste mit drei Reitern statt aller Abschnitte untereinander. */
+function DrawerBody({ game, open }: { readonly game: GameState; readonly open: boolean }) {
+  const t = useT();
+  const close = useSidebarStore((state) => state.close);
+  return (
+    <div className="drawer-body glass" aria-hidden={!open}>
+      <div className="drawer-close">
+        <IconButton icon={X} label={t('closeDrawer')} onClick={close} side="bottom" />
+      </div>
+      <TabPanel value="turn">
+        <StrategyCardGrid game={game} />
+      </TabPanel>
+      <TabPanel value="score">
+        <ObjectivesPanel game={game} />
+        <PlayersPanel game={game} />
+      </TabPanel>
+      <TabPanel value="empire">
+        <TechnologyPanel game={game} />
+        <FactionsPanel game={game} />
+        <LawsPanel game={game} />
+      </TabPanel>
+    </div>
+  );
+}
+
+/** Übersicht als Schublade über der Karte: Kartenauslage, Wertung und das eigene Reich. */
 export function GameSidebar({ game }: { readonly game: GameState }): ReactElement {
-  const { tab, setTab } = useSidebarStore();
+  const { tab, open } = useSidebarStore();
   const choose = (value: string) => {
-    if (isTab(value)) setTab(value);
+    if (isTab(value)) useSidebarStore.getState().setTab(value);
   };
   return (
-    <aside className="game-sidebar glass">
-      <RuleError />
-      <Tabs.Root value={tab} onValueChange={choose}>
+    <aside className={open ? 'game-drawer open' : 'game-drawer'}>
+      <Tabs.Root value={tab} onValueChange={choose} orientation="vertical">
         <TabList />
-        <TabPanel value="turn">
-          <TurnPanel game={game} />
-          <StrategyCardGrid game={game} />
-        </TabPanel>
-        <TabPanel value="score">
-          <ObjectivesPanel game={game} />
-          <PlayersPanel game={game} />
-        </TabPanel>
-        <TabPanel value="empire">
-          <TechnologyPanel game={game} />
-          <FactionsPanel game={game} />
-          <LawsPanel game={game} />
-        </TabPanel>
+        <DrawerBody game={game} open={open} />
       </Tabs.Root>
     </aside>
   );
