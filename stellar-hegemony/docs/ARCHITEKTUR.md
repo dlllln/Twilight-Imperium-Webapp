@@ -544,7 +544,27 @@ tragen dessen Farbe am Rand. Wertung, Reich und Kartenauslage sind eine Schublad
 | `control` im Szenenmodell                  | Die Szene liefert den alleinigen Besitzer, Pixi zeichnet nur den Rand (Single Responsibility).                                               |
 | `GameSidebar` als Schublade                | Gleiche Panels, andere Anordnung; der Sidebar-Store merkt sich Reiter und Offen-Zustand, die Anleitung öffnet beides.                        |
 
-## 23. Iterationen
+## 23. Iteration 19 im Detail (plastische Karte)
+
+Die Karte wirkt wie ein Spielbrett aus echten Teilen, bleibt aber in der Draufsicht, damit
+Trefferflächen, Zoom und die Knöpfe am Feld exakt sitzen. Jede Kachel ist eine erhabene Platte:
+etwas kleiner als das Feld (Fugen), mit Seitenwänden nach unten, weichem Schlagschatten,
+Lichtkante oben links und Schattenfase unten rechts; die Fläche zeigt Tiefraum mit eigenen
+Sternen und einem Schleier in vier Varianten. Tiefer liegende Kacheln decken die oberen ab.
+Planeten werfen einen Schatten auf die Kachel, Schiffe haben eine dunkle Rumpfunterseite und
+schweben mit Schatten über dem Feld, Kommandomarker sind Chips mit Dicke und Glanzpunkt.
+Heimat- und Besitzränder leuchten in der Platzfarbe (breiter Schein und helle Linie).
+
+| Element                             | Prinzip                                                                                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `tile-shape.ts`                     | Reine Geometrie (Fläche, Wände, Fasen, Anker) ohne Canvas, einzeln getestet (Pure Fabrication, Testbarkeit).                         |
+| `paintTile` mit Varianten           | Flyweight: je Rückseite vier Bilder im Textur-Cache, die Variante kommt stabil aus dem Feldschlüssel.                                |
+| Draufsicht statt gekippter Kamera   | Gleiche Abbildung für Pixi und SVG; Tiefe entsteht nur in den Texturen (Low Coupling zur Trefferebene).                              |
+| `zIndex` nach Feldhöhe              | Die Szene ordnet die Ebenen, die Felder wissen nichts voneinander (Single Responsibility).                                           |
+| `dropShadow`, Kiel in `paintFigure` | Eine Schattenfunktion für Schiffe und Bodentruppen (DRY); Kiel und Rumpf nutzen denselben Umriss, Systemansicht und Kampf erben ihn. |
+| `seatFrame`                         | Ein Rand für Heimat und Besitz, nur Stärke und Größe unterscheiden sich (Open/Closed).                                               |
+
+## 24. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -566,8 +586,9 @@ tragen dessen Farbe am Rand. Wertung, Reich und Kartenauslage sind eine Schublad
 | 16  | Kampfsimulator, Kampfbühne auch in der Partie       | ✓     |
 | 17  | Handkarten statt Knöpfe, Systemzoom ohne Fenster    | ✓     |
 | 18  | Spieltisch über der Karte, Fraktionswahl            | ✓     |
+| 19  | Plastische Karte: Kacheln, Schatten, Leuchtränder   | ✓     |
 
-## 24. Befehle
+## 25. Befehle
 
 ```
 pnpm install

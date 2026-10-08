@@ -7,10 +7,12 @@ import { hexOf, type Rgb, rgbOf } from './palette.ts';
 import { type PlanetLook, paintPlanet } from './planet-texture.ts';
 import { paintUnit } from './ship-texture.ts';
 import { paintGlow, paintStar, STAR_VARIANTS } from './star-texture.ts';
-import { paintTileFace } from './tile-texture.ts';
+import { paintTile } from './tile-texture.ts';
 
 /* Texturgrößen in Pixeln: groß genug für dreifachen Zoom auf hochauflösenden Bildschirmen. */
-const TILE_RADIUS = 160;
+export const TILE_RADIUS = 160;
+/** Kacheln gibt es in mehreren Varianten (Sterne, Schleier), damit die Karte nicht gekachelt wirkt. */
+export const TILE_VARIANTS = 4;
 const PLANET_SIZE = 160;
 const ANOMALY_SIZE = 256;
 const SHIP_SIZE = { width: 112, height: 70 };
@@ -34,8 +36,8 @@ function cached(key: string, paint: () => HTMLCanvasElement | null): Texture {
 
 export const seatRgb = (seat: number): Rgb => rgbOf(hexOf(seatColor(seat)));
 
-export const tileTexture = (back: TileBack): Texture =>
-  cached(`tile:${back}`, () => paintTileFace(back, TILE_RADIUS));
+export const tileTexture = (back: TileBack, variant: number): Texture =>
+  cached(`tile:${back}:${String(variant)}`, () => paintTile(back, TILE_RADIUS, variant));
 
 export const planetTexture = (id: string, look: PlanetLook): Texture =>
   cached(`planet:${id}`, () => paintPlanet(id, look, PLANET_SIZE));

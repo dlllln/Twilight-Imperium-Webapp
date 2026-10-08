@@ -240,10 +240,34 @@ function paintFigure(
   height: number,
 ) {
   const ship = !isGround(type);
+  const outline = OUTLINES[type] ?? OUTLINES.destroyer ?? [];
   if (ship) paintEngine(context, width, height);
-  hullPath(context, OUTLINES[type] ?? OUTLINES.destroyer ?? [], width, height);
+  if (ship) paintKeel(context, outline, color, width, height);
+  context.save();
+  if (ship) context.scale(1, 1 - KEEL);
+  hullPath(context, outline, width, height);
   paintHull(context, color, height);
   if (ship) paintPlating(context, color, width, height);
   context.fillStyle = css(mix(color, [0, 0, 0], 0.55));
   DETAILS[type]?.(context, width, height);
+  context.restore();
+}
+
+/** Anteil der Bildhöhe für die dunkle Rumpfunterseite: das Schiff wirkt wie eine Figur mit Tiefe. */
+const KEEL = 0.14;
+
+function paintKeel(
+  context: CanvasRenderingContext2D,
+  outline: Outline,
+  color: Rgb,
+  width: number,
+  height: number,
+) {
+  context.save();
+  context.translate(0, height * KEEL);
+  context.scale(1, 1 - KEEL);
+  hullPath(context, outline, width, height);
+  context.fillStyle = css(mix(color, [0, 0, 0], 0.72));
+  context.fill();
+  context.restore();
 }

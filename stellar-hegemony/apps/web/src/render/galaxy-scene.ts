@@ -51,6 +51,8 @@ export class GalaxyScene {
 
   constructor(private readonly app: Application) {
     this.background.anchor.set(0.5);
+    this.layers.base.sortableChildren = true;
+    this.layers.content.sortableChildren = true;
     this.world.addChild(
       this.layers.base,
       this.layers.glow,
