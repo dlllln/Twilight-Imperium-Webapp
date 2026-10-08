@@ -43,7 +43,8 @@ stellar-hegemony/
 │   │       ├── objectives/    (It. 8) ObjectiveEvaluator, VictoryChecker
 │   │       ├── action-card/   (It. 9) Aktionskarten als Daten, Wirkungsregeln, Zeitfenster, Verhindern
 │   │       ├── agenda/        (It. 10) Agenden als Daten, Abstimmung, Gesetze, Direktiven
-│   │       └── faction/       (It. 11) FactionAbility, Fraktionsregeln; galaxy/board-limits
+│   │       ├── faction/       (It. 11) FactionAbility, Fraktionsregeln; galaxy/board-limits
+│   │       └── simulator/     (It. 16) Flotte kaufen, Kampfrunde mit Taktikkarten, KI-Gegner
 │   ├── application/         Use Cases: GameController, Ports (EventStorePort, EventPublisherPort)
 │   ├── infrastructure/      Adapter: SeededRandom, SystemClock, InMemoryEventStore, InProcessEventPublisher
 │   │                        CryptoRandom, CryptoIds, InMemoryLobbyStore; unter `/node` PostgresEventStore, RedisLobbyStore
@@ -52,8 +53,10 @@ stellar-hegemony/
 └── apps/
     ├── server/              (It. 12) Fastify + Socket.IO, Composition Root, SocketGateway, BotDriver
     └── web/                 React 18 + Vite + Zustand, i18n de/en, Playwright-E2E
-        └── src/render/      (It. 4) PixiJS-Szene: prozeduraler Nebel, Planeten, Anomalien,
-                             Schiffsminiaturen, Bloom-Glühen; darüber SVG-Trefferflächen
+        ├── src/render/      (It. 4) PixiJS-Szene: prozeduraler Nebel, Planeten, Anomalien,
+        │                    Schiffsminiaturen, Bloom-Glühen; darüber SVG-Trefferflächen
+        ├── src/battle/      (It. 16) Aufstellung und Choreografie der Kampfbühne (reine Funktionen)
+        └── src/simulator/   (It. 16) Ablauf des Kampfsimulators
 ```
 
 Abhängigkeiten zeigen nur nach innen: `web → application → domain`, `infrastructure → application → domain`,
@@ -459,7 +462,30 @@ und die Karte zeigt keine Systemkennungen mehr (der Tooltip nennt sie).
 | `PhaseBar` in der `Toolbar`       | Eine Zeile statt zwei; nur die aktuelle Phase zeigt ihren Namen, die anderen erklären sich per Tooltip.                           |
 | `IconButton` mit eigenem Provider | Selbstständiger Baustein: funktioniert auch außerhalb des App-Providers, etwa in Tests einzelner Leisten.                         |
 
-## 20. Iterationen
+## 20. Iteration 16 im Detail (Kampfsimulator, Kampfbühne)
+
+Der Kampfsimulator ist ein eigener Modus neben der Partie, erreichbar über „Kampfsimulator“ im
+Aufbau. Ablauf: Fraktion wählen (Liste, Heimatplanet mit Wappen, Komplexität, Fähigkeiten und ein
+eigener kurzer Hintergrund), Flotte in der Werft kaufen (Ressourcen, Produktionslimit, Kapazität
+für Jäger, Bestandslimit je Schiff), dann der Raumkampf gegen einen KI-Gegner über bis zu drei
+Kämpfe. Pro Runde darf eine Taktikkarte gespielt werden (+1 auf Würfe, ein Treffer abgewehrt,
+zwei Würfel mehr, Reparatur), danach feuern beide Seiten gleichzeitig. Die Kampfbühne zeigt
+Laser, Funken, Schilde, Explosionen mit Trümmern, Rauch an beschädigten Schiffen und zwei große
+Planeten im Hintergrund; darüber liegen Seitenkarten, Rundenbanner, Serienanzeige und Karten.
+Dieselbe Bühne steht jetzt auch in der Kampfansicht der Partie: Würfe lösen Schüsse aus, die
+Zuweisung lässt die gewählten Schiffe explodieren oder qualmen.
+
+| Element                                         | Prinzip                                                                                                                                         |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fightRound`, `validateFleet`, `botFleet`       | Domain mit `Result` statt Ausnahmen; Regeln des Simulators sind reine Funktionen, Zufall kommt über den `RandomPort` (Dependency Inversion).    |
+| `SIMULATOR_RULES`, `TACTIC_CARDS`, Profile      | Daten im Paket `content` (Open/Closed): neue Karten oder Schiffe ohne Codeänderung; Texte und Hintergründe sind eigene Formulierungen.          |
+| `battleLayout`, `shotsOf`, `combatStage`        | Reine Funktionen (Information Expert): Aufstellung, Choreografie einer Runde und die Brücke vom Kampfprotokoll zur Bühne, ohne Pixi testbar.    |
+| `BattleScene`, `EffectLayer`, `BattleShipPiece` | Controller und Komposition: die Szene gleicht Schiffe ab und plant Wirkungen zeitlich ein; jedes Teil animiert sich selbst.                     |
+| `usePixiScene`                                  | Ein Hook für alle Pixi-Bühnen (DRY): Anwendung anlegen, Größe nachführen, sauber abbauen; Karte, Systemansicht und Kampf teilen ihn.            |
+| `useSimulatorStore`                             | Controller (GRASP) für den Ablauf; `battle` ist der Stand, `shown` hinkt während der Schüsse nach, damit Treffer sichtbar werden.               |
+| `CombatStage` in der Partie                     | Geringe Kopplung: liest nur Spielstand und Protokoll; zerstörte Schiffe bleiben für die Salve auf der Bühne, danach gilt wieder der Spielstand. |
+
+## 21. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -478,8 +504,9 @@ und die Karte zeigt keine Systemkennungen mehr (der Tooltip nennt sie).
 | 13  | Animationen, Sound-Hooks, Tutorial                  | ✓     |
 | 14  | Systemansicht mit Kamerafahrt, moderne Oberfläche   | ✓     |
 | 15  | Gängige Namen, schlichtere Oberfläche mit Reitern   | ✓     |
+| 16  | Kampfsimulator, Kampfbühne auch in der Partie       | ✓     |
 
-## 21. Befehle
+## 22. Befehle
 
 ```
 pnpm install

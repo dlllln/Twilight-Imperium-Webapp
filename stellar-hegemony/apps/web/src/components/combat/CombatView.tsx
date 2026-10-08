@@ -17,6 +17,7 @@ import { PlayableCards } from '../cards/PlayableCards.tsx';
 import { ReactionPrompt } from '../cards/ReactionPrompt.tsx';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { CombatLog } from './CombatLog.tsx';
+import { CombatStage } from './CombatStage.tsx';
 import { FleetColumn } from './FleetColumn.tsx';
 import { HitAssignmentForm } from './HitAssignmentForm.tsx';
 import { RetreatForm } from './RetreatForm.tsx';
@@ -120,7 +121,8 @@ function Fleets({
 }
 
 /**
- * Eigene Kampfansicht über der Karte: beide Flotten als Miniaturen, Würfelprotokoll
+ * Eigene Kampfansicht über der Karte: im Raumkampf die bewegte Bühne mit Lasern und
+ * Explosionen, beide Flotten als Miniaturen, Würfelprotokoll
  * und die gerade offene Entscheidung (Treffer zuweisen, Rückzug).
  */
 export function CombatView(): ReactElement | null {
@@ -142,6 +144,7 @@ export function CombatView(): ReactElement | null {
           <h2>{t(titleOf(log))}</h2>
           <p>{systemLabel(game, system, language)}</p>
         </header>
+        <CombatStage key={system} game={game} system={system} log={log} />
         <Fleets game={game} system={system} log={log} />
         <CombatLog game={game} log={log} />
         <footer className="combat-footer">

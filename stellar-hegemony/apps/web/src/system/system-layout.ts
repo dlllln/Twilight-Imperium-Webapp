@@ -70,7 +70,7 @@ const FLEET_SPREAD = 560;
 export const MAX_SHIPS_PER_TYPE = 6;
 
 const SHIP_ORDER = ['sunbreaker', 'dreadnought', 'carrier', 'cruiser', 'destroyer'];
-const SHIP_SCALE: Readonly<Record<string, number>> = {
+export const SHIP_SCALE: Readonly<Record<string, number>> = {
   sunbreaker: 1.5,
   dreadnought: 1.25,
   carrier: 1.1,

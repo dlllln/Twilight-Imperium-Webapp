@@ -1,4 +1,4 @@
-import { BookOpen, LogOut, Play, Shuffle } from 'lucide-react';
+import { BookOpen, LogOut, Play, Shuffle, Swords } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { PhaseBar } from './game/PhaseBar.tsx';
 import { SettingsMenu } from './SettingsMenu.tsx';
@@ -6,6 +6,7 @@ import { IconButton } from './ui/IconButton.tsx';
 import { type MessageKey, translate } from '../i18n.ts';
 import { useGameStore } from '../game-store.ts';
 import { useOnlineStore } from '../online/online-store.ts';
+import { useSimulatorStore } from '../simulator/simulator-store.ts';
 import { useGalaxyStore } from '../store.ts';
 import { useTutorialStore } from '../tutorial/tutorial-store.ts';
 
@@ -93,12 +94,16 @@ function GameButton({ t }: { readonly t: Translate }): ReactElement | null {
 /** Vor der Partie: Spielerzahl, KI-Gegner, neue Galaxie. */
 function SetupControls({ t }: { readonly t: Translate }): ReactElement {
   const generate = useGalaxyStore((state) => state.generate);
+  const openSimulator = useSimulatorStore((state) => state.open);
   return (
     <>
       <PlayerCountSelect label={t('players')} />
       <BotCountSelect label={t('botOpponents')} />
       <button type="button" className="icon-button" onClick={() => generate()}>
         <Shuffle size={18} aria-hidden="true" /> {t('newGalaxy')}
+      </button>
+      <button type="button" className="icon-button" onClick={openSimulator}>
+        <Swords size={18} aria-hidden="true" /> {t('openSimulator')}
       </button>
     </>
   );

@@ -149,3 +149,8 @@ export * from './phases/current-actor.ts';
 export * from './galaxy/board-limits.ts';
 export * from './visibility/player-view.ts';
 export * from './visibility/visible-events.ts';
+export * from './simulator/simulator-state.ts';
+export * from './simulator/fleet-order.ts';
+export * from './simulator/simulated-round.ts';
+export * from './simulator/simulator-setup.ts';
+export * from './simulator/simulator-bot.ts';

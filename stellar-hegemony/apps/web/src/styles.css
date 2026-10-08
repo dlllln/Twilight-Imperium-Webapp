@@ -622,7 +622,7 @@ input[type='checkbox'] {
   width: min(1100px, 100%);
   max-height: 100%;
   display: grid;
-  grid-template-rows: auto auto minmax(80px, 1fr) auto;
+  grid-template-rows: auto auto auto minmax(80px, 1fr) auto;
   gap: 14px;
   padding: 20px 24px;
   border: 1px solid var(--gold-line);
@@ -633,7 +633,7 @@ input[type='checkbox'] {
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.7),
     inset 0 0 80px rgba(0, 0, 0, 0.65);
-  overflow: hidden;
+  overflow: hidden auto;
 }
 
 .combat-header {
@@ -2429,4 +2429,673 @@ select option {
 
 .tab-panel[data-state='inactive'] {
   display: none;
+}
+
+/* Iteration 16: Kampfsimulator — Fraktionswahl, Werft, Kampfbühne */
+
+.simulator {
+  --hud: rgba(10, 18, 38, 0.86);
+  --hud-line: rgba(120, 160, 220, 0.28);
+  --hud-gold: #f0c96a;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  padding: 28px;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(60, 90, 170, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(120, 60, 140, 0.25) 0%, transparent 55%),
+    var(--space-deep);
+  overflow: auto;
+}
+
+.simulator.stage-battle {
+  padding: 0;
+  overflow: hidden;
+}
+
+.simulator-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+}
+
+.sim-panel {
+  background: var(--hud);
+  border: 1px solid var(--hud-line);
+  clip-path: polygon(
+    0 18px,
+    18px 0,
+    100% 0,
+    100% calc(100% - 18px),
+    calc(100% - 18px) 100%,
+    0 100%
+  );
+  padding: 22px 26px;
+}
+
+.sim-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--title-font);
+  font-size: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hud-gold);
+}
+
+.sim-kicker {
+  margin: 4px 0 16px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.hex-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 28px;
+  border: 1px solid var(--hud-line);
+  border-radius: 0;
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 50%,
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 50%
+  );
+  background: rgba(30, 44, 80, 0.9);
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hex-button.primary {
+  background: linear-gradient(180deg, #ffe7a6 0%, #e2b55a 100%);
+  color: #1b1405;
+  border-color: transparent;
+}
+
+.hex-button:disabled {
+  opacity: 0.45;
+}
+
+.hex-button.primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fff1c6 0%, #ecc26a 100%);
+  color: #1b1405;
+}
+
+.sim-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.sim-error {
+  margin: 0 auto 0 0;
+  color: #ffb3a8;
+  font-size: 14px;
+}
+
+/* Fraktionswahl */
+
+.sim-faction {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: 32px;
+  max-width: 1200px;
+  width: 100%;
+  margin: auto;
+}
+
+.faction-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.faction-grid button {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border: 1px solid var(--hud-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.faction-grid button[aria-checked='true'] {
+  border-color: var(--hud-gold);
+  box-shadow:
+    0 0 0 2px rgba(240, 201, 106, 0.35),
+    0 0 22px rgba(240, 201, 106, 0.25);
+}
+
+.sim-faction-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 20px;
+}
+
+.faction-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 26px;
+}
+
+.faction-head > div:not(.faction-orb) {
+  flex: 1;
+}
+
+.faction-head h2 {
+  margin: 0 0 10px;
+  font-family: var(--title-font);
+  font-size: 34px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.faction-orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 230px;
+  height: 230px;
+  flex: none;
+}
+
+.faction-orb img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 60px rgba(120, 170, 255, 0.35);
+}
+
+.faction-orb .faction-emblem {
+  position: absolute;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7));
+}
+
+.complexity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.complexity span {
+  margin-right: 8px;
+}
+
+.complexity i {
+  width: 34px;
+  height: 9px;
+  transform: skewX(-25deg);
+  border: 1px solid var(--hud-gold);
+}
+
+.complexity i.on {
+  background: var(--hud-gold);
+}
+
+.pill-tabs {
+  display: inline-flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pill-tabs button {
+  padding: 6px 22px;
+  border: 1px solid var(--hud-line);
+  border-radius: 0;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  background: rgba(30, 44, 80, 0.8);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pill-tabs button[data-state='active'] {
+  background: linear-gradient(180deg, #ffe7a6 0%, #e2b55a 100%);
+  color: #1b1405;
+}
+
+.faction-tabs [role='tabpanel'] {
+  min-height: 120px;
+}
+
+.ability-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ability-list li {
+  display: grid;
+  gap: 2px;
+}
+
+.faction-lore {
+  margin: 0;
+  font-style: italic;
+  color: #cfd6ee;
+  max-width: 60ch;
+}
+
+/* Werft */
+
+.sim-fleet {
+  max-width: 1100px;
+  width: 100%;
+  margin: auto;
+}
+
+.sim-fleet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fleet-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 18px 0 22px;
+  border: 1px solid var(--hud-line);
+  clip-path: polygon(
+    24px 0,
+    calc(100% - 24px) 0,
+    100% 50%,
+    calc(100% - 24px) 100%,
+    24px 100%,
+    0 50%
+  );
+  background: rgba(20, 32, 62, 0.7);
+}
+
+.fleet-stat {
+  display: grid;
+  justify-items: center;
+  padding: 10px;
+  gap: 2px;
+}
+
+.fleet-stat span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hud-gold);
+}
+
+.fleet-stat strong {
+  font-size: 22px;
+}
+
+.fleet-stat.over strong {
+  color: #ff8f80;
+}
+
+.ship-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ship-card {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 12px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 60%, rgba(80, 110, 180, 0.18) 0%, transparent 70%);
+}
+
+.ship-card h3 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hud-gold);
+}
+
+.ship-owned,
+.ship-cost {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ship-card img {
+  width: 170px;
+  height: 85px;
+  object-fit: contain;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border-radius: 0;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: rgba(40, 58, 100, 0.95);
+  border: 0;
+}
+
+.stepper output {
+  min-width: 28px;
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.series-pips {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hud-gold);
+}
+
+.series-pips ol {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pip {
+  width: 18px;
+  height: 18px;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: rgba(150, 170, 210, 0.35);
+}
+
+.pip.current {
+  background: #fff;
+}
+
+.pip.won {
+  background: #52d68a;
+}
+
+.pip.lost {
+  background: #ff6b5c;
+}
+
+.pip.drawn {
+  background: var(--hud-gold);
+}
+
+/* Kampfbühne */
+
+.sim-battle {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.battle-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.battle-banner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.banner-plate {
+  padding: 8px 46px;
+  text-align: center;
+  background: var(--hud);
+  border: 1px solid var(--hud-line);
+  clip-path: polygon(
+    18px 0,
+    calc(100% - 18px) 0,
+    100% 50%,
+    calc(100% - 18px) 100%,
+    18px 100%,
+    0 50%
+  );
+}
+
+.banner-plate h2 {
+  margin: 0;
+  font-family: var(--title-font);
+  font-size: 18px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hud-gold);
+}
+
+.banner-plate p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.side-card {
+  position: absolute;
+  top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 360px;
+  padding: 10px 18px;
+  background: var(--hud);
+  border-bottom: 3px solid #52d68a;
+}
+
+.side-card.rival {
+  left: 14px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
+  border-color: #56b4e9;
+}
+
+.side-card.you {
+  right: 70px;
+  flex-direction: row-reverse;
+  text-align: right;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 18px 100%);
+  border-color: #e69f00;
+}
+
+.side-card h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.side-role {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hud-gold);
+}
+
+.side-fleet {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.round-log {
+  position: absolute;
+  left: 50%;
+  bottom: 168px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(8, 14, 30, 0.8);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.battle-controls {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+.tactic-hand {
+  display: flex;
+  gap: 10px;
+}
+
+.tactic-card {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  width: 150px;
+  min-height: 128px;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid rgba(240, 120, 110, 0.55);
+  border-top: 4px solid #e2574b;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, rgba(40, 22, 30, 0.95) 0%, rgba(14, 16, 30, 0.95) 100%);
+  transition: transform 0.18s ease;
+}
+
+.tactic-card strong {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tactic-card span {
+  font-size: 12px;
+  color: #cdd3ea;
+}
+
+.tactic-card:hover:not(:disabled),
+.tactic-card[aria-pressed='true'] {
+  transform: translateY(-14px);
+}
+
+.tactic-card[aria-pressed='true'] {
+  border-color: var(--hud-gold);
+  border-top-color: var(--hud-gold);
+  box-shadow: 0 0 24px rgba(240, 201, 106, 0.4);
+}
+
+.fire-button {
+  padding: 16px 40px;
+  font-size: 18px;
+}
+
+.battle-result {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  padding: 18px 42px;
+  background: var(--hud);
+  border: 1px solid var(--hud-line);
+}
+
+.battle-result h2 {
+  margin: 0;
+  font-family: var(--title-font);
+  font-size: 34px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.battle-result.victory h2 {
+  color: #6de39c;
+}
+
+.battle-result.defeat h2 {
+  color: #ff7b6b;
+}
+
+.battle-result p {
+  margin: 4px 0 0;
+}
+
+@media (max-width: 760px) {
+  .sim-faction {
+    grid-template-columns: 1fr;
+  }
+
+  .faction-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .side-card {
+    max-width: 44vw;
+  }
+
+  .tactic-card {
+    width: 110px;
+  }
+}
+
+.sim-faction-list .sim-title {
+  font-size: 19px;
+  letter-spacing: 0.08em;
+}
+
+/* Kampfbühne in der Partie */
+
+.combat-stage {
+  position: relative;
+  height: clamp(180px, 32vh, 340px);
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--gold-line);
+  border-radius: 12px;
+  background: #050a18;
 }

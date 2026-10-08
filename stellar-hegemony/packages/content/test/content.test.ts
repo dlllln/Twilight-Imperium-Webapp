@@ -1,16 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import {
+  botFleet,
   canBeProduced,
   countsTowardFleetLimit,
   findCapability,
+  playerId,
+  StaticUnitCatalog,
+  validateFleet,
   validateGameConfig,
 } from '@stellar/domain';
 import {
   abilitiesOf,
   BASE_RULE_NUMBERS,
   BASE_UNITS,
+  FACTION_PROFILES,
   FACTIONS,
   factionAbilityText,
+  SIMULATOR_RULES,
+  SIMULATOR_SHIPS,
+  TACTIC_CARD_TEXTS,
+  TACTIC_CARDS,
   UNIT_TYPES,
   unitName,
 } from '../src/index.ts';
@@ -97,5 +106,20 @@ describe('Content: Fraktionsfähigkeiten (RR 27.21)', () => {
       ),
     );
     expect(targets.every((type) => known.has(type))).toBe(true);
+  });
+});
+
+describe('Content: Kampfsimulator', () => {
+  it('jede Fraktion hat ein Profil, jede Taktikkarte einen Text', () => {
+    expect(FACTIONS.every((faction) => FACTION_PROFILES[faction.id] !== undefined)).toBe(true);
+    expect(TACTIC_CARDS.every((card) => TACTIC_CARD_TEXTS[card.id] !== undefined)).toBe(true);
+  });
+
+  it('der KI-Gegner baut mit den Grundwerten eine gültige Flotte', () => {
+    const catalog = new StaticUnitCatalog(BASE_UNITS);
+    const random = { nextInt: (min: number) => min };
+    const owner = playerId('p2');
+    const order = botFleet(SIMULATOR_SHIPS, catalog, owner, SIMULATOR_RULES, random);
+    expect(validateFleet(order, catalog, owner, SIMULATOR_RULES).ok).toBe(true);
   });
 });

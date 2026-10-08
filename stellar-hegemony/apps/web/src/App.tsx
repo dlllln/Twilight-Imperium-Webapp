@@ -5,6 +5,7 @@ import { GalaxyMap } from './components/GalaxyMap.tsx';
 import { GameSidebar } from './components/game/GameSidebar.tsx';
 import { ConnectionBanner } from './components/online/ConnectionBanner.tsx';
 import { SetupSidebar } from './components/online/SetupSidebar.tsx';
+import { SimulatorScreen } from './components/simulator/SimulatorScreen.tsx';
 import { Toolbar } from './components/Toolbar.tsx';
 import { TutorialDialog } from './components/tutorial/TutorialDialog.tsx';
 import { useSoundEffects } from './audio/use-sound-effects.ts';
@@ -63,6 +64,7 @@ export function App(): ReactElement {
         </main>
         {game !== null && <CombatView />}
         <TutorialDialog />
+        <SimulatorScreen />
       </div>
     </Tooltip.Provider>
   );

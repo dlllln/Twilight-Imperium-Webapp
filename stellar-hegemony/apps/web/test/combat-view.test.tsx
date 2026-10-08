@@ -128,6 +128,7 @@ describe('Kampfansicht', () => {
     expect(screen.getByRole('dialog', { name: 'Raumkampf' })).toBeDefined();
     expect(screen.getByText('Angreifer')).toBeDefined();
     expect(screen.getByText('Verteidiger')).toBeDefined();
+    expect(document.querySelector('.combat-stage .battle-canvas')).not.toBeNull();
     // RR 63.5: Der Angreifer kann sich in seine Heimat zurückziehen, also fragt die Ansicht zuerst.
     expect(document.querySelectorAll('.die')).toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: 'Weiterkämpfen' }));
