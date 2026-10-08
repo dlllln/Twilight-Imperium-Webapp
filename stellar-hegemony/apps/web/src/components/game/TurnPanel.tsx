@@ -7,11 +7,10 @@ import {
   type StrategyCardDefinition,
   type StrategyCardId,
   type StrategyChoice,
-  strategyCardsOf,
-  strategyEffectFor,
 } from '@stellar/domain';
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
 import { useOthersTurn, useGameStore, useHumanActor } from '../../game-store.ts';
+import { useHandStore } from '../../hand/hand-store.ts';
 import { useSettingsStore } from '../../settings-store.ts';
 import { content } from '../../store.ts';
 import { PHASE_TIPS } from '../../tutorial/tutorial-steps.ts';
@@ -24,7 +23,7 @@ import { ReactionPrompt } from '../cards/ReactionPrompt.tsx';
 import { cardText } from './card-text.ts';
 import { ChoiceForm } from './ChoiceForm.tsx';
 import { PlayerTag } from './PlayerTag.tsx';
-import { ActivationBlock, TacticalTurn } from './TacticalPanel.tsx';
+import { TacticalTurn } from './TacticalPanel.tsx';
 import { TransactionForm, TransactionReply } from './TransactionForm.tsx';
 
 const definitionOf = (id: StrategyCardId | undefined): StrategyCardDefinition | undefined =>
@@ -64,26 +63,6 @@ function SecondaryPrompt({ game, player }: TurnProps): ReactElement | null {
   );
 }
 
-function CardChoice({
-  card,
-  onChoose,
-}: {
-  readonly card: StrategyCardDefinition;
-  readonly onChoose: () => void;
-}): ReactElement {
-  const t = useT();
-  const language = useLanguage();
-  const playable = strategyEffectFor(card.mechanic) !== undefined;
-  return (
-    <li>
-      <button type="button" disabled={!playable} onClick={onChoose}>
-        {t('strategicAction')}: {cardText(card.id).name[language]}
-      </button>
-      {!playable && <p className="hint">{t('laterIteration')}</p>}
-    </li>
-  );
-}
-
 interface PrimaryProps extends TurnProps {
   readonly card: StrategyCardDefinition;
   readonly onBack: () => void;
@@ -93,8 +72,9 @@ function PrimaryAction({ game, player, card, onBack }: PrimaryProps): ReactEleme
   const t = useT();
   const language = useLanguage();
   const send = useGameStore((state) => state.send);
-  const perform = (choice: StrategyChoice) =>
-    send({ type: 'PerformStrategicAction', issuedBy: player, card: card.id, choice });
+  const perform = (choice: StrategyChoice) => {
+    if (send({ type: 'PerformStrategicAction', issuedBy: player, card: card.id, choice })) onBack();
+  };
   return (
     <div className="turn-block">
       <h3>{cardText(card.id).name[language]}</h3>
@@ -108,33 +88,24 @@ function PrimaryAction({ game, player, card, onBack }: PrimaryProps): ReactEleme
   );
 }
 
+/** Die aus der Hand gespielte strategische Aktion dieses Spielers, falls eine offen ist. */
+function useChosenCard(player: PlayerId): StrategyCardDefinition | undefined {
+  const chosen = useHandStore((state) => state.chosen);
+  return chosen?.player === player ? definitionOf(chosen.card) : undefined;
+}
+
+/** Gezogen wird mit den Karten der Hand; hier stehen nur Formulare und der Handel. */
 function ActiveTurn({ game, player }: TurnProps): ReactElement {
   const t = useT();
-  const send = useGameStore((state) => state.send);
-  const [chosen, setChosen] = useState<StrategyCardDefinition | null>(null);
+  const chosen = useChosenCard(player);
+  const clear = useHandStore((state) => state.clear);
   if (game.actionPhase?.tactical != null) return <TacticalTurn game={game} player={player} />;
-  if (chosen !== null)
-    return (
-      <PrimaryAction game={game} player={player} card={chosen} onBack={() => setChosen(null)} />
-    );
-  const unused = strategyCardsOf(game, player).filter((card) => !card.exhausted);
-  const cards = unused.flatMap((card) => definitionOf(card.id) ?? []);
+  if (chosen !== undefined)
+    return <PrimaryAction game={game} player={player} card={chosen} onBack={clear} />;
   return (
     <div className="turn-block">
-      <ul className="choices">
-        {cards.map((card) => (
-          <CardChoice key={card.id} card={card} onChoose={() => setChosen(card)} />
-        ))}
-      </ul>
-      <ActivationBlock game={game} player={player} />
+      <p className="hint hand-hint">{t('handHint')}</p>
       <TransactionForm game={game} player={player} />
-      <button
-        type="button"
-        disabled={unused.length > 0}
-        onClick={() => send({ type: 'Pass', issuedBy: player })}
-      >
-        {t('pass')}
-      </button>
     </div>
   );
 }

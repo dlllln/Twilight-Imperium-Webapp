@@ -16,7 +16,7 @@ async function keepSecret(page: Page) {
 }
 
 async function pickIfAllowed(page: Page) {
-  const free = page.locator('.strategy-card button:not([disabled])').first();
+  const free = page.locator('.hand-card[data-kind="pick"]:not([data-leaving])').first();
   if (await free.isVisible()) await free.click();
 }
 

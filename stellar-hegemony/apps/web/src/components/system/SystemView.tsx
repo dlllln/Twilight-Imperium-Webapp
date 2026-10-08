@@ -15,9 +15,14 @@ const SystemCanvas = lazy(() =>
   import('./SystemCanvas.tsx').then((module) => ({ default: module.SystemCanvas })),
 );
 
-/** Die Systemansicht öffnet sich, während die Kamera noch in das Feld hineinfährt. */
-const OPEN = { delay: 0.3, duration: 0.55, ease: [0.22, 1, 0.36, 1] } as const;
+/**
+ * Kein Fenster: Die Ansicht blendet sich gegen Ende der Kamerafahrt aus der Unschärfe ein,
+ * als zoome die Karte einfach weiter in das System hinein.
+ */
+const OPEN = { delay: 0.35, duration: 0.6, ease: [0.22, 1, 0.36, 1] } as const;
 const CLOSE = { duration: 0.35, ease: [0.4, 0, 1, 1] } as const;
+const FAR = { opacity: 0, scale: 0.72, filter: 'blur(10px)' } as const;
+const NEAR = { opacity: 1, scale: 1, filter: 'blur(0px)' } as const;
 
 function useEscapeToClose(): void {
   const close = useSystemViewStore((state) => state.close);
@@ -46,14 +51,17 @@ function SystemStage({ hex }: { readonly hex: SceneHex }): ReactElement {
         <SystemLabels layout={layout} size={size} />
       </div>
       <SystemHeader hex={hex} />
-      <SystemContents layout={layout} />
+      <div className="sr-only">
+        <SystemContents layout={layout} />
+      </div>
     </section>
   );
 }
 
-/** Ebene über der Karte; erscheint mit einem Zoom aus der Mitte, in die die Kamera fährt. */
+/** Ebene über der Karte; Herauszoomen mit dem Mausrad kehrt zur Sternenkarte zurück. */
 export function SystemView({ hexes }: { readonly hexes: readonly SceneHex[] }): ReactElement {
   const key = useSystemViewStore((state) => state.key);
+  const close = useSystemViewStore((state) => state.close);
   const animations = useSettingsStore((state) => state.animations);
   const hex = hexes.find((candidate) => candidate.key === key && candidate.kind === 'system');
   const instant = { duration: 0 };
@@ -63,9 +71,12 @@ export function SystemView({ hexes }: { readonly hexes: readonly SceneHex[] }): 
         <motion.div
           key={hex.key}
           className="system-layer"
-          initial={{ opacity: 0, scale: 0.25 }}
-          animate={{ opacity: 1, scale: 1, transition: animations ? OPEN : instant }}
-          exit={{ opacity: 0, scale: 0.25, transition: animations ? CLOSE : instant }}
+          initial={FAR}
+          animate={{ ...NEAR, transition: animations ? OPEN : instant }}
+          exit={{ ...FAR, transition: animations ? CLOSE : instant }}
+          onWheel={(event) => {
+            if (event.deltaY > 0) close();
+          }}
         >
           <SystemStage hex={hex} />
         </motion.div>

@@ -34,16 +34,17 @@ afterEach(() => cleanup());
 function openHome() {
   render(<App />);
   act(() => void keepSecrets(started()));
-  fireEvent.doubleClick(homeOfFirstSeat());
+  fireEvent.click(homeOfFirstSeat());
   const view = systemView();
   if (view === null) throw new Error('Systemansicht fehlt');
   return view;
 }
 
 describe('Systemansicht', () => {
-  it('Doppelklick fährt die Kamera ins System und zeigt Flotten, Planeten und Bodentruppen', () => {
+  it('ein Klick fährt ohne Fenster ins System, wählt es aus und zeigt Flotten und Planeten', () => {
     const view = openHome();
     expect(useGalaxyStore.getState().viewport.zoom).toBe(FOCUS_ZOOM);
+    expect(useGameStore.getState().selected).toBe(homeOfFirstSeat().getAttribute('data-system'));
     const contents = within(view).getByRole('list', { name: 'Im System' });
     expect(contents.textContent).toContain('Träger');
     expect(contents.textContent).toContain('Raumdock');
@@ -58,22 +59,21 @@ describe('Systemansicht', () => {
     expect(useGalaxyStore.getState().viewport).toEqual(DEFAULT_VIEWPORT);
   });
 
-  it('„Dieses System wählen“ wählt es in der Partie aus und kehrt zur Karte zurück', async () => {
+  it('Herauszoomen mit dem Mausrad kehrt zur Sternenkarte zurück', async () => {
     const view = openHome();
-    const system = homeOfFirstSeat().getAttribute('data-system');
-    fireEvent.click(within(view).getByRole('button', { name: 'Dieses System wählen' }));
-    expect(useGameStore.getState().selected).toBe(system);
+    fireEvent.wheel(view, { deltaY: -120 });
+    expect(systemView()).not.toBeNull();
+    fireEvent.wheel(view, { deltaY: 120 });
     await waitFor(() => expect(systemView()).toBeNull());
   });
 
-  it('die Kartensteuerung zoomt erst, wenn ein System angeklickt wurde', () => {
+  it('tiefes Hineinzoomen öffnet das System in der Bildmitte von selbst', () => {
     render(<App />);
-    const zoomInto = () => screen.getByRole('button', { name: /System/ });
-    expect(zoomInto()).toHaveProperty('disabled', true);
-    fireEvent.click(document.querySelector('[data-system]') as Element);
-    fireEvent.click(screen.getByRole('button', { name: 'Ins System zoomen' }));
+    const zoomIn = screen.getByRole('button', { name: 'Hineinzoomen' });
+    for (let step = 0; step < 4; step += 1) fireEvent.click(zoomIn);
+    expect(systemView()).toBeNull();
+    fireEvent.click(zoomIn);
     expect(systemView()).not.toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Hineinzoomen' }));
   });
 });
 
@@ -105,7 +105,8 @@ describe('Moderne Seitenleiste', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     fireEvent.click(trigger);
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
-    expect(screen.getByText('Führung').closest('[data-state="closed"]')).not.toBeNull();
+    const tile = screen.getByText('Führung', { selector: '.strategy-tile .card-name' });
+    expect(tile.closest('[data-state="closed"]')).not.toBeNull();
   });
 
   it('das Einstellungsmenü schaltet Klang und Tipps', () => {

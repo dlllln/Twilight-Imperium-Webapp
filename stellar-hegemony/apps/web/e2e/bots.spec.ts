@@ -15,7 +15,7 @@ test('KI-Gegner: zwei Bots wählen Strategiekarten und ziehen, bis der Mensch dr
   const phase = page.locator('.phases [aria-current="step"]');
   await expect(phase).toHaveText('Strategie');
   for (let pick = 0; pick < 2; pick += 1) {
-    const free = page.locator('.strategy-card button:not([disabled])').first();
+    const free = page.locator('.hand-card[data-kind="pick"]:not([data-leaving])').first();
     await expect(free).toBeVisible();
     await free.click();
   }

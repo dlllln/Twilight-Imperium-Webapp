@@ -54,12 +54,13 @@ function useDrag(onDrag: (dx: number, dy: number) => void): DragHandlers {
   };
 }
 
-/** Ziehen verschiebt, Mausrad zoomt. Bildschirm-Pixel werden in SVG-Einheiten umgerechnet. */
+/** Ziehen verschiebt, Mausrad zoomt (über `zoomBy`, damit tiefes Zoomen ein System öffnet). Bildschirm-Pixel werden in SVG-Einheiten umgerechnet. */
 export function usePanZoom(
   svg: RefObject<SVGSVGElement | null>,
   viewWidth: number,
+  zoomBy: (factor: number) => void,
 ): PanZoomHandlers {
-  const { zoomBy, panBy } = useGalaxyStore();
+  const panBy = useGalaxyStore((state) => state.panBy);
   const [cursor, setCursor] = useState<Point>({ x: 0, y: 0 });
   const scale = () => viewWidth / Math.max(1, svg.current?.clientWidth ?? 1);
   const { dragTo, ...drag } = useDrag((dx, dy) => panBy(dx * scale(), dy * scale()));

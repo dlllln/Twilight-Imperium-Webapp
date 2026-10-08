@@ -1,6 +1,5 @@
-import { ArrowLeft, Crosshair, Hexagon, Orbit } from 'lucide-react';
+import { ArrowLeft, Hexagon, Orbit } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { useGameStore } from '../../game-store.ts';
 import type { SceneHex } from '../../render/scene-model.ts';
 import { seatColor } from '../../seat-colors.ts';
 import { useSystemViewStore } from '../../system/system-view-store.ts';
@@ -33,31 +32,21 @@ function Badges({ hex }: { readonly hex: SceneHex }): ReactElement {
   );
 }
 
-/** Kopfzeile der Systemansicht: zurück zur Karte, Name, Kennzeichen, im Spiel „System wählen“. */
+/** Schwebender Titel der Systemansicht: zurück zur Karte, Name und Kennzeichen, ohne Rahmen. */
 export function SystemHeader({ hex }: { readonly hex: SceneHex }): ReactElement {
   const t = useT();
   const close = useSystemViewStore((state) => state.close);
-  const playing = useGameStore((state) => state.game !== null);
-  const choose = () => {
-    useGameStore.getState().select(hex.systemId);
-    close();
-  };
   const names = hex.planets.map((planet) => planet.name).join(' · ');
   return (
-    <header className="system-header glass">
-      <button type="button" className="icon-button" onClick={close}>
-        <ArrowLeft size={18} aria-hidden="true" /> {t('closeSystem')}
+    <header className="system-header">
+      <button type="button" className="round-button" aria-label={t('closeSystem')} onClick={close}>
+        <ArrowLeft size={18} aria-hidden="true" />
       </button>
       <div className="system-title">
         <h2>{hex.systemId?.toUpperCase() ?? ''}</h2>
         <span>{names === '' ? t(hex.anomaly ?? 'emptySpace') : names}</span>
       </div>
       <Badges hex={hex} />
-      {playing && hex.systemId !== null && (
-        <button type="button" className="primary icon-button" onClick={choose}>
-          <Crosshair size={18} aria-hidden="true" /> {t('selectThisSystem')}
-        </button>
-      )}
     </header>
   );
 }

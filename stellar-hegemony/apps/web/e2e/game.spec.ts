@@ -1,5 +1,8 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
 
+/** Eine freie Strategiekarte in der Hand, die nicht gerade ausfliegt. */
+const FREE_PICK = '.hand-card[data-kind="pick"]:not([data-leaving])';
+
 const center = async (locator: Locator) => {
   const box = await locator.boundingBox();
   if (box === null) throw new Error('nicht sichtbar');
@@ -48,8 +51,7 @@ async function startThreePlayers(page: Page) {
 }
 
 async function pickCards(page: Page) {
-  for (let pick = 0; pick < 6; pick += 1)
-    await page.locator('.strategy-card button:not([disabled])').first().click();
+  for (let pick = 0; pick < 6; pick += 1) await page.locator(FREE_PICK).first().click();
 }
 
 test('Hot-Seat: Führung, Diplomatie und eine taktische Aktion mit Bewegung', async ({ page }) => {
@@ -121,9 +123,9 @@ test('Hot-Seat: Produktion im eigenen Heimatsystem', async ({ page }) => {
 
 test('Hot-Seat: Technologie bringt eine neue Technologie', async ({ page }) => {
   await startThreePlayers(page);
-  const free = page.locator('.strategy-card button:not([disabled])');
+  const free = page.locator(FREE_PICK);
   for (let pick = 0; pick < 3; pick += 1) await free.first().click();
-  await page.locator('.strategy-card button', { hasText: 'Technologie' }).click();
+  await page.getByRole('button', { name: 'Technologie', exact: true }).click();
   for (let pick = 0; pick < 2; pick += 1) await free.first().click();
 
   const chips = page.locator('.tech-owners .tech-chip');
@@ -149,11 +151,11 @@ test('Hot-Seat: Aufträge und Siegpunkte sind sichtbar', async ({ page }) => {
 
 test('Hot-Seat: Politik bringt Aktionskarten auf die Hand', async ({ page }) => {
   await startThreePlayers(page);
-  await expect(page.locator('.hand-panel')).toContainText('Keine Aktionskarten');
-  const free = page.locator('.strategy-card button:not([disabled])');
+  await expect(page.locator('.hand-dock .action-card')).toHaveCount(0);
+  const free = page.locator(FREE_PICK);
   for (let pick = 0; pick < 2; pick += 1) await free.first().click();
-  await page.locator('.strategy-card button', { hasText: 'Konstruktion' }).click();
-  await page.locator('.strategy-card button', { hasText: 'Politik' }).click();
+  await page.getByRole('button', { name: 'Konstruktion', exact: true }).click();
+  await page.getByRole('button', { name: 'Politik', exact: true }).click();
   for (let pick = 0; pick < 2; pick += 1) await free.first().click();
 
   await page.getByRole('button', { name: 'Strategische Aktion: Politik' }).click();
@@ -162,5 +164,5 @@ test('Hot-Seat: Politik bringt Aktionskarten auf die Hand', async ({ page }) => 
   await page.getByRole('button', { name: 'Ausführen' }).click();
   await page.getByRole('button', { name: 'Ablehnen' }).click();
   await expect(page.locator('[data-testid^="hand-p"]', { hasText: '▤ 2' })).toHaveCount(2);
-  await expect(page.locator('.hand-panel .action-card')).not.toHaveCount(0);
+  await expect(page.locator('.hand-dock .action-card')).not.toHaveCount(0);
 });

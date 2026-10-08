@@ -50,17 +50,24 @@ test('Anleitung führt durch die Oberfläche; Einstellungen bleiben nach dem Neu
   await expect(page.locator('html')).toHaveClass(/motion-off/);
 });
 
-test('Doppelklick zoomt ins System; Escape fährt zurück zur Sternenkarte', async ({ page }) => {
+test('Ein Klick zoomt ohne Fenster ins System; Mausrad und Escape fahren zurück', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Partie starten' }).click();
-  await page.locator('[data-seat="1"][data-system]').dblclick();
+  await page.locator('[data-seat="1"][data-system]').click();
   const view = page.getByRole('region', { name: 'Systemansicht' });
   await expect(view).toBeVisible();
   await expect(view.getByRole('list', { name: 'Im System' })).toContainText('Raumdock');
   await page.keyboard.press('Escape');
   await expect(view).toBeHidden();
   await page.locator('[data-seat="1"][data-system]').click();
-  await page.getByRole('button', { name: 'Ins System zoomen' }).click();
+  await expect(view).toBeVisible();
+  await view.hover();
+  await page.mouse.wheel(0, 200);
+  await expect(view).toBeHidden();
+  const zoomIn = page.getByRole('button', { name: 'Hineinzoomen' });
+  for (let step = 0; step < 5; step += 1) await zoomIn.click();
   await expect(view).toBeVisible();
   await view.getByRole('button', { name: 'Zur Sternenkarte' }).click();
   await expect(view).toBeHidden();

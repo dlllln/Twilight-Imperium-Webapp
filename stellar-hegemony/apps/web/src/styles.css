@@ -143,7 +143,7 @@ label {
 
 .galaxy {
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   cursor: grab;
   touch-action: none;
 }
@@ -406,19 +406,15 @@ input[type='number'] {
   list-style: none;
 }
 
-.strategy-card button {
+.strategy-tile {
   width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
-  text-align: left;
+  border: 1px solid var(--border);
 }
 
-.strategy-card button:disabled {
-  opacity: 1;
-}
-
-.strategy-card.exhausted button {
+.strategy-card.exhausted .strategy-tile {
   opacity: 0.4;
 }
 
@@ -1643,7 +1639,6 @@ input[type='checkbox'] {
   inset: 0;
   z-index: 20;
   overflow: hidden;
-  border-radius: 12px;
   transform-origin: 50% 50%;
   cursor: default;
 }
@@ -1657,7 +1652,8 @@ input[type='checkbox'] {
 
 .system-stage {
   position: absolute;
-  inset: 70px 0 136px 0;
+  inset: 0 0 96px 0;
+  mask-image: linear-gradient(to bottom, #000 80%, transparent);
 }
 
 .system-canvas,
@@ -2273,7 +2269,7 @@ select option {
   background: linear-gradient(180deg, rgba(109, 139, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
 }
 
-.strategy-card button {
+.strategy-tile {
   padding: 8px 10px;
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
@@ -3098,4 +3094,220 @@ select option {
   border: 1px solid var(--gold-line);
   border-radius: 12px;
   background: #050a18;
+}
+
+/* Iteration 17: Handkarten am unteren Rand, Systemansicht ohne Fenster */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hand-dock {
+  --hand-gold: #f0c96a;
+  position: absolute;
+  left: 50%;
+  bottom: -54px;
+  z-index: 25;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  max-width: calc(100% - 150px);
+  padding: 0 30px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.hand-anchor {
+  display: contents;
+}
+
+.hand-owner {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  margin: 0;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(8, 12, 28, 0.78);
+  border: 1px solid rgba(240, 201, 106, 0.35);
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.hand-dock .hand-card {
+  position: relative;
+  flex: none;
+  width: 126px;
+  height: 178px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  overflow: hidden;
+  text-align: left;
+  --card-bg:
+    radial-gradient(circle at 80% 0%, rgba(240, 201, 106, 0.18), transparent 55%),
+    linear-gradient(165deg, #23345f 0%, #131c3a 58%, #0b1024 100%);
+  margin: 0 calc(-12px - var(--crowd, 0) * 5px);
+  border: 1px solid rgba(240, 201, 106, 0.55);
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.04);
+  color: #eef2ff;
+  font-size: 12px;
+  transform-origin: 50% 130%;
+  cursor: grab;
+  touch-action: none;
+  pointer-events: auto;
+}
+
+.hand-dock .hand-card:hover {
+  background: var(--card-bg);
+  border-color: var(--hand-gold);
+}
+
+.hand-dock .hand-card.playable {
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.6),
+    0 0 22px rgba(240, 201, 106, 0.32),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.05);
+}
+
+.hand-dock .hand-card.idle {
+  opacity: 1;
+  filter: saturate(0.35) brightness(0.72);
+  cursor: default;
+}
+
+.hand-dock .hand-card[data-leaving] {
+  pointer-events: none;
+}
+
+.hand-dock .hand-card:active {
+  cursor: grabbing;
+}
+
+.hand-dock .hand-card[data-kind='pass'] {
+  --card-bg: linear-gradient(165deg, #3a2a44 0%, #1c1428 60%, #0e0b18 100%);
+}
+
+.hand-dock .hand-card[data-kind='tactical'] {
+  --card-bg: linear-gradient(165deg, #173f4a 0%, #0f2430 60%, #08131c 100%);
+}
+
+.hand-dock .hand-card.action-card {
+  --card: #e07a5f;
+  --card-bg: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--card) 35%, #151b36) 0%,
+    #121733 60%,
+    #0b0f22 100%
+  );
+  border-color: color-mix(in srgb, var(--card) 70%, transparent);
+}
+
+.hand-initiative {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-family: var(--title-font);
+  font-size: 30px;
+  color: var(--hand-gold);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.hand-kicker {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hand-title {
+  padding-right: 28px;
+  font-family: var(--title-font);
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+
+.hand-text,
+.hand-dock .action-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #c9d2ee;
+  font-size: 11px;
+  line-height: 1.35;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+}
+
+.hand-icon {
+  color: var(--hand-gold);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+}
+
+.hand-goods {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(240, 201, 106, 0.2);
+  color: var(--hand-gold);
+  font-weight: 700;
+}
+
+.hand-targets {
+  max-width: 280px;
+}
+
+.hand-hint {
+  margin: 0;
+}
+
+.system-header {
+  background: none;
+  border: none;
+  pointer-events: none;
+}
+
+.system-header > * {
+  pointer-events: auto;
+}
+
+.system-title h2 {
+  font-family: var(--title-font);
+  font-size: 26px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+.system-title span {
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 760px) {
+  .hand-dock {
+    max-width: 100%;
+    bottom: -70px;
+  }
+
+  .hand-dock .hand-card {
+    width: 104px;
+    height: 150px;
+    margin: 0 calc(-20px - var(--crowd, 0) * 6px);
+  }
 }

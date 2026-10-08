@@ -28,7 +28,7 @@ export function CardFace({ id, count }: { readonly id: string; readonly count: n
 }
 
 /** Ziele wählen und ausspielen; ohne Ziele genügt der Knopf. */
-function PlayControls({ game, player, card }: CardProps): ReactElement {
+export function PlayControls({ game, player, card }: CardProps): ReactElement {
   const t = useT();
   const send = useGameStore((state) => state.send);
   const [target, setTarget] = useState<ActionTarget>(() => initialTarget(card.targets));

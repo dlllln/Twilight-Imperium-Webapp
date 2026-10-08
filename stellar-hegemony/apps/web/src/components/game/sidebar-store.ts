@@ -7,7 +7,6 @@ export type SidebarTab = 'turn' | 'score' | 'empire';
 const TAB_OF_ANCHOR: Readonly<Record<string, SidebarTab>> = {
   turn: 'turn',
   strategy: 'turn',
-  hand: 'turn',
   players: 'score',
   objectives: 'score',
   factions: 'empire',

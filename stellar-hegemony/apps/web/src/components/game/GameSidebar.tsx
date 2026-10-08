@@ -6,7 +6,6 @@ import { useGameStore } from '../../game-store.ts';
 import { errorText, type MessageKey } from '../../i18n.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { LawsPanel } from '../agenda/LawsPanel.tsx';
-import { HandPanel } from '../cards/HandPanel.tsx';
 import { FactionsPanel } from '../faction/FactionsPanel.tsx';
 import { ObjectivesPanel } from '../objectives/ObjectivesPanel.tsx';
 import { TechnologyPanel } from '../technology/TechnologyPanel.tsx';
@@ -77,7 +76,6 @@ export function GameSidebar({ game }: { readonly game: GameState }): ReactElemen
         <TabPanel value="turn">
           <TurnPanel game={game} />
           <StrategyCardGrid game={game} />
-          <HandPanel game={game} />
         </TabPanel>
         <TabPanel value="score">
           <ObjectivesPanel game={game} />

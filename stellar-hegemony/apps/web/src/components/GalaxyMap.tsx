@@ -23,7 +23,8 @@ import { HexTooltip } from './HexTooltip.tsx';
 import { MapControls } from './MapControls.tsx';
 import { SystemView } from './system/SystemView.tsx';
 import { useSystemViewStore } from '../system/system-view-store.ts';
-import { focusViewport } from '../system/viewport-tween.ts';
+import { focusViewport, reachesSystem, viewCenter } from '../system/viewport-tween.ts';
+import { HandDock } from './hand/HandDock.tsx';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
 const PixiCanvas = lazy(() =>
@@ -75,11 +76,10 @@ interface TargetProps {
   readonly hovered: boolean;
   readonly onHover: (key: string | null) => void;
   readonly onPick: (hex: SceneHex) => void;
-  readonly onOpen: (hex: SceneHex) => void;
 }
 
 /** Unsichtbare Trefferfläche je Feld: Maus, Tastatur, Screenreader und E2E-Tests. */
-function HexTarget({ hex, hovered, onHover, onPick, onOpen }: TargetProps): ReactElement {
+function HexTarget({ hex, hovered, onHover, onPick }: TargetProps): ReactElement {
   const pickable = hex.systemId !== null;
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') onPick(hex);
@@ -99,7 +99,6 @@ function HexTarget({ hex, hovered, onHover, onPick, onOpen }: TargetProps): Reac
       onPointerLeave={() => onHover(null)}
       onFocus={() => onHover(hex.key)}
       onClick={() => onPick(hex)}
-      onDoubleClick={() => onOpen(hex)}
       onKeyDown={onKeyDown}
     />
   );
@@ -110,7 +109,6 @@ interface TargetsProps {
   readonly bounds: Bounds;
   readonly viewport: Viewport;
   readonly onPick: (hex: SceneHex) => void;
-  readonly onOpen: (hex: SceneHex) => void;
 }
 
 const viewBoxOf = (b: Bounds): string =>
@@ -118,7 +116,7 @@ const viewBoxOf = (b: Bounds): string =>
 
 /** SVG-Ebene über dem Pixi-Bild, mit derselben Abbildung wie `worldTransform`. */
 const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
-  { hexes, bounds, viewport, onPick, onOpen },
+  { hexes, bounds, viewport, onPick },
   svg,
 ): ReactElement {
   const { hovered, hover } = useGalaxyStore();
@@ -133,7 +131,6 @@ const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
             hovered={hex.key === hovered}
             onHover={hover}
             onPick={onPick}
-            onOpen={onOpen}
           />
         ))}
       </g>
@@ -141,11 +138,13 @@ const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
   );
 });
 
-/** Kamerafahrt in ein System; Heimat-Plätze vor der Partie haben keinen Inhalt. */
+/** Kamerafahrt in ein System, das in der Partie zugleich ausgewählt wird; Heimat-Plätze vor der Partie haben keinen Inhalt. */
 function useOpenSystem(bounds: Bounds) {
   return useCallback(
     (hex: SceneHex) => {
       if (hex.kind !== 'system') return;
+      const { game, select } = useGameStore.getState();
+      if (game !== null) select(hex.systemId);
       const focus = focusViewport(bounds, hexToPixel(hex.position));
       useSystemViewStore.getState().open(hex.key, focus);
     },
@@ -153,16 +152,36 @@ function useOpenSystem(bounds: Bounds) {
   );
 }
 
-/** Ein Klick merkt sich das Feld (für „Ins System zoomen“) und wählt es in der Partie aus. */
-function usePicking(wasDrag: () => boolean) {
-  const [picked, setPicked] = useState<SceneHex | null>(null);
-  const pick = (hex: SceneHex) => {
-    if (wasDrag()) return;
-    setPicked(hex);
-    const { game, select } = useGameStore.getState();
-    if (game !== null) select(hex.systemId);
+/** Ein Klick fährt in das Feld hinein; wer dabei die Karte gezogen hat, verschiebt sie nur. */
+function usePicking(wasDrag: () => boolean, open: (hex: SceneHex) => void) {
+  return (hex: SceneHex) => {
+    if (!wasDrag()) open(hex);
   };
-  return { picked, pick };
+}
+
+/** Nächstes System zur Bildmitte; der Mauszeiger hat Vorrang, wenn er auf einem steht. */
+function systemNear(hexes: readonly SceneHex[], point: { x: number; y: number }) {
+  const distance = (hex: SceneHex) => {
+    const center = hexToPixel(hex.position);
+    return Math.hypot(center.x - point.x, center.y - point.y);
+  };
+  const systems = hexes.filter((hex) => hex.kind === 'system');
+  return systems.reduce<SceneHex | undefined>(
+    (best, hex) => (best === undefined || distance(hex) < distance(best) ? hex : best),
+    undefined,
+  );
+}
+
+/** Zoomen; erreicht der Zoom die Schwelle, öffnet sich das System unter dem Zeiger oder mittig. */
+function useZoom(hexes: readonly SceneHex[], bounds: Bounds, open: (hex: SceneHex) => void) {
+  return (factor: number) => {
+    const { viewport, zoomBy, hovered } = useGalaxyStore.getState();
+    zoomBy(factor);
+    if (!reachesSystem(viewport.zoom, factor)) return;
+    const pointed = hexes.find((hex) => hex.key === hovered && hex.kind === 'system');
+    const target = pointed ?? systemNear(hexes, viewCenter(bounds, viewport));
+    if (target !== undefined) open(target);
+  };
 }
 
 /** Ereignisse der Systemansicht sollen die Karte darunter nicht verschieben. */
@@ -171,17 +190,29 @@ function stop(event: { stopPropagation: () => void }) {
   event.stopPropagation();
 }
 
+/** Oberhalb der Karte: Systemansicht und Hand; ihre Gesten verschieben die Karte nicht. */
+function Overlays({ hexes }: { readonly hexes: readonly SceneHex[] }): ReactElement {
+  const game = useGameStore((state) => state.game);
+  return (
+    <div className="system-shield" {...shield}>
+      <SystemView hexes={hexes} />
+      {game !== null && <HandDock game={game} />}
+    </div>
+  );
+}
+
 export function GalaxyMap(): ReactElement {
   const { hovered, viewport } = useGalaxyStore();
   const hexes = useScene();
   const effects = useMapEffects();
   const bounds = useMemo(() => boundsOf(hexes.map((hex) => hex.position)), [hexes]);
   const svg = useRef<SVGSVGElement>(null);
-  const { cursor, wasDrag, ...handlers } = usePanZoom(svg, bounds.width);
-  const [flat, setFlat] = useState(false);
-  const { picked, pick } = usePicking(wasDrag);
-  const onUnavailable = useCallback(() => setFlat(true), []);
   const open = useOpenSystem(bounds);
+  const zoom = useZoom(hexes, bounds, open);
+  const { cursor, wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
+  const [flat, setFlat] = useState(false);
+  const pick = usePicking(wasDrag, open);
+  const onUnavailable = useCallback(() => setFlat(true), []);
   const systemOpen = useSystemViewStore((state) => state.key !== null);
   const hoveredHex = systemOpen ? undefined : hexes.find((hex) => hex.key === hovered);
   return (
@@ -191,12 +222,10 @@ export function GalaxyMap(): ReactElement {
           <PixiCanvas {...{ hexes, bounds, viewport, effects, onUnavailable }} />
         </Suspense>
       )}
-      <HexTargets {...{ hexes, bounds, viewport }} ref={svg} onPick={pick} onOpen={open} />
+      <HexTargets {...{ hexes, bounds, viewport }} ref={svg} onPick={pick} />
       {hoveredHex !== undefined && <HexTooltip hex={hoveredHex} x={cursor.x} y={cursor.y} />}
-      <MapControls onOpen={picked?.kind === 'system' ? () => open(picked) : null} />
-      <div className="system-shield" {...shield}>
-        <SystemView hexes={hexes} />
-      </div>
+      <MapControls onZoom={zoom} onReset={() => useGalaxyStore.getState().resetView()} />
+      <Overlays hexes={hexes} />
     </div>
   );
 }

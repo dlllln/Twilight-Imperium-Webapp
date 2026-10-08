@@ -48,3 +48,20 @@ export function animateViewport(
   };
   running = requestAnimationFrame(step);
 }
+
+/** Ab diesem Zoom öffnet weiteres Hineinzoomen das System in der Bildmitte von selbst. */
+export const AUTO_OPEN_ZOOM = 2.9;
+
+/** Ob ein Zoomschritt von `zoom` um `factor` die Schwelle zur Systemansicht erreicht. */
+export const reachesSystem = (zoom: number, factor: number): boolean =>
+  factor > 1 && zoom * factor >= AUTO_OPEN_ZOOM;
+
+/** Der Kartenpunkt, der gerade mittig im Bild steht. */
+export function viewCenter(bounds: Bounds, viewport: Viewport): { x: number; y: number } {
+  const centerX = bounds.minX + bounds.width / 2;
+  const centerY = bounds.minY + bounds.height / 2;
+  return {
+    x: (centerX - viewport.panX) / viewport.zoom,
+    y: (centerY - viewport.panY) / viewport.zoom,
+  };
+}

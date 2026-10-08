@@ -4,7 +4,6 @@ import {
   type PlayerId,
   type ShipMoveOrder,
   type SystemId,
-  systemId,
   type TacticalActionState,
   type UnitId,
 } from '@stellar/domain';
@@ -22,31 +21,6 @@ import { TransactionForm } from './TransactionForm.tsx';
 interface TurnProps {
   readonly game: GameState;
   readonly player: PlayerId;
-}
-
-/** Taktische Aktion beginnen: das auf der Karte gewählte System aktivieren. */
-export function ActivationBlock({ game, player }: TurnProps): ReactElement {
-  const t = useT();
-  const language = useLanguage();
-  const send = useGameStore((state) => state.send);
-  const selected = useGameStore((state) => state.selected);
-  const activate = () => {
-    if (selected !== null)
-      send({ type: 'ActivateSystem', issuedBy: player, system: systemId(selected) });
-  };
-  return (
-    <div className="turn-block">
-      <h3>{t('tacticalAction')}</h3>
-      <p className="hint">
-        {selected === null
-          ? t('selectSystemHint')
-          : `${t('selectedSystem')}: ${systemLabel(game, selected, language)}`}
-      </p>
-      <button type="button" disabled={selected === null} onClick={activate}>
-        {t('activateSystem')}
-      </button>
-    </div>
-  );
 }
 
 type Orders = Readonly<Record<string, readonly UnitId[]>>;

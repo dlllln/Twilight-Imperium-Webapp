@@ -56,7 +56,8 @@ stellar-hegemony/
         ├── src/render/      (It. 4) PixiJS-Szene: prozeduraler Nebel, Planeten, Anomalien,
         │                    Schiffsminiaturen, Bloom-Glühen; darüber SVG-Trefferflächen
         ├── src/battle/      (It. 16) Aufstellung und Choreografie der Kampfbühne (reine Funktionen)
-        └── src/simulator/   (It. 16) Ablauf des Kampfsimulators
+        ├── src/simulator/   (It. 16) Ablauf des Kampfsimulators
+        └── src/hand/        (It. 17) Handkarten als reine Daten und gewählte strategische Aktion
 ```
 
 Abhängigkeiten zeigen nur nach innen: `web → application → domain`, `infrastructure → application → domain`,
@@ -485,7 +486,31 @@ Zuweisung lässt die gewählten Schiffe explodieren oder qualmen.
 | `useSimulatorStore`                             | Controller (GRASP) für den Ablauf; `battle` ist der Stand, `shown` hinkt während der Schüsse nach, damit Treffer sichtbar werden.               |
 | `CombatStage` in der Partie                     | Geringe Kopplung: liest nur Spielstand und Protokoll; zerstörte Schiffe bleiben für die Salve auf der Bühne, danach gilt wieder der Spielstand. |
 
-## 21. Iterationen
+## 21. Iteration 17 im Detail (Handkarten, Systemzoom ohne Fenster)
+
+Statt Knöpfen in der Seitenleiste liegt unten auf der Karte eine Hand im Fächer. In der
+Strategiephase sind das die freien Strategiekarten, im Zug die strategische Aktion je unbenutzter
+Karte, die taktische Aktion und Passen, dazu immer die Aktionskarten. Eine Karte hebt sich beim
+Überfahren an; Antippen oder nach oben Ziehen spielt sie aus, sie fliegt dann aufs Spielfeld.
+Was gerade nicht geht, bleibt liegen und sagt warum. Die taktische Aktion aktiviert das auf der
+Karte gewählte System, die strategische Aktion öffnet ihr Formular in der Seitenleiste, Zurück
+legt sie wieder auf die Hand. Aktionskarten mit Zielen zeigen die Zielwahl direkt über der Karte.
+
+Ein Klick auf ein System wählt es aus und fährt ohne Fenster hinein: Die Karte zoomt, die
+Detailansicht blendet randlos über. Wer mit dem Mausrad oder den Zoomknöpfen tief genug
+hineinzoomt, landet automatisch im System unter dem Zeiger oder in der Bildmitte; Herauszoomen,
+Escape oder „Zur Sternenkarte“ fahren zurück.
+
+| Element                                  | Prinzip                                                                                                                                         |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `handEntries`, `interrupted`             | Reine Funktionen (Information Expert): welche Karten bereitliegen und ob sie spielbar sind, aus Spielstand und Auswahl, ohne React testbar.     |
+| `HandEntry` als Union                    | Polymorphie über die Art (`pick`, `strategic`, `tactical`, `pass`, `action`); Vorderseite, Name und Befehl werden je Art gewählt (Open/Closed). |
+| `useHandStore`                           | Kleiner Controller (GRASP) für die gewählte strategische Aktion; Hand und Seitenleiste lesen denselben Stand und kennen einander nicht.         |
+| `HandDock`, `HandCard`, `useGesture`     | Single Responsibility: Fächer und Ein-/Ausflug, eine Karte, die Geste; Befehle gehen wie bisher über `send`, die Domain prüft (Low Coupling).   |
+| `useZoom`, `reachesSystem`, `systemNear` | Reine Schwellen- und Abstandsrechnung (Pure Fabrication); die Karte entscheidet nur, welches System sich beim tiefen Zoom öffnet.               |
+| `SystemView` randlos                     | Gleiche Kamerafahrt wie zuvor, nur ohne Rahmen; Herauszoomen schließt. Die Inhaltsliste bleibt für Screenreader im Baum (Barrierefreiheit).     |
+
+## 22. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -505,8 +530,9 @@ Zuweisung lässt die gewählten Schiffe explodieren oder qualmen.
 | 14  | Systemansicht mit Kamerafahrt, moderne Oberfläche   | ✓     |
 | 15  | Gängige Namen, schlichtere Oberfläche mit Reitern   | ✓     |
 | 16  | Kampfsimulator, Kampfbühne auch in der Partie       | ✓     |
+| 17  | Handkarten statt Knöpfe, Systemzoom ohne Fenster    | ✓     |
 
-## 22. Befehle
+## 23. Befehle
 
 ```
 pnpm install
