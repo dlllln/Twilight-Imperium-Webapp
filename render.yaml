@@ -1,13 +1,36 @@
+# Render-Blueprint für Stellar Hegemony: ein Webdienst (Seite + Socket.IO),
+# PostgreSQL als Event Store und Key Value (Redis-kompatibel) für die Lobbys.
 services:
   - type: web
-    name: sternenthron
+    name: stellar-hegemony
     runtime: node
     plan: free
-    buildCommand: npm install --omit=dev
-    startCommand: npm start
-    healthCheckPath: /
+    rootDir: stellar-hegemony
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: cd apps/server && ./node_modules/.bin/tsx src/main.ts
+    healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
         value: "22"
-      - key: SAVE_DIR
-        value: /tmp/sternenthron-saves
+      - key: WEB_DIST
+        value: ../web/dist
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stellar-hegemony-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: stellar-hegemony-lobbies
+          property: connectionString
+
+  - type: keyvalue
+    name: stellar-hegemony-lobbies
+    plan: free
+    maxmemoryPolicy: noeviction
+    # Nur Dienste im selben Render-Konto dürfen zugreifen.
+    ipAllowList: []
+
+databases:
+  - name: stellar-hegemony-db
+    plan: free

@@ -462,3 +462,19 @@ Der Online-Server liest seine Einstellungen aus der Umgebung:
 Für ein Hosting als ein Dienst: im Ordner `stellar-hegemony` mit `pnpm install --frozen-lockfile &&
 pnpm build` bauen und mit `WEB_DIST=../web/dist pnpm server` starten. Der Health-Check liegt unter
 `/health`.
+
+### Render
+
+`render.yaml` im Wurzelordner des Repos beschreibt alles für Render: den Webdienst
+`stellar-hegemony`, die Datenbank `stellar-hegemony-db` und den Key-Value-Speicher
+`stellar-hegemony-lobbies` (nur intern erreichbar). Einrichten: auf render.com „New“ →
+„Blueprint“, dieses Repo wählen und bestätigen; bei einem schon verbundenen Blueprint genügt
+„Sync“. Die Tabelle für die Events legt der Server beim ersten Start selbst an.
+
+Grenzen des kostenlosen Tarifs:
+
+- Der Webdienst schläft nach 15 Minuten ohne Aufrufe ein; der erste Aufruf danach dauert etwa
+  eine Minute. Laufende Partien gehen dabei nicht verloren, weil sie im Event Store liegen.
+- Die kostenlose Datenbank läuft 30 Tage nach dem Anlegen ab (danach 14 Tage Frist). Vorher auf
+  einen bezahlten Tarif wechseln oder sie neu anlegen, sonst startet der Server nicht mehr.
+- Key Value hält Lobbys nur im Arbeitsspeicher; startet er neu, sind offene Lobbycodes weg.

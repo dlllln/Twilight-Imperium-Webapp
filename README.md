@@ -21,11 +21,10 @@ Ungenutzte Spiele werden nach 14 Tagen gelöscht, beendete nach einem Tag.
 
 ## Online stellen (Render)
 
-1. Auf [render.com](https://render.com) mit GitHub anmelden.
-2. „New“ → „Blueprint“ wählen und dieses Repo auswählen. Render liest `render.yaml` und richtet den Dienst ein.
-3. Nach dem ersten Build ist das Spiel unter der angezeigten `onrender.com`-Adresse erreichbar.
-
-Hinweis: Im kostenlosen Tarif schläft der Server nach längerer Inaktivität ein (der erste Aufruf dauert dann etwas), und Spielstände gehen bei einem Neustart verloren. Ein bezahlter Tarif mit Festplatte behebt beides.
+`render.yaml` startet nicht mehr Sternenthron, sondern **Stellar Hegemony** aus
+`stellar-hegemony/` (Webdienst mit Socket.IO, PostgreSQL für den Event Store, Key Value für Lobbys).
+Einrichtung und Grenzen des kostenlosen Tarifs stehen in `stellar-hegemony/docs/ARCHITEKTUR.md`
+unter „Befehle“. Sternenthron läuft weiterhin lokal mit `npm start`.
 
 ## Aufbau
 
