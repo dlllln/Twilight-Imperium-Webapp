@@ -5,6 +5,7 @@ import type { ReactElement } from 'react';
 import { useHumanActor } from '../../game-store.ts';
 import { seatColor } from '../../seat-colors.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { strategyLook } from '../../hand/card-look.ts';
 import { cardText } from './card-text.ts';
 
 function StrategyCardTile({
@@ -19,7 +20,11 @@ function StrategyCardTile({
   const holder = game.players.find((player) => player.id === card.holder);
   return (
     <li className={`strategy-card${card.exhausted ? ' exhausted' : ''}`}>
-      <div className="strategy-tile" title={text.primary[language]}>
+      <div
+        className="strategy-tile"
+        data-look={strategyLook(card.mechanic)}
+        title={text.primary[language]}
+      >
         <span className="initiative">{card.initiative}</span>
         <span className="card-name">{text.name[language]}</span>
         {holder !== undefined && (

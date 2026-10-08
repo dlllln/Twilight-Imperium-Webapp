@@ -501,6 +501,12 @@ Detailansicht blendet randlos über. Wer mit dem Mausrad oder den Zoomknöpfen t
 hineinzoomt, landet automatisch im System unter dem Zeiger oder in der Bildmitte; Herauszoomen,
 Escape oder „Zur Sternenkarte“ fahren zurück.
 
+Jede Karte hat ihr eigenes Aussehen: Die acht Strategiekarten tragen je eine Farbe und ein
+Symbol, Zugkarten sind gold und schiefer, Aktionskarten färben sich nach ihrem Zeitpunkt
+(Kampf rot, Antworten rosa, Sekundär violett …). Ein Zierrahmen mit Rauten, ein Bildfenster mit
+prozeduralem Sternfeld und Umlaufbahn, ein Initiative-Siegel und eine Trennlinie geben der Karte
+Tiefe; alles ist eigene Grafik aus CSS und SVG.
+
 | Element                                  | Prinzip                                                                                                                                         |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `handEntries`, `interrupted`             | Reine Funktionen (Information Expert): welche Karten bereitliegen und ob sie spielbar sind, aus Spielstand und Auswahl, ohne React testbar.     |
@@ -508,6 +514,7 @@ Escape oder „Zur Sternenkarte“ fahren zurück.
 | `useHandStore`                           | Kleiner Controller (GRASP) für die gewählte strategische Aktion; Hand und Seitenleiste lesen denselben Stand und kennen einander nicht.         |
 | `HandDock`, `HandCard`, `useGesture`     | Single Responsibility: Fächer und Ein-/Ausflug, eine Karte, die Geste; Befehle gehen wie bisher über `send`, die Domain prüft (Low Coupling).   |
 | `useZoom`, `reachesSystem`, `systemNear` | Reine Schwellen- und Abstandsrechnung (Pure Fabrication); die Karte entscheidet nur, welches System sich beim tiefen Zoom öffnet.               |
+| `lookOf`, `specksOf`, `CardArt`          | Aussehen als Daten (Open/Closed): Motiv je Mechanik oder Zeitpunkt, Farben im Stylesheet, Sterne deterministisch aus der Karten-Id.             |
 | `SystemView` randlos                     | Gleiche Kamerafahrt wie zuvor, nur ohne Rahmen; Herauszoomen schließt. Die Inhaltsliste bleibt für Screenreader im Baum (Barrierefreiheit).     |
 
 ## 22. Iterationen

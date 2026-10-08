@@ -146,6 +146,9 @@ const DICTIONARY = {
     en: 'Take an available strategy card from your hand below.',
   },
   yourHand: { de: 'Deine Hand', en: 'Your hand' },
+  strategyCardKind: { de: 'Strategiekarte', en: 'Strategy card' },
+  turnCardKind: { de: 'Zugkarte', en: 'Turn card' },
+  actionCardKind: { de: 'Aktionskarte', en: 'Action card' },
   handHint: {
     de: 'Spiele eine Karte aus deiner Hand unten: strategische Aktion, taktische Aktion oder Passen.',
     en: 'Play a card from your hand below: strategic action, tactical action or pass.',

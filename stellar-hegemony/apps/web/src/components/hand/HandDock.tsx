@@ -3,6 +3,7 @@ import { type GameState, type PlayerId, systemId } from '@stellar/domain';
 import { AnimatePresence, motion, type PanInfo, useIsPresent } from 'motion/react';
 import { type CSSProperties, type ReactElement, useRef, useState } from 'react';
 import { useGameStore, useHumanActor, useViewer } from '../../game-store.ts';
+import { lookOf } from '../../hand/card-look.ts';
 import { entryKey, type HandEntry, handEntries } from '../../hand/hand-model.ts';
 import { useHandStore } from '../../hand/hand-store.ts';
 import { useSettingsStore } from '../../settings-store.ts';
@@ -112,6 +113,7 @@ function HandCard({ game, entry, offset, onPlay }: CardProps): ReactElement {
       type="button"
       className={classOf(entry)}
       data-kind={entry.kind}
+      data-look={lookOf(entry)}
       data-testid={testIdOf(entry)}
       data-leaving={present ? undefined : true}
       aria-label={name(entry)}
