@@ -130,7 +130,10 @@ export function HexTooltip({ hex, x, y }: HexTooltipProps): ReactElement {
           {t('homeSlot')} · {t('seat')} {hex.seat}
         </strong>
       ) : (
-        <SystemDetails hex={hex} t={t} />
+        <>
+          <SystemDetails hex={hex} t={t} />
+          <span className="tooltip-hint">{t('systemHint')}</span>
+        </>
       )}
     </div>
   );

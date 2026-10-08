@@ -419,7 +419,29 @@ hebt dabei das jeweilige Bedienelement hervor.
 | `TUTORIAL_STEPS`, `PHASE_TIPS`            | Inhalte als Daten in eigenen Worten; `data-tutorial` verbindet einen Schritt mit seinem Bedienelement, ohne dass die Panels die Anleitung kennen.               |
 | `useTutorialStore`, `TutorialDialog`      | Zustand (offen, Schritt) getrennt von der Darstellung; fehlt ein Element gerade, bleibt der Schritt trotzdem lesbar.                                            |
 
-## 18. Iterationen
+## 18. Iteration 14 im Detail (Optik)
+
+Ein Doppelklick auf ein System (oder das Fernrohr in der Kartensteuerung) fährt die Kamera in das
+Feld hinein; dann öffnet sich die Systemansicht. Dort stehen Stern oder Anomalie, die Planeten auf
+ihren Bahnen mit Mond, Bodentruppen und Raumdock, und die Flotten jedes Spielers in Keilformation;
+Jäger umkreisen ihre Flotte, Triebwerke flackern, Monde ziehen vor und hinter ihren Planeten vorbei.
+Beschriftungen und eine Kartenleiste nennen alles im Klartext. Escape oder „Zur Sternenkarte“ fährt
+zurück. Planeten haben Wolken, Glanzlichter und Lichter auf der Nachtseite, Schiffe Plattenfugen
+und Fensterreihen. Die Oberfläche nutzt Radix UI (Popover, Switch, Slider, Tooltip, Collapsible),
+Motion für Übergänge und Lucide-Symbole; alle Grafiken bleiben eigene, prozedurale Zeichnungen.
+
+| Element                                        | Prinzip                                                                                                                                            |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `systemLayout`, `fitScale`                     | Reine Funktion (Information Expert): ordnet Stern, Bahnen, Planeten, Truppen und Flotten auf einer gedachten Bühne an; ohne Pixi oder DOM testbar. |
+| `SystemScene`, `system-pieces`                 | Controller und Builder: jedes Teil liefert Darstellung und `animate(time)`; die Szene blendet sie gestaffelt ein. Ohne Animationen ein Standbild.  |
+| `focusViewport`, `blendViewport`               | Reine Kameramathematik: Ziel mittig vergrößern, Zoom logarithmisch und Verschiebung passend dazu, damit das Ziel ruhig in der Mitte bleibt.        |
+| `useSystemViewStore`                           | Zustand der Ansicht (offenes Feld, Rückkehrpunkt); öffnen und schließen fahren die Kamera, je nach Einstellung animiert oder sofort.               |
+| `SystemView`, `SystemLabels`, `SystemContents` | Darstellung in React: dieselben Bühnenkoordinaten für Pixi und DOM-Beschriftung; der Inhalt ist als Liste lesbar und testbar.                      |
+| `createApplication`, `KEEP_SHARED`             | Karte und Systemansicht sind zwei Pixi-Anwendungen; beim Abbau bleiben Pixis globale Pools erhalten, sonst zerbricht die jeweils andere.           |
+| `paintStar`, `paintGlow`, Detail-Texturen      | Flyweight wie bisher, zusätzlich in hoher Auflösung für die Nahansicht; Planeten- und Schiffsmaler zeichnen mehr Einzelheiten.                     |
+| `Panel`, `IconButton`, `SettingsMenu`, Phasen  | Wiederverwendbare Bausteine (Komposition): einklappbare Abschnitte mit Symbol, Tooltips, Einstellungsmenü; die Phasenpille gleitet mit Motion.     |
+
+## 19. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -436,8 +458,9 @@ hebt dabei das jeweilige Bedienelement hervor.
 | 11  | Fraktionsfähigkeiten, KI-Gegner                     | ✓     |
 | 12  | Multiplayer, Persistenz, Reconnect                  | ✓     |
 | 13  | Animationen, Sound-Hooks, Tutorial                  | ✓     |
+| 14  | Systemansicht mit Kamerafahrt, moderne Oberfläche   | ✓     |
 
-## 19. Befehle
+## 20. Befehle
 
 ```
 pnpm install

@@ -1,3 +1,4 @@
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { type ReactElement, useEffect } from 'react';
 import { CombatView } from './components/combat/CombatView.tsx';
 import { GalaxyMap } from './components/GalaxyMap.tsx';
@@ -31,35 +32,40 @@ function useMotionSetting(): void {
   }, [animations]);
 }
 
-export function App(): ReactElement {
+/** Galaxie erzeugen, Online-Platz wiederherstellen, Tastatur und Sprache des Dokuments. */
+function useStartup(): void {
   const language = useGalaxyStore((state) => state.language);
-  const game = useGameStore((state) => state.game);
-  useBotDriver();
-  useSoundEffects();
-  useMotionSetting();
-
   useEffect(() => {
     useGalaxyStore.getState().generate();
     useOnlineStore.getState().restore();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
+}
+
+export function App(): ReactElement {
+  const game = useGameStore((state) => state.game);
+  useStartup();
+  useBotDriver();
+  useSoundEffects();
+  useMotionSetting();
 
   return (
-    <div className="app">
-      <Toolbar />
-      <ConnectionBanner />
-      {game !== null && <PhaseBar game={game} />}
-      <main className={game === null ? 'board' : 'board playing'}>
-        <GalaxyMap />
-        {game === null ? <SetupSidebar /> : <GameSidebar game={game} />}
-      </main>
-      {game !== null && <CombatView />}
-      <TutorialDialog />
-    </div>
+    <Tooltip.Provider delayDuration={250}>
+      <div className="app">
+        <Toolbar />
+        <ConnectionBanner />
+        {game !== null && <PhaseBar game={game} />}
+        <main className={game === null ? 'board' : 'board playing'}>
+          <GalaxyMap />
+          {game === null ? <SetupSidebar /> : <GameSidebar game={game} />}
+        </main>
+        {game !== null && <CombatView />}
+        <TutorialDialog />
+      </div>
+    </Tooltip.Provider>
   );
 }

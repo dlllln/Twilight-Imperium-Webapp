@@ -1,3 +1,5 @@
+import { Panel } from '../ui/Panel.tsx';
+import { Scale } from 'lucide-react';
 import type { GameState } from '@stellar/domain';
 import type { ReactElement } from 'react';
 import { agendaLabel, agendaPassedText } from '../../labels.ts';
@@ -10,8 +12,7 @@ export function LawsPanel({ game }: { readonly game: GameState }): ReactElement 
   const language = useLanguage();
   if (!game.centerTokenRemoved && game.laws.length === 0) return null;
   return (
-    <section className="game-section laws-panel">
-      <h2>{t('lawsInForce')}</h2>
+    <Panel title={t('lawsInForce')} icon={Scale} className="laws-panel">
       {game.laws.length === 0 ? (
         <p className="hint">{t('noLaws')}</p>
       ) : (
@@ -24,6 +25,6 @@ export function LawsPanel({ game }: { readonly game: GameState }): ReactElement 
           ))}
         </ul>
       )}
-    </section>
+    </Panel>
   );
 }

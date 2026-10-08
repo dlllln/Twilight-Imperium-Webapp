@@ -6,6 +6,7 @@ import { paintNebula } from './nebula-texture.ts';
 import { hexOf, type Rgb, rgbOf } from './palette.ts';
 import { type PlanetLook, paintPlanet } from './planet-texture.ts';
 import { paintUnit } from './ship-texture.ts';
+import { paintGlow, paintStar, STAR_VARIANTS } from './star-texture.ts';
 import { paintTileFace } from './tile-texture.ts';
 
 /* Texturgrößen in Pixeln: groß genug für dreifachen Zoom auf hochauflösenden Bildschirmen. */
@@ -56,3 +57,31 @@ export function unitTexture(type: string, seat: number): Texture {
 
 export const nebulaTexture = (): Texture =>
   cached('nebula', () => paintNebula(NEBULA_SIZE.width, NEBULA_SIZE.height, NEBULA_SIZE.seed));
+
+/* Systemansicht: dieselben Maler in höherer Auflösung, weil Planeten und Schiffe dort groß stehen. */
+const DETAIL = { planet: 384, ship: { width: 240, height: 150 }, ground: 96, star: 512 } as const;
+const DETAIL_ANOMALY = 640;
+const GLOW_SIZE = 64;
+
+export const detailPlanetTexture = (id: string, look: PlanetLook): Texture =>
+  cached(`planet-detail:${id}`, () => paintPlanet(id, look, DETAIL.planet));
+
+export function detailUnitTexture(type: string, seat: number): Texture {
+  const ground = isGroundPiece(type);
+  const width = ground ? DETAIL.ground : DETAIL.ship.width;
+  const height = ground ? DETAIL.ground : DETAIL.ship.height;
+  return cached(`unit-detail:${type}:${String(seat)}`, () =>
+    paintUnit(type, seatRgb(seat), width, height),
+  );
+}
+
+export const starTexture = (hue: number): Texture =>
+  cached(`star:${String(hue % STAR_VARIANTS)}`, () => paintStar(hue % STAR_VARIANTS, DETAIL.star));
+
+export const detailAnomalyTexture = (kind: AnomalyKind): Texture =>
+  cached(`anomaly-detail:${kind}`, () => paintAnomaly(kind, DETAIL_ANOMALY));
+
+export const glowTexture = (): Texture => cached('glow', () => paintGlow(GLOW_SIZE));
+
+/** Seitenverhältnis der Schiffstexturen (Breite zu Höhe). */
+export const SHIP_ASPECT = DETAIL.ship.height / DETAIL.ship.width;

@@ -1,3 +1,5 @@
+import { Panel } from '../ui/Panel.tsx';
+import { Users } from 'lucide-react';
 import { clockwiseFrom, type GameState, type PlayerState, strategyCardsOf } from '@stellar/domain';
 import type { ReactElement } from 'react';
 import { seatPlayerId } from '@stellar/application';
@@ -62,13 +64,12 @@ export function PlayersPanel({ game }: { readonly game: GameState }): ReactEleme
     game.actionPhase?.order ?? clockwiseFrom(game, game.speaker ?? game.host).map((p) => p.id);
   const players = order.flatMap((id) => game.players.filter((player) => player.id === id));
   return (
-    <section className="game-section" data-tutorial="players">
-      <h2>{t('initiativeOrder')}</h2>
+    <Panel title={t('initiativeOrder')} icon={Users} tutorial="players">
       <ol className="player-list">
         {players.map((player) => (
           <PlayerRow key={player.id} game={game} player={player} />
         ))}
       </ol>
-    </section>
+    </Panel>
   );
 }

@@ -14,7 +14,10 @@ import { useGalaxyStore } from '../src/store.ts';
 import { TUTORIAL_STEPS } from '../src/tutorial/tutorial-steps.ts';
 import { useTutorialStore } from '../src/tutorial/tutorial-store.ts';
 import { currentActor } from '../src/local-game.ts';
+import { installDomPolyfills } from './dom-polyfills.ts';
 import { keepSecrets, pickAll, started } from './game-helpers.ts';
+
+installDomPolyfills();
 
 /** Attrappe des Audiokontexts: zählt erzeugte Knoten statt Ton auszugeben. */
 function fakeAudio(state: AudioContextState = 'suspended') {
@@ -138,9 +141,11 @@ describe('Einstellungen', () => {
 
   it('ohne Animationen schaltet die Oberfläche alle Bewegungen ab', () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Animationen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Einstellungen' }));
+    const toggle = () => fireEvent.click(screen.getByRole('switch', { name: 'Animationen' }));
+    toggle();
     expect(document.documentElement.classList.contains('motion-off')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Animationen' }));
+    toggle();
     expect(document.documentElement.classList.contains('motion-off')).toBe(false);
   });
 

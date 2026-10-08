@@ -147,6 +147,49 @@ function paintHull(context: CanvasRenderingContext2D, color: Rgb, height: number
   context.stroke();
 }
 
+/** Feine Details auf dem Rumpf: Plattenfugen, Glanzstreifen, Zierlinie, Fensterreihe. */
+function paintPlating(
+  context: CanvasRenderingContext2D,
+  color: Rgb,
+  width: number,
+  height: number,
+) {
+  context.save();
+  context.clip();
+  paintSeams(context, color, width, height);
+  context.fillStyle = css(mix(color, [255, 255, 255], 0.75), 0.55);
+  context.fillRect(width * 0.12, height * 0.36, width * 0.7, height * 0.035);
+  context.fillStyle = css(mix(color, [255, 255, 255], 0.3), 0.8);
+  context.fillRect(width * 0.55, height * 0.56, width * 0.35, height * 0.03);
+  paintWindows(context, width, height);
+  context.restore();
+}
+
+function paintSeams(context: CanvasRenderingContext2D, color: Rgb, width: number, height: number) {
+  context.strokeStyle = css(mix(color, [0, 0, 0], 0.7), 0.45);
+  context.lineWidth = Math.max(0.6, height * 0.014);
+  for (let panel = 1; panel <= PANELS; panel++) {
+    const x = width * (0.1 + (0.8 * panel) / (PANELS + 1));
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x - height * 0.12, height);
+    context.stroke();
+  }
+}
+
+function paintWindows(context: CanvasRenderingContext2D, width: number, height: number) {
+  context.fillStyle = 'rgba(255,236,180,0.9)';
+  const radius = Math.max(0.6, height * 0.018);
+  for (let window = 0; window < WINDOWS; window++) {
+    context.beginPath();
+    context.arc(width * (0.3 + window * 0.07), height * 0.47, radius, 0, Math.PI * 2);
+    context.fill();
+  }
+}
+
+const PANELS = 5;
+const WINDOWS = 6;
+
 function paintEngine(context: CanvasRenderingContext2D, width: number, height: number) {
   const glow = context.createRadialGradient(0, height / 2, 0, 0, height / 2, height * 0.35);
   glow.addColorStop(0, 'rgba(220,250,255,0.95)');
@@ -184,10 +227,23 @@ export function paintUnit(
     paintDock(context, color, Math.min(width, height));
     return surface.canvas;
   }
-  if (!isGround(type)) paintEngine(context, width, height);
+  paintFigure(context, type, color, width, height);
+  return surface.canvas;
+}
+
+/** Schiffe mit Triebwerk und Plattenfugen, Bodeneinheiten als schlichte Figur. */
+function paintFigure(
+  context: CanvasRenderingContext2D,
+  type: string,
+  color: Rgb,
+  width: number,
+  height: number,
+) {
+  const ship = !isGround(type);
+  if (ship) paintEngine(context, width, height);
   hullPath(context, OUTLINES[type] ?? OUTLINES.destroyer ?? [], width, height);
   paintHull(context, color, height);
+  if (ship) paintPlating(context, color, width, height);
   context.fillStyle = css(mix(color, [0, 0, 0], 0.55));
   DETAILS[type]?.(context, width, height);
-  return surface.canvas;
 }

@@ -1,3 +1,4 @@
+import { Users } from 'lucide-react';
 import type { LobbyView, SeatTicket } from '@stellar/application';
 import type { ReactElement } from 'react';
 import type { MessageKey } from '../../i18n.ts';
@@ -45,7 +46,9 @@ export function LobbyPanel(): ReactElement | null {
   if (ticket === null) return null;
   return (
     <section className="online-panel lobby-panel glass" aria-label={t('lobby')}>
-      <h2>{t('lobby')}</h2>
+      <h2 className="setup-title">
+        <Users size={16} aria-hidden="true" /> {t('lobby')}
+      </h2>
       <p className="lobby-code" data-testid="lobby-code">
         {ticket.code}
       </p>

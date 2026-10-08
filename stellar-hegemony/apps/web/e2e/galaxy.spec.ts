@@ -37,10 +37,29 @@ test('Anleitung führt durch die Oberfläche; Einstellungen bleiben nach dem Neu
   await guide.getByRole('button', { name: 'Schließen' }).click();
   await expect(guide).toBeHidden();
 
-  const animations = page.getByRole('button', { name: 'Animationen' });
+  const settings = page.getByRole('button', { name: 'Einstellungen' });
+  const animations = page.getByRole('switch', { name: 'Animationen' });
+  await settings.click();
   await animations.click();
   await expect(page.locator('html')).toHaveClass(/motion-off/);
   await page.reload();
-  await expect(animations).toHaveAttribute('aria-pressed', 'false');
+  await settings.click();
+  await expect(animations).toHaveAttribute('aria-checked', 'false');
   await expect(page.locator('html')).toHaveClass(/motion-off/);
+});
+
+test('Doppelklick zoomt ins System; Escape fährt zurück zur Sternenkarte', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Partie starten' }).click();
+  await page.locator('[data-seat="1"][data-system]').dblclick();
+  const view = page.getByRole('region', { name: 'Systemansicht' });
+  await expect(view).toBeVisible();
+  await expect(view.getByRole('list', { name: 'Im System' })).toContainText('Raumdock');
+  await page.keyboard.press('Escape');
+  await expect(view).toBeHidden();
+  await page.locator('[data-seat="1"][data-system]').click();
+  await page.getByRole('button', { name: 'Ins System zoomen' }).click();
+  await expect(view).toBeVisible();
+  await view.getByRole('button', { name: 'Zur Sternenkarte' }).click();
+  await expect(view).toBeHidden();
 });

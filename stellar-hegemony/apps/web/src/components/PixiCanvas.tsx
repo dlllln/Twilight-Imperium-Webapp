@@ -1,30 +1,11 @@
-import { Application } from 'pixi.js';
+import type { Application } from 'pixi.js';
 import { type ReactElement, type RefObject, useEffect, useRef, useState } from 'react';
 import type { MapEffect } from '../animation/map-effects.ts';
 import type { Bounds } from '../hex-geometry.ts';
 import { GalaxyScene } from '../render/galaxy-scene.ts';
+import { createApplication, KEEP_SHARED } from '../render/pixi-app.ts';
 import type { SceneHex } from '../render/scene-model.ts';
 import type { Viewport } from '../store.ts';
-
-/** Pixi misst Text sofort; die Schriften müssen daher vorher geladen sein. */
-const FONT_FACES = ["700 30px 'Cinzel'", "700 10px 'Exo 2'", "400 10px 'Exo 2'"];
-const loadFonts = () =>
-  Promise.all(FONT_FACES.map((face) => document.fonts.load(face))).catch(() => []);
-
-async function createApplication(host: HTMLElement): Promise<Application> {
-  const app = new Application();
-  await app.init({
-    resizeTo: host,
-    backgroundAlpha: 0,
-    antialias: true,
-    preference: 'webgl',
-    resolution: window.devicePixelRatio,
-    autoDensity: true,
-    autoStart: false,
-  });
-  await loadFonts();
-  return app;
-}
 
 /** Hängt die Leinwand ein; `resizeTo` sieht nur Fenstergrößen, daher ein ResizeObserver. */
 function mountScene(element: HTMLElement, app: Application) {
@@ -35,7 +16,7 @@ function mountScene(element: HTMLElement, app: Application) {
   const dispose = () => {
     observer.disconnect();
     scene.destroy();
-    app.destroy(true, { children: true });
+    app.destroy(KEEP_SHARED, { children: true });
   };
   return { scene, dispose };
 }
@@ -53,7 +34,7 @@ function useGalaxyScene(
     if (element === null) return;
     createApplication(element).then((app) => {
       if (disposed) {
-        app.destroy(true, { children: true });
+        app.destroy(KEEP_SHARED, { children: true });
         return;
       }
       mounted = mountScene(element, app);

@@ -47,6 +47,8 @@ export interface GalaxyStore {
   readonly zoomBy: (factor: number) => void;
   readonly panBy: (dx: number, dy: number) => void;
   readonly resetView: () => void;
+  /** Setzt die Ansicht direkt, z. B. während der Kamerafahrt in ein System. */
+  readonly setViewport: (viewport: Viewport) => void;
 }
 
 /** Validiert über dieselbe Domain-Logik wie der Server. */
@@ -77,7 +79,10 @@ export const nextSeed = (): number => Math.floor(Math.random() * 2 ** 31);
 type Set = StoreApi<GalaxyStore>['setState'];
 type Get = StoreApi<GalaxyStore>['getState'];
 type GalaxyActions = Pick<GalaxyStore, 'setPlayerCount' | 'setBotCount' | 'generate' | 'importMap'>;
-type ViewActions = Pick<GalaxyStore, 'setLanguage' | 'hover' | 'zoomBy' | 'panBy' | 'resetView'>;
+type ViewActions = Pick<
+  GalaxyStore,
+  'setLanguage' | 'hover' | 'zoomBy' | 'panBy' | 'resetView' | 'setViewport'
+>;
 
 function importedLayout(mapString: string, fallbackPlayers: number): Partial<GalaxyStore> {
   const parsed = parseMapString(mapString);
@@ -114,6 +119,7 @@ const viewActions = (set: Set): ViewActions => ({
     withViewport(set, (v) => ({ ...v, zoom: clamp(v.zoom * factor, ZOOM_MIN, ZOOM_MAX) })),
   panBy: (dx, dy) => withViewport(set, (v) => ({ ...v, panX: v.panX + dx, panY: v.panY + dy })),
   resetView: () => set({ viewport: DEFAULT_VIEWPORT }),
+  setViewport: (viewport) => set({ viewport }),
 });
 
 export const useGalaxyStore = create<GalaxyStore>()((set, get) => ({

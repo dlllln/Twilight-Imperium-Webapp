@@ -1,3 +1,5 @@
+import { Panel } from '../ui/Panel.tsx';
+import { Cpu } from 'lucide-react';
 import { type GameState, ownedTechnologies } from '@stellar/domain';
 import type { ReactElement } from 'react';
 import { content } from '../../store.ts';
@@ -9,8 +11,7 @@ import { TechnologyChip } from './TechnologyChip.tsx';
 export function TechnologyPanel({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   return (
-    <section className="game-section">
-      <h2>{t('technologies')}</h2>
+    <Panel title={t('technologies')} icon={Cpu}>
       <ul className="tech-owners">
         {game.players.map((player) => (
           <li key={player.id}>
@@ -23,6 +24,6 @@ export function TechnologyPanel({ game }: { readonly game: GameState }): ReactEl
           </li>
         ))}
       </ul>
-    </section>
+    </Panel>
   );
 }

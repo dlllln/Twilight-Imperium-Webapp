@@ -1,3 +1,5 @@
+import { Panel } from '../ui/Panel.tsx';
+import { Layers } from 'lucide-react';
 import type { GameState, StrategyCardState } from '@stellar/domain';
 import type { ReactElement } from 'react';
 import { useGameStore, useHumanActor } from '../../game-store.ts';
@@ -47,14 +49,13 @@ export function StrategyCardGrid({ game }: { readonly game: GameState }): ReactE
       ? undefined
       : () => send({ type: 'PickStrategyCard', issuedBy: actor, card: card.id });
   return (
-    <section className="game-section" data-tutorial="strategy">
-      <h2>{t('strategyCards')}</h2>
+    <Panel title={t('strategyCards')} icon={Layers} tutorial="strategy">
       {actor !== null && <p className="hint">{t('pickHint')}</p>}
       <ul className="card-grid">
         {cards.map((card) => (
           <StrategyCardTile key={card.id} card={card} game={game} onPick={pick(card)} />
         ))}
       </ul>
-    </section>
+    </Panel>
   );
 }

@@ -53,13 +53,44 @@ function shade(nx: number, ny: number): number {
   return Math.max(0.08, -0.55 * nx - 0.45 * ny + 0.7 * nz);
 }
 
+/** Wolkendecke und Leuchten auf der Nachtseite (Städte, Lava) je Planetenart. */
+interface Features {
+  readonly clouds: number;
+  readonly night: Rgb | null;
+  readonly shine: number;
+}
+
+const FEATURES: Readonly<Record<PlanetLook, Features>> = {
+  cultural: { clouds: 0.6, night: [255, 214, 150], shine: 0.45 },
+  hazardous: { clouds: 0.15, night: [255, 96, 24], shine: 0 },
+  industrial: { clouds: 0.35, night: [255, 190, 110], shine: 0.15 },
+  plain: { clouds: 0.4, night: null, shine: 0.1 },
+  center: { clouds: 0, night: null, shine: 0.3 },
+};
+
+const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
+
+/** Glanzpunkt der Sonne auf glatten Oberflächen (Meere, Gas). */
+const specular = (nx: number, ny: number, nz: number): number =>
+  clamp01(-0.4 * nx - 0.35 * ny + 0.85 * nz) ** 24;
+
+function nightGlow(noise: ValueNoise, features: Features, nx: number, ny: number, light: number) {
+  if (features.night === null || light > 0.3) return 0;
+  const sites = noise.fbm(nx * 9 + 70, ny * 9 + 30, 3);
+  return clamp01((sites - 0.58) * 6) * clamp01((0.3 - light) * 5);
+}
+
 function surfacePixel(noise: ValueNoise, look: PlanetLook, nx: number, ny: number): Rgb {
   const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
   const t = noise.fbm(nx * 2.2 + nz, ny * 2.2 - nz, 6);
   const bands = look === 'center' ? Math.sin(ny * 9 + t * 4) * 0.12 : 0;
   const light = shade(nx, ny);
-  const [r, g, b] = ramp(look, Math.min(1, Math.max(0, t + bands)));
-  return [r * light, g * light, b * light];
+  const features = FEATURES[look];
+  const ground = mix(ramp(look, clamp01(t + bands)), [0, 0, 0], 1 - light);
+  const cloud = clamp01((noise.fbm(nx * 3.4 + 50, ny * 5 - nz, 4) - 0.55) * 3) * features.clouds;
+  const cloudy = mix(ground, [235 * light, 240 * light, 250 * light], cloud);
+  const lit = mix(cloudy, [255, 255, 255], specular(nx, ny, nz) * features.shine);
+  return mix(lit, features.night ?? lit, nightGlow(noise, features, nx, ny, light) * (1 - cloud));
 }
 
 function atmospherePixel(

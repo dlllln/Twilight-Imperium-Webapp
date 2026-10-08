@@ -1,3 +1,4 @@
+import { Globe } from 'lucide-react';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { useOnlineStore } from '../../online/online-store.ts';
 import { currentMapString, useGalaxyStore } from '../../store.ts';
@@ -36,7 +37,9 @@ export function OnlinePanel(): ReactElement {
   const busy = status === 'connecting';
   return (
     <section className="online-panel glass" aria-label={t('online')} data-tutorial="online">
-      <h2>{t('online')}</h2>
+      <h2 className="setup-title">
+        <Globe size={16} aria-hidden="true" /> {t('online')}
+      </h2>
       <label>
         {t('yourName')}
         <input value={name} maxLength={24} onChange={(event) => setName(event.target.value)} />

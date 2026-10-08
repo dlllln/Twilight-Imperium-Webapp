@@ -1,3 +1,5 @@
+import { Panel } from '../ui/Panel.tsx';
+import { Target } from 'lucide-react';
 import { findPlayer, type GameState, type PlayerId, scoringOptions } from '@stellar/domain';
 import type { ReactElement } from 'react';
 import { useViewer } from '../../game-store.ts';
@@ -85,11 +87,10 @@ export function ObjectivesPanel({ game }: { readonly game: GameState }): ReactEl
   const t = useT();
   const actor = useViewer(game);
   return (
-    <section className="game-section objectives-panel" data-tutorial="objectives">
-      <h2>{t('objectives')}</h2>
+    <Panel title={t('objectives')} icon={Target} tutorial="objectives" className="objectives-panel">
       <VictoryTrack game={game} />
       <PublicRow game={game} />
       {actor !== null && <SecretList game={game} player={actor} />}
-    </section>
+    </Panel>
   );
 }
