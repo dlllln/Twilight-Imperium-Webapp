@@ -1,10 +1,11 @@
-import { Container, Graphics, Sprite } from 'pixi.js';
+import { Container, Graphics, type Mesh, type MeshGeometry, type Shader, Sprite } from 'pixi.js';
+import { planetMesh } from './planet-mesh.ts';
 import { GOLD } from './palette.ts';
 import type { ScenePlanet, UnitCount } from './scene-model.ts';
 import { COUNT_STYLE, INFLUENCE_STYLE, label, RESOURCE_STYLE } from './text-styles.ts';
 import { hexOf } from './palette.ts';
 import { seatColor } from '../seat-colors.ts';
-import { planetTexture, unitTexture } from './textures.ts';
+import { unitTexture } from './textures.ts';
 
 export interface Spot {
   readonly x: number;
@@ -27,7 +28,7 @@ const PLANET_SPOTS: readonly (readonly Spot[])[] = [
 ];
 const PLANET_DIAMETERS = [0, 34, 27, 22];
 const CENTER_DIAMETER = 42;
-const ATMOSPHERE = 1.15;
+const EXHAUSTED_TINT = 0x5a5a6a;
 const TECH_COLORS: Readonly<Record<string, number>> = {
   biotic: 0x4caf50,
   propulsion: 0x42a5f5,
@@ -43,17 +44,17 @@ export const planetDiameter = (planet: ScenePlanet, count: number): number =>
 
 const seatHex = (seat: number): number => hexOf(seatColor(seat));
 
-function planetBody(planet: ScenePlanet, diameter: number): Sprite {
-  const body = new Sprite(planetTexture(planet.id, planet.look));
-  body.anchor.set(0.5);
-  body.width = diameter * ATMOSPHERE;
-  body.height = diameter * ATMOSPHERE;
-  if (planet.exhausted) body.tint = 0x5a5a6a;
+/** Planet als Shader-Fläche: scharf in jeder Zoomstufe. */
+function planetBody(planet: ScenePlanet, diameter: number): Mesh<MeshGeometry, Shader> {
+  const body = planetMesh(planet.id, planet.look, diameter);
+  if (planet.exhausted) body.tint = EXHAUSTED_TINT;
   return body;
 }
 
-function planetValues(planet: ScenePlanet, diameter: number): Container {
+/** Ressourcen und Einfluss unter dem Planeten; beim Nahzoom übernimmt die Beschriftung im DOM. */
+function planetValues(planet: ScenePlanet, diameter: number, at: Spot): Container {
   const values = new Container();
+  values.position.set(at.x, at.y);
   const y = diameter / 2 + 6;
   values.addChild(
     label(String(planet.definition.resources), RESOURCE_STYLE, -5, y),
@@ -70,8 +71,8 @@ function techDot(specialty: string, radius: number): Graphics {
     .stroke({ width: 0.8, color: 0x000000 });
 }
 
-/** Kleine Figuren neben dem Planeten: Bodentruppen und Bauwerke des Besitzers. */
-function groundUnits(units: readonly UnitCount[], radius: number): Container {
+/** Kleine Figuren neben dem Planeten: Bodentruppen und Bauwerke; Zahlen gehen in `labels`. */
+function groundUnits(units: readonly UnitCount[], radius: number, at: Spot, labels: Container) {
   const stack = new Container();
   units.forEach((unit, index) => {
     const icon = new Sprite(unitTexture(unit.type, unit.seat));
@@ -79,7 +80,8 @@ function groundUnits(units: readonly UnitCount[], radius: number): Container {
     icon.setSize(10, 10);
     icon.position.set(radius + 6, -radius / 2 + index * 10);
     stack.addChild(dropShadow(icon, GROUND_LIFT), icon);
-    if (unit.count > 1) stack.addChild(label(String(unit.count), COUNT_STYLE, radius + 13, icon.y));
+    if (unit.count > 1)
+      labels.addChild(label(String(unit.count), COUNT_STYLE, at.x + radius + 13, at.y + icon.y));
   });
   return stack;
 }
@@ -106,30 +108,34 @@ function planetShadow(diameter: number): Graphics {
   return shadow;
 }
 
-/** Planet mit Werten, Spezialisierung und Truppen; der Kontrollring kommt in die Glühebene. */
-export function planetPiece(planet: ScenePlanet, diameter: number, at: Spot): Container {
+/** Planet mit Spezialisierung und Truppen; Kontrollring und Zahlen liegen in eigenen Ebenen. */
+export function planetPiece(
+  planet: ScenePlanet,
+  diameter: number,
+  at: Spot,
+  labels: Container,
+): Container {
   const piece = new Container();
   piece.position.set(at.x, at.y);
-  piece.addChild(
-    planetShadow(diameter),
-    planetBody(planet, diameter),
-    planetValues(planet, diameter),
-  );
+  piece.addChild(planetShadow(diameter), planetBody(planet, diameter));
   const specialty = planet.definition.technologySpecialty;
   if (specialty !== undefined) piece.addChild(techDot(specialty, diameter / 2));
-  piece.addChild(groundUnits(planet.units, diameter / 2));
+  piece.addChild(groundUnits(planet.units, diameter / 2, at, labels));
+  labels.addChild(planetValues(planet, diameter, at));
   return piece;
 }
 
-export function controlRing(seat: number, diameter: number, at: Spot): Graphics {
+export function controlRing(seat: number, diameter: number, at: Spot, line: number): Graphics {
   return new Graphics()
-    .circle(at.x, at.y, diameter / 2 + 2.5)
-    .stroke({ width: 1.6, color: seatHex(seat), alpha: 0.95 });
+    .circle(at.x, at.y, diameter / 2 + 2.5 * line)
+    .stroke({ width: 1.6 * line, color: seatHex(seat), alpha: 0.95 });
 }
 
 const SHIP_ROW_Y = 33;
 const SHIP_SPACING = 24;
 const SHIPS_PER_ROW = 3;
+const SHIP_ROW_GAP = 13;
+const ORIGIN: Spot = { x: 0, y: 0 };
 
 /** Dieselbe Figur dunkel und versetzt: Schlagschatten der schwebenden Miniatur. */
 export function dropShadow(sprite: Sprite, lift: number): Sprite {
@@ -145,28 +151,33 @@ export function dropShadow(sprite: Sprite, lift: number): Sprite {
 const SHIP_LIFT = 5;
 const GROUND_LIFT = 2;
 
-function shipIcon(unit: UnitCount, x: number, y: number): Container {
+function shipIcon(unit: UnitCount, at: Spot, labels: Container): Container {
   const icon = new Container();
   const fighter = unit.type === 'fighter';
   const sprite = new Sprite(unitTexture(unit.type, unit.seat));
   sprite.anchor.set(0.5);
   sprite.setSize(fighter ? 14 : 24, fighter ? 9 : 15);
-  icon.position.set(x, y);
+  icon.position.set(at.x, at.y);
   icon.addChild(dropShadow(sprite, SHIP_LIFT), sprite);
-  if (unit.count > 1) icon.addChild(label(String(unit.count), COUNT_STYLE, 9, 6));
+  if (unit.count > 1) labels.addChild(label(String(unit.count), COUNT_STYLE, at.x + 9, at.y + 6));
   return icon;
 }
 
-/** Flotten als Reihen kleiner Miniaturen am unteren Feldrand, gruppiert nach Spieler und Typ. */
-export function shipRows(ships: readonly UnitCount[]): Container {
-  const rows = new Container();
-  ships.forEach((unit, index) => {
+/** Plätze der Schiffsgruppen: Reihen zu drei am unteren Feldrand. */
+export function shipSlots(count: number): readonly Spot[] {
+  return Array.from({ length: count }, (_, index) => {
     const row = Math.floor(index / SHIPS_PER_ROW);
-    const inRow = Math.min(SHIPS_PER_ROW, ships.length - row * SHIPS_PER_ROW);
+    const inRow = Math.min(SHIPS_PER_ROW, count - row * SHIPS_PER_ROW);
     const column = index % SHIPS_PER_ROW;
-    const x = (column - (inRow - 1) / 2) * SHIP_SPACING;
-    rows.addChild(shipIcon(unit, x, SHIP_ROW_Y + row * 13));
+    return { x: (column - (inRow - 1) / 2) * SHIP_SPACING, y: SHIP_ROW_Y + row * SHIP_ROW_GAP };
   });
+}
+
+/** Flotten als Reihen kleiner Miniaturen am unteren Feldrand, gruppiert nach Spieler und Typ. */
+export function shipRows(ships: readonly UnitCount[], labels: Container): Container {
+  const rows = new Container();
+  const slots = shipSlots(ships.length);
+  ships.forEach((unit, index) => rows.addChild(shipIcon(unit, slots[index] ?? ORIGIN, labels)));
   return rows;
 }
 

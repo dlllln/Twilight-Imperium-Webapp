@@ -6,7 +6,7 @@ export interface Size {
 }
 
 /** Größe eines Elements, aktualisiert bei jeder Änderung (für Beschriftungen über Pixi). */
-export function useElementSize(element: RefObject<HTMLElement | null>): Size {
+export function useElementSize(element: RefObject<Element | null>): Size {
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
   useEffect(() => {
     const target = element.current;

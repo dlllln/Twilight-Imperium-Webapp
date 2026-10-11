@@ -13,7 +13,9 @@ import {
 } from '@stellar/domain';
 import { SeededRandom } from '@stellar/infrastructure';
 import { create, type StoreApi } from 'zustand';
+import type { Point } from './hex-geometry.ts';
 import type { Language } from './i18n.ts';
+import { zoomAround } from './system/viewport-tween.ts';
 
 export const content: ContentPort = createBaseContent();
 
@@ -24,9 +26,8 @@ export interface Viewport {
 }
 
 export const DEFAULT_VIEWPORT: Viewport = { zoom: 1, panX: 0, panY: 0 };
+const MAP_ORIGIN: Point = { x: 0, y: 0 };
 const DEFAULT_PLAYERS = 6;
-const ZOOM_MIN = 0.5;
-const ZOOM_MAX = 3;
 
 export interface GalaxyStore {
   readonly language: Language;
@@ -44,7 +45,8 @@ export interface GalaxyStore {
   readonly generate: (seed?: number) => void;
   readonly importMap: (mapString: string) => boolean;
   readonly hover: (key: string | null) => void;
-  readonly zoomBy: (factor: number) => void;
+  /** Zoomt um `factor`; `anchor` (viewBox-Koordinaten) bleibt stehen, sonst die Kartenmitte. */
+  readonly zoomBy: (factor: number, anchor?: Point) => void;
   readonly panBy: (dx: number, dy: number) => void;
   readonly resetView: () => void;
   /** Setzt die Ansicht direkt, z. B. während der Kamerafahrt in ein System. */
@@ -115,8 +117,7 @@ const withViewport = (set: Set, change: (viewport: Viewport) => Viewport): void 
 const viewActions = (set: Set): ViewActions => ({
   setLanguage: (language) => set({ language }),
   hover: (hovered) => set({ hovered }),
-  zoomBy: (factor) =>
-    withViewport(set, (v) => ({ ...v, zoom: clamp(v.zoom * factor, ZOOM_MIN, ZOOM_MAX) })),
+  zoomBy: (factor, anchor = MAP_ORIGIN) => withViewport(set, (v) => zoomAround(v, factor, anchor)),
   panBy: (dx, dy) => withViewport(set, (v) => ({ ...v, panX: v.panX + dx, panY: v.panY + dy })),
   resetView: () => set({ viewport: DEFAULT_VIEWPORT }),
   setViewport: (viewport) => set({ viewport }),

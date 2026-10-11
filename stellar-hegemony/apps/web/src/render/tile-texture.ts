@@ -1,10 +1,9 @@
 import type { TileBack } from '@stellar/domain';
 import type { Point } from '../hex-geometry.ts';
 import { createCanvas, paintPixels } from './canvas.ts';
-import { seededRandom, ValueNoise } from './noise.ts';
+import { ValueNoise } from './noise.ts';
 import {
   css,
-  FRAME,
   mix,
   type Rgb,
   rgbOf,
@@ -13,26 +12,16 @@ import {
   TILE_HOME,
   TILE_RED,
 } from './palette.ts';
-import {
-  bevelFacets,
-  type LitFacet,
-  tileFace,
-  tileFrame,
-  type TileFrame,
-  tileOutline,
-  tileWalls,
-} from './tile-shape.ts';
+import { tileFace, tileFrame, type TileFrame, tileOutline } from './tile-shape.ts';
 
-const BACK_COLORS: Readonly<Record<TileBack, Rgb>> = {
+export const BACK_COLORS: Readonly<Record<TileBack, Rgb>> = {
   blue: rgbOf(TILE_BLUE),
   red: rgbOf(TILE_RED),
   center: rgbOf(TILE_CENTER),
   home: rgbOf(TILE_HOME),
 };
 const BLACK: Rgb = [0, 0, 0];
-const WHITE: Rgb = [255, 255, 255];
 const STARLIGHT: Rgb = [120, 150, 220];
-const SPECKS = 46;
 
 function polygon(context: CanvasRenderingContext2D, points: readonly Point[]) {
   context.beginPath();
@@ -54,16 +43,6 @@ function paintShadow(context: CanvasRenderingContext2D, frame: TileFrame) {
   context.fillStyle = 'rgb(4,6,14)';
   context.fill();
   context.restore();
-}
-
-/** Seitenwände in dunklem Metall, je nach Richtung heller oder dunkler. */
-function paintWalls(context: CanvasRenderingContext2D, frame: TileFrame, base: Rgb) {
-  const metal = mix(base, rgbOf(FRAME), 0.7);
-  for (const wall of tileWalls(frame)) {
-    polygon(context, wall.points);
-    context.fillStyle = css(mix(metal, BLACK, 0.55 - wall.light * 0.3));
-    context.fill();
-  }
 }
 
 function faceGradient(context: CanvasRenderingContext2D, frame: TileFrame, base: Rgb) {
@@ -96,20 +75,7 @@ function paintWisps(context: CanvasRenderingContext2D, frame: TileFrame, variant
   context.drawImage(layer.canvas, 0, 0);
 }
 
-function paintSpecks(context: CanvasRenderingContext2D, frame: TileFrame, variant: number) {
-  const random = seededRandom(variant * 104729 + 1);
-  const { center, face } = frame;
-  for (let speck = 0; speck < SPECKS; speck++) {
-    const x = center.x + (random() - 0.5) * face * 1.8;
-    const y = center.y + (random() - 0.5) * face * 1.6;
-    context.fillStyle = `rgba(230,240,255,${String(0.15 + random() * 0.5)})`;
-    context.beginPath();
-    context.arc(x, y, face * (0.004 + random() * 0.008), 0, Math.PI * 2);
-    context.fill();
-  }
-}
-
-/** Kachelfläche: Tiefraum mit Sternen und Schleier, oben links vom Licht getroffen. */
+/** Kachelfläche: Tiefraum mit Schleier, oben links vom Licht getroffen. */
 function paintFace(
   context: CanvasRenderingContext2D,
   frame: TileFrame,
@@ -122,23 +88,13 @@ function paintFace(
   context.fillStyle = faceGradient(context, frame, base);
   context.fillRect(0, 0, frame.width, frame.height);
   paintWisps(context, frame, variant);
-  paintSpecks(context, frame, variant);
   context.restore();
 }
 
-const facetColor = (facet: LitFacet): string =>
-  facet.light > 0 ? css(WHITE, facet.light * 0.32) : css(BLACK, -facet.light * 0.45);
-
-/** Lichtkante: helle Fase oben links, Schattenfase unten rechts. */
-function paintBevel(context: CanvasRenderingContext2D, frame: TileFrame) {
-  for (const facet of bevelFacets(frame)) {
-    polygon(context, facet.points);
-    context.fillStyle = facetColor(facet);
-    context.fill();
-  }
-}
-
-/** Plastische Kachel mit Schatten, Seitenwänden, Fläche und Lichtkante (Maße aus `tileFrame`). */
+/**
+ * Weicher Teil der Kachel: Schlagschatten und Fläche mit Schleier (Maße aus `tileFrame`).
+ * Wände, Lichtkante und Sterne zeichnet `tileRelief` als Vektorgrafik, scharf bei jedem Zoom.
+ */
 export function paintTile(
   back: TileBack,
   radius: number,
@@ -150,8 +106,6 @@ export function paintTile(
   const { context } = surface;
   const base = BACK_COLORS[back];
   paintShadow(context, frame);
-  paintWalls(context, frame, base);
   paintFace(context, frame, base, variant);
-  paintBevel(context, frame);
   return surface.canvas;
 }

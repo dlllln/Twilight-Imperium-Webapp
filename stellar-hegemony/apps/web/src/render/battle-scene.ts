@@ -1,13 +1,12 @@
 import { type Application, Container, Sprite, type Ticker } from 'pixi.js';
-import { type BattleFrame, FULL_FRAME, type ShipSpot } from '../battle/battle-layout.ts';
+import { type BattleFrame, FULL_FRAME, type ShipSpot, WORLD } from '../battle/battle-layout.ts';
 import type { Shot } from '../battle/battle-shots.ts';
 import { seatColor } from '../seat-colors.ts';
-import { WORLD } from '../system/system-layout.ts';
 import { EffectLayer, type Point } from './battle-effects.ts';
 import { BattleShipPiece } from './battle-ships.ts';
 import { hexOf } from './palette.ts';
 import type { PlanetLook } from './planet-texture.ts';
-import { starfield } from './system-pieces.ts';
+import { starfield } from './starfield.ts';
 import { detailPlanetTexture, glowTexture, nebulaTexture } from './textures.ts';
 
 const LOOKS: readonly PlanetLook[] = ['cultural', 'hazardous', 'industrial', 'plain'];

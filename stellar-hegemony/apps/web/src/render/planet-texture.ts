@@ -6,7 +6,7 @@ import { mix, type Rgb } from './palette.ts';
 export type PlanetLook = PlanetTrait | 'center' | 'plain';
 
 /** Drei Farbstufen je Planetenart: tief, mittel, hell. */
-const RAMPS: Readonly<Record<PlanetLook, readonly [Rgb, Rgb, Rgb]>> = {
+export const RAMPS: Readonly<Record<PlanetLook, readonly [Rgb, Rgb, Rgb]>> = {
   cultural: [
     [18, 52, 112],
     [52, 128, 176],
@@ -34,7 +34,7 @@ const RAMPS: Readonly<Record<PlanetLook, readonly [Rgb, Rgb, Rgb]>> = {
   ],
 };
 
-const ATMOSPHERE: Readonly<Record<PlanetLook, Rgb>> = {
+export const ATMOSPHERE: Readonly<Record<PlanetLook, Rgb>> = {
   cultural: [120, 190, 255],
   hazardous: [255, 140, 80],
   industrial: [170, 220, 140],
@@ -54,13 +54,13 @@ function shade(nx: number, ny: number): number {
 }
 
 /** Wolkendecke und Leuchten auf der Nachtseite (Städte, Lava) je Planetenart. */
-interface Features {
+export interface Features {
   readonly clouds: number;
   readonly night: Rgb | null;
   readonly shine: number;
 }
 
-const FEATURES: Readonly<Record<PlanetLook, Features>> = {
+export const FEATURES: Readonly<Record<PlanetLook, Features>> = {
   cultural: { clouds: 0.6, night: [255, 214, 150], shine: 0.45 },
   hazardous: { clouds: 0.15, night: [255, 96, 24], shine: 0 },
   industrial: { clouds: 0.35, night: [255, 190, 110], shine: 0.15 },

@@ -21,3 +21,7 @@ export const mix = (a: Rgb, b: Rgb, t: number): Rgb => [
 
 export const css = ([r, g, b]: Rgb, alpha = 1): string =>
   `rgba(${String(Math.round(r))},${String(Math.round(g))},${String(Math.round(b))},${String(alpha)})`;
+
+/** Farbwert für Pixi aus drei Kanälen. */
+export const colorOf = ([r, g, b]: Rgb): number =>
+  (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b);

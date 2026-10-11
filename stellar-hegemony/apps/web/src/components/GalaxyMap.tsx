@@ -5,7 +5,9 @@ import {
   Suspense,
   type KeyboardEvent,
   type ReactElement,
+  type RefObject,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -18,6 +20,7 @@ import {
   hexCorners,
   hexToPixel,
   padBounds,
+  type Point,
   toSvgPoints,
 } from '../hex-geometry.ts';
 import type { Language } from '../i18n.ts';
@@ -28,9 +31,16 @@ import { useSettingsStore } from '../settings-store.ts';
 import { usePanZoom } from '../use-pan-zoom.ts';
 import { HexTooltip } from './HexTooltip.tsx';
 import { MapControls } from './MapControls.tsx';
-import { SystemView } from './system/SystemView.tsx';
-import { useSystemViewStore } from '../system/system-view-store.ts';
-import { focusViewport, reachesSystem, viewCenter } from '../system/viewport-tween.ts';
+import { glideCamera, useCameraStore } from '../system/camera-store.ts';
+import { useElementSize } from '../system/use-element-size.ts';
+import {
+  boundsCenter,
+  CLOSE_ZOOM,
+  focusViewport,
+  systemZoom,
+  zoomAround,
+} from '../system/viewport-tween.ts';
+import { CloseUpLabels } from './CloseUpLabels.tsx';
 import { HandDock } from './hand/HandDock.tsx';
 import { PhaseDock } from './hud/PhaseDock.tsx';
 import { PlayerRail } from './hud/PlayerRail.tsx';
@@ -150,6 +160,7 @@ function ChosenActions({ hexes, bounds, viewport, onView }: Omit<TargetsProps, '
       hex={chosen}
       viewport={viewport}
       top={bounds.minY + HUD_MARGINS.top}
+      bottom={bounds.minY + bounds.height - HUD_MARGINS.bottom}
       onView={onView}
     />
   );
@@ -180,59 +191,69 @@ const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
   );
 });
 
-/** Kamerafahrt in ein System, das in der Partie zugleich ausgewählt bleibt; Heimat-Plätze vor der Partie haben keinen Inhalt. */
-function useOpenSystem(bounds: Bounds) {
+const svgSize = (svg: RefObject<SVGSVGElement | null>) => ({
+  width: svg.current?.clientWidth ?? 0,
+  height: svg.current?.clientHeight ?? 0,
+});
+
+/** Fährt an ein System heran, bis es zwei Drittel des Bildes füllt; in der Partie bleibt es gewählt. */
+function useFlyTo(bounds: Bounds, svg: RefObject<SVGSVGElement | null>) {
   return useCallback(
     (hex: SceneHex) => {
       if (hex.kind !== 'system') return;
       const { game, select } = useGameStore.getState();
       if (game !== null) select(hex.systemId);
-      const focus = focusViewport(bounds, hexToPixel(hex.position));
-      useSystemViewStore.getState().open(hex.key, focus);
+      const zoom = systemZoom(bounds, svgSize(svg));
+      useCameraStore.getState().focus(focusViewport(bounds, hexToPixel(hex.position), zoom));
     },
-    [bounds],
+    [bounds, svg],
   );
 }
 
 /**
  * In der Partie wählt ein Klick das System und zeigt seine Knöpfe; ein zweiter Klick fährt
- * hinein. Vor der Partie fährt schon der erste Klick hinein. Wer die Karte zieht, verschiebt sie nur.
+ * heran. Vor der Partie fährt schon der erste Klick heran. Wer die Karte zieht, verschiebt sie nur.
  */
-function usePicking(wasDrag: () => boolean, open: (hex: SceneHex) => void) {
+function usePicking(wasDrag: () => boolean, flyTo: (hex: SceneHex) => void) {
   return (hex: SceneHex) => {
     if (wasDrag()) return;
     const { game, selected, select } = useGameStore.getState();
-    if (game === null || hex.systemId === selected) open(hex);
+    if (game === null || hex.systemId === selected) flyTo(hex);
     else select(hex.systemId);
   };
 }
 
-/** Nächstes System zur Bildmitte; der Mauszeiger hat Vorrang, wenn er auf einem steht. */
-function systemNear(hexes: readonly SceneHex[], point: { x: number; y: number }) {
-  const distance = (hex: SceneHex) => {
-    const center = hexToPixel(hex.position);
-    return Math.hypot(center.x - point.x, center.y - point.y);
-  };
-  const systems = hexes.filter((hex) => hex.kind === 'system');
-  return systems.reduce<SceneHex | undefined>(
-    (best, hex) => (best === undefined || distance(hex) < distance(best) ? hex : best),
-    undefined,
-  );
+/** Bildschirmpunkt in viewBox-Koordinaten (null, wenn der Browser es nicht kann, z. B. in Tests). */
+function toViewBox(svg: SVGSVGElement | null, client: Point): Point | null {
+  if (svg === null || !('getScreenCTM' in svg)) return null;
+  const matrix = svg.getScreenCTM();
+  if (matrix === null) return null;
+  const point = new DOMPoint(client.x, client.y).matrixTransform(matrix.inverse());
+  return { x: point.x, y: point.y };
 }
 
-/** Zoomen; erreicht der Zoom die Schwelle, öffnet sich das System unter dem Zeiger oder mittig. */
-function useZoom(hexes: readonly SceneHex[], bounds: Bounds, open: (hex: SceneHex) => void) {
-  return (factor: number) => {
-    const { viewport, zoomBy, hovered } = useGalaxyStore.getState();
-    zoomBy(factor);
-    if (!reachesSystem(viewport.zoom, factor)) return;
-    const pointed = hexes.find((hex) => hex.key === hovered && hex.kind === 'system');
-    const target = pointed ?? systemNear(hexes, viewCenter(bounds, viewport));
-    if (target !== undefined) open(target);
+/** Stufenloser Zoom zum Zeiger hin (ohne Zeiger zur Bildmitte), bis an einzelne Planeten. */
+function useZoom(bounds: Bounds, svg: RefObject<SVGSVGElement | null>) {
+  return (factor: number, client?: Point) => {
+    const pointed = client === undefined ? null : toViewBox(svg.current, client);
+    const anchor = pointed ?? boundsCenter(bounds);
+    glideCamera((from) => zoomAround(from, factor, anchor));
   };
 }
 
-/** Ereignisse der Systemansicht sollen die Karte darunter nicht verschieben. */
+/** Escape fährt nach dem Heranfahren an die alte Stelle zurück. */
+function useEscapeBack(): void {
+  useEffect(() => {
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      const { returnTo, back } = useCameraStore.getState();
+      if (event.key === 'Escape' && returnTo !== null) back();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+}
+
+/** Gesten der Anzeigen über der Karte sollen die Karte darunter nicht verschieben. */
 const shield = { onPointerDown: stop, onPointerMove: stop, onWheel: stop, onDoubleClick: stop };
 function stop(event: { stopPropagation: () => void }) {
   event.stopPropagation();
@@ -251,31 +272,56 @@ function Hud({ game }: { readonly game: GameState }): ReactElement {
   );
 }
 
-/** Oberhalb der Karte: Systemansicht und Anzeigen; ihre Gesten verschieben die Karte nicht. */
-function Overlays({ hexes }: { readonly hexes: readonly SceneHex[] }): ReactElement {
+/** Oberhalb der Karte: die Anzeigen der Partie; ihre Gesten verschieben die Karte nicht. */
+function Overlays(): ReactElement | null {
   const game = useGameStore((state) => state.game);
+  if (game === null) return null;
   return (
-    <div className="system-shield" {...shield}>
-      <SystemView hexes={hexes} />
-      {game !== null && <Hud game={game} />}
+    <div className="hud-shield" {...shield}>
+      <Hud game={game} />
     </div>
   );
 }
 
-export function GalaxyMap(): ReactElement {
+/** Kamera der Karte: Heranfahren an Systeme und stufenloser Zoom, beide über dieselbe SVG-Abbildung. */
+function useMapCamera(bounds: Bounds) {
+  const svg = useRef<SVGSVGElement>(null);
+  const flyTo = useFlyTo(bounds, svg);
+  const zoom = useZoom(bounds, svg);
+  const size = useElementSize(svg);
+  useEscapeBack();
+  return { svg, size, flyTo, zoom };
+}
+
+/** Ohne WebGL zeigt die Karte nur die SVG-Felder. */
+function useFlatFallback(): readonly [boolean, () => void] {
+  const [flat, setFlat] = useState(false);
+  return [flat, useCallback(() => setFlat(true), [])];
+}
+
+/** Hinweis am Zeiger; beim Nahzoom übernehmen die Schilder an Planeten und Flotten. */
+function MapTooltip({
+  hexes,
+  cursor,
+}: {
+  readonly hexes: readonly SceneHex[];
+  readonly cursor: Point;
+}) {
   const { hovered, viewport } = useGalaxyStore();
+  const hex = hexes.find((candidate) => candidate.key === hovered);
+  if (hex === undefined || viewport.zoom >= CLOSE_ZOOM) return null;
+  return <HexTooltip hex={hex} x={cursor.x} y={cursor.y} />;
+}
+
+export function GalaxyMap(): ReactElement {
+  const viewport = useGalaxyStore((state) => state.viewport);
   const hexes = useScene();
   const effects = useMapEffects();
   const bounds = useBounds(hexes);
-  const svg = useRef<SVGSVGElement>(null);
-  const open = useOpenSystem(bounds);
-  const zoom = useZoom(hexes, bounds, open);
+  const { svg, size, flyTo, zoom } = useMapCamera(bounds);
   const { cursor, wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
-  const [flat, setFlat] = useState(false);
-  const pick = usePicking(wasDrag, open);
-  const onUnavailable = useCallback(() => setFlat(true), []);
-  const systemOpen = useSystemViewStore((state) => state.key !== null);
-  const hoveredHex = systemOpen ? undefined : hexes.find((hex) => hex.key === hovered);
+  const [flat, onUnavailable] = useFlatFallback();
+  const pick = usePicking(wasDrag, flyTo);
   return (
     <div className={flat ? 'galaxy flat' : 'galaxy'} data-tutorial="galaxy" {...handlers}>
       {!flat && (
@@ -283,10 +329,11 @@ export function GalaxyMap(): ReactElement {
           <PixiCanvas {...{ hexes, bounds, viewport, effects, onUnavailable }} />
         </Suspense>
       )}
-      <HexTargets {...{ hexes, bounds, viewport }} ref={svg} onPick={pick} onView={open} />
-      {hoveredHex !== undefined && <HexTooltip hex={hoveredHex} x={cursor.x} y={cursor.y} />}
-      <MapControls onZoom={zoom} onReset={() => useGalaxyStore.getState().resetView()} />
-      <Overlays hexes={hexes} />
+      <HexTargets {...{ hexes, bounds, viewport }} ref={svg} onPick={pick} onView={flyTo} />
+      <CloseUpLabels {...{ hexes, bounds, viewport, size }} />
+      <MapTooltip hexes={hexes} cursor={cursor} />
+      <MapControls onZoom={(factor) => zoom(factor)} onReset={useCameraStore.getState().back} />
+      <Overlays />
     </div>
   );
 }

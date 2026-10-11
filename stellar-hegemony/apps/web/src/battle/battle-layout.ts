@@ -1,10 +1,18 @@
-import { SHIP_SCALE, WORLD } from '../system/system-layout.ts';
-
 /*
- * Aufstellung der Kampfbühne als reine Daten. Wie die Systemansicht nutzt sie eine gedachte
- * Bühne von 1600 × 1000 mit dem Ursprung in der Mitte: links der Verteidiger, rechts der
- * Angreifer, Jäger als Staffel darüber, unten liegen die Planeten.
+ * Aufstellung der Kampfbühne als reine Daten: eine gedachte Bühne von WORLD.width ×
+ * WORLD.height mit dem Ursprung in der Mitte; links der Verteidiger, rechts der Angreifer,
+ * Jäger als Staffel darüber, unten liegen die Planeten.
  */
+export const WORLD = { width: 1600, height: 1000 } as const;
+
+/** Größere Schiffe stehen größer auf der Bühne. */
+export const SHIP_SCALE: Readonly<Record<string, number>> = {
+  sunbreaker: 1.5,
+  dreadnought: 1.25,
+  carrier: 1.1,
+  cruiser: 0.95,
+  destroyer: 0.8,
+};
 
 export interface BattleShip {
   readonly id: string;

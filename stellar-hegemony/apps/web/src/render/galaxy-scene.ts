@@ -4,10 +4,11 @@ import { EffectLayer } from '../animation/effect-layer.ts';
 import type { MapEffect } from '../animation/map-effects.ts';
 import type { Bounds } from '../hex-geometry.ts';
 import type { Viewport } from '../store.ts';
-import { drawHex, type HexLayers } from './hex-view.ts';
+import { drawFine, drawHex, type HexLayers } from './hex-view.ts';
 import type { SceneHex } from './scene-model.ts';
 import { nebulaTexture } from './textures.ts';
-import { worldTransform } from './view-transform.ts';
+import { CLOSE_ZOOM } from '../system/viewport-tween.ts';
+import { detailLevel, lineScale, worldTransform } from './view-transform.ts';
 
 const BACKGROUND_OVERSCAN = 1.1;
 const PARALLAX = 0.04;
@@ -42,12 +43,17 @@ export class GalaxyScene {
   private readonly world = new Container();
   private readonly layers: HexLayers = {
     base: new Container(),
+    fine: new Container(),
     glow: bloomLayer(),
     content: new Container(),
+    labels: new Container(),
   };
   private readonly effects = new EffectLayer();
   private pulses: readonly Graphics[] = [];
   private framing: Framing | null = null;
+  private hexes: readonly SceneHex[] = [];
+  /** Detailstufe des Zooms; bei einem Wechsel werden Striche und Sterne neu gezeichnet. */
+  private level = 0;
 
   constructor(private readonly app: Application) {
     this.background.anchor.set(0.5);
@@ -55,8 +61,10 @@ export class GalaxyScene {
     this.layers.content.sortableChildren = true;
     this.world.addChild(
       this.layers.base,
+      this.layers.fine,
       this.layers.glow,
       this.layers.content,
+      this.layers.labels,
       this.effects.container,
     );
     app.stage.addChild(this.background, this.world);
@@ -67,9 +75,26 @@ export class GalaxyScene {
 
   /** Baut alle Felder neu auf; die Texturen bleiben im Cache. */
   show(hexes: readonly SceneHex[]): void {
-    const { base, glow, content } = this.layers;
-    const old = [base, glow, content].flatMap((layer) => layer.removeChildren());
-    this.pulses = hexes.flatMap((hex) => drawHex(hex, this.layers) ?? []);
+    this.hexes = hexes;
+    const line = lineScale(this.level);
+    this.replace(Object.keys(this.layers) as (keyof HexLayers)[], () =>
+      hexes.flatMap((hex) => drawHex(hex, this.layers, line) ?? []),
+    );
+  }
+
+  /** Nur Glühen und Sterne neu, wenn der Zoom die Detailstufe wechselt. */
+  private refine(level: number): void {
+    if (level === this.level) return;
+    this.level = level;
+    const line = lineScale(level);
+    this.replace(['fine', 'glow'], () =>
+      this.hexes.flatMap((hex) => drawFine(hex, this.layers, line) ?? []),
+    );
+  }
+
+  private replace(names: readonly (keyof HexLayers)[], draw: () => Graphics[]): void {
+    const old = names.flatMap((name) => this.layers[name].removeChildren());
+    this.pulses = draw();
     this.redraw();
     // Erst nach dem Zeichnen freigeben, damit kein Shader mehr auf die alten Objekte zeigt.
     for (const child of old) child.destroy({ children: true });
@@ -100,7 +125,9 @@ export class GalaxyScene {
     const transform = worldTransform(bounds, screen, viewport);
     this.world.scale.set(transform.scale);
     this.world.position.set(transform.x, transform.y);
+    this.layers.labels.visible = viewport.zoom < CLOSE_ZOOM;
     this.coverBackground(viewport);
+    this.refine(detailLevel(viewport.zoom));
     this.redraw();
   };
 

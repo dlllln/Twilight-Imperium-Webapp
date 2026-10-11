@@ -51,27 +51,25 @@ test('Anleitung führt durch die Oberfläche; Einstellungen bleiben nach dem Neu
   await expect(page.locator('html')).toHaveClass(/motion-off/);
 });
 
-test('Ein Klick zeigt die Knöpfe am System, Ansehen zoomt ohne Fenster hinein; Mausrad und Escape fahren zurück', async ({
+test('Ein Klick zeigt die Knöpfe am System, Ansehen fährt auf der Karte heran; Mausrad zoomt bis an die Planeten, Escape zurück', async ({
   page,
 }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Partie starten' }).click();
   await chooseFactions(page);
-  await page.locator('[data-seat="1"][data-system]').click();
+  const home = page.locator('[data-seat="1"][data-system]');
+  await home.click();
   await page.getByRole('button', { name: 'System ansehen' }).click();
-  const view = page.getByRole('region', { name: 'Systemansicht' });
-  await expect(view).toBeVisible();
-  await expect(view.getByRole('list', { name: 'Im System' })).toContainText('Raumdock');
+  const signs = page.getByRole('list', { name: 'Aus der Nähe' });
+  await expect(signs).toContainText('Raumdock');
+  await expect(page.getByRole('region', { name: 'Systemansicht' })).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(view).toBeHidden();
-  await page.locator('[data-seat="1"][data-system]').click();
-  await expect(view).toBeVisible();
-  await view.hover();
-  await page.mouse.wheel(0, 200);
-  await expect(view).toBeHidden();
-  const zoomIn = page.getByRole('button', { name: 'Hineinzoomen' });
-  for (let step = 0; step < 5; step += 1) await zoomIn.click();
-  await expect(view).toBeVisible();
-  await view.getByRole('button', { name: 'Zur Sternenkarte' }).click();
-  await expect(view).toBeHidden();
+  await expect(signs).toBeHidden();
+  const box = await home.boundingBox();
+  if (box === null) throw new Error('Heimatsystem nicht sichtbar');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  for (let step = 0; step < 12; step += 1) await page.mouse.wheel(0, -120);
+  await expect(signs).toBeVisible();
+  await page.getByRole('button', { name: 'Ansicht zurücksetzen' }).click();
+  await expect(signs).toBeHidden();
 });

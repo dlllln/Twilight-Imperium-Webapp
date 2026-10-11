@@ -1628,180 +1628,13 @@ input[type='checkbox'] {
   transition: none !important;
 }
 
-/* Iteration 14: Systemansicht und Kartensteuerung. */
+/* Iteration 14: Kartensteuerung und Schilder (Werte, Truppen). */
 
-.system-shield {
+.hud-shield {
   display: contents;
 }
 
-.system-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  overflow: hidden;
-  transform-origin: 50% 50%;
-  cursor: default;
-}
-
-.system-view {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 35%, rgba(60, 80, 160, 0.25), transparent 60%), var(--space-deep);
-}
-
-.system-stage {
-  position: absolute;
-  inset: 0 0 96px 0;
-  mask-image: linear-gradient(to bottom, #000 80%, transparent);
-}
-
-.system-canvas,
-.system-labels {
-  position: absolute;
-  inset: 0;
-}
-
-.system-canvas canvas {
-  display: block;
-}
-
-.system-labels {
-  pointer-events: none;
-}
-
-.system-label {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(8, 12, 28, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(6px);
-  font-size: 13px;
-  white-space: nowrap;
-  transform: translate(-50%, 0);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-}
-
-.fleet-label {
-  transform: translate(-50%, -100%);
-}
-
-.wormhole-label {
-  transform: translate(-50%, -50%);
-  font-size: 22px;
-  font-weight: 700;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  justify-content: center;
-}
-
-.system-header {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 12px;
-  border-radius: 14px;
-}
-
-.system-title {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.system-title h2 {
-  margin: 0;
-  white-space: nowrap;
-  font-size: 18px;
-  letter-spacing: 0.08em;
-}
-
-.system-title span {
-  color: var(--muted);
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.system-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.system-header > .primary {
-  margin-left: 4px;
-}
-
-.system-contents {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  height: 116px;
-  margin: 0;
-  padding: 10px;
-  list-style: none;
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  border-radius: 14px;
-}
-
-.system-card {
-  flex: 0 0 auto;
-  min-width: 220px;
-  max-width: 340px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  overflow: hidden;
-}
-
-.system-card.exhausted {
-  opacity: 0.7;
-}
-
-.system-card.muted {
-  color: var(--muted);
-  justify-content: center;
-}
-
-.card-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.card-head strong {
-  flex: 1;
-  white-space: nowrap;
-}
-
-.card-kind {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-}
-
-.card-tags,
-.unit-row {
+.close-up-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -3467,26 +3300,6 @@ select option {
   margin: 0;
 }
 
-.system-header {
-  background: none;
-  border: none;
-  pointer-events: none;
-}
-
-.system-header > * {
-  pointer-events: auto;
-}
-
-.system-title h2 {
-  font-family: var(--title-font);
-  font-size: 26px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
-}
-
-.system-title span {
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
-}
-
 @media (max-width: 760px) {
   .hand-dock {
     max-width: 100%;
@@ -4006,9 +3819,60 @@ select option {
   background: var(--influence);
 }
 
-/* In der Partie rückt die Kopfzeile der Systemansicht neben die Spieler und unter die Vorräte. */
-.board.playing .system-header {
-  top: 72px;
-  left: 232px;
-  right: 440px;
+/* Iteration 20: Nahzoom ohne eigene Ansicht; Schilder unter Planeten und Flotten. */
+
+.close-up-labels {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+  overflow: hidden;
+  animation: close-up-in 0.35s ease-out;
+}
+
+.close-up-sign {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(8, 12, 28, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(6px);
+  font-size: 13px;
+  white-space: nowrap;
+  transform: translate(-50%, 0);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.close-up-sign.fleet-sign {
+  flex-direction: row;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.close-up-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.close-up-head strong {
+  font-family: var(--title-font);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+}
+
+.close-up-tags:empty {
+  display: none;
+}
+
+@keyframes close-up-in {
+  from {
+    opacity: 0;
+  }
 }

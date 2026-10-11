@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { handleShortcut } from '../src/keyboard.ts';
 import { currentMapString, DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
+import { ZOOM_MAX } from '../src/system/viewport-tween.ts';
 
 const store = () => useGalaxyStore.getState();
 
@@ -45,7 +46,7 @@ describe('Galaxie-Store', () => {
 
   it('Zoom bleibt in Grenzen, Pan verschiebt', () => {
     for (let step = 0; step < 20; step++) store().zoomBy(2);
-    expect(store().viewport.zoom).toBe(3);
+    expect(store().viewport.zoom).toBe(ZOOM_MAX);
     store().panBy(10, -5);
     expect(store().viewport).toMatchObject({ panX: 10, panY: -5 });
     store().resetView();

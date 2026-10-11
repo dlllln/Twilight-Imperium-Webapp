@@ -30,3 +30,15 @@ export function worldTransform(
     y: offsetY + fit * (viewport.panY - bounds.minY),
   };
 }
+
+/** Striche wachsen beim Zoomen nur gedämpft mit (Bildschirmbreite ∝ zoom^0,3). */
+const LINE_GROWTH = 0.3;
+/** Detailstufen in Schritten von 30 % Zoom; nur beim Stufenwechsel wird neu gezeichnet. */
+const LEVEL_STEP = Math.log(1.3);
+
+export const detailLevel = (zoom: number): number =>
+  Math.round(Math.log(Math.max(1, zoom)) / LEVEL_STEP);
+
+/** Faktor für Strichstärken und Sterngrößen in Karteneinheiten auf einer Detailstufe. */
+export const lineScale = (level: number): number =>
+  Math.exp(level * LEVEL_STEP * (LINE_GROWTH - 1));

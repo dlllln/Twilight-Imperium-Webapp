@@ -28,6 +28,8 @@ interface Props {
   readonly viewport: Viewport;
   /** Unterkante der Vorratsleiste; reicht der Platz darunter nicht, stehen die Knöpfe unter dem Feld. */
   readonly top: number;
+  /** Oberkante der Hand; ist das Feld größer als das Bild, bleiben die Knöpfe oben im Bild. */
+  readonly bottom: number;
   readonly onView: (hex: SceneHex) => void;
 }
 
@@ -63,18 +65,31 @@ function ActionButton({
   );
 }
 
-/** Lage über der Oberkante des Felds, in Karteneinheiten wie die Trefferflächen. */
-function placement(hex: SceneHex, viewport: Viewport, count: number, top: number) {
+interface Band {
+  readonly top: number;
+  readonly bottom: number;
+}
+
+/** Über dem Feld, sonst darunter; passt beides nicht (nah herangezoomt), oben im Bild. */
+function rowY(above: number, below: number, band: Band): number {
+  if (above >= band.top) return above;
+  if (below + BUTTON <= band.bottom) return below;
+  return band.top + LIFT;
+}
+
+/** Lage der Knopfreihe in Karteneinheiten wie die Trefferflächen. */
+function placement(hex: SceneHex, viewport: Viewport, count: number, band: Band) {
   const center = hexToPixel(hex.position);
   const width = count * BUTTON + (count - 1) * GAP;
   const x = viewport.panX + center.x * viewport.zoom - width / 2;
   const above = viewport.panY + (center.y - HALF_HEIGHT) * viewport.zoom - BUTTON - LIFT;
   const below = viewport.panY + (center.y + HALF_HEIGHT) * viewport.zoom + LIFT;
-  return { x, y: above < top ? below : above, width, height: BUTTON };
+  return { x, y: rowY(above, below, band), width, height: BUTTON };
 }
 
 /** Sechseckige Knöpfe über dem gewählten System, wie Marker auf dem Spielbrett. */
-export function SystemActions({ game, hex, viewport, top, onView }: Props): ReactElement | null {
+export function SystemActions(props: Props): ReactElement | null {
+  const { game, hex, viewport, top, bottom, onView } = props;
   const actor = useHumanActor(game);
   const seed = useGameStore((state) => state.seed);
   const run = useRun(game, hex, onView);
@@ -82,7 +97,7 @@ export function SystemActions({ game, hex, viewport, top, onView }: Props): Reac
   const actions = systemActions(game, actor, hex.systemId, seed);
   return (
     <foreignObject
-      {...placement(hex, viewport, actions.length, top)}
+      {...placement(hex, viewport, actions.length, { top, bottom })}
       className="system-actions-host"
     >
       <div className="system-actions" onPointerDown={keepMap}>

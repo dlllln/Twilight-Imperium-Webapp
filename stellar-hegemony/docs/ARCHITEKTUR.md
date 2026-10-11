@@ -59,7 +59,8 @@ stellar-hegemony/
         ├── src/simulator/   (It. 16) Ablauf des Kampfsimulators
         ├── src/hand/        (It. 17) Handkarten als reine Daten und gewählte strategische Aktion
         ├── src/hud/         (It. 18) Anzeigen über der Karte: Vorräte, Spieler, Zug beenden, Hex-Knöpfe
-        └── src/setup/       (It. 18) Fraktionswahl vor der Partie
+        ├── src/setup/       (It. 18) Fraktionswahl vor der Partie
+        └── src/system/      (It. 20) Kamera der Karte: Zoom zum Zeiger, Heranfahren, Schilder beim Nahzoom
 ```
 
 Abhängigkeiten zeigen nur nach innen: `web → application → domain`, `infrastructure → application → domain`,
@@ -555,16 +556,40 @@ Planeten werfen einen Schatten auf die Kachel, Schiffe haben eine dunkle Rumpfun
 schweben mit Schatten über dem Feld, Kommandomarker sind Chips mit Dicke und Glanzpunkt.
 Heimat- und Besitzränder leuchten in der Platzfarbe (breiter Schein und helle Linie).
 
-| Element                             | Prinzip                                                                                                                              |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `tile-shape.ts`                     | Reine Geometrie (Fläche, Wände, Fasen, Anker) ohne Canvas, einzeln getestet (Pure Fabrication, Testbarkeit).                         |
-| `paintTile` mit Varianten           | Flyweight: je Rückseite vier Bilder im Textur-Cache, die Variante kommt stabil aus dem Feldschlüssel.                                |
-| Draufsicht statt gekippter Kamera   | Gleiche Abbildung für Pixi und SVG; Tiefe entsteht nur in den Texturen (Low Coupling zur Trefferebene).                              |
-| `zIndex` nach Feldhöhe              | Die Szene ordnet die Ebenen, die Felder wissen nichts voneinander (Single Responsibility).                                           |
-| `dropShadow`, Kiel in `paintFigure` | Eine Schattenfunktion für Schiffe und Bodentruppen (DRY); Kiel und Rumpf nutzen denselben Umriss, Systemansicht und Kampf erben ihn. |
-| `seatFrame`                         | Ein Rand für Heimat und Besitz, nur Stärke und Größe unterscheiden sich (Open/Closed).                                               |
+| Element                             | Prinzip                                                                                                               |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `tile-shape.ts`                     | Reine Geometrie (Fläche, Wände, Fasen, Anker) ohne Canvas, einzeln getestet (Pure Fabrication, Testbarkeit).          |
+| `paintTile` mit Varianten           | Flyweight: je Rückseite vier Bilder im Textur-Cache, die Variante kommt stabil aus dem Feldschlüssel.                 |
+| Draufsicht statt gekippter Kamera   | Gleiche Abbildung für Pixi und SVG; Tiefe entsteht nur in den Texturen (Low Coupling zur Trefferebene).               |
+| `zIndex` nach Feldhöhe              | Die Szene ordnet die Ebenen, die Felder wissen nichts voneinander (Single Responsibility).                            |
+| `dropShadow`, Kiel in `paintFigure` | Eine Schattenfunktion für Schiffe und Bodentruppen (DRY); Kiel und Rumpf nutzen denselben Umriss, der Kampf erbt ihn. |
+| `seatFrame`                         | Ein Rand für Heimat und Besitz, nur Stärke und Größe unterscheiden sich (Open/Closed).                                |
 
-## 24. Iterationen
+## 24. Iteration 20 im Detail (Nahzoom statt Systemansicht, gerenderte Planeten)
+
+Es gibt keine eigene Systemansicht mehr. „System ansehen“ oder ein zweiter Klick fährt die
+Kamera auf der Karte an das System heran, bis es etwa zwei Drittel des Bildes füllt; das Mausrad
+zoomt stufenlos und weich zum Mauszeiger hin, bis ein einzelner Planet das Bild füllt (Zoom bis
+28). Escape oder „Ansicht zurücksetzen“ fährt zurück. Planeten sind keine hochskalierten Bilder
+mehr, sondern werden auf der Grafikkarte gerechnet: Kugelnormale, verwirbeltes 3D-Rauschen für
+Kontinente, feines Relief mit Licht und Schatten, Meere mit Glanz, Wolken, Nachtlichter und
+Atmosphäre, scharf in jeder Zoomstufe. Ab Zoom 5 weichen die kleinen Zahlen der Karte lesbaren
+Schildern unter Planeten (Name, Werte, Eigenschaft, Besitzer, Truppen) und Flotten. Striche,
+Leuchtränder und Kachelsterne wachsen beim Zoomen nur gedämpft mit, Schiffe und Anomalien sind in
+hoher Auflösung mit Mipmaps gemalt, Wände und Lichtkanten der Kacheln sind Vektorgrafik.
+
+| Element                                    | Prinzip                                                                                                                          |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `planet-shader.ts`, `planetMesh`           | Ein GL-Programm für alle Planeten (Flyweight), je Planet nur Werte; Geometrie je Größe und Shader je Planet geteilt.             |
+| `planetPaint`                              | Reine Funktion: dieselben Farbstufen wie der Canvas-Maler, damit Karte, Fraktionswahl und Kampf denselben Planeten zeigen (DRY). |
+| `zoomAround`, `approach`, `systemZoom`     | Reine Kamerarechnung, einzeln getestet; der feste Punkt unter dem Zeiger bleibt beim Zoomen und Gleiten stehen.                  |
+| `glideTo`, `animateViewport`, `stopCamera` | Eine Kamerabewegung zur Zeit: Mausrad gleitet, Heranfahren fährt, Ziehen hält beide an (Single Responsibility).                  |
+| `useCameraStore`                           | Ersetzt die Systemansicht: merkt nur den Rückkehrpunkt (Information Expert), die Karte selbst bleibt die einzige Ansicht.        |
+| `closeUpMarks`, `CloseUpLabels`            | Reine Projektion der Planeten und Flotten auf den Bildschirm, darüber echtes DOM: lesbar, scharf, testbar.                       |
+| `detailLevel`, `lineScale`, `drawFine`     | Nur beim Wechsel der Detailstufe werden Glühen und Sterne neu gezeichnet, nicht die ganze Karte (Low Coupling zur Spiellogik).   |
+| Systemansicht entfernt                     | Kampfbühne behält ihre Bausteine (`WORLD`, `SHIP_SCALE`, `starfield`); toter Code der alten Ansicht ist gelöscht.                |
+
+## 25. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -587,8 +612,9 @@ Heimat- und Besitzränder leuchten in der Platzfarbe (breiter Schein und helle L
 | 17  | Handkarten statt Knöpfe, Systemzoom ohne Fenster    | ✓     |
 | 18  | Spieltisch über der Karte, Fraktionswahl            | ✓     |
 | 19  | Plastische Karte: Kacheln, Schatten, Leuchtränder   | ✓     |
+| 20  | Nahzoom statt Systemansicht, Shader-Planeten        | ✓     |
 
-## 25. Befehle
+## 26. Befehle
 
 ```
 pnpm install

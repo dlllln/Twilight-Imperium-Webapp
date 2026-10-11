@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { GameState } from '@stellar/domain';
 import { App } from '../src/App.tsx';
@@ -8,8 +8,8 @@ import { useGameStore } from '../src/game-store.ts';
 import { currentActor } from '../src/local-game.ts';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
-import { useSystemViewStore } from '../src/system/system-view-store.ts';
-import { FOCUS_ZOOM } from '../src/system/viewport-tween.ts';
+import { useCameraStore } from '../src/system/camera-store.ts';
+import { FOCUS_ZOOM, ZOOM_MAX } from '../src/system/viewport-tween.ts';
 import { installDomPolyfills } from './dom-polyfills.ts';
 import { keepSecrets, pickAll, started } from './game-helpers.ts';
 
@@ -22,61 +22,48 @@ const homeOfFirstSeat = () => {
 };
 
 const systemView = () => screen.queryByRole('region', { name: 'Systemansicht' });
+const zoom = () => useGalaxyStore.getState().viewport.zoom;
 
 beforeEach(() => {
   localStorage.clear();
   useGalaxyStore.setState({ language: 'de', viewport: DEFAULT_VIEWPORT });
   useSettingsStore.setState({ animations: false });
-  useSystemViewStore.setState({ key: null, returnTo: null });
+  useCameraStore.setState({ returnTo: null });
   useGameStore.getState().leave();
 });
 
 afterEach(() => cleanup());
 
-function openHome() {
+function viewHome() {
   render(<App />);
   act(() => void keepSecrets(started()));
   fireEvent.click(homeOfFirstSeat());
-  expect(systemView()).toBeNull();
+  expect(zoom()).toBe(1);
   fireEvent.click(screen.getByRole('button', { name: 'System ansehen' }));
-  const view = systemView();
-  if (view === null) throw new Error('Systemansicht fehlt');
-  return view;
 }
 
-describe('Systemansicht', () => {
-  it('ein Klick wählt das System, „Ansehen“ fährt ohne Fenster hinein und zeigt Flotten und Planeten', () => {
-    const view = openHome();
-    expect(useGalaxyStore.getState().viewport.zoom).toBe(FOCUS_ZOOM);
+describe('Nahzoom auf der Karte statt Systemansicht', () => {
+  it('ein Klick wählt das System, „Ansehen“ fährt auf der Karte heran, ohne eigene Ansicht', () => {
+    viewHome();
+    expect(zoom()).toBe(FOCUS_ZOOM);
+    expect(systemView()).toBeNull();
     expect(useGameStore.getState().selected).toBe(homeOfFirstSeat().getAttribute('data-system'));
-    const contents = within(view).getByRole('list', { name: 'Im System' });
-    expect(contents.textContent).toContain('Träger');
-    expect(contents.textContent).toContain('Raumdock');
-    expect(contents.textContent).toContain('Infanterie');
-    expect(within(view).getByText(/Heimatsystem/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'System ansehen' })).toBeTruthy();
   });
 
-  it('Escape schließt und fährt die Kamera an die alte Stelle zurück', async () => {
-    openHome();
+  it('Escape fährt die Kamera an die alte Stelle zurück', () => {
+    viewHome();
     fireEvent.keyDown(window, { key: 'Escape' });
-    await waitFor(() => expect(systemView()).toBeNull());
     expect(useGalaxyStore.getState().viewport).toEqual(DEFAULT_VIEWPORT);
+    expect(useCameraStore.getState().returnTo).toBeNull();
   });
 
-  it('Herauszoomen mit dem Mausrad kehrt zur Sternenkarte zurück', async () => {
-    const view = openHome();
-    fireEvent.wheel(view, { deltaY: -120 });
-    expect(systemView()).not.toBeNull();
-    fireEvent.wheel(view, { deltaY: 120 });
-    await waitFor(() => expect(systemView()).toBeNull());
-  });
-
-  it('ein zweiter Klick auf das gewählte System fährt ebenfalls hinein', () => {
+  it('ein zweiter Klick auf das gewählte System fährt ebenfalls heran', () => {
     render(<App />);
     act(() => void keepSecrets(started()));
     fireEvent.click(homeOfFirstSeat());
     fireEvent.click(homeOfFirstSeat());
-    expect(systemView()).not.toBeNull();
+    expect(zoom()).toBe(FOCUS_ZOOM);
   });
 
   it('RR 89: über dem gewählten System erscheint „System aktivieren“, wenn der Zug es erlaubt', () => {
@@ -93,13 +80,14 @@ describe('Systemansicht', () => {
     expect(screen.queryByRole('button', { name: 'System aktivieren' })).toBeNull();
   });
 
-  it('tiefes Hineinzoomen öffnet das System in der Bildmitte von selbst', () => {
+  it('tiefes Hineinzoomen vergrößert nur die Karte, bis an die Planeten, und öffnet nichts', () => {
     render(<App />);
     const zoomIn = screen.getByRole('button', { name: 'Hineinzoomen' });
-    for (let step = 0; step < 4; step += 1) fireEvent.click(zoomIn);
+    for (let step = 0; step < 30; step += 1) fireEvent.click(zoomIn);
+    expect(zoom()).toBe(ZOOM_MAX);
     expect(systemView()).toBeNull();
-    fireEvent.click(zoomIn);
-    expect(systemView()).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Ansicht zurücksetzen' }));
+    expect(useGalaxyStore.getState().viewport).toEqual(DEFAULT_VIEWPORT);
   });
 });
 
