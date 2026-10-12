@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import type { Bounds } from '../hex-geometry.ts';
 import type { SceneHex, ScenePlanet } from '../render/scene-model.ts';
 import type { Viewport } from '../store.ts';
+import type { BoardView } from '../render/board-view.ts';
 import { type CloseUpMark, closeUpMarks } from '../system/close-up.ts';
 import type { Size } from '../system/use-element-size.ts';
 import { useT } from '../use-translation.ts';
@@ -68,13 +69,14 @@ interface Props {
   readonly hexes: readonly SceneHex[];
   readonly bounds: Bounds;
   readonly viewport: Viewport;
+  readonly view: BoardView;
   readonly size: Size;
 }
 
 /** Schilder unter Planeten und Flotten beim Nahzoom: echtes DOM, scharf und lesbar. */
-export function CloseUpLabels({ hexes, bounds, viewport, size }: Props): ReactElement | null {
+export function CloseUpLabels({ hexes, bounds, viewport, view, size }: Props): ReactElement | null {
   const t = useT();
-  const marks = closeUpMarks(hexes, bounds, size, viewport);
+  const marks = closeUpMarks(hexes, bounds, size, viewport, view);
   if (marks.length === 0) return null;
   return (
     <ul className="close-up-labels" aria-label={t('closeUp')}>

@@ -1,4 +1,5 @@
 import { type Bounds, HEX_SIZE, type Point } from '../hex-geometry.ts';
+import { FORESHORTEN } from '../render/board-view.ts';
 import type { ScreenSize } from '../render/view-transform.ts';
 import type { Viewport } from '../store.ts';
 
@@ -11,12 +12,12 @@ export const ZOOM_MIN = 0.5;
 /** So nah, dass ein kleiner Planet einen großen Teil des Bildes füllt. */
 export const ZOOM_MAX = 28;
 /** Ab hier weichen die Zahlen auf der Karte einer lesbaren Beschriftung im DOM. */
-export const CLOSE_ZOOM = 5;
+export const CLOSE_ZOOM = 3;
 /** Ersatz, solange die Bildgröße unbekannt ist (z. B. in Tests). */
 export const FOCUS_ZOOM = 4;
 export const CAMERA_MS = 700;
-/** Anteil der Bildhöhe, den ein angesehenes System einnimmt. */
-const SYSTEM_FILL = 0.62;
+/** Anteil der Bildhöhe, den ein angesehenes (schräg gesehenes) System einnimmt. */
+const SYSTEM_FILL = 0.5;
 const SQRT3 = Math.sqrt(3);
 /** Gleiten beim Mausrad: so schnell holt die Kamera ihr Ziel ein (Zeitkonstante in ms). */
 const GLIDE_MS = 90;
@@ -43,12 +44,15 @@ export const boundsCenter = (bounds: Bounds): Point => ({
   y: bounds.minY + bounds.height / 2,
 });
 
-/** Zoom, bei dem ein Feld etwa zwei Drittel der Bildhöhe füllt. */
-export function systemZoom(bounds: Bounds, screen: ScreenSize): number {
+/**
+ * Zoom, bei dem ein Feld die Hälfte der Bildhöhe füllt. Das Feld liegt gekippt und an
+ * seiner Stelle um `scale` perspektivisch vergrößert oder verkleinert auf dem Brett.
+ */
+export function systemZoom(bounds: Bounds, screen: ScreenSize, scale = 1): number {
   if (screen.width <= 0 || screen.height <= 0) return FOCUS_ZOOM;
   const fit = Math.min(screen.width / bounds.width, screen.height / bounds.height);
   const span = Math.min(screen.width, screen.height) * SYSTEM_FILL;
-  return clamp(span / (HEX_SIZE * SQRT3 * fit), 1, ZOOM_MAX);
+  return clamp(span / (HEX_SIZE * SQRT3 * FORESHORTEN * scale * fit), 1, ZOOM_MAX);
 }
 
 /** Ansicht, in der `point` (Kartenkoordinaten) mittig und mit `zoom` vergrößert steht. */
@@ -57,7 +61,7 @@ export function focusViewport(bounds: Bounds, point: Point, zoom = FOCUS_ZOOM): 
   return { zoom, panX: center.x - zoom * point.x, panY: center.y - zoom * point.y };
 }
 
-const easeInOut = (t: number): number => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+export const easeInOut = (t: number): number => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
 /**
  * Zwischenstand zwischen zwei Ansichten bei Anteil `k`: der Zoom läuft logarithmisch, die

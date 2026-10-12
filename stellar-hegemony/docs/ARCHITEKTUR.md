@@ -589,7 +589,31 @@ hoher Auflösung mit Mipmaps gemalt, Wände und Lichtkanten der Kacheln sind Vek
 | `detailLevel`, `lineScale`, `drawFine`     | Nur beim Wechsel der Detailstufe werden Glühen und Sterne neu gezeichnet, nicht die ganze Karte (Low Coupling zur Spiellogik).   |
 | Systemansicht entfernt                     | Kampfbühne behält ihre Bausteine (`WORLD`, `SHIP_SCALE`, `starfield`); toter Code der alten Ansicht ist gelöscht.                |
 
-## 25. Iterationen
+## 25. Iteration 21 im Detail (schräger Blick vom Heimatsystem, saubere Kacheln, eigene Planeten)
+
+Die Karte liegt wie ein Brett auf dem Tisch und wird schräg gesehen, nicht mehr aus der
+Vogelperspektive. Jeder sieht sie von der Seite seines Heimatsystems: online immer vom eigenen
+Platz, am Hot-Seat vom Menschen am Zug; wechselt der Platz, dreht sich das Brett weich und die
+Kamera fährt auf die ganze Karte zurück. Zu Beginn der Partie liegt das Brett gleich richtig.
+Vorne wirkt alles größer als hinten. Planeten und Schiffe stehen dem Betrachter zugewandt auf dem
+Brett, ihre Anordnung im Feld dreht sich nicht mit (Flotten stehen immer vorne). Die Kacheln liegen
+fugenlos; statt Wänden, Lichtkanten und Doppelrahmen gibt es dünne Fugen, eine helle Außenkante
+und eine Brettkante zum Betrachter. Heimatsysteme, Besitz und Hervorhebung haben je eine schlanke
+Linie mit weichem Schein. Jeder Planet hat einen eigenen Charakter (Ozeanwelt, Archipel, Eiswelt,
+Wüste mit Dünen, Kraterwelt, Gasriese mit Ring …), leicht verschobenen Farbton und eigene Größe;
+die Art bleibt an der Farbe erkennbar.
+
+| Element                                          | Prinzip                                                                                                                                |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `board-view.ts` (`turn`, `lift`, `boardBounds`)  | Reine Projektion, einzeln getestet; Pixi, SVG-Trefferflächen, Schilder, Knöpfe und Effekte nutzen dieselbe Abbildung (DRY).            |
+| `board-pieces.ts` (`flatImage`, `standing`)      | Stücke werden einmal gebaut und nur neu ausgerichtet (Strategy); beim Drehen entstehen keine neuen Objekte.                            |
+| `board-grid.ts` (`boardEdges`)                   | Jede gemeinsame Kante genau einmal: gleichmäßig dünne Fugen, Außenkante und Brettkante aus derselben Kantenliste (Information Expert). |
+| `hex-layout.ts`                                  | Plätze und Größen im Feld ohne Pixi: Karte und Nahbeschriftung teilen sie, das Hauptpaket lädt kein Pixi (Low Coupling).               |
+| `board-camera.ts` (`viewerSeat`, `useBoardView`) | Wer vorne sitzt, ist eine reine Funktion des Spielstands; die Drehung ist davon getrennt (Single Responsibility).                      |
+| `planet-style.ts` (`planetStyle`, `hueRotate`)   | Reine Funktion aus Art und Name: gleiche Welt bei jedem Aufruf, Shader und Canvas-Maler nutzen dieselben Farben (DRY).                 |
+| `GalaxyScene.redraw`, `moveCamera`               | Ein Bild pro Frame, auch wenn Kamera und Drehung zugleich ändern; eine Kamerafahrt an dieselbe Stelle entfällt.                        |
+
+## 26. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -613,8 +637,9 @@ hoher Auflösung mit Mipmaps gemalt, Wände und Lichtkanten der Kacheln sind Vek
 | 18  | Spieltisch über der Karte, Fraktionswahl            | ✓     |
 | 19  | Plastische Karte: Kacheln, Schatten, Leuchtränder   | ✓     |
 | 20  | Nahzoom statt Systemansicht, Shader-Planeten        | ✓     |
+| 21  | Schräger Blick vom Heimatsystem, eigene Planeten    | ✓     |
 
-## 26. Befehle
+## 27. Befehle
 
 ```
 pnpm install

@@ -64,3 +64,10 @@ export const padBounds = (bounds: Bounds, margins: Margins): Bounds => ({
   width: bounds.width + margins.left + margins.right,
   height: bounds.height + margins.top + margins.bottom,
 });
+
+/** Liegt der Punkt (relativ zur Feldmitte) in einem Sechseck mit flacher Oberkante und Radius `radius`? */
+export function insideHex({ x, y }: Point, radius: number): boolean {
+  const qx = Math.abs(x);
+  const qy = Math.abs(y);
+  return qy <= (SQRT3 / 2) * radius && SQRT3 * qx + qy <= SQRT3 * radius;
+}

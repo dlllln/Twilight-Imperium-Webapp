@@ -2,6 +2,7 @@ import type { GameState, MapLayout } from '@stellar/domain';
 import {
   forwardRef,
   lazy,
+  memo,
   Suspense,
   type KeyboardEvent,
   type ReactElement,
@@ -14,15 +15,9 @@ import {
 } from 'react';
 import { type MapEffect, mapEffects } from '../animation/map-effects.ts';
 import { useGameStore } from '../game-store.ts';
-import {
-  type Bounds,
-  boundsOf,
-  hexCorners,
-  hexToPixel,
-  padBounds,
-  type Point,
-  toSvgPoints,
-} from '../hex-geometry.ts';
+import { type Bounds, hexToPixel, padBounds, type Point, toSvgPoints } from '../hex-geometry.ts';
+import { boardBounds, type BoardView, project, projectedCorners } from '../render/board-view.ts';
+import { useBoardView } from '../system/board-camera.ts';
 import type { Language } from '../i18n.ts';
 import { gameScene, layoutScene, type SceneHex } from '../render/scene-model.ts';
 import { content, useGalaxyStore, type Viewport } from '../store.ts';
@@ -83,12 +78,15 @@ const NO_EFFECTS: readonly MapEffect[] = [];
 /** In der Partie liegen Spieler links, Vorräte oben und die Hand unten über der Karte; dafür bleibt Platz. */
 const HUD_MARGINS = { top: 80, bottom: 150, left: 230, right: 80 } as const;
 
-function useBounds(hexes: readonly SceneHex[]): Bounds {
+function useBounds(hexes: readonly SceneHex[], view: BoardView): Bounds {
   const playing = useGameStore((state) => state.game !== null);
   return useMemo(() => {
-    const bounds = boundsOf(hexes.map((hex) => hex.position));
+    const bounds = boardBounds(
+      view,
+      hexes.map((hex) => hexToPixel(hex.position)),
+    );
     return playing ? padBounds(bounds, HUD_MARGINS) : bounds;
-  }, [hexes, playing]);
+  }, [hexes, view, playing]);
 }
 
 /** Effekte des letzten Zugs, wenn Animationen eingeschaltet sind. */
@@ -106,20 +104,21 @@ const tileClass = (hex: SceneHex): string =>
 
 interface TargetProps {
   readonly hex: SceneHex;
+  readonly view: BoardView;
   readonly hovered: boolean;
   readonly onHover: (key: string | null) => void;
   readonly onPick: (hex: SceneHex) => void;
 }
 
 /** Unsichtbare Trefferfläche je Feld: Maus, Tastatur, Screenreader und E2E-Tests. */
-function HexTarget({ hex, hovered, onHover, onPick }: TargetProps): ReactElement {
+function HexTarget({ hex, view, hovered, onHover, onPick }: TargetProps): ReactElement {
   const pickable = hex.systemId !== null;
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') onPick(hex);
   };
   return (
     <polygon
-      points={toSvgPoints(hexCorners(hexToPixel(hex.position)))}
+      points={toSvgPoints(projectedCorners(view, hexToPixel(hex.position)))}
       className={`hex ${tileClass(hex)} highlight-${hex.highlight}${hovered ? ' highlighted' : ''}`}
       data-slot={hex.key}
       data-system={hex.systemId ?? undefined}
@@ -141,6 +140,7 @@ interface TargetsProps {
   readonly hexes: readonly SceneHex[];
   readonly bounds: Bounds;
   readonly viewport: Viewport;
+  readonly view: BoardView;
   readonly onPick: (hex: SceneHex) => void;
   readonly onView: (hex: SceneHex) => void;
 }
@@ -149,7 +149,7 @@ const viewBoxOf = (b: Bounds): string =>
   [b.minX, b.minY, b.width, b.height].map((value) => String(value)).join(' ');
 
 /** Knöpfe über dem in der Partie gewählten System. */
-function ChosenActions({ hexes, bounds, viewport, onView }: Omit<TargetsProps, 'onPick'>) {
+function ChosenActions({ hexes, bounds, viewport, view, onView }: Omit<TargetsProps, 'onPick'>) {
   const game = useGameStore((state) => state.game);
   const selected = useGameStore((state) => state.selected);
   const chosen = hexes.find((hex) => hex.systemId !== null && hex.systemId === selected);
@@ -159,6 +159,7 @@ function ChosenActions({ hexes, bounds, viewport, onView }: Omit<TargetsProps, '
       game={game}
       hex={chosen}
       viewport={viewport}
+      view={view}
       top={bounds.minY + HUD_MARGINS.top}
       bottom={bounds.minY + bounds.height - HUD_MARGINS.bottom}
       onView={onView}
@@ -168,7 +169,7 @@ function ChosenActions({ hexes, bounds, viewport, onView }: Omit<TargetsProps, '
 
 /** SVG-Ebene über dem Pixi-Bild, mit derselben Abbildung wie `worldTransform`. */
 const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
-  { hexes, bounds, viewport, onPick, onView },
+  { hexes, bounds, viewport, view, onPick, onView },
   svg,
 ): ReactElement {
   const { hovered, hover } = useGalaxyStore();
@@ -180,13 +181,14 @@ const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
           <HexTarget
             key={hex.key}
             hex={hex}
+            view={view}
             hovered={hex.key === hovered}
             onHover={hover}
             onPick={onPick}
           />
         ))}
       </g>
-      <ChosenActions {...{ hexes, bounds, viewport, onView }} />
+      <ChosenActions {...{ hexes, bounds, viewport, view, onView }} />
     </svg>
   );
 });
@@ -196,17 +198,18 @@ const svgSize = (svg: RefObject<SVGSVGElement | null>) => ({
   height: svg.current?.clientHeight ?? 0,
 });
 
-/** Fährt an ein System heran, bis es zwei Drittel des Bildes füllt; in der Partie bleibt es gewählt. */
-function useFlyTo(bounds: Bounds, svg: RefObject<SVGSVGElement | null>) {
+/** Fährt an ein System heran, bis es gut die Hälfte des Bildes füllt; in der Partie bleibt es gewählt. */
+function useFlyTo(bounds: Bounds, view: BoardView, svg: RefObject<SVGSVGElement | null>) {
   return useCallback(
     (hex: SceneHex) => {
       if (hex.kind !== 'system') return;
       const { game, select } = useGameStore.getState();
       if (game !== null) select(hex.systemId);
-      const zoom = systemZoom(bounds, svgSize(svg));
-      useCameraStore.getState().focus(focusViewport(bounds, hexToPixel(hex.position), zoom));
+      const at = project(view, hexToPixel(hex.position));
+      const zoom = systemZoom(bounds, svgSize(svg), at.scale);
+      useCameraStore.getState().focus(focusViewport(bounds, at, zoom));
     },
-    [bounds, svg],
+    [bounds, view, svg],
   );
 }
 
@@ -272,8 +275,11 @@ function Hud({ game }: { readonly game: GameState }): ReactElement {
   );
 }
 
-/** Oberhalb der Karte: die Anzeigen der Partie; ihre Gesten verschieben die Karte nicht. */
-function Overlays(): ReactElement | null {
+/**
+ * Oberhalb der Karte: die Anzeigen der Partie; ihre Gesten verschieben die Karte nicht.
+ * Ohne Eigenschaften und mit `memo`: Kamerafahrten und Drehungen der Karte zeichnen sie nicht neu.
+ */
+const Overlays = memo(function Overlays(): ReactElement | null {
   const game = useGameStore((state) => state.game);
   if (game === null) return null;
   return (
@@ -281,12 +287,12 @@ function Overlays(): ReactElement | null {
       <Hud game={game} />
     </div>
   );
-}
+});
 
 /** Kamera der Karte: Heranfahren an Systeme und stufenloser Zoom, beide über dieselbe SVG-Abbildung. */
-function useMapCamera(bounds: Bounds) {
+function useMapCamera(bounds: Bounds, view: BoardView) {
   const svg = useRef<SVGSVGElement>(null);
-  const flyTo = useFlyTo(bounds, svg);
+  const flyTo = useFlyTo(bounds, view, svg);
   const zoom = useZoom(bounds, svg);
   const size = useElementSize(svg);
   useEscapeBack();
@@ -317,8 +323,9 @@ export function GalaxyMap(): ReactElement {
   const viewport = useGalaxyStore((state) => state.viewport);
   const hexes = useScene();
   const effects = useMapEffects();
-  const bounds = useBounds(hexes);
-  const { svg, size, flyTo, zoom } = useMapCamera(bounds);
+  const { view, target } = useBoardView(hexes);
+  const bounds = useBounds(hexes, target);
+  const { svg, size, flyTo, zoom } = useMapCamera(bounds, view);
   const { cursor, wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
   const [flat, onUnavailable] = useFlatFallback();
   const pick = usePicking(wasDrag, flyTo);
@@ -326,11 +333,11 @@ export function GalaxyMap(): ReactElement {
     <div className={flat ? 'galaxy flat' : 'galaxy'} data-tutorial="galaxy" {...handlers}>
       {!flat && (
         <Suspense fallback={null}>
-          <PixiCanvas {...{ hexes, bounds, viewport, effects, onUnavailable }} />
+          <PixiCanvas {...{ hexes, bounds, viewport, view, effects, onUnavailable }} />
         </Suspense>
       )}
-      <HexTargets {...{ hexes, bounds, viewport }} ref={svg} onPick={pick} onView={flyTo} />
-      <CloseUpLabels {...{ hexes, bounds, viewport, size }} />
+      <HexTargets {...{ hexes, bounds, viewport, view }} ref={svg} onPick={pick} onView={flyTo} />
+      <CloseUpLabels {...{ hexes, bounds, viewport, view, size }} />
       <MapTooltip hexes={hexes} cursor={cursor} />
       <MapControls onZoom={(factor) => zoom(factor)} onReset={useCameraStore.getState().back} />
       <Overlays />

@@ -1,5 +1,5 @@
 import type { TileBack } from '@stellar/domain';
-import type { Point } from '../hex-geometry.ts';
+import { hexCorners, type Point } from '../hex-geometry.ts';
 import { createCanvas, paintPixels } from './canvas.ts';
 import { ValueNoise } from './noise.ts';
 import {
@@ -12,7 +12,6 @@ import {
   TILE_HOME,
   TILE_RED,
 } from './palette.ts';
-import { tileFace, tileFrame, type TileFrame, tileOutline } from './tile-shape.ts';
 
 export const BACK_COLORS: Readonly<Record<TileBack, Rgb>> = {
   blue: rgbOf(TILE_BLUE),
@@ -22,90 +21,73 @@ export const BACK_COLORS: Readonly<Record<TileBack, Rgb>> = {
 };
 const BLACK: Rgb = [0, 0, 0];
 const STARLIGHT: Rgb = [120, 150, 220];
+const SQRT3 = Math.sqrt(3);
 
-function polygon(context: CanvasRenderingContext2D, points: readonly Point[]) {
+/** Bildmaße einer Kachel: das Sechseck füllt das Bild ganz aus (Kacheln liegen fugenlos). */
+export const tileImageSize = (radius: number) => ({
+  width: Math.ceil(2 * radius),
+  height: Math.ceil(SQRT3 * radius),
+});
+
+function hexPath(context: CanvasRenderingContext2D, center: Point, radius: number) {
   context.beginPath();
-  points.forEach(({ x, y }, index) => {
+  hexCorners(center, radius).forEach(({ x, y }, index) => {
     if (index === 0) context.moveTo(x, y);
     else context.lineTo(x, y);
   });
   context.closePath();
 }
 
-/** Weicher Schatten nach rechts unten: die Kachel liegt erhaben auf dem Tisch. */
-function paintShadow(context: CanvasRenderingContext2D, frame: TileFrame) {
-  context.save();
-  context.shadowColor = 'rgba(0,0,0,0.9)';
-  context.shadowBlur = frame.depth * 1.1;
-  context.shadowOffsetX = frame.depth * 0.5;
-  context.shadowOffsetY = frame.depth * 0.8;
-  polygon(context, tileOutline(frame));
-  context.fillStyle = 'rgb(4,6,14)';
-  context.fill();
-  context.restore();
-}
-
-function faceGradient(context: CanvasRenderingContext2D, frame: TileFrame, base: Rgb) {
-  const { center, face } = frame;
+/** Tiefraum, oben links etwas heller, zum Rand hin dunkler: jede Kachel wirkt leicht gewölbt. */
+function faceGradient(context: CanvasRenderingContext2D, center: Point, radius: number, base: Rgb) {
   const gradient = context.createRadialGradient(
-    center.x - face * 0.25,
-    center.y - face * 0.3,
+    center.x - radius * 0.2,
+    center.y - radius * 0.25,
     0,
     center.x,
     center.y,
-    face,
+    radius,
   );
-  gradient.addColorStop(0, css(mix(base, STARLIGHT, 0.22)));
-  gradient.addColorStop(0.65, css(base));
-  gradient.addColorStop(1, css(mix(base, BLACK, 0.45)));
+  gradient.addColorStop(0, css(mix(base, STARLIGHT, 0.2)));
+  gradient.addColorStop(0.7, css(base));
+  gradient.addColorStop(1, css(mix(base, BLACK, 0.5)));
   return gradient;
 }
 
 /** Feiner Nebelschleier je Variante, damit nicht jede Kachel gleich aussieht. */
-function paintWisps(context: CanvasRenderingContext2D, frame: TileFrame, variant: number) {
-  const { width, height } = frame;
+function paintWisps(context: CanvasRenderingContext2D, radius: number, variant: number) {
+  const { width, height } = tileImageSize(radius);
   const layer = createCanvas(width, height);
   if (layer === null) return;
   const noise = new ValueNoise(variant * 7919 + 13);
-  const scale = 3 / frame.face;
+  const scale = 2.6 / radius;
   paintPixels(layer.context, width, height, (x, y) => {
-    const cloud = noise.fbm(x * scale, y * scale, 4);
-    return [150, 170, 255, Math.round(Math.max(0, cloud - 0.5) * 120)];
+    const cloud = noise.fbm(x * scale, y * scale, 5);
+    return [150, 172, 255, Math.round(Math.max(0, cloud - 0.5) * 110)];
   });
   context.drawImage(layer.canvas, 0, 0);
 }
 
-/** Kachelfläche: Tiefraum mit Schleier, oben links vom Licht getroffen. */
-function paintFace(
-  context: CanvasRenderingContext2D,
-  frame: TileFrame,
-  base: Rgb,
-  variant: number,
-) {
-  context.save();
-  polygon(context, tileFace(frame));
-  context.clip();
-  context.fillStyle = faceGradient(context, frame, base);
-  context.fillRect(0, 0, frame.width, frame.height);
-  paintWisps(context, frame, variant);
-  context.restore();
-}
-
 /**
- * Weicher Teil der Kachel: Schlagschatten und Fläche mit Schleier (Maße aus `tileFrame`).
- * Wände, Lichtkante und Sterne zeichnet `tileRelief` als Vektorgrafik, scharf bei jedem Zoom.
+ * Kachelfläche ohne Fassung: Linien zwischen den Feldern und die Brettkante zeichnet
+ * `board-grid` als Vektorgrafik, damit sie in jeder Zoomstufe sauber und dünn bleiben.
  */
 export function paintTile(
   back: TileBack,
   radius: number,
   variant: number,
 ): HTMLCanvasElement | null {
-  const frame = tileFrame(radius);
-  const surface = createCanvas(frame.width, frame.height);
+  const { width, height } = tileImageSize(radius);
+  const surface = createCanvas(width, height);
   if (surface === null) return null;
   const { context } = surface;
-  const base = BACK_COLORS[back];
-  paintShadow(context, frame);
-  paintFace(context, frame, base, variant);
+  const center = { x: width / 2, y: height / 2 };
+  context.save();
+  hexPath(context, center, radius);
+  context.clip();
+  context.fillStyle = faceGradient(context, center, radius, BACK_COLORS[back]);
+  context.fillRect(0, 0, width, height);
+  paintWisps(context, radius, variant);
+  context.restore();
   return surface.canvas;
 }

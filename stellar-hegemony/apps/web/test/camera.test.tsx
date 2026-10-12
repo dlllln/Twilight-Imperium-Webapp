@@ -5,7 +5,15 @@ import { CloseUpLabels } from '../src/components/CloseUpLabels.tsx';
 import { boundsOf, hexToPixel } from '../src/hex-geometry.ts';
 import { planetPaint } from '../src/render/planet-paint.ts';
 import { gameScene, type SceneHex } from '../src/render/scene-model.ts';
-import { insideHex } from '../src/render/tile-relief.ts';
+import { insideHex } from '../src/hex-geometry.ts';
+import {
+  boardBounds,
+  FLAT_VIEW,
+  FORESHORTEN,
+  project,
+  viewFrom,
+} from '../src/render/board-view.ts';
+import { homeOf } from '../src/system/board-camera.ts';
 import { detailLevel, lineScale, worldTransform } from '../src/render/view-transform.ts';
 import { content, useGalaxyStore } from '../src/store.ts';
 import { closeUpMarks } from '../src/system/close-up.ts';
@@ -32,6 +40,17 @@ function homeScene(): { hexes: readonly SceneHex[]; home: SceneHex } {
   return { hexes, home };
 }
 
+/** Szene mit Blick vom Heimatsystem des ersten Platzes, wie in der Partie. */
+function tilted() {
+  const { hexes, home } = homeScene();
+  const view = viewFrom(homeOf(hexes, 1));
+  const bounds = boardBounds(
+    view,
+    hexes.map((hex) => hexToPixel(hex.position)),
+  );
+  return { hexes, home, view, bounds };
+}
+
 describe('Kamera der Sternenkarte', () => {
   it('Zoomen hält den Punkt unter dem Zeiger fest und bleibt in Grenzen', () => {
     const anchor = { x: 120, y: -40 };
@@ -43,16 +62,17 @@ describe('Kamera der Sternenkarte', () => {
     expect(zoomAround(from, 1000, anchor).zoom).toBe(ZOOM_MAX);
   });
 
-  it('„System ansehen“ füllt etwa zwei Drittel der Bildhöhe mit dem Feld, mittig', () => {
+  it('„System ansehen“ füllt die halbe Bildhöhe mit dem schräg liegenden Feld, mittig', () => {
     const bounds = boundsOf([
       { q: 0, r: 0 },
       { q: 3, r: 0 },
       { q: 0, r: 3 },
     ]);
-    const zoom = systemZoom(bounds, SCREEN);
-    const point = hexToPixel({ q: 3, r: 0 });
+    const point = project(FLAT_VIEW, hexToPixel({ q: 3, r: 0 }));
+    const zoom = systemZoom(bounds, SCREEN, point.scale);
     const view = worldTransform(bounds, SCREEN, focusViewport(bounds, point, zoom));
-    expect((60 * Math.sqrt(3) * view.scale) / SCREEN.height).toBeCloseTo(0.62, 2);
+    const height = 60 * Math.sqrt(3) * FORESHORTEN * point.scale * view.scale;
+    expect(height / SCREEN.height).toBeCloseTo(0.5, 2);
     expect(view.x + point.x * view.scale).toBeCloseTo(SCREEN.width / 2);
   });
 
@@ -95,7 +115,7 @@ describe('Nahansicht der Planeten', () => {
     expect(planetPaint('lava', 'hazardous').features[2]).toBe(1);
   });
 
-  it('Sterne auf der Kachel liegen innerhalb des Sechsecks', () => {
+  it('ein Punkt liegt genau dann im Sechseck, wenn er innerhalb der Kanten ist', () => {
     expect(insideHex({ x: 0, y: 0 }, 10)).toBe(true);
     expect(insideHex({ x: 9.9, y: 0 }, 10)).toBe(true);
     expect(insideHex({ x: 0, y: 9 }, 10)).toBe(false);
@@ -103,12 +123,11 @@ describe('Nahansicht der Planeten', () => {
   });
 
   it('erst beim Nahzoom stehen Schilder unter Planeten und Flotten, nur was im Bild ist', () => {
-    const { hexes, home } = homeScene();
-    const bounds = boundsOf(hexes.map((hex) => hex.position));
+    const { hexes, home, view, bounds } = tilted();
     const far = { zoom: CLOSE_ZOOM - 1, panX: 0, panY: 0 };
-    expect(closeUpMarks(hexes, bounds, SCREEN, far)).toEqual([]);
-    const near = focusViewport(bounds, hexToPixel(home.position), CLOSE_ZOOM + 1);
-    const marks = closeUpMarks(hexes, bounds, SCREEN, near);
+    expect(closeUpMarks(hexes, bounds, SCREEN, far, view)).toEqual([]);
+    const near = focusViewport(bounds, project(view, hexToPixel(home.position)), CLOSE_ZOOM + 2);
+    const marks = closeUpMarks(hexes, bounds, SCREEN, near, view);
     const planets = marks.filter((mark) => mark.kind === 'planet' && mark.key.startsWith(home.key));
     expect(planets).toHaveLength(home.planets.length);
     expect(marks.some((mark) => mark.kind === 'fleet' && mark.key.startsWith(home.key))).toBe(true);
@@ -116,10 +135,15 @@ describe('Nahansicht der Planeten', () => {
   });
 
   it('die Schilder nennen Planet, Werte, Truppen und die Flotte des Besitzers', () => {
-    const { hexes, home } = homeScene();
-    const bounds = boundsOf(hexes.map((hex) => hex.position));
-    const viewport = focusViewport(bounds, hexToPixel(home.position), CLOSE_ZOOM + 1);
-    render(<CloseUpLabels hexes={hexes} bounds={bounds} viewport={viewport} size={SCREEN} />);
+    const { hexes, home, view, bounds } = tilted();
+    const viewport = focusViewport(
+      bounds,
+      project(view, hexToPixel(home.position)),
+      CLOSE_ZOOM + 2,
+    );
+    render(
+      <CloseUpLabels hexes={hexes} bounds={bounds} viewport={viewport} view={view} size={SCREEN} />,
+    );
     const list = screen.getByRole('list', { name: 'Aus der Nähe' });
     const name = home.planets[0]?.name ?? '';
     expect(within(list).getByText(name)).toBeTruthy();

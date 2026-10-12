@@ -1,6 +1,13 @@
 import type { Bounds, Point } from '../hex-geometry.ts';
 import { hexToPixel } from '../hex-geometry.ts';
-import { planetDiameter, planetSpots, shipSlots } from '../render/hex-pieces.ts';
+import { type BoardView, lift, plus, type Projected, turn } from '../render/board-view.ts';
+import {
+  PLANET_HEIGHT,
+  planetDiameter,
+  planetSpots,
+  SHIP_HEIGHT,
+  shipSlots,
+} from '../render/hex-layout.ts';
 import type { SceneHex, ScenePlanet, UnitCount } from '../render/scene-model.ts';
 import { type ScreenSize, worldTransform } from '../render/view-transform.ts';
 import type { Viewport } from '../store.ts';
@@ -34,23 +41,28 @@ const FLEET_STACK = 34;
 /** Schilder knapp außerhalb des Bildes werden nicht gebaut. */
 const MARGIN = 80;
 
-type Project = (world: Point) => Point;
+/** Vom Bild des Bretts auf den Bildschirm. */
+type ToScreen = (board: Point) => Point;
 
-function planetMarks(hex: SceneHex, center: Point, project: Project): CloseUpMark[] {
+/** Unter einer stehenden Figur: `below` Karteneinheiten unter ihrem Standpunkt im Bild. */
+const under = (at: Projected, below: number): Point => ({ x: at.x, y: at.y + below * at.scale });
+
+function planetMarks(hex: SceneHex, center: Point, toScreen: ToScreen): CloseUpMark[] {
   const spots = planetSpots(hex.planets.length);
   return hex.planets.map((planet, index) => {
     const spot = spots[index] ?? { x: 0, y: 0 };
     const radius = planetDiameter(planet, hex.planets.length) / 2;
-    const world = { x: center.x + spot.x, y: center.y + spot.y + radius + PLANET_GAP };
-    return { kind: 'planet', key: `${hex.key}:${planet.id}`, planet, at: project(world) };
+    const at = under(lift(plus(center, spot), PLANET_HEIGHT), radius + PLANET_GAP);
+    return { kind: 'planet', key: `${hex.key}:${planet.id}`, planet, at: toScreen(at) };
   });
 }
 
-function fleetMarks(hex: SceneHex, center: Point, project: Project): CloseUpMark[] {
+function fleetMarks(hex: SceneHex, center: Point, toScreen: ToScreen): CloseUpMark[] {
   const slots = shipSlots(hex.ships.length);
   const lowest = Math.max(0, ...slots.map((slot) => slot.y));
   const seats = [...new Set(hex.ships.map((unit) => unit.seat))];
-  const anchor = project({ x: center.x, y: center.y + lowest + FLEET_GAP });
+  const front = lift(plus(center, { x: 0, y: lowest }), SHIP_HEIGHT);
+  const anchor = toScreen(under(front, FLEET_GAP));
   return seats.map((seat, index) => ({
     kind: 'fleet',
     key: `${hex.key}:fleet:${String(seat)}`,
@@ -72,17 +84,19 @@ export function closeUpMarks(
   bounds: Bounds,
   screen: ScreenSize,
   viewport: Viewport,
+  view: BoardView,
 ): readonly CloseUpMark[] {
   if (viewport.zoom < CLOSE_ZOOM || screen.width <= 0) return [];
-  const view = worldTransform(bounds, screen, viewport);
-  const project: Project = ({ x, y }) => ({
-    x: view.x + x * view.scale,
-    y: view.y + y * view.scale,
+  const camera = worldTransform(bounds, screen, viewport);
+  const toScreen: ToScreen = ({ x, y }) => ({
+    x: camera.x + x * camera.scale,
+    y: camera.y + y * camera.scale,
   });
   return hexes
     .flatMap((hex) => {
-      const center = hexToPixel(hex.position);
-      return [...planetMarks(hex, center, project), ...fleetMarks(hex, center, project)];
+      // Gedrehte Feldmitte; die Anordnung im Feld zeigt immer zum Betrachter.
+      const center = turn(view, hexToPixel(hex.position));
+      return [...planetMarks(hex, center, toScreen), ...fleetMarks(hex, center, toScreen)];
     })
     .filter(onScreen(screen));
 }

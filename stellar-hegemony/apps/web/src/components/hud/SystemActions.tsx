@@ -3,6 +3,7 @@ import { Crosshair, type LucideIcon, ZoomIn } from 'lucide-react';
 import type { PointerEvent, ReactElement } from 'react';
 import { useGameStore, useHumanActor } from '../../game-store.ts';
 import { HEX_SIZE, hexToPixel } from '../../hex-geometry.ts';
+import { type BoardView, FORESHORTEN, project } from '../../render/board-view.ts';
 import { type SystemAction, systemActions } from '../../hud/system-actions.ts';
 import type { MessageKey } from '../../i18n.ts';
 import type { SceneHex } from '../../render/scene-model.ts';
@@ -13,7 +14,8 @@ import { useT } from '../../use-translation.ts';
 const BUTTON = 46;
 const GAP = 8;
 const LIFT = 10;
-const HALF_HEIGHT = (HEX_SIZE * Math.sqrt(3)) / 2;
+/** Halbe Höhe eines gekippten Felds im Bild (vor der Perspektive). */
+const HALF_HEIGHT = ((HEX_SIZE * Math.sqrt(3)) / 2) * FORESHORTEN;
 
 const LOOKS: Readonly<Record<SystemAction, readonly [LucideIcon, MessageKey]>> = {
   view: [ZoomIn, 'viewSystem'],
@@ -26,6 +28,7 @@ interface Props {
   readonly game: GameState;
   readonly hex: SceneHex;
   readonly viewport: Viewport;
+  readonly view: BoardView;
   /** Unterkante der Vorratsleiste; reicht der Platz darunter nicht, stehen die Knöpfe unter dem Feld. */
   readonly top: number;
   /** Oberkante der Hand; ist das Feld größer als das Bild, bleiben die Knöpfe oben im Bild. */
@@ -78,18 +81,25 @@ function rowY(above: number, below: number, band: Band): number {
 }
 
 /** Lage der Knopfreihe in Karteneinheiten wie die Trefferflächen. */
-function placement(hex: SceneHex, viewport: Viewport, count: number, band: Band) {
-  const center = hexToPixel(hex.position);
+interface Where {
+  readonly hex: SceneHex;
+  readonly viewport: Viewport;
+  readonly view: BoardView;
+}
+
+function placement({ hex, viewport, view }: Where, count: number, band: Band) {
+  const center = project(view, hexToPixel(hex.position));
+  const half = HALF_HEIGHT * center.scale;
   const width = count * BUTTON + (count - 1) * GAP;
   const x = viewport.panX + center.x * viewport.zoom - width / 2;
-  const above = viewport.panY + (center.y - HALF_HEIGHT) * viewport.zoom - BUTTON - LIFT;
-  const below = viewport.panY + (center.y + HALF_HEIGHT) * viewport.zoom + LIFT;
+  const above = viewport.panY + (center.y - half) * viewport.zoom - BUTTON - LIFT;
+  const below = viewport.panY + (center.y + half) * viewport.zoom + LIFT;
   return { x, y: rowY(above, below, band), width, height: BUTTON };
 }
 
 /** Sechseckige Knöpfe über dem gewählten System, wie Marker auf dem Spielbrett. */
 export function SystemActions(props: Props): ReactElement | null {
-  const { game, hex, viewport, top, bottom, onView } = props;
+  const { game, hex, top, bottom, onView } = props;
   const actor = useHumanActor(game);
   const seed = useGameStore((state) => state.seed);
   const run = useRun(game, hex, onView);
@@ -97,7 +107,7 @@ export function SystemActions(props: Props): ReactElement | null {
   const actions = systemActions(game, actor, hex.systemId, seed);
   return (
     <foreignObject
-      {...placement(hex, viewport, actions.length, { top, bottom })}
+      {...placement(props, actions.length, { top, bottom })}
       className="system-actions-host"
     >
       <div className="system-actions" onPointerDown={keepMap}>

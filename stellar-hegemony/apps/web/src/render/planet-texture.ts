@@ -2,6 +2,7 @@ import type { PlanetTrait } from '@stellar/domain';
 import { createCanvas, paintPixels } from './canvas.ts';
 import { hashString, ValueNoise } from './noise.ts';
 import { mix, type Rgb } from './palette.ts';
+import { hueRotate, planetStyle } from './planet-style.ts';
 
 export type PlanetLook = PlanetTrait | 'center' | 'plain';
 
@@ -42,8 +43,15 @@ export const ATMOSPHERE: Readonly<Record<PlanetLook, Rgb>> = {
   center: [255, 220, 130],
 };
 
-function ramp(look: PlanetLook, t: number): Rgb {
+/** Farbstufen eines bestimmten Planeten: die seiner Art, im Farbton leicht verschoben. */
+export function styledRamp(id: string, look: PlanetLook): readonly [Rgb, Rgb, Rgb] {
+  const { hue } = planetStyle(id, look);
   const [low, mid, high] = RAMPS[look];
+  return [hueRotate(low, hue), hueRotate(mid, hue), hueRotate(high, hue)];
+}
+
+function ramp(colors: readonly [Rgb, Rgb, Rgb], t: number): Rgb {
+  const [low, mid, high] = colors;
   return t < 0.5 ? mix(low, mid, t * 2) : mix(mid, high, (t - 0.5) * 2);
 }
 
@@ -80,13 +88,19 @@ function nightGlow(noise: ValueNoise, features: Features, nx: number, ny: number
   return clamp01((sites - 0.58) * 6) * clamp01((0.3 - light) * 5);
 }
 
-function surfacePixel(noise: ValueNoise, look: PlanetLook, nx: number, ny: number): Rgb {
+interface Painter {
+  readonly noise: ValueNoise;
+  readonly look: PlanetLook;
+  readonly colors: readonly [Rgb, Rgb, Rgb];
+}
+
+function surfacePixel({ noise, look, colors }: Painter, nx: number, ny: number): Rgb {
   const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
   const t = noise.fbm(nx * 2.2 + nz, ny * 2.2 - nz, 6);
   const bands = look === 'center' ? Math.sin(ny * 9 + t * 4) * 0.12 : 0;
   const light = shade(nx, ny);
   const features = FEATURES[look];
-  const ground = mix(ramp(look, clamp01(t + bands)), [0, 0, 0], 1 - light);
+  const ground = mix(ramp(colors, clamp01(t + bands)), [0, 0, 0], 1 - light);
   const cloud = clamp01((noise.fbm(nx * 3.4 + 50, ny * 5 - nz, 4) - 0.55) * 3) * features.clouds;
   const cloudy = mix(ground, [235 * light, 240 * light, 250 * light], cloud);
   const lit = mix(cloudy, [255, 255, 255], specular(nx, ny, nz) * features.shine);
@@ -106,14 +120,14 @@ function atmospherePixel(
 export function paintPlanet(id: string, look: PlanetLook, size: number): HTMLCanvasElement | null {
   const surface = createCanvas(size, size);
   if (surface === null) return null;
-  const noise = new ValueNoise(hashString(id));
+  const painter = { noise: new ValueNoise(hashString(id)), look, colors: styledRamp(id, look) };
   const radius = size / 2 / 1.15;
   paintPixels(surface.context, size, size, (x, y) => {
     const nx = (x - size / 2) / radius;
     const ny = (y - size / 2) / radius;
     const distance = Math.hypot(nx, ny);
     if (distance > 1) return atmospherePixel(look, distance);
-    const [r, g, b] = surfacePixel(noise, look, nx, ny);
+    const [r, g, b] = surfacePixel(painter, nx, ny);
     return [r, g, b, 255];
   });
   return surface.canvas;

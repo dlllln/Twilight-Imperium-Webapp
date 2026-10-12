@@ -2,6 +2,7 @@ import type { Application } from 'pixi.js';
 import { type ReactElement, type RefObject, useEffect, useRef, useState } from 'react';
 import type { MapEffect } from '../animation/map-effects.ts';
 import type { Bounds } from '../hex-geometry.ts';
+import type { BoardView } from '../render/board-view.ts';
 import { GalaxyScene } from '../render/galaxy-scene.ts';
 import { createApplication, KEEP_SHARED } from '../render/pixi-app.ts';
 import type { SceneHex } from '../render/scene-model.ts';
@@ -52,6 +53,8 @@ interface PixiCanvasProps {
   readonly hexes: readonly SceneHex[];
   readonly bounds: Bounds;
   readonly viewport: Viewport;
+  /** Blick auf das Brett (vom eigenen Heimatsystem aus). */
+  readonly view: BoardView;
   /** Effekte des letzten Zugs; ein neues Array spielt sie ab. */
   readonly effects: readonly MapEffect[];
   readonly onUnavailable: () => void;
@@ -62,12 +65,14 @@ export function PixiCanvas({
   hexes,
   bounds,
   viewport,
+  view,
   effects,
   onUnavailable,
 }: PixiCanvasProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const scene = useGalaxyScene(host, onUnavailable);
   useEffect(() => scene?.show(hexes), [scene, hexes]);
+  useEffect(() => scene?.look(view), [scene, view]);
   useEffect(() => scene?.frame(bounds, viewport), [scene, bounds, viewport]);
   useEffect(() => scene?.play(effects), [scene, effects]);
   return <div ref={host} className="pixi-host" aria-hidden="true" />;

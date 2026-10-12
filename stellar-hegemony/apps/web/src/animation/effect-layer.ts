@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import { hexToPixel, HEX_SIZE } from '../hex-geometry.ts';
+import { type BoardView, FLAT_VIEW, FORESHORTEN, project } from '../render/board-view.ts';
 import { hexOf } from '../render/palette.ts';
 import { seatColor } from '../seat-colors.ts';
 import type { MapEffect } from './map-effects.ts';
@@ -23,7 +24,7 @@ interface Running {
 const colorOf = (effect: MapEffect): number =>
   effect.kind === 'blast' ? BLAST_COLOR : hexOf(seatColor(effect.seat));
 
-/** Punkt entlang eines Weges aus Hexfeldern; `t` von 0 bis 1. */
+/** Punkt entlang eines Weges aus Hexfeldern (Kartenkoordinaten); `t` von 0 bis 1. */
 function along(path: Extract<MapEffect, { kind: 'travel' }>, t: number) {
   const points = path.path.map((hex) => hexToPixel(hex));
   if (points.length < 2) return points[0] ?? { x: 0, y: 0 };
@@ -35,25 +36,40 @@ function along(path: Extract<MapEffect, { kind: 'travel' }>, t: number) {
   return { x: from.x + (to.x - from.x) * local, y: from.y + (to.y - from.y) * local };
 }
 
-function drawTravel(graphic: Graphics, effect: Extract<MapEffect, { kind: 'travel' }>, t: number) {
+/** Flughöhe der Spur über dem Brett. */
+const FLIGHT = 6;
+
+function drawTravel(
+  graphic: Graphics,
+  effect: Extract<MapEffect, { kind: 'travel' }>,
+  t: number,
+  view: BoardView,
+) {
   const color = colorOf(effect);
   for (let step = TRAIL_STEPS; step >= 0; step -= 1) {
-    const point = along(effect, Math.max(0, t - step * 0.03));
+    const point = project(view, along(effect, Math.max(0, t - step * 0.03)), FLIGHT);
     const fade = 1 - step / (TRAIL_STEPS + 1);
-    graphic.circle(point.x, point.y, 4 + 6 * fade).fill({ color, alpha: 0.15 + 0.6 * fade });
+    const radius = (4 + 6 * fade) * point.scale;
+    graphic.circle(point.x, point.y, radius).fill({ color, alpha: 0.15 + 0.6 * fade });
   }
 }
 
 type RingEffect = Exclude<MapEffect, { kind: 'travel' }>;
 
-function drawRing(graphic: Graphics, effect: RingEffect, t: number) {
-  const center = hexToPixel(effect.at);
+/** Ring flach auf dem Brett: im Bild eine Ellipse. */
+function drawRing(graphic: Graphics, effect: RingEffect, t: number, view: BoardView) {
+  const center = project(view, hexToPixel(effect.at));
   const color = colorOf(effect);
   const grow = effect.kind === 'arrive' ? 1 - t : t;
-  const radius = HEX_SIZE * (0.3 + 0.7 * grow);
-  graphic.circle(center.x, center.y, radius).stroke({ width: 4, color, alpha: 1 - t });
+  const radius = HEX_SIZE * (0.3 + 0.7 * grow) * center.scale;
+  const flat = FORESHORTEN;
+  graphic
+    .ellipse(center.x, center.y, radius, radius * flat)
+    .stroke({ width: 4 * center.scale, color, alpha: 1 - t });
   if (effect.kind === 'blast' || effect.kind === 'capture')
-    graphic.circle(center.x, center.y, radius * 0.6).fill({ color, alpha: 0.5 * (1 - t) });
+    graphic
+      .ellipse(center.x, center.y, radius * 0.6, radius * 0.6 * flat)
+      .fill({ color, alpha: 0.5 * (1 - t) });
 }
 
 /**
@@ -62,6 +78,8 @@ function drawRing(graphic: Graphics, effect: RingEffect, t: number) {
  */
 export class EffectLayer {
   readonly container = new Container();
+  /** Blick auf das Brett, damit Effekte auf den gedrehten Feldern liegen. */
+  view: BoardView = FLAT_VIEW;
   private running: Running[] = [];
 
   get active(): boolean {
@@ -89,7 +107,7 @@ export class EffectLayer {
     item.elapsed += deltaMs;
     const t = Math.min(1, item.elapsed / DURATION_MS[item.effect.kind]);
     item.graphic.clear();
-    if (item.effect.kind === 'travel') drawTravel(item.graphic, item.effect, t);
-    else drawRing(item.graphic, item.effect, t);
+    if (item.effect.kind === 'travel') drawTravel(item.graphic, item.effect, t, this.view);
+    else drawRing(item.graphic, item.effect, t, this.view);
   }
 }

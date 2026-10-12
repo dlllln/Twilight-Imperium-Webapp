@@ -1,6 +1,7 @@
 import { hashString } from './noise.ts';
 import type { Rgb } from './palette.ts';
-import { ATMOSPHERE, FEATURES, type PlanetLook, RAMPS } from './planet-texture.ts';
+import { ATMOSPHERE, FEATURES, type PlanetLook, styledRamp } from './planet-texture.ts';
+import { planetStyle } from './planet-style.ts';
 
 /*
  * Werte für den Planeten-Shader (reine Funktion): dieselben Farbstufen und Merkmale wie der
@@ -17,8 +18,12 @@ export interface PlanetPaint {
   readonly high: Vec3;
   readonly atmosphere: Vec3;
   readonly night: Vec3;
-  /** Wolken, Glanz, Nachtlichter (0/1), Bänder (0/1). */
+  /** Wolken, Glanz, Nachtlichter (0/1), Bänder. */
   readonly features: readonly [number, number, number, number];
+  /** Meeresspiegel, Polkappen, Krater, Zerklüftung. */
+  readonly shape: readonly [number, number, number, number];
+  /** Ring (0/1), Neigung des Rings. */
+  readonly ring: readonly [number, number];
 }
 
 const CHANNEL = 255;
@@ -35,8 +40,10 @@ function seedOf(id: string): Vec3 {
 }
 
 export function planetPaint(id: string, look: PlanetLook): PlanetPaint {
-  const [low, mid, high] = RAMPS[look];
+  const [low, mid, high] = styledRamp(id, look);
   const features = FEATURES[look];
+  const style = planetStyle(id, look);
+  const nightOn = features.night === null ? 0 : 1;
   return {
     seed: seedOf(id),
     low: unit(low),
@@ -44,11 +51,8 @@ export function planetPaint(id: string, look: PlanetLook): PlanetPaint {
     high: unit(high),
     atmosphere: unit(ATMOSPHERE[look]),
     night: unit(features.night ?? [0, 0, 0]),
-    features: [
-      features.clouds,
-      features.shine,
-      features.night === null ? 0 : 1,
-      look === 'center' ? 1 : 0,
-    ],
+    features: [Math.min(1, features.clouds * style.clouds), features.shine, nightOn, style.bands],
+    shape: [style.ocean, style.ice, style.craters, style.roughness],
+    ring: [style.ring, style.ringTilt],
   };
 }

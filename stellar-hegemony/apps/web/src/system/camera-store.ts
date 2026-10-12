@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { useSettingsStore } from '../settings-store.ts';
 import { DEFAULT_VIEWPORT, useGalaxyStore, type Viewport } from '../store.ts';
-import { animateViewport, glideGoal, glideTo, stopCamera } from './viewport-tween.ts';
+import { animateViewport, glideGoal, glideTo, settled, stopCamera } from './viewport-tween.ts';
 
 export interface CameraStore {
   /** Ansicht vor dem Heranfahren an ein System; Escape kehrt dorthin zurück. */
@@ -14,9 +14,10 @@ export interface CameraStore {
 
 const animated = (): boolean => useSettingsStore.getState().animations;
 
-/** Kamerafahrt (mit Animationen) oder Sprung (ohne). */
+/** Kamerafahrt (mit Animationen) oder Sprung (ohne); steht die Kamera schon dort, bleibt alles ruhig. */
 export function moveCamera(to: Viewport): void {
   const galaxy = useGalaxyStore.getState();
+  if (settled(galaxy.viewport, to)) return;
   if (animated()) animateViewport(galaxy.viewport, to, galaxy.setViewport);
   else galaxy.setViewport(to);
 }
