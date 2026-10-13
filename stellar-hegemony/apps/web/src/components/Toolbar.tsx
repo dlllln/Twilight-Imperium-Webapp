@@ -1,4 +1,4 @@
-import { BookOpen, LogOut, Play, Shuffle, Swords } from 'lucide-react';
+import { BookOpen, LogOut, Shuffle, Swords } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { PhaseBar } from './game/PhaseBar.tsx';
 import { SettingsMenu } from './SettingsMenu.tsx';
@@ -6,7 +6,6 @@ import { IconButton } from './ui/IconButton.tsx';
 import { type MessageKey, translate } from '../i18n.ts';
 import { useGameStore } from '../game-store.ts';
 import { useOnlineStore } from '../online/online-store.ts';
-import { useDraftStore } from '../setup/draft-store.ts';
 import { useSimulatorStore } from '../simulator/simulator-store.ts';
 import { useGalaxyStore } from '../store.ts';
 import { useTutorialStore } from '../tutorial/tutorial-store.ts';
@@ -43,27 +42,6 @@ function PlayerCountSelect({ label }: { readonly label: string }): ReactElement 
   );
 }
 
-/** KI-Gegner übernehmen die letzten Plätze; der erste Platz bleibt immer menschlich. */
-function BotCountSelect({ label }: { readonly label: string }): ReactElement {
-  const { playerCount, botCount, setBotCount } = useGalaxyStore();
-  return (
-    <label>
-      {label}
-      <select
-        value={botCount}
-        onChange={(event) => setBotCount(Number(event.target.value))}
-        aria-label={label}
-      >
-        {Array.from({ length: playerCount }, (_, count) => (
-          <option key={count} value={count}>
-            {count}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 type Translate = (key: MessageKey) => string;
 
 function GuideButton({ t }: { readonly t: Translate }): ReactElement {
@@ -71,34 +49,21 @@ function GuideButton({ t }: { readonly t: Translate }): ReactElement {
   return <IconButton icon={BookOpen} label={t('guide')} onClick={startGuide} side="bottom" />;
 }
 
-function GameButton({ t }: { readonly t: Translate }): ReactElement | null {
-  const { game, leave } = useGameStore();
-  const online = useOnlineStore((state) => state.ticket !== null);
-  const leaveOnline = useOnlineStore((state) => state.leave);
-  const begin = useDraftStore((state) => state.begin);
-  if (online && game === null) return null;
-  return game === null ? (
-    <button type="button" className="primary icon-button" onClick={begin}>
-      <Play size={18} aria-hidden="true" /> {t('startGame')}
-    </button>
-  ) : (
-    <IconButton
-      icon={LogOut}
-      label={t(online ? 'leaveOnline' : 'backToGalaxy')}
-      onClick={online ? leaveOnline : leave}
-      side="bottom"
-    />
-  );
+/** In der Partie: die Online-Partie verlassen (der Platz bleibt, man kann zurückkehren). */
+function LeaveButton({ t }: { readonly t: Translate }): ReactElement | null {
+  const playing = useGameStore((state) => state.game !== null);
+  const leave = useOnlineStore((state) => state.leave);
+  if (!playing) return null;
+  return <IconButton icon={LogOut} label={t('leaveOnline')} onClick={leave} side="bottom" />;
 }
 
-/** Vor der Partie: Spielerzahl, KI-Gegner, neue Galaxie. */
+/** Vor der Partie: Spielerzahl, neue Galaxie, Kampfsimulator. */
 function SetupControls({ t }: { readonly t: Translate }): ReactElement {
   const generate = useGalaxyStore((state) => state.generate);
   const openSimulator = useSimulatorStore((state) => state.open);
   return (
     <>
       <PlayerCountSelect label={t('players')} />
-      <BotCountSelect label={t('botOpponents')} />
       <button type="button" className="icon-button" onClick={() => generate()}>
         <Shuffle size={18} aria-hidden="true" /> {t('newGalaxy')}
       </button>
@@ -132,7 +97,7 @@ export function Toolbar(): ReactElement {
       {game === null && code === null && <SetupControls t={t} />}
       {game !== null && <PhaseBar game={game} />}
       <div className="toolbar-end">
-        <GameButton t={t} />
+        <LeaveButton t={t} />
         <GuideButton t={t} />
         <SettingsMenu />
       </div>

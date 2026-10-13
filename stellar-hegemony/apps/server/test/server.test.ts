@@ -104,6 +104,17 @@ describe('Online-Server', () => {
     expect((await restored).state.phase).toBe('strategy');
   });
 
+  it('Fraktionswahl: alle sehen die Wahl in der Lobby, die Partie übernimmt sie', async () => {
+    const { host, guest, guestTicket } = await table();
+    const seen = next(host, 'lobby:update', (view) => view.seats[1]?.faction !== null);
+    const lobby = value(await guest.emitWithAck('lobby:faction', { faction: 'nesh' }));
+    expect(lobby.seats[1]?.faction).toBe('nesh');
+    expect((await seen).seats[1]?.faction).toBe('nesh');
+    const started = next(host, 'game:update', (update) => update.state.phase === 'strategy');
+    value(await host.emitWithAck('lobby:start', {}));
+    expect(playerIn((await started).state, guestTicket.player)?.faction).toBe('nesh');
+  });
+
   it('unsinnige Anfragen bekommen eine Fehlermeldung statt den Server anzuhalten', async () => {
     const { url, guest } = await table();
     const stranger = connect(url);
@@ -116,6 +127,14 @@ describe('Online-Server', () => {
       'lobby.unknownSeat',
     );
     expect(await code(stranger.emitWithAck('lobby:start', {}))).toBe('lobby.unknownSeat');
+    expect(await code(stranger.emitWithAck('lobby:faction', { faction: 'x' }))).toBe(
+      'lobby.unknownSeat',
+    );
+    expect(await code(stranger.emitWithAck('game:undo', {}))).toBe('lobby.unknownSeat');
+    expect(await code(guest.emitWithAck('game:undo', {}))).toBe('lobby.notStarted');
+    expect(await code(guest.emitWithAck('lobby:faction', null as never))).toBe(
+      'lobby.unknownFaction',
+    );
     expect(await code(stranger.emitWithAck('lobby:resume', null as never))).toBe(
       'lobby.unknownSeat',
     );

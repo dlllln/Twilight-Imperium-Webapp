@@ -20,6 +20,8 @@ export * from './game/rule-numbers.ts';
 export * from './game/game-config.ts';
 export * from './game/game-state.ts';
 export * from './game/game-events.ts';
+export * from './undo/undo-events.ts';
+export * from './undo/step-undo.ts';
 export * from './eventsourcing/domain-event.ts';
 export * from './eventsourcing/command.ts';
 export * from './setup/setup-events.ts';

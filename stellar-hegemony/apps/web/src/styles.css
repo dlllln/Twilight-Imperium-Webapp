@@ -238,7 +238,7 @@ label {
 
 .unit-line {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .tooltip .exhausted {
@@ -280,22 +280,65 @@ label {
 .tooltip {
   position: absolute;
   pointer-events: none;
-  padding: 10px 12px;
-  min-width: 180px;
-  font-size: 13px;
+  padding: 6px 9px;
+  max-width: 230px;
+  font-size: 12px;
+  line-height: 1.35;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+}
+
+.tooltip-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.tooltip-title .seat-dot {
+  margin-right: 0;
+}
+
+.tooltip-wormhole {
+  color: #ffb27a;
 }
 
 .tooltip-planet {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 0 8px;
   align-items: baseline;
+}
+
+.tooltip-planet.exhausted .name {
+  color: var(--muted);
 }
 
 .tooltip-planet .name {
   flex: 1;
+  white-space: nowrap;
+}
+
+.tooltip-planet .values {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.tooltip-planet .unit-line {
+  flex-basis: 100%;
+  padding-left: 14px;
+  color: var(--muted);
+}
+
+.tech-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
 }
 
 .tooltip .trait {
@@ -1408,8 +1451,9 @@ input[type='checkbox'] {
 
 .lobby-seat {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 2px 8px;
   padding: 6px 8px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
@@ -1440,6 +1484,19 @@ input[type='checkbox'] {
 
 .seat-state.offline {
   color: #ff8a80;
+}
+
+/* Gewählte Fraktion in eigener Zeile unter dem Namen. */
+.seat-faction {
+  flex-basis: 100%;
+  padding-left: 28px;
+  font-size: 12px;
+  color: var(--gold, #e8c46a);
+}
+
+.lobby-seat.open .seat-faction,
+.lobby-seat.bot .seat-faction {
+  color: var(--muted);
 }
 
 .connection-banner {
@@ -1731,7 +1788,7 @@ input[type='checkbox'] {
 }
 
 .tooltip-hint {
-  margin-top: 4px;
+  margin-top: 2px;
   color: var(--muted);
   font-size: 11px;
 }
@@ -2943,9 +3000,11 @@ select option {
 .hand-dock {
   --hand-gold: #f0c96a;
   --look: var(--hand-gold);
+  --hand-bottom: -54px;
   position: absolute;
   left: 50%;
-  bottom: -54px;
+  bottom: var(--hand-bottom);
+  transition: bottom 0.25s ease;
   z-index: 25;
   display: flex;
   align-items: flex-end;
@@ -2964,8 +3023,11 @@ select option {
   position: absolute;
   left: 50%;
   bottom: calc(100% + 6px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin: 0;
-  padding: 3px 12px;
+  padding: 3px 4px 3px 12px;
   border-radius: 999px;
   background: rgba(8, 12, 28, 0.78);
   border: 1px solid rgba(240, 201, 106, 0.35);
@@ -2974,6 +3036,31 @@ select option {
   white-space: nowrap;
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+/* Eingeklappt ragen nur die Kartenköpfe herein; Zeigen auf die Hand hebt sie an. */
+.hand-dock.tucked {
+  --hand-bottom: -160px;
+}
+
+@media (hover: hover) {
+  .hand-dock.tucked:hover,
+  .hand-dock.tucked:focus-within {
+    --hand-bottom: -54px;
+  }
+}
+
+.hand-toggle {
+  pointer-events: auto;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(240, 201, 106, 0.12);
+  border: 1px solid rgba(240, 201, 106, 0.35);
+  color: var(--hand-gold);
 }
 
 /* Farbe je Motiv: Strategiekarten im Farbkreis, Zugkarten in Gold und Schiefer, Aktionskarten nach Zeitpunkt. */
@@ -3303,7 +3390,11 @@ select option {
 @media (max-width: 760px) {
   .hand-dock {
     max-width: 100%;
-    bottom: -70px;
+    --hand-bottom: -70px;
+  }
+
+  .hand-dock.tucked {
+    --hand-bottom: -124px;
   }
 
   .hand-dock .hand-card {
@@ -3874,5 +3965,44 @@ select option {
 @keyframes close-up-in {
   from {
     opacity: 0;
+  }
+}
+
+/* Zugverlauf: knappe Zeilen, Rundenwechsel als Trenner. */
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.history-list li {
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.history-list .history-round {
+  background: none;
+  color: var(--gold, #e8c46a);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 8px;
+}
+
+/* Tablet: Finger brauchen größere Ziele als der Mauszeiger. */
+@media (pointer: coarse) {
+  .round-button,
+  .hand-toggle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .map-controls {
+    gap: 10px;
   }
 }

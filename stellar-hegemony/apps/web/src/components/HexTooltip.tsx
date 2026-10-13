@@ -5,114 +5,107 @@ import { useGameStore } from '../game-store.ts';
 import type { MessageKey } from '../i18n.ts';
 import type { SceneHex, ScenePlanet, UnitCount } from '../render/scene-model.ts';
 import { seatColor } from '../seat-colors.ts';
+import { useSettingsStore } from '../settings-store.ts';
 import { useLanguage, useT } from '../use-translation.ts';
 
 type Translate = (key: MessageKey) => string;
+
+/** Abstand zum Zeiger und geschätzte Größe des Hinweises, um ihn vom Rand wegzuklappen. */
+const OFFSET = 18;
+const ESTIMATE = { width: 230, height: 160 };
 
 function SeatDot({ seat }: { readonly seat: number }): ReactElement {
   return <span className="seat-dot" style={{ background: seatColor(seat) }} />;
 }
 
-function UnitLine({ unit }: { readonly unit: UnitCount }): ReactElement {
+/** Einheiten eines Platzes in einer Zeile: „2 Kreuzer · 1 Träger“. */
+function UnitLine({ units }: { readonly units: readonly UnitCount[] }): ReactElement | null {
   const language = useLanguage();
-  const name = unitName(unitTypeId(unit.type))?.[language] ?? unit.type;
+  const first = units[0];
+  if (first === undefined) return null;
+  const names = units.map(
+    (unit) => `${String(unit.count)} ${unitName(unitTypeId(unit.type))?.[language] ?? unit.type}`,
+  );
   return (
     <span className="unit-line">
-      <SeatDot seat={unit.seat} />
-      {unit.count}× {name}
+      <SeatDot seat={first.seat} />
+      {names.join(' · ')}
     </span>
   );
 }
 
-function PlanetName({ planet, t }: { readonly planet: ScenePlanet; readonly t: Translate }) {
+/** Einheiten nach Platz gruppiert, eine Zeile je Spieler. */
+function UnitLines({ units }: { readonly units: readonly UnitCount[] }): ReactElement {
+  const seats = [...new Set(units.map((unit) => unit.seat))];
   return (
-    <span className="name">
-      {planet.controllerSeat !== null && <SeatDot seat={planet.controllerSeat} />}
-      {planet.name}
-      {planet.exhausted && <em className="exhausted"> ({t('exhausted')})</em>}
-    </span>
+    <>
+      {seats.map((seat) => (
+        <UnitLine key={seat} units={units.filter((unit) => unit.seat === seat)} />
+      ))}
+    </>
   );
 }
 
-function PlanetRow({
-  planet,
-  t,
-}: {
-  readonly planet: ScenePlanet;
-  readonly t: Translate;
-}): ReactElement {
-  const { resources, influence, trait, technologySpecialty } = planet.definition;
+/** Planet in einer Zeile: Besitzer, Name, Ressourcen/Einfluss, Spezialisierung als Punkt. */
+function PlanetRow({ planet, t }: { readonly planet: ScenePlanet; readonly t: Translate }) {
+  const { resources, influence, technologySpecialty } = planet.definition;
   return (
-    <div className="tooltip-planet">
-      <PlanetName planet={planet} t={t} />
-      <span className="resources" title={t('resources')}>
-        {resources}
+    <div className={planet.exhausted ? 'tooltip-planet exhausted' : 'tooltip-planet'}>
+      <span className="name">
+        {planet.controllerSeat !== null && <SeatDot seat={planet.controllerSeat} />}
+        {planet.name}
+        {technologySpecialty !== undefined && (
+          <i
+            className={`tech-dot tech-${technologySpecialty}`}
+            aria-label={t(technologySpecialty)}
+          />
+        )}
       </span>
-      <span className="influence" title={t('influence')}>
-        {influence}
+      <span className="values">
+        <b className="resources">{resources}</b>/<b className="influence">{influence}</b>
       </span>
-      {trait !== undefined && <span className="trait">{t(trait)}</span>}
-      {technologySpecialty !== undefined && (
-        <span className={`tech-label tech-${technologySpecialty}`}>{t(technologySpecialty)}</span>
-      )}
-      {planet.units.map((unit) => (
-        <UnitLine key={`${String(unit.seat)}:${unit.type}`} unit={unit} />
-      ))}
-    </div>
-  );
-}
-
-const isEmptySpace = (hex: SceneHex): boolean =>
-  hex.planets.length === 0 && hex.anomaly === undefined && hex.wormholes.length === 0;
-
-function TokenLine(props: { readonly seats: readonly number[]; readonly t: Translate }) {
-  if (props.seats.length === 0) return null;
-  return (
-    <div>
-      {props.t('commandTokens')}:{' '}
-      {props.seats.map((seat) => (
-        <SeatDot key={seat} seat={seat} />
-      ))}
+      <UnitLines units={planet.units} />
     </div>
   );
 }
 
 function SystemTitle({ hex, t }: { readonly hex: SceneHex; readonly t: Translate }) {
-  const home = hex.seat === null ? '' : ` · ${t('homeSystem')} ${t('seat')} ${String(hex.seat)}`;
   return (
-    <strong>
+    <strong className="tooltip-title">
       {hex.systemId?.toUpperCase()}
-      {home}
+      {hex.seat !== null && <SeatDot seat={hex.seat} />}
+      {hex.anomaly !== undefined && <span className="tooltip-anomaly">{t(hex.anomaly)}</span>}
+      {hex.wormholes.map((kind) => (
+        <span key={kind} className="tooltip-wormhole">
+          {kind === 'alpha' ? 'α' : 'β'}
+        </span>
+      ))}
+      {hex.tokens.map((seat) => (
+        <SeatDot key={`token-${String(seat)}`} seat={seat} />
+      ))}
     </strong>
   );
 }
 
-function SystemDetails({
-  hex,
-  t,
-}: {
-  readonly hex: SceneHex;
-  readonly t: Translate;
-}): ReactElement {
+function SystemDetails({ hex, t }: { readonly hex: SceneHex; readonly t: Translate }) {
   return (
     <>
       <SystemTitle hex={hex} t={t} />
-      {hex.anomaly !== undefined && <div className="tooltip-anomaly">{t(hex.anomaly)}</div>}
-      {hex.wormholes.map((kind) => (
-        <div key={kind}>
-          {t('wormhole')} {kind === 'alpha' ? 'α' : 'β'}
-        </div>
-      ))}
-      {isEmptySpace(hex) && <div>{t('emptySpace')}</div>}
       {hex.planets.map((planet) => (
         <PlanetRow key={planet.id} planet={planet} t={t} />
       ))}
-      {hex.ships.map((unit) => (
-        <UnitLine key={`${String(unit.seat)}:${unit.type}`} unit={unit} />
-      ))}
-      <TokenLine seats={hex.tokens} t={t} />
+      <UnitLines units={hex.ships} />
     </>
   );
+}
+
+/** Rechts unten vom Zeiger; nah am Rand klappt der Hinweis auf die andere Seite. */
+function placement(x: number, y: number) {
+  const width = window.innerWidth || Number.POSITIVE_INFINITY;
+  const height = window.innerHeight || Number.POSITIVE_INFINITY;
+  const left = x + OFFSET + ESTIMATE.width > width ? x - OFFSET - ESTIMATE.width : x + OFFSET;
+  const top = y + OFFSET + ESTIMATE.height > height ? y - OFFSET - ESTIMATE.height : y + OFFSET;
+  return { left: Math.max(0, left), top: Math.max(0, top) };
 }
 
 interface HexTooltipProps {
@@ -121,12 +114,13 @@ interface HexTooltipProps {
   readonly y: number;
 }
 
-/** Details zum Feld unter dem Mauszeiger: Planeten, Truppen, Flotten, Marker. */
+/** Knapper Hinweis zum Feld unter dem Zeiger; die Bedienhilfe nur, bis man einmal geklickt hat. */
 export function HexTooltip({ hex, x, y }: HexTooltipProps): ReactElement {
   const t = useT();
   const playing = useGameStore((state) => state.game !== null);
+  const hintSeen = useSettingsStore((state) => state.hintSeen);
   return (
-    <div className="tooltip glass" role="tooltip" style={{ left: x + 16, top: y + 16 }}>
+    <div className="tooltip glass" role="tooltip" style={placement(x, y)}>
       {hex.kind === 'homeSlot' ? (
         <strong>
           {t('homeSlot')} · {t('seat')} {hex.seat}
@@ -134,7 +128,9 @@ export function HexTooltip({ hex, x, y }: HexTooltipProps): ReactElement {
       ) : (
         <>
           <SystemDetails hex={hex} t={t} />
-          <span className="tooltip-hint">{t(playing ? 'systemHintGame' : 'systemHint')}</span>
+          {!hintSeen && (
+            <span className="tooltip-hint">{t(playing ? 'systemHintGame' : 'systemHint')}</span>
+          )}
         </>
       )}
     </div>

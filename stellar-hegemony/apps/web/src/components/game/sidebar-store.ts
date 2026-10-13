@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
-/** Die Reiter der Übersicht am rechten Rand: Strategiekarten, Wertung, das eigene Reich. */
-export type SidebarTab = 'turn' | 'score' | 'empire';
+/** Die Reiter der Übersicht am rechten Rand: Strategiekarten, Wertung, das eigene Reich, Verlauf. */
+export type SidebarTab = 'turn' | 'score' | 'empire' | 'history';
 
 /** In welchem Reiter ein Anker der Anleitung liegt; nicht genannte liegen auf der Karte. */
 const TAB_OF_ANCHOR: Readonly<Record<string, SidebarTab>> = {

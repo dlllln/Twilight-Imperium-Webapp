@@ -1,7 +1,7 @@
 import { type LobbyView, type SeatTicket, seatPlayerId } from '@stellar/application';
 import type { DomainError, GameCommand, Result } from '@stellar/domain';
 import { create, type StoreApi } from 'zustand';
-import { useGameStore } from '../game-store.ts';
+import { type Remote, useGameStore } from '../game-store.ts';
 import {
   type ConnectionEvents,
   type Connector,
@@ -23,6 +23,8 @@ export interface OnlineStore {
   readonly host: (playerCount: number, mapString: string) => Promise<boolean>;
   readonly join: (code: string) => Promise<boolean>;
   readonly start: () => Promise<boolean>;
+  /** Eigene Fraktion in der Lobby wählen; alle sehen die Wahl sofort. */
+  readonly chooseFaction: (faction: string) => Promise<boolean>;
   /** Nach einem Neuladen: zurück auf den gespeicherten Platz. */
   readonly restore: () => void;
   readonly leave: () => void;
@@ -66,11 +68,21 @@ const connect = (set: Set, get: Get): OnlineConnection => {
   return connection;
 };
 
-/** Online-Commands: Fehler des Servers erscheinen wie lokale Regelverstöße. */
-const remote = (command: GameCommand): void => {
-  void connection?.command(command).then((result) => {
-    if (!result.ok) useGameStore.getState().setError(result.error);
-  });
+const reportError = (result: Result<unknown, DomainError>): void => {
+  if (!result.ok) useGameStore.getState().setError(result.error);
+};
+
+/** Online-Commands: Fehler des Servers erscheinen wie Regelverstöße, Quittungen gehen an den Spielstand. */
+const remote: Remote = {
+  command: (command: GameCommand) => {
+    void connection?.command(command).then((result) => {
+      reportError(result);
+      if (result.ok) useGameStore.getState().acknowledge(result.value);
+    });
+  },
+  undo: () => {
+    void connection?.undo().then(reportError);
+  },
 };
 
 function seated(set: Set, ticket: SeatTicket): void {
@@ -110,6 +122,12 @@ async function startGame(set: Set, get: Get): Promise<boolean> {
   return result.ok;
 }
 
+async function pickFaction(set: Set, get: Get, faction: string): Promise<boolean> {
+  const result = await connect(set, get).faction(faction);
+  set({ error: result.ok ? null : result.error });
+  return result.ok;
+}
+
 function restoreSeat(set: Set, get: Get): void {
   const ticket = loadTicket();
   if (ticket === null || get().ticket !== null) return;
@@ -137,6 +155,7 @@ export const useOnlineStore = create<OnlineStore>()((set, get) => ({
       connect(set, get).join({ code: code.trim().toUpperCase(), name }),
     )(),
   start: () => startGame(set, get),
+  chooseFaction: (faction) => pickFaction(set, get, faction),
   restore: () => restoreSeat(set, get),
   leave: () => leaveGame(set),
 }));

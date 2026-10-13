@@ -16,6 +16,8 @@ export interface LobbySeat {
   readonly name: string | null;
   /** Geheimer Schlüssel des Menschen auf diesem Platz; damit kehrt er nach einem Abbruch zurück. */
   readonly token: string | null;
+  /** Gewählte Fraktion; ohne Wahl vergibt der Start die nächste freie. */
+  readonly faction: string | null;
 }
 
 /** Eine Online-Partie vor und nach dem Start; gespeichert im Lobby-Store. */
@@ -47,10 +49,11 @@ export const HOST_SEAT = 0;
 export const lobbyView = (lobby: Lobby, connected: readonly number[]): LobbyView => ({
   code: lobby.code,
   started: lobby.started,
-  seats: lobby.seats.map(({ seat, kind, name }) => ({
+  seats: lobby.seats.map(({ seat, kind, name, faction }) => ({
     seat,
     kind,
     name,
+    faction: faction ?? null,
     connected: kind === 'bot' || connected.includes(seat),
   })),
 });
@@ -68,8 +71,23 @@ export function claimSeat(lobby: Lobby, name: string, token: string): Result<Lob
   if (lobby.started) return err(lobbyError('started', 'Die Partie läuft bereits'));
   const open = lobby.seats.find((seat) => seat.kind === 'open');
   if (open === undefined) return err(lobbyError('full', 'Alle Plätze sind besetzt'));
-  const claimed: LobbySeat = { seat: open.seat, kind: 'human', name, token };
+  const claimed: LobbySeat = { seat: open.seat, kind: 'human', name, token, faction: null };
   return ok({ ...lobby, seats: lobby.seats.map((seat) => (seat === open ? claimed : seat)) });
+}
+
+/** Jeder wählt seine Fraktion auf dem eigenen Gerät; eine Fraktion gibt es nur einmal. */
+export function chooseFaction(
+  lobby: Lobby,
+  seat: number,
+  faction: string,
+): Result<Lobby, DomainError> {
+  if (lobby.started) return err(lobbyError('started', 'Die Partie läuft bereits'));
+  const taken = lobby.seats.some((other) => other.seat !== seat && other.faction === faction);
+  if (taken) return err(lobbyError('factionTaken', 'Diese Fraktion hat schon jemand gewählt'));
+  return ok({
+    ...lobby,
+    seats: lobby.seats.map((entry) => (entry.seat === seat ? { ...entry, faction } : entry)),
+  });
 }
 
 /** Beim Start übernimmt die KI alle Plätze, die noch frei sind. */

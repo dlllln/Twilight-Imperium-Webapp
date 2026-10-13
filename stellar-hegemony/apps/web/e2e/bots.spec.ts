@@ -1,28 +1,20 @@
 import { expect, test } from '@playwright/test';
-import { chooseFactions } from './draft.ts';
+import { freePick, keepSecrets, openTable, phaseOf } from './table.ts';
 
-test('KI-Gegner: zwei Bots wählen Strategiekarten und ziehen, bis der Mensch dran ist', async ({
-  page,
+test('Allein in der Lobby: zwei KI-Gegner wählen Strategiekarten und ziehen, bis der Mensch dran ist', async ({
+  browser,
 }) => {
-  await page.goto('/');
-  await page.getByLabel('Spieler').selectOption('3');
-  await page.getByLabel('KI-Gegner').selectOption('2');
-  await page.getByRole('button', { name: 'Partie starten' }).click();
-  await chooseFactions(page);
-
-  await page.locator('.secret-choice input[type="checkbox"]').first().check();
-  await page.getByRole('button', { name: 'Behalten' }).click();
+  const [page] = await openTable(browser, 1);
+  if (page === undefined) throw new Error('kein Gerät');
+  await keepSecrets([page]);
   await expect(page.locator('.player-list .bot-badge')).toHaveCount(2);
 
-  const phase = page.locator('.phases [aria-current="step"]');
-  await expect(phase).toHaveText('Strategie');
   for (let pick = 0; pick < 2; pick += 1) {
-    const free = page.locator('.hand-card[data-kind="pick"]:not([data-leaving])').first();
-    await expect(free).toBeVisible();
-    await free.click();
+    await expect(freePick(page).first()).toBeVisible({ timeout: 15_000 });
+    await freePick(page).first().click();
   }
-  await expect(phase).toHaveText('Aktion', { timeout: 15_000 });
+  await expect(phaseOf(page)).toHaveText('Aktion', { timeout: 15_000 });
   await expect(page.locator('.strategy-card .swatch')).toHaveCount(6);
-  await expect(page.getByTestId('actor')).toContainText('P1', { timeout: 30_000 });
+  await expect(page.getByTestId('actor')).toContainText('Anna', { timeout: 30_000 });
   await expect(page.getByText('ist am Zug und überlegt …')).toHaveCount(0);
 });

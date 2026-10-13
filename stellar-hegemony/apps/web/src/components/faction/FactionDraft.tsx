@@ -1,29 +1,46 @@
 import { Check } from 'lucide-react';
 import { type ReactElement, useEffect } from 'react';
-import { takenSeats } from '../../setup/faction-draft.ts';
-import { useDraftStore } from '../../setup/draft-store.ts';
+import { useOnlineStore } from '../../online/online-store.ts';
+import { takenSeats, useFactionPick } from '../../setup/faction-draft.ts';
 import { useT } from '../../use-translation.ts';
 import { FactionChooser } from './FactionChooser.tsx';
 
-/** Escape geht einen Schritt zurück, wie der Zurück-Knopf. */
-function useEscape(open: boolean, back: () => void): void {
+/** Escape schließt die Auswahl, wie der Zurück-Knopf. */
+function useEscape(open: boolean, close: () => void): void {
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') back();
+      if (event.key === 'Escape') close();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, back]);
+  }, [open, close]);
 }
 
-/** Vor der Partie: jeder Mensch am Bildschirm wählt seine Fraktion, dann beginnt das Spiel. */
+/** Wählen schickt die Wahl an den Server; erst wenn er sie annimmt, schließt die Auswahl. */
+function useChoice(seat: number) {
+  const { preview, show, close } = useFactionPick();
+  const { lobby, chooseFaction } = useOnlineStore();
+  const taken = takenSeats(lobby?.seats ?? [], seat);
+  const choose = () => {
+    void chooseFaction(preview).then((done) => {
+      if (done) close();
+    });
+  };
+  const look = (id: string) => {
+    if (taken[id] === undefined) show(id);
+  };
+  return { taken, choose, look };
+}
+
+/** In der Lobby: die eigene Fraktion wählen; was andere gewählt haben, ist gesperrt. */
 export function FactionDraft(): ReactElement | null {
   const t = useT();
-  const { open, picks, preview, show, choose, back } = useDraftStore();
-  useEscape(open, back);
-  if (!open) return null;
-  const seat = picks.length + 1;
+  const { open, preview, close } = useFactionPick();
+  const ticket = useOnlineStore((state) => state.ticket);
+  const { taken, choose, look } = useChoice(ticket?.seat ?? -1);
+  useEscape(open, close);
+  if (!open || ticket === null) return null;
   return (
     <section
       className="simulator stage-faction faction-draft"
@@ -33,13 +50,13 @@ export function FactionDraft(): ReactElement | null {
     >
       <FactionChooser
         title={t('conquest')}
-        kicker={`P${String(seat)} ${t('seatChooses')}`}
+        kicker={`P${String(ticket.seat + 1)} ${t('seatChooses')}`}
         selected={preview}
-        taken={takenSeats(picks)}
+        taken={taken}
         chooseIcon={Check}
-        onPreview={show}
+        onPreview={look}
         onChoose={choose}
-        onBack={back}
+        onBack={close}
       />
     </section>
   );

@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { useRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CloseUpLabels } from '../src/components/CloseUpLabels.tsx';
+import { HexTooltip } from '../src/components/HexTooltip.tsx';
+import { useSettingsStore } from '../src/settings-store.ts';
 import { boundsOf, hexToPixel } from '../src/hex-geometry.ts';
 import { planetPaint } from '../src/render/planet-paint.ts';
 import { gameScene, type SceneHex } from '../src/render/scene-model.ts';
@@ -25,7 +28,7 @@ import {
   ZOOM_MAX,
   zoomAround,
 } from '../src/system/viewport-tween.ts';
-import { wheelFactor } from '../src/use-pan-zoom.ts';
+import { pinchStep, usePanZoom, wheelFactor } from '../src/use-pan-zoom.ts';
 import { started } from './game-helpers.ts';
 
 beforeEach(() => useGalaxyStore.setState({ language: 'de' }));
@@ -90,6 +93,64 @@ describe('Kamera der Sternenkarte', () => {
     expect(wheelFactor(-3, 1)).toBeCloseTo(wheelFactor(-99), 5);
     expect(wheelFactor(-4)).toBeLessThan(1.01);
     expect(wheelFactor(-100000)).toBe(2);
+  });
+
+  it('zwei Finger: auseinander zoomt um den Mittelpunkt, gemeinsames Wandern verschiebt', () => {
+    const step = pinchStep(
+      [
+        { x: 100, y: 100 },
+        { x: 200, y: 100 },
+      ],
+      [
+        { x: 60, y: 120 },
+        { x: 260, y: 120 },
+      ],
+    );
+    expect(step).toEqual({ factor: 2, center: { x: 160, y: 120 }, dx: 10, dy: 20 });
+  });
+
+  it('am Tablet: zwei Finger zoomen die Karte, ein Finger verschiebt sie und wählt dann nichts', () => {
+    const zooms: number[] = [];
+    let drag: () => boolean = () => false;
+    function Surface() {
+      const svg = useRef<SVGSVGElement>(null);
+      const gestures = usePanZoom(svg, 100, (factor) => zooms.push(factor));
+      drag = gestures.wasDrag;
+      const { onPointerDown, onPointerMove, onPointerUp } = gestures;
+      return <div data-testid="surface" {...{ onPointerDown, onPointerMove, onPointerUp }} />;
+    }
+    render(<Surface />);
+    const surface = screen.getByTestId('surface');
+    const finger = (pointerId: number, clientX: number) => ({
+      pointerId,
+      clientX,
+      clientY: 50,
+      pointerType: 'touch',
+    });
+    fireEvent.pointerDown(surface, finger(1, 100));
+    fireEvent.pointerDown(surface, finger(2, 200));
+    fireEvent.pointerMove(surface, finger(2, 300));
+    expect(zooms).toEqual([2]);
+    expect(drag()).toBe(true);
+    fireEvent.pointerUp(surface, finger(2, 300));
+    fireEvent.pointerUp(surface, finger(1, 100));
+    fireEvent.pointerDown(surface, finger(3, 100));
+    expect(drag()).toBe(false);
+  });
+
+  it('der Hinweis am Zeiger ist knapp: Planeten in einer Zeile, Bedienhilfe nur bis zum ersten Klick', () => {
+    const { home } = homeScene();
+    useSettingsStore.setState({ hintSeen: false });
+    const { rerender } = render(<HexTooltip hex={home} x={10} y={10} />);
+    const tip = screen.getByRole('tooltip');
+    expect(tip.querySelectorAll('.tooltip-planet')).toHaveLength(home.planets.length);
+    expect(tip.querySelector('.tooltip-hint')).not.toBeNull();
+    useSettingsStore.getState().markHintSeen();
+    rerender(<HexTooltip hex={home} x={10} y={10} />);
+    expect(screen.getByRole('tooltip').querySelector('.tooltip-hint')).toBeNull();
+    rerender(<HexTooltip hex={home} x={window.innerWidth - 5} y={window.innerHeight - 5} />);
+    const flipped = screen.getByRole('tooltip').style;
+    expect(Number.parseFloat(flipped.left)).toBeLessThan(window.innerWidth - 5);
   });
 
   it('Striche und Sterne wachsen beim Nahzoom nur gedämpft mit', () => {

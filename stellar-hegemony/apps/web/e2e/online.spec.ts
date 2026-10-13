@@ -30,7 +30,7 @@ async function pickUntilAction(host: Page, guest: Page) {
   }
 }
 
-test('Online: Lobby mit Code, zwei Browser, KI auf dem freien Platz, Reconnect nach Neuladen', async ({
+test('Private Lobby: Code, Fraktionswahl je Gerät, KI auf dem freien Platz, Reconnect nach Neuladen', async ({
   browser,
 }) => {
   const host = await openPage(browser, 'Anna');
@@ -45,6 +45,14 @@ test('Online: Lobby mit Code, zwei Browser, KI auf dem freien Platz, Reconnect n
   await expect(guest.getByText('Warte, bis der Gastgeber die Partie startet …')).toBeVisible();
   await expect(host.getByTestId('lobby-seat-1')).toContainText('verbunden');
   await expect(host.getByTestId('lobby-seat-2')).toContainText('frei, sonst KI');
+
+  await guest.getByRole('button', { name: 'Fraktion wählen' }).click();
+  const draft = guest.getByRole('dialog', { name: 'Fraktion wählen' });
+  await draft.getByRole('radio').nth(3).click();
+  await draft.getByRole('button', { name: 'Wählen' }).click();
+  await expect(draft).toBeHidden();
+  await expect(host.getByTestId('lobby-seat-1')).not.toContainText('Fraktion noch offen');
+  await expect(host.getByTestId('lobby-seat-0')).toContainText('Fraktion noch offen');
 
   await host.getByRole('button', { name: 'Partie starten' }).click();
   for (const page of [host, guest]) {
@@ -61,7 +69,7 @@ test('Online: Lobby mit Code, zwei Browser, KI auf dem freien Platz, Reconnect n
   }
 
   await guest.reload();
-  await expect(phaseOf(guest)).toHaveText('Aktion');
+  await expect(phaseOf(guest)).toHaveText('Aktion', { timeout: 15_000 });
   await expect(guest.locator('.secret-choice')).toHaveCount(0);
   await expect(host.locator('.player-list .offline-badge')).toHaveCount(0);
 });

@@ -205,7 +205,7 @@ Funktionen in `.ts`-Dateien haben höchstens 20 Zeilen. React-Komponenten (`.tsx
 | `performStrategicActionHandler`, `resolveSecondaryHandler`, `declineSecondaryHandler`, `passHandler`        | Command Pattern: ein Handler je Command. Das Sekundärfenster läuft ab dem linken Nachbarn reihum, danach endet der Zug.                              |
 | `nextActivePlayer`                                                                                          | Pure Fabrication: nächster Spieler in Initiativreihenfolge, der noch nicht gepasst hat.                                                              |
 | `evaluatePayment`, `paymentEvents`                                                                          | Information Expert über `Planet.exhaust`: Bezahlen mit Planeten und Handelswaren, wiederverwendbar für Produktion und Abstimmung.                    |
-| Web: `createLocalGame`, `useGameStore`                                                                      | Lokaler Adapter: dieselben Commands wie später über das Netz, nur ohne Server (Hot-Seat).                                                            |
+| Web: `useGameStore` (`remote`), `tryCommand`                                                                | Adapter zum Server: Commands gehen übers Netz; `tryCommand` erprobt sie nur, damit Knöpfe zeigen, was die Domain erlaubt.                            |
 | Web: `PhaseBar`, `StrategyCardGrid`, `TurnPanel`, `TokenForm`                                               | SRP: Anzeige und Eingabe; Regeln stammen aus der Domain.                                                                                             |
 
 Mechaniken, deren Karten noch nicht registriert sind, lehnt die Domain mit `strategy.mechanicUnavailable` ab: Diplomatie kam in Iteration 4, Kriegsführung, Bauen und Handel in 6; Technologie folgt in 7, Imperium in 8, Politik in 10. Bis dahin endet eine Runde im Browser nicht, weil Passen erst nach allen eigenen Strategiekarten erlaubt ist (RR 4.3).
@@ -613,7 +613,32 @@ die Art bleibt an der Farbe erkennbar.
 | `planet-style.ts` (`planetStyle`, `hueRotate`)   | Reine Funktion aus Art und Name: gleiche Welt bei jedem Aufruf, Shader und Canvas-Maler nutzen dieselben Farben (DRY).                 |
 | `GalaxyScene.redraw`, `moveCamera`               | Ein Bild pro Frame, auch wenn Kamera und Drehung zugleich ändern; eine Kamerafahrt an dieselbe Stelle entfällt.                        |
 
-## 26. Iterationen
+## 26. Iteration 22 im Detail (nur private Lobbys, Zugverlauf, Rückgängig, Tablet)
+
+Gespielt wird nur noch in privaten Lobbys: Jeder Mensch sitzt an seinem eigenen Gerät, der
+Gastgeber gibt den Code weiter, freie Plätze übernimmt beim Start die KI. Den Hot-Seat-Modus mit
+lokaler Partie, lokaler KI und Fraktionswahl am gemeinsamen Bildschirm gibt es nicht mehr. Die
+Fraktion wählt jeder in der Lobby auf seinem Gerät; was andere gewählt haben, ist gesperrt. Neu sind
+der Zugverlauf „Was ist passiert?“ als Reiter der Übersicht und ein Knopf „Rückgängig“ für den
+letzten eigenen Schritt, solange man noch am Zug ist und nichts Neues verraten wurde. Der Hinweis am
+Mauszeiger ist knapp (Planeten in einer Zeile, Einheiten je Spieler zusammengefasst), klappt vom Rand
+weg und zeigt die Bedienhilfe nur bis zum ersten Klick. Die Hand liegt eingeklappt am unteren Rand,
+bis man sie braucht (Kartenwahl), auf sie zeigt oder sie mit dem Knopf öffnet. Am Tablet zoomen zwei
+Finger um ihren Mittelpunkt, ein Finger verschiebt, der Hinweis am Zeiger entfällt, und Knöpfe sind
+größer.
+
+| Element                                              | Prinzip                                                                                                                                                         |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `StepUndone`, `withoutUndone`, `replayGame` (Domain) | Event Sourcing bleibt unveränderlich: Die Rücknahme ist selbst ein Event, das Replay lässt die zurückgenommenen Events aus; die Version zählt den ganzen Strom. |
+| `isReversible`, `undoStep` (Domain)                  | Positivliste (Information Expert): Nur Events, die nichts verraten, lassen sich zurücknehmen; ein neues Event ist erst einmal endgültig (Open/Closed, sicher).  |
+| `OnlineGames.undo`, `GameController.undo`            | GRASP Controller: Nur die Anwendung kennt die Grenzen eines Commands; sie merkt sich den letzten zurücknehmbaren Schritt je Lobby und prüft die Version.        |
+| `chooseFaction`, `seatFactions` (Anwendung)          | Reine Funktionen: Wahl je Platz, Rest der Reihe nach; `setupCommands` baut die Partie wie bisher (DRY).                                                         |
+| `CommandReceipt`, `useCanUndo` (Web)                 | Die Quittung sagt, ob der Schritt zurücknehmbar ist; der Knopf erscheint nur, solange die Partie noch bei dieser Version steht (kein Wettlauf mit Updates).     |
+| `turn-history.ts` (`historyLines`, `appendHistory`)  | Reine Funktionen: Events werden zu Daten, Text entsteht erst beim Anzeigen in der gewählten Sprache (Single Responsibility).                                    |
+| `pinchStep`, `usePointers` (`use-pan-zoom.ts`)       | Reine Geste plus dünner Hook: Zwei Finger liefern Zoomfaktor und Verschiebung, Maus und ein Finger bleiben ein Ziehen (Low Coupling).                           |
+| Tests: `local-table.ts` (`seatTable`)                | Testattrappe des Servers (Dependency Inversion über `Remote`): Komponententests bedienen alle Plätze, das Produkt kennt nur den eigenen.                        |
+
+## 27. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -638,8 +663,9 @@ die Art bleibt an der Farbe erkennbar.
 | 19  | Plastische Karte: Kacheln, Schatten, Leuchtränder   | ✓     |
 | 20  | Nahzoom statt Systemansicht, Shader-Planeten        | ✓     |
 | 21  | Schräger Blick vom Heimatsystem, eigene Planeten    | ✓     |
+| 22  | Nur private Lobbys, Zugverlauf, Rückgängig, Tablet  | ✓     |
 
-## 27. Befehle
+## 28. Befehle
 
 ```
 pnpm install

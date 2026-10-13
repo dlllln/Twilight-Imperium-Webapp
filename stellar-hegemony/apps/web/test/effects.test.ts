@@ -2,7 +2,7 @@ import type { GameEvent, GameState, SystemId } from '@stellar/domain';
 import { describe, expect, it } from 'vitest';
 import { mapEffects } from '../src/animation/map-effects.ts';
 import { MAX_CUES, soundCues, turnCue } from '../src/audio/sound-cues.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { started } from './game-helpers.ts';
 
 const events = (list: readonly object[]) => list as unknown as readonly GameEvent[];

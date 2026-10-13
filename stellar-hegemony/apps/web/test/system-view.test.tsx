@@ -5,7 +5,7 @@ import type { GameState } from '@stellar/domain';
 import { App } from '../src/App.tsx';
 import { useSidebarStore } from '../src/components/game/sidebar-store.ts';
 import { useGameStore } from '../src/game-store.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
 import { useCameraStore } from '../src/system/camera-store.ts';

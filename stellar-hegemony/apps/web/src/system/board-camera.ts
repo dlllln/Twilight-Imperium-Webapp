@@ -1,4 +1,4 @@
-import { currentActor, type GameState, type PlayerId } from '@stellar/domain';
+import type { GameState, PlayerId } from '@stellar/domain';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '../game-store.ts';
 import { hexToPixel, type Point } from '../hex-geometry.ts';
@@ -8,31 +8,14 @@ import { useSettingsStore } from '../settings-store.ts';
 import { useCameraStore } from './camera-store.ts';
 import { easeInOut } from './viewport-tween.ts';
 
-/** Dauer der Drehung, wenn ein anderer Mensch an den Bildschirm kommt. */
+/** Dauer der Drehung, falls sich der eigene Platz ändert (z. B. nach dem Beitreten). */
 export const TURN_MS = 900;
 /** Vor der Partie sieht man die Karte vom ersten Platz aus. */
 const SETUP_SEAT = 1;
 
-/** Der Mensch am Zug, sonst der erste Mensch am Tisch. */
-function humanAtScreen(game: GameState, bots: readonly PlayerId[]): PlayerId | undefined {
-  const human = (id: PlayerId) => !bots.includes(id);
-  const actor = currentActor(game);
-  if (actor !== null && human(actor)) return actor;
-  return game.players.find((player) => human(player.id))?.id;
-}
-
-/**
- * Aus wessen Sicht das Brett liegt: online der eigene Platz, am Hot-Seat der Mensch am Zug;
- * zieht gerade die KI, bleibt der erste menschliche Platz vorne.
- */
-export function viewerSeat(
-  game: GameState | null,
-  me: PlayerId | null,
-  bots: readonly PlayerId[],
-): number {
-  if (game === null) return SETUP_SEAT;
-  const id = me ?? humanAtScreen(game, bots);
-  const seat = game.players.find((player) => player.id === id)?.seat;
+/** Aus wessen Sicht das Brett liegt: immer vom eigenen Platz aus. */
+export function viewerSeat(game: GameState | null, me: PlayerId | null): number {
+  const seat = game?.players.find((player) => player.id === me)?.seat;
   // Im Spielzustand zählen Plätze ab 0, auf der Karte ab 1.
   return seat === undefined ? SETUP_SEAT : seat + 1;
 }
@@ -46,8 +29,7 @@ export function homeOf(hexes: readonly SceneHex[], seat: number): Point | null {
 function useTargetView(hexes: readonly SceneHex[]) {
   const game = useGameStore((state) => state.game);
   const me = useGameStore((state) => state.me);
-  const bots = useGameStore((state) => state.bots);
-  const seat = viewerSeat(game, me, bots);
+  const seat = viewerSeat(game, me);
   const target = useMemo(() => viewFrom(homeOf(hexes, seat)), [hexes, seat]);
   return { target, playing: game !== null };
 }

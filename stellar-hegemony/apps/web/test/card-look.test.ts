@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ART_HEIGHT, ART_WIDTH, lookOf, specksOf, strategyLook } from '../src/hand/card-look.ts';
 import { handEntries } from '../src/hand/hand-model.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { keepSecrets, pickAll, started } from './game-helpers.ts';
 
 describe('Aussehen der Handkarten', () => {

@@ -5,14 +5,17 @@ import {
   err,
   type GameCommand,
   type GameState,
+  isReversible,
   map,
   ok,
+  type PlayerId,
   type Result,
 } from '@stellar/domain';
-import type { GameController } from '../game-controller.ts';
+import type { CommandOutcome, GameController } from '../game-controller.ts';
 import { createGameCommand, seatPlayerId, setupCommands, type TableSpec } from '../game-setup.ts';
 import {
   botSeatsOf,
+  chooseFaction,
   claimSeat,
   fillWithBots,
   HOST_SEAT,
@@ -22,7 +25,12 @@ import {
   seatOfToken,
 } from './lobby.ts';
 import type { BotPort, IdGeneratorPort, LobbyStorePort } from './ports.ts';
-import type { CreateLobbyRequest, JoinLobbyRequest, SeatTicket } from './protocol.ts';
+import type {
+  CommandReceipt,
+  CreateLobbyRequest,
+  JoinLobbyRequest,
+  SeatTicket,
+} from './protocol.ts';
 import { SerialQueue } from './serial-queue.ts';
 import { rehearseSetup, tableConfig, type TableRules } from './table-rules.ts';
 
@@ -59,7 +67,18 @@ const tableOf = (lobby: Lobby, config: TableSpec['config']): TableSpec => ({
   config,
   mapString: lobby.mapString,
   names: lobby.seats.map((seat) => seat.name ?? String(seat.seat + 1)),
+  picks: lobby.seats.map((seat) => seat.faction ?? null),
 });
+
+/** Der letzte Schritt eines Menschen, solange er sich zurücknehmen lässt. */
+interface UndoPoint {
+  readonly player: PlayerId;
+  /** Version vor und nach dem Schritt. */
+  readonly from: number;
+  readonly to: number;
+}
+
+const NOTHING_TO_UNDO = lobbyError('nothingToUndo', 'Es gibt keinen Schritt zum Zurücknehmen');
 
 /**
  * Anwendungsfälle des Online-Spiels (GRASP Controller): Lobby eröffnen, beitreten,
@@ -67,6 +86,8 @@ const tableOf = (lobby: Lobby, config: TableSpec['config']): TableSpec => ({
  */
 export class OnlineGames {
   private readonly queue = new SerialQueue();
+  /** Je Lobby der letzte zurücknehmbare Schritt; nur im Speicher, nach einem Neustart verfällt er. */
+  private readonly undoPoints = new Map<string, UndoPoint>();
 
   constructor(private readonly ports: OnlineGamesPorts) {}
 
@@ -113,8 +134,24 @@ export class OnlineGames {
     });
   }
 
+  /** Jeder wählt seine Fraktion vor dem Start; nur Fraktionen aus dem Inhalt. */
+  async chooseFaction(code: string, token: string, faction: unknown): Outcome<Lobby> {
+    const known = this.ports.games.context().content.factions.some((f) => f.id === faction);
+    if (typeof faction !== 'string' || !known)
+      return err(lobbyError('unknownFaction', 'Unbekannte Fraktion'));
+    return this.queue.run(code, async () => {
+      const lobby = await this.lobby(code);
+      if (!lobby.ok) return lobby;
+      const seat = seatOfToken(lobby.value, token);
+      if (!seat.ok) return seat;
+      const chosen = chooseFaction(lobby.value, seat.value, faction);
+      if (chosen.ok) await this.ports.lobbies.save(chosen.value);
+      return chosen;
+    });
+  }
+
   /** Commands laufen immer im Namen des eigenen Platzes, egal was der Browser schickt. */
-  async submit(code: string, token: string, command: GameCommand): Outcome<number> {
+  async submit(code: string, token: string, command: GameCommand): Outcome<CommandReceipt> {
     return this.queue.run(code, async () => {
       const lobby = await this.startedLobby(code);
       if (!lobby.ok) return lobby;
@@ -122,7 +159,25 @@ export class OnlineGames {
       if (!seat.ok) return seat;
       const issued = { ...command, issuedBy: seatPlayerId(seat.value) };
       const outcome = await this.ports.games.execute(lobby.value.gameId, issued);
-      return map(outcome, (done) => done.state.version);
+      return map(outcome, (done) => this.note(code, issued.issuedBy, done));
+    });
+  }
+
+  /** Den letzten eigenen Schritt zurücknehmen, solange seitdem nichts anderes geschah. */
+  async undo(code: string, token: string): Outcome<number> {
+    return this.queue.run(code, async () => {
+      const lobby = await this.startedLobby(code);
+      if (!lobby.ok) return lobby;
+      const seat = seatOfToken(lobby.value, token);
+      if (!seat.ok) return seat;
+      const point = this.undoPoints.get(code);
+      const state = await this.ports.games.load(lobby.value.gameId);
+      const player = seatPlayerId(seat.value);
+      if (point?.player !== player || !state.ok || state.value.version !== point.to)
+        return err(NOTHING_TO_UNDO);
+      this.undoPoints.delete(code);
+      const undone = await this.ports.games.undo(lobby.value.gameId, player, point.from);
+      return map(undone, (done) => done.state.version);
     });
   }
 
@@ -145,6 +200,16 @@ export class OnlineGames {
   async lobby(code: unknown): Outcome<Lobby> {
     const found = typeof code === 'string' ? await this.ports.lobbies.load(code) : null;
     return found === null ? err(lobbyError('notFound', 'Keine Partie mit diesem Code')) : ok(found);
+  }
+
+  /** Merkt sich einen zurücknehmbaren Schritt; jeder andere Schritt löscht den alten. */
+  private note(code: string, player: PlayerId, done: CommandOutcome): CommandReceipt {
+    const version = done.state.version;
+    const undoable = isReversible(done.events);
+    if (undoable)
+      this.undoPoints.set(code, { player, from: version - done.events.length, to: version });
+    else this.undoPoints.delete(code);
+    return { version, undoable };
   }
 
   private async startedLobby(code: string): Outcome<Lobby> {
@@ -183,6 +248,7 @@ export class OnlineGames {
         kind: 'open',
         name: null,
         token: null,
+        faction: null,
       })),
       started: false,
     };

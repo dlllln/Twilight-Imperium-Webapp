@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { LawsPanel } from '../src/components/agenda/LawsPanel.tsx';
 import { TurnPanel } from '../src/components/game/TurnPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { useGalaxyStore } from '../src/store.ts';
 import { pickAll, started } from './game-helpers.ts';
 

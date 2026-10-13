@@ -23,8 +23,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     null,
     { de: 'Willkommen bei Stellar Hegemony', en: 'Welcome to Stellar Hegemony' },
     {
-      de: 'Du führst ein Sternenreich. Wer zuerst 10 Siegpunkte sammelt, gewinnt. Gespielt wird am selben Bildschirm, gegen die KI oder online mit Freunden.',
-      en: 'You lead a stellar empire. The first to collect 10 victory points wins. Play on one screen, against the AI, or online with friends.',
+      de: 'Du führst ein Sternenreich. Wer zuerst 10 Siegpunkte sammelt, gewinnt. Gespielt wird in privaten Lobbys: Jeder sitzt an seinem eigenen Gerät, freie Plätze übernimmt die KI.',
+      en: 'You lead a stellar empire. The first to collect 10 victory points wins. Games run in private lobbies: everyone plays on their own device, the AI takes any open seat.',
     },
   ),
   step(
@@ -32,17 +32,17 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     'galaxy',
     { de: 'Die Galaxie', en: 'The galaxy' },
     {
-      de: 'Jedes Sechseck ist ein System. Unter jedem Planeten stehen Ressourcen (links) und Einfluss (rechts). Die Zahlen am Rand markieren die Heimatsysteme, in der Mitte liegt die Thronwelt. Nebel, Asteroiden, Supernovae und Gravitationsrisse erschweren den Flug. Mausrad zoomt, Ziehen verschiebt.',
-      en: 'Each hexagon is a system. Below each planet you see resources (left) and influence (right). The numbers on the rim mark home systems; the throne world sits in the centre. Nebulae, asteroids, supernovae and gravity rifts hinder travel. Scroll to zoom, drag to pan.',
+      de: 'Jedes Sechseck ist ein System. Unter jedem Planeten stehen Ressourcen (links) und Einfluss (rechts). Die Zahlen am Rand markieren die Heimatsysteme, in der Mitte liegt die Thronwelt. Nebel, Asteroiden, Supernovae und Gravitationsrisse erschweren den Flug. Mausrad oder zwei Finger zoomen, Ziehen verschiebt.',
+      en: 'Each hexagon is a system. Below each planet you see resources (left) and influence (right). The numbers on the rim mark home systems; the throne world sits in the centre. Nebulae, asteroids, supernovae and gravity rifts hinder travel. Scroll or pinch to zoom, drag to pan.',
     },
   ),
   step(
     'toolbar',
     'toolbar',
-    { de: 'Partie einrichten', en: 'Setting up' },
+    { de: 'Galaxie vorbereiten', en: 'Preparing the galaxy' },
     {
-      de: 'Hier wählst du Spielerzahl und KI-Gegner, würfelst eine neue Galaxie aus und startest. Rechts schaltest du Klang und Animationen und öffnest diese Anleitung wieder.',
-      en: 'Pick the number of players and AI opponents, roll a new galaxy and start. On the right you switch sound and animations and reopen this guide.',
+      de: 'Hier wählst du die Spielerzahl, würfelst eine neue Galaxie aus und probierst Kämpfe im Simulator. Rechts schaltest du Klang und Animationen und öffnest diese Anleitung wieder.',
+      en: 'Pick the number of players, roll a new galaxy and try battles in the simulator. On the right you switch sound and animations and reopen this guide.',
     },
   ),
   step(
@@ -50,8 +50,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     'online',
     { de: 'Online spielen', en: 'Playing online' },
     {
-      de: 'Eröffne eine Online-Partie und gib den Code weiter. Mitspieler treten mit dem Code bei. Beim Start übernimmt die KI alle freien Plätze. Verlierst du die Verbindung, bringt dich ein Neuladen auf deinen Platz zurück.',
-      en: 'Open an online game and share the code. Others join with it. At the start the AI takes every open seat. If you lose the connection, reloading brings you back to your seat.',
+      de: 'Eröffne eine Lobby und gib den Code weiter. Mitspieler treten mit dem Code auf ihrem Gerät bei, jeder wählt dort seine Fraktion. Beim Start übernimmt die KI alle freien Plätze. Verlierst du die Verbindung, bringt dich ein Neuladen auf deinen Platz zurück.',
+      en: 'Open a lobby and share the code. Others join with it on their own device and pick their faction there. At the start the AI takes every open seat. If you lose the connection, reloading brings you back to your seat.',
     },
   ),
   step(

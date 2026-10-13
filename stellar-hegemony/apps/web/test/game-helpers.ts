@@ -1,7 +1,7 @@
-import type { GameState, StrategyCardState } from '@stellar/domain';
+import { currentActor, type GameState, type StrategyCardState } from '@stellar/domain';
 import { useGameStore } from '../src/game-store.ts';
-import { createLocalGame, currentActor } from '../src/local-game.ts';
 import { useGalaxyStore } from '../src/store.ts';
+import { createLocalGame, seatTable } from './local-table.ts';
 
 /** Feste Galaxie, damit Tests nicht von einer zufälligen Karte abhängen. */
 const GALAXY_SEED = 4242;
@@ -20,7 +20,7 @@ export function started(): GameState {
 
 /** Jeder Spieler behält die ersten angebotenen geheimen Aufträge. */
 export function keepSecrets(game: GameState): GameState {
-  useGameStore.setState({ game, seed: 7, error: null });
+  seatTable(game);
   for (const player of game.players) {
     const choice = player.secretChoice;
     if (choice === null) continue;

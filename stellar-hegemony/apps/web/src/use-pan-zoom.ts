@@ -18,10 +18,13 @@ interface Point {
 
 export interface PanZoomHandlers {
   readonly cursor: Point;
-  /** Ob die letzte Zeigerbewegung ein Verschieben der Karte war. */
+  /** Ob der letzte Zeiger ein Finger war; dann stört ein Hinweis am Zeiger nur. */
+  readonly touch: boolean;
+  /** Ob die letzte Zeigerbewegung ein Verschieben oder Zoomen der Karte war. */
   readonly wasDrag: () => boolean;
   readonly onPointerDown: (event: PointerEvent<HTMLElement>) => void;
-  readonly onPointerUp: () => void;
+  readonly onPointerUp: (event: PointerEvent<HTMLElement>) => void;
+  readonly onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
   readonly onPointerMove: (event: PointerEvent<HTMLElement>) => void;
   readonly onWheel: (event: WheelEvent<HTMLElement>) => void;
 }
@@ -47,51 +50,121 @@ export function wheelFactor(deltaY: number, deltaMode = 0): number {
   return Math.min(MAX_WHEEL_STEP, Math.max(1 / MAX_WHEEL_STEP, factor));
 }
 
-type DragHandlers = Pick<PanZoomHandlers, 'onPointerDown' | 'onPointerUp' | 'wasDrag'> & {
-  readonly dragTo: (event: PointerEvent<HTMLElement>) => void;
-};
+type Pair = readonly [Point, Point];
 
-/** Meldet Zieh-Bewegungen in Bildschirm-Pixeln. */
-function useDrag(onDrag: (dx: number, dy: number) => void): DragHandlers {
-  const drag = useRef<Point | null>(null);
-  const travelled = useRef(0);
+const middle = ([a, b]: Pair): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+const span = ([a, b]: Pair): number => Math.hypot(a.x - b.x, a.y - b.y);
+
+/**
+ * Zwei Finger (reine Funktion): Der Abstand ändert den Zoom um den Mittelpunkt, ein Wandern
+ * des Mittelpunkts verschiebt die Karte – wie bei Karten-Apps auf dem Tablet.
+ */
+export function pinchStep(before: Pair, after: Pair) {
+  const from = middle(before);
+  const to = middle(after);
   return {
-    onPointerDown: (event) => {
-      drag.current = pointOf(event);
-      travelled.current = 0;
-    },
-    onPointerUp: () => (drag.current = null),
-    wasDrag: () => travelled.current > DRAG_THRESHOLD,
-    dragTo: (event) => {
-      if (drag.current === null) return;
-      const dx = event.clientX - drag.current.x;
-      const dy = event.clientY - drag.current.y;
-      travelled.current += Math.hypot(dx, dy);
-      onDrag(dx, dy);
-      drag.current = pointOf(event);
-    },
+    factor: span(after) / Math.max(1, span(before)),
+    center: to,
+    dx: to.x - from.x,
+    dy: to.y - from.y,
   };
 }
 
-/** Ziehen verschiebt, Mausrad zoomt zum Zeiger hin. Bildschirm-Pixel werden in SVG-Einheiten umgerechnet. */
+interface Gestures {
+  readonly pan: (dx: number, dy: number) => void;
+  readonly zoomAt: (factor: number, client: Point) => void;
+}
+
+type PointerHandlers = Pick<
+  PanZoomHandlers,
+  'onPointerDown' | 'onPointerUp' | 'onPointerCancel' | 'wasDrag'
+> & {
+  readonly moveTo: (event: PointerEvent<HTMLElement>) => void;
+};
+
+function firstTwo(points: ReadonlyMap<number, Point>): Pair | null {
+  const [a, b] = points.values();
+  return a === undefined || b === undefined ? null : [a, b];
+}
+
+function pinch(gestures: Gestures, before: Pair, after: Pair): void {
+  const step = pinchStep(before, after);
+  gestures.zoomAt(step.factor, step.center);
+  gestures.pan(step.dx, step.dy);
+}
+
+/** Finger (oder Maus) auf der Karte und wie weit sie seit dem Aufsetzen gewandert sind. */
+interface Touches {
+  readonly points: Map<number, Point>;
+  travelled: number;
+}
+
+/** Ein Finger oder die Maus verschiebt, zwei Finger zoomen; gemeldet in Bildschirm-Pixeln. */
+function moveFinger(touches: Touches, gestures: Gestures, event: PointerEvent<HTMLElement>) {
+  const before = touches.points.get(event.pointerId);
+  if (before === undefined) return;
+  // Außerhalb losgelassene Maustaste: kein Ziehen mehr.
+  if (event.pointerType === 'mouse' && event.buttons === 0) {
+    touches.points.delete(event.pointerId);
+    return;
+  }
+  const pair = firstTwo(touches.points);
+  touches.points.set(event.pointerId, pointOf(event));
+  const dx = event.clientX - before.x;
+  const dy = event.clientY - before.y;
+  touches.travelled += Math.hypot(dx, dy);
+  const after = firstTwo(touches.points);
+  if (pair === null || after === null) gestures.pan(dx, dy);
+  else pinch(gestures, pair, after);
+}
+
+function usePointers(gestures: Gestures): PointerHandlers {
+  const touches = useRef<Touches>({ points: new Map(), travelled: 0 }).current;
+  const release = (event: PointerEvent<HTMLElement>) => touches.points.delete(event.pointerId);
+  return {
+    onPointerDown: (event) => {
+      if (touches.points.size === 0) touches.travelled = 0;
+      touches.points.set(event.pointerId, pointOf(event));
+    },
+    onPointerUp: release,
+    onPointerCancel: release,
+    wasDrag: () => touches.travelled > DRAG_THRESHOLD,
+    moveTo: (event) => moveFinger(touches, gestures, event),
+  };
+}
+
+/** Zeigerposition relativ zur Karte, nicht zum Element darunter (z. B. einem Knopf über dem System). */
+function useCursor() {
+  const [cursor, setCursor] = useState<Point>({ x: 0, y: 0 });
+  const [touch, setTouch] = useState(false);
+  const track = (event: PointerEvent<HTMLElement>) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    setCursor({ x: event.clientX - box.left, y: event.clientY - box.top });
+    setTouch(event.pointerType === 'touch');
+  };
+  return { cursor, touch, track };
+}
+
+/**
+ * Ziehen verschiebt, Mausrad und zwei Finger zoomen zum Zeiger hin. Bildschirm-Pixel werden in
+ * SVG-Einheiten umgerechnet.
+ */
 export function usePanZoom(
   svg: RefObject<SVGSVGElement | null>,
   viewWidth: number,
   zoomAt: (factor: number, client: Point) => void,
 ): PanZoomHandlers {
-  /** Relativ zur Karte, nicht zum Element unter dem Zeiger (z. B. einem Knopf über dem System). */
-  const [cursor, setCursor] = useState<Point>({ x: 0, y: 0 });
+  const { cursor, touch, track } = useCursor();
   const scale = () => viewWidth / Math.max(1, svg.current?.clientWidth ?? 1);
-  const { dragTo, ...drag } = useDrag(useDragPan(scale));
-  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
-    const box = event.currentTarget.getBoundingClientRect();
-    setCursor({ x: event.clientX - box.left, y: event.clientY - box.top });
-    dragTo(event);
-  };
+  const { moveTo, ...pointers } = usePointers({ pan: useDragPan(scale), zoomAt });
   return {
     cursor,
-    ...drag,
-    onPointerMove,
+    touch,
+    ...pointers,
+    onPointerMove: (event) => {
+      track(event);
+      moveTo(event);
+    },
     onWheel: (event) => zoomAt(wheelFactor(event.deltaY, event.deltaMode), pointOf(event)),
   };
 }

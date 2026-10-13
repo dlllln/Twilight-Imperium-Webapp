@@ -60,6 +60,21 @@ export class SocketGateway {
   }
 
   private register(socket: GameSocket): void {
+    this.registerLobby(socket);
+    socket.on('lobby:faction', (request, ack) =>
+      this.answer(ack, async () => this.faction(socket, request)),
+    );
+    socket.on('game:undo', (_, ack) => this.answer(ack, async () => this.undo(socket)));
+    socket.on('game:command', (command, ack) =>
+      this.answer(ack, async () => this.command(socket, command)),
+    );
+    socket.on('disconnect', () => {
+      const code = socket.data.ticket?.code;
+      if (code !== undefined) void this.broadcastLobby(code);
+    });
+  }
+
+  private registerLobby(socket: GameSocket): void {
     const { online } = this.services;
     socket.on('lobby:create', (request, ack) =>
       this.answer(ack, async () => this.seated(socket, await online.create(request))),
@@ -71,13 +86,6 @@ export class SocketGateway {
       this.answer(ack, async () => this.resumed(socket, ticket)),
     );
     socket.on('lobby:start', (_, ack) => this.answer(ack, async () => this.start(socket)));
-    socket.on('game:command', (command, ack) =>
-      this.answer(ack, async () => this.command(socket, command)),
-    );
-    socket.on('disconnect', () => {
-      const code = socket.data.ticket?.code;
-      if (code !== undefined) void this.broadcastLobby(code);
-    });
   }
 
   /** Fehler aus dem Browser oder der Speicherung dürfen den Server nie anhalten. */
@@ -123,6 +131,22 @@ export class SocketGateway {
     if (!started.ok) return started;
     await this.broadcastLobby(ticket.code);
     return ok(lobbyView(started.value, []));
+  }
+
+  private async faction(socket: GameSocket, request: unknown) {
+    const ticket = socket.data.ticket;
+    if (ticket === undefined) return failure('lobby.unknownSeat', 'Erst einer Partie beitreten');
+    const { faction } = (request ?? {}) as { faction?: unknown };
+    const chosen = await this.services.online.chooseFaction(ticket.code, ticket.token, faction);
+    if (!chosen.ok) return chosen;
+    await this.broadcastLobby(ticket.code);
+    return ok(lobbyView(chosen.value, []));
+  }
+
+  private async undo(socket: GameSocket) {
+    const ticket = socket.data.ticket;
+    if (ticket === undefined) return failure('lobby.unknownSeat', 'Erst einer Partie beitreten');
+    return this.services.online.undo(ticket.code, ticket.token);
   }
 
   private async command(socket: GameSocket, command: unknown) {

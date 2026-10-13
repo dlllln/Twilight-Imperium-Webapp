@@ -220,6 +220,7 @@ function useFlyTo(bounds: Bounds, view: BoardView, svg: RefObject<SVGSVGElement 
 function usePicking(wasDrag: () => boolean, flyTo: (hex: SceneHex) => void) {
   return (hex: SceneHex) => {
     if (wasDrag()) return;
+    useSettingsStore.getState().markHintSeen();
     const { game, selected, select } = useGameStore.getState();
     if (game === null || hex.systemId === selected) flyTo(hex);
     else select(hex.systemId);
@@ -305,17 +306,20 @@ function useFlatFallback(): readonly [boolean, () => void] {
   return [flat, useCallback(() => setFlat(true), [])];
 }
 
-/** Hinweis am Zeiger; beim Nahzoom übernehmen die Schilder an Planeten und Flotten. */
+/** Hinweis am Zeiger; beim Nahzoom übernehmen die Schilder an Planeten und Flotten, am Tablet die Knöpfe. */
 function MapTooltip({
   hexes,
   cursor,
+  touch,
 }: {
   readonly hexes: readonly SceneHex[];
   readonly cursor: Point;
+  readonly touch: boolean;
 }) {
   const { hovered, viewport } = useGalaxyStore();
   const hex = hexes.find((candidate) => candidate.key === hovered);
-  if (hex === undefined || viewport.zoom >= CLOSE_ZOOM) return null;
+  // Mit dem Finger gibt es kein Zeigen ohne Tippen: dort übernehmen Knöpfe und Nahzoom.
+  if (hex === undefined || touch || viewport.zoom >= CLOSE_ZOOM) return null;
   return <HexTooltip hex={hex} x={cursor.x} y={cursor.y} />;
 }
 
@@ -326,7 +330,7 @@ export function GalaxyMap(): ReactElement {
   const { view, target } = useBoardView(hexes);
   const bounds = useBounds(hexes, target);
   const { svg, size, flyTo, zoom } = useMapCamera(bounds, view);
-  const { cursor, wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
+  const { cursor, touch, wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
   const [flat, onUnavailable] = useFlatFallback();
   const pick = usePicking(wasDrag, flyTo);
   return (
@@ -338,7 +342,7 @@ export function GalaxyMap(): ReactElement {
       )}
       <HexTargets {...{ hexes, bounds, viewport, view }} ref={svg} onPick={pick} onView={flyTo} />
       <CloseUpLabels {...{ hexes, bounds, viewport, view, size }} />
-      <MapTooltip hexes={hexes} cursor={cursor} />
+      <MapTooltip hexes={hexes} cursor={cursor} touch={touch} />
       <MapControls onZoom={(factor) => zoom(factor)} onReset={useCameraStore.getState().back} />
       <Overlays />
     </div>

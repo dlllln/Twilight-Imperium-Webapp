@@ -5,10 +5,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { ObjectivesPanel } from '../src/components/objectives/ObjectivesPanel.tsx';
 import { TurnPanel } from '../src/components/game/TurnPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { useGalaxyStore } from '../src/store.ts';
 import { holding, Live } from './card-form-helpers.tsx';
 import { pickAll, started } from './game-helpers.ts';
+import { seatTable } from './local-table.ts';
 
 afterEach(cleanup);
 
@@ -36,7 +37,7 @@ function statusPhase(): GameState {
 describe('Geheime Aufträge zu Spielbeginn (RR 12.20)', () => {
   it('jeder Spieler behält genau einen; erst danach wird gewählt', () => {
     useGalaxyStore.setState({ language: 'de' });
-    useGameStore.setState({ game: started(), error: null });
+    seatTable(started());
     render(<LivePanel />);
     const keep = () => screen.getByRole<HTMLButtonElement>('button', { name: 'Behalten' });
     expect(keep().disabled).toBe(true);

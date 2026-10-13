@@ -1,8 +1,20 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
-import { chooseFactions } from './draft.ts';
+import {
+  actorPage,
+  declineSecondaries,
+  freePick,
+  keepSecrets,
+  NAMES,
+  openTable,
+  phaseOf,
+  pickFirstFree,
+  whereVisible,
+} from './table.ts';
 
-/** Eine freie Strategiekarte in der Hand, die nicht gerade ausfliegt. */
-const FREE_PICK = '.hand-card[data-kind="pick"]:not([data-leaving])';
+/*
+ * Drei Menschen, drei Geräte: Jeder sieht nur seine eigene Hand und entscheidet nur auf
+ * seinem Gerät. Ein Gerät pro Mensch, wie im echten Spiel.
+ */
 
 const center = async (locator: Locator) => {
   const box = await locator.boundingBox();
@@ -10,10 +22,13 @@ const center = async (locator: Locator) => {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 };
 
-/** Ein Nachbarfeld der Heimat des Spielers am Zug, ohne Anomalie und ohne fremde Heimat. */
-async function neighbourOfActiveHome(page: Page): Promise<Locator> {
-  const actor = await page.getByTestId('actor').innerText();
-  const seat = /P(\d)/.exec(actor)?.[1] ?? '';
+// Drei Geräte mit Software-Rendering teilen sich den Rechner; der Ablauf braucht Luft.
+test.describe.configure({ timeout: 180_000 });
+
+const seatOf = (pages: readonly Page[], page: Page) => String(pages.indexOf(page) + 1);
+
+/** Ein Nachbarfeld der eigenen Heimat, ohne Anomalie und ohne fremde Heimat. */
+async function neighbourOfHome(page: Page, seat: string): Promise<Locator> {
   const home = await center(page.locator(`[data-seat="${seat}"]`));
   const hexes = page.locator('[data-system]:not([data-anomaly]):not([data-seat])');
   const centers = await Promise.all((await hexes.all()).map(center));
@@ -35,136 +50,136 @@ async function skipRemainingSteps(page: Page) {
   }
 }
 
-/** RR 12.20: jeder Spieler behält einen der beiden gezogenen geheimen Aufträge. */
-async function keepSecrets(page: Page) {
-  for (let player = 0; player < 3; player += 1) {
-    await page.locator('.secret-choice input[type="checkbox"]').first().check();
-    await page.getByRole('button', { name: 'Behalten' }).click();
-  }
-  await expect(page.locator('.secret-choice')).toHaveCount(0);
+/** Auf dem Gerät, das die Karte gerade wählen darf, genau diese Karte nehmen. */
+async function pickCard(pages: readonly Page[], name: string) {
+  const page = await whereVisible(pages, freePick);
+  await page.getByRole('button', { name, exact: true }).click();
+  await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
 }
 
-async function startThreePlayers(page: Page) {
-  await page.goto('/');
-  await page.getByLabel('Spieler').selectOption('3');
-  await page.getByRole('button', { name: 'Partie starten' }).click();
-  await chooseFactions(page);
-  await keepSecrets(page);
+async function startTable(browser: Parameters<typeof openTable>[0]) {
+  const pages = await openTable(browser);
+  await keepSecrets(pages);
+  return pages;
 }
 
-async function pickCards(page: Page) {
-  for (let pick = 0; pick < 6; pick += 1) await page.locator(FREE_PICK).first().click();
-}
+test('Lobby zu dritt: Führung, Diplomatie, taktische Aktion mit Rückgängig und Verlauf', async ({
+  browser,
+}) => {
+  const pages = await startTable(browser);
+  const [host] = pages as [Page];
+  await expect(host.locator('.victory-track li')).toHaveCount(3);
+  await expect(host.locator('.strategy-card')).toHaveCount(8);
+  await pickFirstFree(pages, 6);
+  for (const page of pages) await expect(phaseOf(page)).toHaveText('Aktion');
 
-test('Hot-Seat: Führung, Diplomatie und eine taktische Aktion mit Bewegung', async ({ page }) => {
-  await startThreePlayers(page);
+  const leader = await actorPage(pages);
+  await leader.getByRole('button', { name: 'Strategische Aktion: Führung' }).click();
+  await expect(leader.getByTestId('tokens-gained')).toHaveText('3');
+  await leader.getByRole('button', { name: 'Taktik +' }).click();
+  await leader.getByRole('button', { name: 'Taktik +' }).click();
+  await leader.getByRole('button', { name: 'Flotte +' }).click();
+  await leader.getByRole('button', { name: 'Ausführen' }).click();
+  await declineSecondaries(pages, 2);
 
-  const phase = page.locator('.phases [aria-current="step"]');
-  await expect(phase).toHaveText('Strategie');
-  await expect(page.locator('.strategy-card')).toHaveCount(8);
-  await pickCards(page);
-  await expect(phase).toHaveText('Aktion');
+  const diplomat = await whereVisible(pages, (page) =>
+    page.getByRole('button', { name: 'Strategische Aktion: Diplomatie' }),
+  );
+  await diplomat.getByRole('button', { name: 'Strategische Aktion: Diplomatie' }).click();
+  await expect(diplomat.getByLabel('System wählen')).toBeVisible();
+  await diplomat.getByRole('button', { name: 'Ausführen' }).click();
+  await declineSecondaries(pages, 2);
 
-  await page.getByRole('button', { name: 'Strategische Aktion: Führung' }).click();
-  await expect(page.getByTestId('tokens-gained')).toHaveText('3');
-  await page.getByRole('button', { name: 'Taktik +' }).click();
-  await page.getByRole('button', { name: 'Taktik +' }).click();
-  await page.getByRole('button', { name: 'Flotte +' }).click();
-  await page.getByRole('button', { name: 'Ausführen' }).click();
-  await expect(page.getByRole('heading', { name: /Sekundärfähigkeit/ })).toBeVisible();
-  await page.getByRole('button', { name: 'Ablehnen' }).click();
-  await page.getByRole('button', { name: 'Ablehnen' }).click();
-
-  await page.getByRole('button', { name: 'Strategische Aktion: Diplomatie' }).click();
-  await expect(page.getByLabel('System wählen')).toBeVisible();
-  await page.getByRole('button', { name: 'Ausführen' }).click();
-  await page.getByRole('button', { name: 'Ablehnen' }).click();
-  await page.getByRole('button', { name: 'Ablehnen' }).click();
-
-  const target = await neighbourOfActiveHome(page);
+  const active = await actorPage(pages);
+  const target = await neighbourOfHome(active, seatOf(pages, active));
   await target.click();
-  await expect(page.getByText(/^Gewählt:/)).toBeVisible();
-  await page.getByRole('button', { name: 'System aktivieren', exact: true }).click();
-  await expect(page.getByRole('heading', { name: /Aktiviertes System/ })).toBeVisible();
-  await page.locator('.ship-choices input[type="checkbox"]').first().check();
-  await page.getByRole('button', { name: 'Schiffe bewegen' }).click();
-  await skipRemainingSteps(page);
+  await active.getByRole('button', { name: 'System aktivieren', exact: true }).click();
+  await expect(active.getByRole('heading', { name: /Aktiviertes System/ })).toBeVisible();
+  await active.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(active.getByRole('heading', { name: /Aktiviertes System/ })).toHaveCount(0);
+
+  await target.click();
+  await active.getByRole('button', { name: 'System aktivieren', exact: true }).click();
+  await active.locator('.ship-choices input[type="checkbox"]').first().check();
+  await active.getByRole('button', { name: 'Schiffe bewegen' }).click();
+  await skipRemainingSteps(active);
   await expect(
-    page.getByText(/Alle Schritte dieser taktischen Aktion sind erledigt/),
+    active.getByText(/Alle Schritte dieser taktischen Aktion sind erledigt/),
   ).toBeVisible();
+  const actorBefore = await active.getByTestId('actor').innerText();
+  await active.getByRole('button', { name: 'Taktische Aktion beenden' }).click();
+  await expect(host.getByTestId('actor')).not.toHaveText(actorBefore);
 
-  const actorBefore = await page.getByTestId('actor').innerText();
-  await page.getByRole('button', { name: 'Taktische Aktion beenden' }).click();
-  await expect(page.getByTestId('actor')).not.toHaveText(actorBefore);
-
-  await page.getByRole('button', { name: 'Zur Galaxie' }).click();
-  await expect(page.getByRole('button', { name: 'Neue Galaxie' })).toBeVisible();
+  const watcher = pages.find((page) => page !== active) ?? host;
+  await watcher.getByRole('tab', { name: 'Verlauf' }).click();
+  const history = watcher.getByRole('tabpanel', { name: 'Verlauf' });
+  await expect(history).toContainText('nimmt den letzten Schritt zurück');
+  await expect(history).toContainText('bewegt');
 });
 
-test('Hot-Seat: Produktion im eigenen Heimatsystem', async ({ page }) => {
-  await startThreePlayers(page);
-  await pickCards(page);
-
-  const actor = await page.getByTestId('actor').innerText();
-  const seat = /P(\d)/.exec(actor)?.[1] ?? '';
-  await page.locator(`[data-seat="${seat}"]`).click();
-  await page.getByRole('button', { name: 'System aktivieren', exact: true }).click();
-  await page.getByRole('button', { name: 'Ohne Bewegung weiter' }).click();
-  await expect(page.getByRole('heading', { name: 'Produktion' })).toBeVisible();
-  await page.getByRole('button', { name: 'Infanterie +' }).click();
-  await page.getByRole('button', { name: 'Infanterie +' }).click();
-  await expect(page.getByTestId('production-cost')).toHaveText('1');
-  await page.locator('.payment input[type="checkbox"]').first().check();
-  await page.getByRole('button', { name: 'Produzieren' }).click();
+test('Lobby zu dritt: Produktion im eigenen Heimatsystem', async ({ browser }) => {
+  const pages = await startTable(browser);
+  await pickFirstFree(pages, 6);
+  const active = await actorPage(pages);
+  const actor = await active.getByTestId('actor').innerText();
+  await active.locator(`[data-seat="${seatOf(pages, active)}"]`).click();
+  await active.getByRole('button', { name: 'System aktivieren', exact: true }).click();
+  await active.getByRole('button', { name: 'Ohne Bewegung weiter' }).click();
+  await expect(active.getByRole('heading', { name: 'Produktion' })).toBeVisible();
+  await active.getByRole('button', { name: 'Infanterie +' }).click();
+  await active.getByRole('button', { name: 'Infanterie +' }).click();
+  await expect(active.getByTestId('production-cost')).toHaveText('1');
+  await active.locator('.payment input[type="checkbox"]').first().check();
+  await active.getByRole('button', { name: 'Produzieren' }).click();
   await expect(
-    page.getByText(/Alle Schritte dieser taktischen Aktion sind erledigt/),
+    active.getByText(/Alle Schritte dieser taktischen Aktion sind erledigt/),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Taktische Aktion beenden' }).click();
-  await expect(page.getByTestId('actor')).not.toHaveText(actor);
+  await active.getByRole('button', { name: 'Taktische Aktion beenden' }).click();
+  await expect(active.getByTestId('actor')).not.toHaveText(actor);
 });
 
-test('Hot-Seat: Technologie bringt eine neue Technologie', async ({ page }) => {
-  await startThreePlayers(page);
-  const free = page.locator(FREE_PICK);
-  for (let pick = 0; pick < 3; pick += 1) await free.first().click();
-  await page.getByRole('button', { name: 'Technologie', exact: true }).click();
-  for (let pick = 0; pick < 2; pick += 1) await free.first().click();
+test('Lobby zu dritt: Technologie bringt eine neue Technologie', async ({ browser }) => {
+  const pages = await startTable(browser);
+  await pickFirstFree(pages, 3);
+  await pickCard(pages, 'Technologie');
+  await pickFirstFree(pages, 2);
 
-  const chips = page.locator('.tech-owners .tech-chip');
+  const researcher = await whereVisible(pages, (page) =>
+    page.getByRole('button', { name: 'Strategische Aktion: Technologie' }),
+  );
+  const chips = researcher.locator('.tech-owners .tech-chip');
   const before = await chips.count();
-  await page.getByRole('button', { name: 'Strategische Aktion: Technologie' }).click();
-  await page.locator('.tech-option:not(.locked) input').first().check();
-  await expect(page.getByTestId('paid')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Erforschen' }).click();
-  await expect(page.getByRole('heading', { name: /Sekundärfähigkeit/ })).toBeVisible();
+  await researcher.getByRole('button', { name: 'Strategische Aktion: Technologie' }).click();
+  await researcher.locator('.tech-option:not(.locked) input').first().check();
+  await expect(researcher.getByTestId('paid')).toHaveCount(0);
+  await researcher.getByRole('button', { name: 'Erforschen' }).click();
   await expect(chips).toHaveCount(before + 1);
-  await page.getByRole('button', { name: 'Ablehnen' }).click();
-  await page.getByRole('button', { name: 'Ablehnen' }).click();
+  await declineSecondaries(pages, 2);
 });
 
-test('Hot-Seat: Aufträge und Siegpunkte sind sichtbar', async ({ page }) => {
-  await startThreePlayers(page);
-  await expect(page.locator('.victory-track li')).toHaveCount(3);
-  await expect(page.locator('.objective-row .objective-card:not(.hidden)')).not.toHaveCount(0);
-  await pickCards(page);
-  await page.getByRole('tab', { name: 'Wertung' }).click();
-  await expect(page.getByRole('heading', { name: /Geheime Aufträge von/ })).toBeVisible();
-});
+test('Lobby zu dritt: Politik bringt Aktionskarten, Wertung zeigt nur die eigenen Geheimaufträge', async ({
+  browser,
+}) => {
+  const pages = await startTable(browser);
+  await pickFirstFree(pages, 2);
+  await pickCard(pages, 'Konstruktion');
+  await pickCard(pages, 'Politik');
+  await pickFirstFree(pages, 2);
 
-test('Hot-Seat: Politik bringt Aktionskarten auf die Hand', async ({ page }) => {
-  await startThreePlayers(page);
-  await expect(page.locator('.hand-dock .action-card')).toHaveCount(0);
-  const free = page.locator(FREE_PICK);
-  for (let pick = 0; pick < 2; pick += 1) await free.first().click();
-  await page.getByRole('button', { name: 'Konstruktion', exact: true }).click();
-  await page.getByRole('button', { name: 'Politik', exact: true }).click();
-  for (let pick = 0; pick < 2; pick += 1) await free.first().click();
+  const politician = await whereVisible(pages, (page) =>
+    page.getByRole('button', { name: 'Strategische Aktion: Politik' }),
+  );
+  await expect(politician.locator('.hand-dock .action-card')).toHaveCount(0);
+  await politician.getByRole('button', { name: 'Strategische Aktion: Politik' }).click();
+  await politician.getByRole('button', { name: 'Ausführen' }).click();
+  await expect(politician.locator('.hand-dock .action-card')).not.toHaveCount(0);
+  const drawer = await whereVisible(pages, (page) => page.getByText('Du ziehst 2 Aktionskarten.'));
+  await drawer.getByRole('button', { name: 'Ausführen' }).click();
+  await expect(drawer.locator('.hand-dock .action-card')).not.toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Strategische Aktion: Politik' }).click();
-  await page.getByRole('button', { name: 'Ausführen' }).click();
-  await expect(page.getByText('Du ziehst 2 Aktionskarten.')).toBeVisible();
-  await page.getByRole('button', { name: 'Ausführen' }).click();
-  await page.getByRole('button', { name: 'Ablehnen' }).click();
-  await expect(page.locator('[data-testid^="hand-p"]', { hasText: '▤ 2' })).toHaveCount(2);
-  await expect(page.locator('.hand-dock .action-card')).not.toHaveCount(0);
+  const other = pages.find((page) => page !== politician) ?? politician;
+  await other.getByRole('tab', { name: 'Wertung' }).click();
+  await expect(other.getByRole('heading', { name: /Geheime Aufträge von/ })).toBeVisible();
+  const name = NAMES[pages.indexOf(other)] ?? '';
+  await expect(other.getByRole('heading', { name: /Geheime Aufträge von/ })).toContainText(name);
 });

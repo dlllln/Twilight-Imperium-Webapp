@@ -1,5 +1,6 @@
 import type {
   ClientToServer,
+  CommandReceipt,
   CreateLobbyRequest,
   GameUpdate,
   JoinLobbyRequest,
@@ -18,7 +19,9 @@ export interface OnlineConnection {
   join(request: JoinLobbyRequest): Reply<SeatTicket>;
   resume(ticket: Pick<SeatTicket, 'code' | 'token'>): Reply<SeatTicket>;
   start(): Reply<LobbyView>;
-  command(command: GameCommand): Reply<number>;
+  faction(faction: string): Reply<LobbyView>;
+  command(command: GameCommand): Reply<CommandReceipt>;
+  undo(): Reply<number>;
   close(): void;
 }
 
@@ -59,7 +62,9 @@ export const socketConnector: Connector = (events) => {
     join: (request) => ask(socket, (s) => s.emitWithAck('lobby:join', request)),
     resume: (ticket) => ask(socket, (s) => s.emitWithAck('lobby:resume', ticket)),
     start: () => ask(socket, (s) => s.emitWithAck('lobby:start', {})),
+    faction: (faction) => ask(socket, (s) => s.emitWithAck('lobby:faction', { faction })),
     command: (command) => ask(socket, (s) => s.emitWithAck('game:command', command)),
+    undo: () => ask(socket, (s) => s.emitWithAck('game:undo', {})),
     close: () => socket.disconnect(),
   };
 };

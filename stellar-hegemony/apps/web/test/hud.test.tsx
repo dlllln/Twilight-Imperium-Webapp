@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { FACTIONS } from '@stellar/content';
+import { type LobbyView, seatPlayerId } from '@stellar/application';
 import type { GameState, PlayerId } from '@stellar/domain';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FactionDraft } from '../src/components/faction/FactionDraft.tsx';
 import { PhaseDock } from '../src/components/hud/PhaseDock.tsx';
@@ -9,12 +10,12 @@ import { ResourceBar } from '../src/components/hud/ResourceBar.tsx';
 import { useGameStore } from '../src/game-store.ts';
 import { empireSummary, endTurnOf, playerRail } from '../src/hud/hud-model.ts';
 import { systemActions } from '../src/hud/system-actions.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { useSettingsStore } from '../src/settings-store.ts';
-import { useDraftStore } from '../src/setup/draft-store.ts';
-import { seatFactions, takenSeats } from '../src/setup/faction-draft.ts';
+import { suggestion, takenSeats, useFactionPick } from '../src/setup/faction-draft.ts';
+import { useOnlineStore } from '../src/online/online-store.ts';
 import { content, useGalaxyStore } from '../src/store.ts';
-import { keepSecrets, pickAll, started, threePlayerLayout } from './game-helpers.ts';
+import { keepSecrets, pickAll, started } from './game-helpers.ts';
 
 beforeEach(() => {
   useGalaxyStore.setState({ language: 'de' });
@@ -31,45 +32,38 @@ const homeOf = (state: GameState, player: PlayerId | null) =>
     system.spaceUnits.some((unit) => unit.owner === player),
   );
 
-describe('Fraktionswahl vor der Partie', () => {
-  it('RR 80: gewählte Fraktionen sitzen auf den ersten Plätzen, die KI bekommt die übrigen', () => {
-    const order = seatFactions(FACTIONS, [idOf(3), idOf(1)]).map((faction) => faction.id);
-    expect(order.slice(0, 2)).toEqual([idOf(3), idOf(1)]);
-    expect(new Set(order).size).toBe(FACTIONS.length);
-    expect(takenSeats([idOf(3), idOf(1)])).toEqual({ [idOf(3)]: 1, [idOf(1)]: 2 });
+describe('Fraktionswahl in der Lobby', () => {
+  const seats: LobbyView['seats'] = [
+    { seat: 0, kind: 'human', name: 'Anna', faction: idOf(3), connected: true },
+    { seat: 1, kind: 'human', name: 'Ben', faction: null, connected: true },
+    { seat: 2, kind: 'open', name: null, faction: idOf(0), connected: false },
+  ];
+
+  it('RR 80: was andere gewählt haben, ist mit ihrem Platz gesperrt; die eigene Wahl nicht', () => {
+    expect(takenSeats(seats, 1)).toEqual({ [idOf(3)]: 1, [idOf(0)]: 3 });
+    expect(takenSeats(seats, 0)).toEqual({ [idOf(0)]: 3 });
+    expect(suggestion(FACTIONS, seats, 0)).toBe(idOf(3));
+    expect(suggestion(FACTIONS, seats, 1)).toBe(idOf(1));
   });
 
-  it('jeder Mensch wählt der Reihe nach; vergebene Fraktionen sind gesperrt, Zurück nimmt zurück', () => {
-    threePlayerLayout();
-    useGalaxyStore.setState({ botCount: 1 });
-    useDraftStore.getState().begin();
+  it('jeder wählt auf seinem Gerät; gesperrte Fraktionen lassen sich nicht ansehen, Wählen schickt die Wahl', async () => {
+    const chosen: string[] = [];
+    useOnlineStore.setState({
+      ticket: { code: 'QX7K2M', token: 't', seat: 1, player: seatPlayerId(1) },
+      lobby: { code: 'QX7K2M', started: false, seats },
+      chooseFaction: (faction) => (chosen.push(faction), Promise.resolve(true)),
+    });
+    useFactionPick.getState().begin(suggestion(FACTIONS, seats, 1));
     render(<FactionDraft />);
-    expect(screen.getByText('P1 wählt eine Fraktion')).toBeTruthy();
-    fireEvent.click(screen.getAllByRole('radio')[2] as HTMLElement);
-    fireEvent.click(screen.getByRole('button', { name: 'Wählen' }));
     expect(screen.getByText('P2 wählt eine Fraktion')).toBeTruthy();
     expect(screen.getByText('P1')).toBeTruthy();
-    useDraftStore.getState().show(idOf(2));
-    expect(useDraftStore.getState().preview).not.toBe(idOf(2));
-    fireEvent.click(screen.getByRole('button', { name: 'Zurück' }));
-    expect(useDraftStore.getState()).toMatchObject({ picks: [], preview: idOf(2) });
-  });
-
-  it('nach dem letzten Menschen beginnt die Partie mit den gewählten Fraktionen', () => {
-    threePlayerLayout();
-    useGalaxyStore.setState({ botCount: 1 });
-    useDraftStore.getState().begin();
-    useDraftStore.getState().show(idOf(4));
-    useDraftStore.getState().choose();
-    useDraftStore.getState().show(idOf(5));
-    useDraftStore.getState().choose();
-    expect(useDraftStore.getState().open).toBe(false);
-    expect(
-      game()
-        .players.map((player) => player.faction)
-        .slice(0, 2),
-    ).toEqual([idOf(4), idOf(5)]);
-    expect(useGameStore.getState().bots).toHaveLength(1);
+    fireEvent.click(screen.getAllByRole('radio')[3] as HTMLElement);
+    expect(useFactionPick.getState().preview).toBe(idOf(1));
+    fireEvent.click(screen.getAllByRole('radio')[2] as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: 'Wählen' }));
+    await act(() => Promise.resolve());
+    expect(chosen).toEqual([idOf(2)]);
+    expect(useFactionPick.getState().open).toBe(false);
   });
 });
 
@@ -99,8 +93,8 @@ describe('Anzeigen über der Karte', () => {
     const actor = currentActor(state) as PlayerId;
     const home = homeOf(state, actor);
     if (home === undefined) throw new Error('kein Heimatsystem');
-    expect(systemActions(state, actor, home.id, 7)).toEqual(['view', 'activate']);
-    expect(systemActions(state, null, home.id, 7)).toEqual(['view']);
+    expect(systemActions(state, actor, home.id)).toEqual(['view', 'activate']);
+    expect(systemActions(state, null, home.id)).toEqual(['view']);
     useGameStore.getState().send({ type: 'ActivateSystem', issuedBy: actor, system: home.id });
     expect(endTurnOf(game(), actor)).toEqual({ kind: 'endTactical', ready: false });
     render(<PhaseDock game={game()} />);

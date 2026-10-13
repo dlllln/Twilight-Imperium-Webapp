@@ -1,11 +1,12 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import type { GameState } from '@stellar/domain';
-import { Flag, Layers, type LucideIcon, Trophy, X } from 'lucide-react';
+import { Flag, History, Layers, type LucideIcon, Trophy, X } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
 import type { MessageKey } from '../../i18n.ts';
 import { useT } from '../../use-translation.ts';
 import { LawsPanel } from '../agenda/LawsPanel.tsx';
 import { FactionsPanel } from '../faction/FactionsPanel.tsx';
+import { HistoryPanel } from '../history/HistoryPanel.tsx';
 import { ObjectivesPanel } from '../objectives/ObjectivesPanel.tsx';
 import { TechnologyPanel } from '../technology/TechnologyPanel.tsx';
 import { IconButton } from '../ui/IconButton.tsx';
@@ -17,6 +18,7 @@ const TABS: readonly (readonly [SidebarTab, MessageKey, LucideIcon])[] = [
   ['turn', 'strategyCards', Layers],
   ['score', 'tabScore', Trophy],
   ['empire', 'tabEmpire', Flag],
+  ['history', 'tabHistory', History],
 ];
 
 const isTab = (value: string): value is SidebarTab => TABS.some(([tab]) => tab === value);
@@ -76,11 +78,14 @@ function DrawerBody({ game, open }: { readonly game: GameState; readonly open: b
         <FactionsPanel game={game} />
         <LawsPanel game={game} />
       </TabPanel>
+      <TabPanel value="history">
+        <HistoryPanel game={game} />
+      </TabPanel>
     </div>
   );
 }
 
-/** Übersicht als Schublade über der Karte: Kartenauslage, Wertung und das eigene Reich. */
+/** Übersicht als Schublade über der Karte: Kartenauslage, Wertung, das eigene Reich, Verlauf. */
 export function GameSidebar({ game }: { readonly game: GameState }): ReactElement {
   const { tab, open } = useSidebarStore();
   const choose = (value: string) => {

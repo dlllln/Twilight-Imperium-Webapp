@@ -1,5 +1,6 @@
 import * as Popover from '@radix-ui/react-popover';
 import { type GameState, type PlayerId, systemId } from '@stellar/domain';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AnimatePresence, motion, type PanInfo, useIsPresent } from 'motion/react';
 import { type CSSProperties, type ReactElement, useRef, useState } from 'react';
 import { useGameStore, useHumanActor, useViewer } from '../../game-store.ts';
@@ -150,45 +151,73 @@ function TargetedCard(props: Omit<CardProps, 'onPlay'>): ReactElement {
   );
 }
 
-/** Wer sieht welche Hand: der Spieler am Zug, online der eigene Platz. */
+/** Die eigene Hand; spielbar ist, was der eigene Platz gerade darf. */
 function useEntries(game: GameState): readonly HandEntry[] {
   const actor = useHumanActor(game);
-  const viewer: PlayerId | null = useViewer(game);
+  const viewer: PlayerId | null = useViewer();
   const selected = useGameStore((state) => state.selected);
   const chosen = useHandStore((state) => state.chosen);
   const choosing = chosen !== null && chosen.player === actor;
   return handEntries({ game, actor, viewer, selected, choosing });
 }
 
-/** Wessen Hand gerade zu sehen ist; am Hot-Seat-Bildschirm wechselt sie mit dem Zug. */
-function HandOwner({ game }: { readonly game: GameState }): ReactElement | null {
+/** In der Strategiephase wählt man nur über die Hand; dann liegt sie offen, sonst eingeklappt. */
+const neededNow = (game: GameState, entries: readonly HandEntry[]): boolean =>
+  game.phase === 'strategy' && entries.some((entry) => entry.kind === 'pick' && entry.playable);
+
+/** Klappt die Hand aus oder ein; solange sie gebraucht wird, liegt sie ohnehin offen. */
+function HandToggle(): ReactElement {
   const t = useT();
-  const owner = useViewer(game);
+  const handOpen = useSettingsStore((state) => state.handOpen);
+  const setHandOpen = useSettingsStore((state) => state.setHandOpen);
+  const Icon = handOpen ? ChevronDown : ChevronUp;
+  return (
+    <button
+      type="button"
+      className="hand-toggle"
+      aria-expanded={handOpen}
+      aria-label={t(handOpen ? 'handCollapse' : 'handExpand')}
+      onClick={() => setHandOpen(!handOpen)}
+    >
+      <Icon size={14} aria-hidden="true" />
+    </button>
+  );
+}
+
+/** Über den Karten: wessen Hand, dazu der Knopf zum Aus- und Einklappen. */
+function HandOwner(props: { readonly game: GameState; readonly needed: boolean }) {
+  const t = useT();
+  const owner = useViewer();
   if (owner === null) return null;
   return (
     <p className="hand-owner">
-      {t('handOf')} <PlayerTag game={game} id={owner} />
+      {t('handOf')} <PlayerTag game={props.game} id={owner} />
+      {!props.needed && <HandToggle />}
     </p>
   );
 }
 
 /**
  * Die Hand am unteren Rand der Karte: Strategiekarten in der Strategiephase, im Zug die
- * strategische und taktische Aktion und Passen, dazu die Aktionskarten.
+ * strategische und taktische Aktion und Passen, dazu die Aktionskarten. Eingeklappt ragen nur
+ * die Kartenköpfe herein, damit das eigene Heimatsystem frei bleibt; Zeigen hebt sie an.
  */
 export function HandDock({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const entries = useEntries(game);
   const play = usePlay(game);
+  const handOpen = useSettingsStore((state) => state.handOpen);
+  const needed = neededNow(game, entries);
+  const raised = handOpen || needed;
   const middle = (entries.length - 1) / 2;
   return (
     <section
-      className="hand-dock"
+      className={raised ? 'hand-dock raised' : 'hand-dock tucked'}
       aria-label={t('yourHand')}
       data-tutorial="hand"
       style={{ '--crowd': Math.max(0, entries.length - ROOMY) } as CSSProperties}
     >
-      {entries.length > 0 && <HandOwner game={game} />}
+      {entries.length > 0 && <HandOwner game={game} needed={needed} />}
       <AnimatePresence initial={false}>
         {entries.map((entry, index) => {
           const props = { game, entry, offset: index - middle };

@@ -13,7 +13,7 @@ import { HandDock } from '../src/components/hand/HandDock.tsx';
 import { PlayersPanel } from '../src/components/game/PlayersPanel.tsx';
 import { TurnPanel } from '../src/components/game/TurnPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { useGalaxyStore } from '../src/store.ts';
 import { pickAll, started } from './game-helpers.ts';
 

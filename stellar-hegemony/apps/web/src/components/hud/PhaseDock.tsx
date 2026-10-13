@@ -1,9 +1,8 @@
-import type { GameState } from '@stellar/domain';
-import { Flag, SkipForward } from 'lucide-react';
+import { currentActor, type GameState } from '@stellar/domain';
+import { Flag, SkipForward, Undo2 } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { useGameStore, useHumanActor } from '../../game-store.ts';
+import { useCanUndo, useGameStore, useHumanActor } from '../../game-store.ts';
 import { endTurnOf } from '../../hud/hud-model.ts';
-import { currentActor } from '../../local-game.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 
@@ -45,6 +44,18 @@ function EndTurnButton({ game }: { readonly game: GameState }): ReactElement | n
   );
 }
 
+/** Letzten eigenen Schritt zurücknehmen, solange niemand sonst seitdem gezogen hat. */
+function UndoButton({ game }: { readonly game: GameState }): ReactElement | null {
+  const t = useT();
+  const undo = useGameStore((state) => state.undo);
+  if (!useCanUndo(game)) return null;
+  return (
+    <button type="button" className="hex-button" onClick={undo} title={t('undoHint')}>
+      <Undo2 size={16} aria-hidden="true" /> {t('undo')}
+    </button>
+  );
+}
+
 /** Unten rechts: aktuelle Phase, Runde, wer am Zug ist und der Knopf zum Beenden des Zugs. */
 export function PhaseDock({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
@@ -57,6 +68,7 @@ export function PhaseDock({ game }: { readonly game: GameState }): ReactElement 
       <span className="hud-actor">
         <PlayerTag game={game} id={currentActor(game)} />
       </span>
+      <UndoButton game={game} />
       <EndTurnButton game={game} />
     </section>
   );

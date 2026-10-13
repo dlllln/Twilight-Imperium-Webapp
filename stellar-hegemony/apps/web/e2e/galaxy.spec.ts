@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { chooseFactions } from './draft.ts';
+import { openTable } from './table.ts';
 
 test('Galaxie wird angezeigt, neu erzeugt und per Map-String importiert', async ({ page }) => {
   await page.goto('/');
@@ -52,11 +52,10 @@ test('Anleitung führt durch die Oberfläche; Einstellungen bleiben nach dem Neu
 });
 
 test('Ein Klick zeigt die Knöpfe am System, Ansehen fährt auf der Karte heran; Mausrad zoomt bis an die Planeten, Escape zurück', async ({
-  page,
+  browser,
 }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Partie starten' }).click();
-  await chooseFactions(page);
+  const [page] = await openTable(browser, 1);
+  if (page === undefined) throw new Error('kein Gerät');
   const home = page.locator('[data-seat="1"][data-system]');
   await home.click();
   await page.getByRole('button', { name: 'System ansehen' }).click();

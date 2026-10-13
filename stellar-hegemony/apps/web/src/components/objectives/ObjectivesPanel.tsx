@@ -85,7 +85,7 @@ function SecretList({ game, player }: { readonly game: GameState; readonly playe
 /** Seitenleiste: Siegpunkte, öffentliche Aufträge und die eigenen geheimen. */
 export function ObjectivesPanel({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
-  const actor = useViewer(game);
+  const actor = useViewer();
   return (
     <Panel title={t('objectives')} icon={Target} tutorial="objectives" className="objectives-panel">
       <VictoryTrack game={game} />

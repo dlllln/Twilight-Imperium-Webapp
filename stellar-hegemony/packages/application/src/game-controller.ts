@@ -13,9 +13,11 @@ import {
   type GameId,
   type GameState,
   ok,
+  type PlayerId,
   type RandomPort,
   replayGame,
   type Result,
+  undoStep,
 } from '@stellar/domain';
 import type { EventPublisherPort } from './event-publisher-port.ts';
 import type { EventStorePort } from './event-store-port.ts';
@@ -69,6 +71,27 @@ export class GameController {
     return this.persist(gameId, state.value.version, { state: next, events: decided.value });
   }
 
+  /**
+   * Nimmt den Schritt ab `fromVersion` zurück: Die Domain prüft, das Event kommt in den Strom,
+   * und der Zustand entsteht neu aus dem Replay, das zurückgenommene Events auslässt.
+   */
+  async undo(
+    gameId: GameId,
+    player: PlayerId,
+    fromVersion: number,
+  ): Promise<Result<CommandOutcome, DomainError>> {
+    const state = await this.load(gameId);
+    if (!state.ok) return state;
+    const decided = undoStep(state.value, player, fromVersion);
+    if (!decided.ok) return decided;
+    const appended = await this.ports.store.append(gameId, state.value.version, decided.value);
+    this.cache.delete(gameId);
+    if (!appended.ok) return appended;
+    const rebuilt = await this.load(gameId);
+    if (!rebuilt.ok) return rebuilt;
+    return ok(this.remember(gameId, { state: rebuilt.value, events: decided.value }));
+  }
+
   async load(gameId: GameId): Promise<Result<GameState, DomainError>> {
     const cached = this.cache.get(gameId);
     if (cached !== undefined) return ok(cached);
@@ -85,8 +108,12 @@ export class GameController {
       this.cache.delete(gameId);
       return appended;
     }
+    return ok(this.remember(gameId, outcome));
+  }
+
+  private remember(gameId: GameId, outcome: CommandOutcome): CommandOutcome {
     this.cache.set(gameId, outcome.state);
     this.ports.publisher.publish(gameId, outcome.events, outcome.state);
-    return ok(outcome);
+    return outcome;
   }
 }

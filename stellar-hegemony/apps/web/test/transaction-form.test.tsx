@@ -13,7 +13,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { homeSystemOf } from '../src/card-view.ts';
 import { TurnPanel } from '../src/components/game/TurnPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { content, useGalaxyStore } from '../src/store.ts';
 import { pickAll, started } from './game-helpers.ts';
 

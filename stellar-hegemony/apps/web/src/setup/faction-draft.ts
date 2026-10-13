@@ -1,23 +1,42 @@
+import type { LobbyView } from '@stellar/application';
 import type { FactionDefinition } from '@stellar/domain';
+import { create } from 'zustand';
 
 /*
- * Fraktionswahl vor der Partie als reine Funktionen: Die Menschen wählen der Reihe nach,
- * die KI-Plätze bekommen die übrigen Fraktionen in der Reihenfolge des Inhalts.
+ * Fraktionswahl in der Lobby: Jeder wählt auf seinem eigenen Gerät. Was andere schon gewählt
+ * haben, ist gesperrt; wer nichts wählt (auch die KI), bekommt beim Start eine freie Fraktion.
  */
 
-/** Fraktionen in Sitzreihenfolge: erst die gewählten, dann die freien. */
-export function seatFactions(
-  all: readonly FactionDefinition[],
-  picks: readonly string[],
-): readonly FactionDefinition[] {
-  const chosen = picks.flatMap((id) => all.filter((faction) => faction.id === id));
-  return [...chosen, ...all.filter((faction) => !picks.includes(faction.id))];
+type Seats = LobbyView['seats'];
+
+/** Welcher Platz (1-basiert) eine Fraktion schon genommen hat; der eigene zählt nicht. */
+export const takenSeats = (seats: Seats, mine: number): Readonly<Record<string, number>> =>
+  Object.fromEntries(
+    seats.flatMap((seat) =>
+      seat.faction === null || seat.seat === mine ? [] : [[seat.faction, seat.seat + 1]],
+    ),
+  );
+
+/** Vorschlag beim Öffnen: die eigene Wahl, sonst die erste freie Fraktion. */
+export function suggestion(all: readonly FactionDefinition[], seats: Seats, mine: number): string {
+  const own = seats.find((seat) => seat.seat === mine)?.faction;
+  if (own !== null && own !== undefined) return own;
+  const taken = takenSeats(seats, mine);
+  return all.find((faction) => taken[faction.id] === undefined)?.id ?? '';
 }
 
-/** Erste noch freie Fraktion als Vorschlag für den nächsten Platz. */
-export const firstFree = (all: readonly FactionDefinition[], picks: readonly string[]): string =>
-  all.find((faction) => !picks.includes(faction.id))?.id ?? '';
+interface FactionPickStore {
+  readonly open: boolean;
+  readonly preview: string;
+  readonly begin: (preview: string) => void;
+  readonly show: (faction: string) => void;
+  readonly close: () => void;
+}
 
-/** Welcher Platz (1-basiert) eine Fraktion schon genommen hat. */
-export const takenSeats = (picks: readonly string[]): Readonly<Record<string, number>> =>
-  Object.fromEntries(picks.map((id, index) => [id, index + 1]));
+export const useFactionPick = create<FactionPickStore>((set) => ({
+  open: false,
+  preview: '',
+  begin: (preview) => set({ open: true, preview }),
+  show: (preview) => set({ preview }),
+  close: () => set({ open: false }),
+}));

@@ -8,7 +8,7 @@ import { HandDock } from '../src/components/hand/HandDock.tsx';
 import { useGameStore } from '../src/game-store.ts';
 import { handEntries } from '../src/hand/hand-model.ts';
 import { useHandStore } from '../src/hand/hand-store.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { useGalaxyStore } from '../src/store.ts';
 import { keepSecrets, pickAll, started } from './game-helpers.ts';
@@ -48,6 +48,24 @@ describe('Hand am unteren Rand', () => {
     const politics = Object.values(game().strategyCards).find((entry) => entry.initiative === 3);
     expect(politics?.holder).toBe(actor);
     await waitFor(() => expect(picks()).toHaveLength(7));
+  });
+
+  it('eingeklappt, solange man sie nicht braucht; zur Kartenwahl offen, der Knopf klappt um', () => {
+    useSettingsStore.setState({ handOpen: false });
+    keepSecrets(started());
+    render(<Live />);
+    const dock = screen.getByRole('region', { name: 'Deine Hand' });
+    expect(dock.className).toContain('raised');
+    cleanup();
+    pickAll(started());
+    render(<Live />);
+    const tucked = screen.getByRole('region', { name: 'Deine Hand' });
+    expect(tucked.className).toContain('tucked');
+    fireEvent.click(screen.getByRole('button', { name: 'Hand ausklappen' }));
+    expect(tucked.className).toContain('raised');
+    expect(useSettingsStore.getState().handOpen).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Hand einklappen' }));
+    expect(tucked.className).toContain('tucked');
   });
 
   it('RR 3: im Zug liegen strategische Aktion, taktische Aktion und Passen bereit', () => {

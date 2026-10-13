@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { currentActor, type GameState, playerId } from '@stellar/domain';
-import { lobbyView, SerialQueue } from '../src/index.ts';
-import { CountingIds, mapFor, onlineGames } from './online-helpers.ts';
+import { lobbyView, seatFactions, SerialQueue } from '../src/index.ts';
+import { content, CountingIds, mapFor, onlineGames } from './online-helpers.ts';
 
 const P1 = playerId('p1');
 const P2 = playerId('p2');
@@ -60,10 +60,10 @@ describe('Online-Lobby', () => {
       code: 'ABC001',
       started: false,
       seats: [
-        { seat: 0, kind: 'human', name: 'Anna', connected: true },
-        { seat: 1, kind: 'human', name: 'Ben', connected: false },
-        { seat: 2, kind: 'open', name: null, connected: false },
-        { seat: 3, kind: 'open', name: null, connected: false },
+        { seat: 0, kind: 'human', name: 'Anna', faction: null, connected: true },
+        { seat: 1, kind: 'human', name: 'Ben', faction: null, connected: false },
+        { seat: 2, kind: 'open', name: null, faction: null, connected: false },
+        { seat: 3, kind: 'open', name: null, faction: null, connected: false },
       ],
     });
   });
@@ -168,6 +168,111 @@ describe('Online-Partie', () => {
     );
     const step = await setup.online.botStep(code);
     expect(errorCode(step)).toBe('lobby.botStuck');
+  });
+});
+
+type Started = Awaited<ReturnType<typeof startedGame>>;
+
+/** Ein Mensch nimmt die erste freie Strategiekarte. */
+async function pickFirstFree(setup: Started, state: GameState) {
+  const ticket = currentActor(state) === P1 ? setup.host : setup.guest;
+  const card = Object.values(state.strategyCards).find((entry) => entry.holder === null);
+  if (card === undefined) throw new Error('keine Karte');
+  await setup.online.submit(ticket.code, ticket.token, {
+    type: 'PickStrategyCard',
+    issuedBy: ticket.player,
+    card: card.id,
+  });
+}
+
+/** Menschen wählen die erste freie Strategiekarte, die KI zieht selbst, bis ein Mensch handelt. */
+async function untilHumanActs(setup: Started) {
+  await keepSecrets(setup, setup.host);
+  await keepSecrets(setup, setup.guest);
+  for (let turn = 0; turn < 100; turn += 1) {
+    const state = await stateOf(setup);
+    const actor = currentActor(state);
+    if (state.phase === 'action' && actor === P1) return setup.host;
+    if (state.phase === 'action' && actor === P2) return setup.guest;
+    const bot = await setup.online.botStep(setup.host.code);
+    if (!bot.ok || !bot.value) await pickFirstFree(setup, state);
+  }
+  throw new Error('kein Mensch am Zug');
+}
+
+const quietSystem = (state: GameState) =>
+  Object.values(state.systems).find(
+    (system) => system.commandTokens.length === 0 && system.spaceUnits.length === 0,
+  )?.id;
+
+describe('Fraktionswahl in der Lobby', () => {
+  it('jeder wählt auf seinem Gerät; doppelt geht nicht, die übrigen Plätze bekommen freie Fraktionen', async () => {
+    const setup = await lobbyWithGuest();
+    const { online, host, guest } = setup;
+    const [first, second] = content.factions.map((faction) => faction.id);
+    const chosen = await online.chooseFaction(host.code, guest.token, second);
+    expect(chosen.ok && chosen.value.seats[1]?.faction).toBe(second);
+    expect(errorCode(await online.chooseFaction(host.code, host.token, second))).toBe(
+      'lobby.factionTaken',
+    );
+    expect(errorCode(await online.chooseFaction(host.code, host.token, 'erfunden'))).toBe(
+      'lobby.unknownFaction',
+    );
+    await online.start(host.code, host.token);
+    const state = await stateOf(setup);
+    expect(state.players.map((player) => player.faction)).toEqual([
+      first,
+      second,
+      content.factions[2]?.id,
+    ]);
+    expect(errorCode(await online.chooseFaction(host.code, host.token, first))).toBe(
+      'lobby.started',
+    );
+  });
+
+  it('gewählte Fraktionen bleiben, freie Plätze füllen der Reihe nach auf, doppelte zählen einmal', () => {
+    const all = content.factions.slice(0, 4);
+    const ids = all.map((faction) => faction.id);
+    const seated = seatFactions(all, [null, ids[0] ?? null, ids[0] ?? null], 3);
+    expect(seated.map((faction) => faction?.id)).toEqual([ids[1], ids[0], ids[2]]);
+  });
+});
+
+describe('Rückgängig online', () => {
+  it('der letzte eigene Schritt lässt sich zurücknehmen, solange niemand sonst etwas tat', async () => {
+    const setup = await startedGame();
+    const ticket = await untilHumanActs(setup);
+    const before = await stateOf(setup);
+    const system = quietSystem(before);
+    if (system === undefined) throw new Error('kein freies System');
+    const activate = { type: 'ActivateSystem', issuedBy: ticket.player, system } as const;
+    const sent = await setup.online.submit(ticket.code, ticket.token, activate);
+    expect(sent).toEqual({ ok: true, value: { version: before.version + 1, undoable: true } });
+    const other = ticket === setup.host ? setup.guest : setup.host;
+    expect(errorCode(await setup.online.undo(other.code, other.token))).toBe('lobby.nothingToUndo');
+    expect(await setup.online.undo(ticket.code, ticket.token)).toEqual({
+      ok: true,
+      value: before.version + 2,
+    });
+    const after = await stateOf(setup);
+    expect(after.actionPhase?.tactical).toBeNull();
+    expect(after.systems[system]?.commandTokens).toEqual([]);
+    expect(errorCode(await setup.online.undo(ticket.code, ticket.token))).toBe(
+      'lobby.nothingToUndo',
+    );
+  });
+
+  it('endgültige Schritte und Schritte, nach denen andere gezogen haben, bleiben stehen', async () => {
+    const setup = await startedGame();
+    const ticket = await untilHumanActs(setup);
+    const passed = await setup.online.submit(ticket.code, ticket.token, {
+      type: 'Pass',
+      issuedBy: ticket.player,
+    });
+    expect(passed.ok && passed.value.undoable).toBe(false);
+    expect(errorCode(await setup.online.undo(ticket.code, ticket.token))).toBe(
+      'lobby.nothingToUndo',
+    );
   });
 });
 

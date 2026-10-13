@@ -60,14 +60,11 @@ describe('Schräger Blick auf das Brett', () => {
     expect(pair.filter((edge) => !edge.outer)).toHaveLength(1);
   });
 
-  it('am Hot-Seat sieht der Mensch am Zug die Karte von seiner Seite (Plätze ab 1)', () => {
+  it('jeder sieht die Karte von seinem eigenen Platz aus (Plätze ab 1), vor der Partie von Platz 1', () => {
     const game = started();
-    const first = game.players[0];
-    expect(viewerSeat(null, null, [])).toBe(1);
-    expect(viewerSeat(game, first?.id ?? null, [])).toBe((first?.seat ?? 0) + 1);
-    const second = game.players[1];
-    if (first === undefined || second === undefined) return;
-    expect(viewerSeat(game, null, [first.id, second.id])).toBeGreaterThan(2);
+    expect(viewerSeat(null, null)).toBe(1);
+    expect(viewerSeat(game, null)).toBe(1);
+    for (const player of game.players) expect(viewerSeat(game, player.id)).toBe(player.seat + 1);
   });
 });
 

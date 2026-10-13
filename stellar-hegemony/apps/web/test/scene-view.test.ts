@@ -7,14 +7,12 @@ import {
   unitTypeId,
 } from '@stellar/domain';
 import { describe, expect, it } from 'vitest';
-import { applyCommand } from '../src/local-game.ts';
+import { tryCommand } from '../src/rules-preview.ts';
 import { countUnits, gameScene, layoutScene } from '../src/render/scene-model.ts';
 import { worldTransform } from '../src/render/view-transform.ts';
 import { content, DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
 import { cargoAtOrigin, highlightsOf, movementChoices } from '../src/tactical-view.ts';
 import { pickAll, started } from './game-helpers.ts';
-
-const SEED = 7;
 
 function activeOf(game: GameState): PlayerId {
   const active = game.actionPhase?.active;
@@ -35,7 +33,7 @@ function activatedNeighbour(game: GameState): GameState {
   const player = activeOf(game);
   for (const id of adjacentSystemIds(game.systems, homeOf(game, player))) {
     const command = { type: 'ActivateSystem', issuedBy: player, system: systemId(id) } as const;
-    const next = applyCommand(game, command, SEED);
+    const next = tryCommand(game, command);
     if (next.ok && movementChoices(next.value, content).length > 0) return next.value;
   }
   throw new Error('kein erreichbares Nachbarsystem');

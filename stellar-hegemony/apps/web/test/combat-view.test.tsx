@@ -13,7 +13,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { CombatView } from '../src/components/combat/CombatView.tsx';
 import { combatDecision, combatParties, nextCombatLog, opensCombat } from '../src/combat-view.ts';
 import { useGameStore } from '../src/game-store.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { content, useGalaxyStore } from '../src/store.ts';
 import { movementChoices } from '../src/tactical-view.ts';
 import { pickAll, started } from './game-helpers.ts';

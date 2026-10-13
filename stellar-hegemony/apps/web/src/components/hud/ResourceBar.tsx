@@ -15,7 +15,7 @@ import { empireSummary, type Supply, TECHNOLOGY_COLORS } from '../../hud/hud-mod
 import type { MessageKey } from '../../i18n.ts';
 import { content } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
-import { useHudPlayer } from './use-hud-player.ts';
+import { useViewer } from '../../game-store.ts';
 
 const TECH_ICONS: Readonly<Record<TechnologyColor, LucideIcon>> = {
   propulsion: Gauge,
@@ -66,7 +66,7 @@ function CommandPools({ pools }: { readonly pools: GameState['players'][number][
 
 /** Die eigenen Vorräte oben über der Karte: Planetenwerte, Waren, Kommandomarker, Technologien. */
 export function ResourceBar({ game }: { readonly game: GameState }): ReactElement | null {
-  const player = useHudPlayer(game);
+  const player = useViewer();
   const summary = player === null ? null : empireSummary(game, player, content);
   if (summary === null) return null;
   return (

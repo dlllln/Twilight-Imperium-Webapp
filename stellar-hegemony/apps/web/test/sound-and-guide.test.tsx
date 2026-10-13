@@ -13,7 +13,7 @@ import { useSettingsStore } from '../src/settings-store.ts';
 import { useGalaxyStore } from '../src/store.ts';
 import { TUTORIAL_STEPS } from '../src/tutorial/tutorial-steps.ts';
 import { useTutorialStore } from '../src/tutorial/tutorial-store.ts';
-import { currentActor } from '../src/local-game.ts';
+import { currentActor } from '@stellar/domain';
 import { installDomPolyfills } from './dom-polyfills.ts';
 import { keepSecrets, pickAll, started } from './game-helpers.ts';
 
@@ -136,6 +136,8 @@ describe('Einstellungen', () => {
       volume: 1,
       animations: false,
       tips: true,
+      hintSeen: false,
+      handOpen: false,
     });
   });
 

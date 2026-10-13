@@ -1,4 +1,4 @@
-import type { GameState, PhaseName } from '@stellar/domain';
+import { currentActor, type GameState, type PhaseName } from '@stellar/domain';
 import {
   ClipboardCheck,
   Landmark,
@@ -11,7 +11,6 @@ import {
 import { motion } from 'motion/react';
 import type { ReactElement } from 'react';
 import type { MessageKey } from '../../i18n.ts';
-import { currentActor } from '../../local-game.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from './PlayerTag.tsx';
 

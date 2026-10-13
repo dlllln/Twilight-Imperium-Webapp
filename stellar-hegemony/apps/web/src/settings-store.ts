@@ -7,11 +7,17 @@ export interface Settings {
   readonly animations: boolean;
   /** Kurze Hinweise zur aktuellen Phase im Zugfeld. */
   readonly tips: boolean;
+  /** Den Bedienhinweis am Mauszeiger kennt man nach dem ersten Klick auf ein System. */
+  readonly hintSeen: boolean;
+  /** Die Hand bleibt eingeklappt, bis man sie braucht. */
+  readonly handOpen: boolean;
 }
 
 export interface SettingsStore extends Settings {
   readonly toggle: (key: 'sound' | 'animations' | 'tips') => void;
   readonly setVolume: (volume: number) => void;
+  readonly markHintSeen: () => void;
+  readonly setHandOpen: (open: boolean) => void;
 }
 
 const KEY = 'stellar.settings';
@@ -31,6 +37,8 @@ const defaults = (): Settings => ({
   volume: DEFAULT_VOLUME,
   animations: !prefersReducedMotion(),
   tips: false,
+  hintSeen: false,
+  handOpen: false,
 });
 
 function load(): Settings {
@@ -44,8 +52,9 @@ function load(): Settings {
 
 function save(settings: Settings): void {
   try {
-    const { sound, volume, animations, tips } = settings;
-    localStorage.setItem(KEY, JSON.stringify({ sound, volume, animations, tips }));
+    const { sound, volume, animations, tips, hintSeen, handOpen } = settings;
+    const saved = { sound, volume, animations, tips, hintSeen, handOpen };
+    localStorage.setItem(KEY, JSON.stringify(saved));
   } catch {
     // Ohne Speicher gelten die Einstellungen nur bis zum Neuladen.
   }
@@ -61,6 +70,15 @@ export const useSettingsStore = create<SettingsStore>()((set, get) => ({
   },
   setVolume: (volume) => {
     set({ volume: clampVolume(volume) });
+    save(get());
+  },
+  markHintSeen: () => {
+    if (get().hintSeen) return;
+    set({ hintSeen: true });
+    save(get());
+  },
+  setHandOpen: (handOpen) => {
+    set({ handOpen });
     save(get());
   },
 }));

@@ -101,10 +101,9 @@ function placement({ hex, viewport, view }: Where, count: number, band: Band) {
 export function SystemActions(props: Props): ReactElement | null {
   const { game, hex, top, bottom, onView } = props;
   const actor = useHumanActor(game);
-  const seed = useGameStore((state) => state.seed);
   const run = useRun(game, hex, onView);
   if (hex.systemId === null) return null;
-  const actions = systemActions(game, actor, hex.systemId, seed);
+  const actions = systemActions(game, actor, hex.systemId);
   return (
     <foreignObject
       {...placement(props, actions.length, { top, bottom })}

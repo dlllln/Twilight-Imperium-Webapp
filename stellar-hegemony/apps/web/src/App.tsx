@@ -15,7 +15,6 @@ import { handleShortcut } from './keyboard.ts';
 import { useOnlineStore } from './online/online-store.ts';
 import { useSettingsStore } from './settings-store.ts';
 import { useGalaxyStore } from './store.ts';
-import { useBotDriver } from './use-bot-driver.ts';
 
 /** Während einer Partie bleibt die Galaxie fest; nur Ansichtstasten wirken. */
 function onKey(event: KeyboardEvent): void {
@@ -50,7 +49,6 @@ function useStartup(): void {
 export function App(): ReactElement {
   const game = useGameStore((state) => state.game);
   useStartup();
-  useBotDriver();
   useSoundEffects();
   useMotionSetting();
 

@@ -37,6 +37,8 @@ import type { AgendaEvent } from '../agenda/agenda-events.ts';
 import { agendaReducers } from '../agenda/agenda-reducers.ts';
 import { actionCardReducers } from '../action-card/action-card-reducers.ts';
 import type { GameState } from './game-state.ts';
+import type { UndoEvent } from '../undo/undo-events.ts';
+import { withoutUndone } from '../undo/step-undo.ts';
 
 /** Alle Events einer Partie. Jede Iteration erweitert diese Union um ihr Modul. */
 export type GameEvent =
@@ -56,7 +58,8 @@ export type GameEvent =
   | StatusEvent
   | ActionCardEvent
   | AgendaEvent
-  | EconomyEvent;
+  | EconomyEvent
+  | UndoEvent;
 
 const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...setupReducers,
@@ -76,6 +79,8 @@ const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...statusReducers,
   ...actionCardReducers,
   ...agendaReducers,
+  // Wirkt nur beim Replay: `withoutUndone` streicht dort die zurückgenommenen Events.
+  StepUndone: (state) => state,
 };
 
 /** Wendet ein Event an und erhöht die Version (Indirection über eine zentrale Stelle). */
@@ -84,11 +89,13 @@ export function evolveGame(state: GameState, event: GameEvent): GameState {
   return { ...next, version: state.version + 1 };
 }
 
-/** Baut den Zustand vollständig aus dem Event-Strom auf (Replay, Reconnect). */
+/** Baut den Zustand vollständig aus dem Event-Strom auf (Replay, Reconnect, Rückgängig). */
 export function replayGame(events: readonly GameEvent[]): Result<GameState, DomainError> {
-  const [first, ...rest] = events;
+  const [first, ...rest] = withoutUndone(events);
   if (first?.type !== 'GameCreated') {
     return err(domainError('replay.missingCreation', 'Event-Strom beginnt nicht mit GameCreated'));
   }
-  return ok(rest.reduce(evolveGame, initialGameState(first)));
+  const state = rest.reduce(evolveGame, initialGameState(first));
+  // Die Version zählt alle gespeicherten Events, auch zurückgenommene: Sie ist die Position im Strom.
+  return ok({ ...state, version: events.length });
 }

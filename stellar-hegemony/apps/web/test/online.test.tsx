@@ -1,16 +1,17 @@
 // @vitest-environment jsdom
 import type { LobbyView, SeatTicket } from '@stellar/application';
+import { seatPlayerId } from '@stellar/application';
 import { currentActor, type GameState, HIDDEN, playerView } from '@stellar/domain';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../src/App.tsx';
 import { TurnPanel } from '../src/components/game/TurnPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
-import { seatPlayerId } from '../src/local-game.ts';
 import type { ConnectionEvents, OnlineConnection } from '../src/online/online-connection.ts';
 import { setConnector, useOnlineStore } from '../src/online/online-store.ts';
 import { useGalaxyStore } from '../src/store.ts';
 import { keepSecrets, started } from './game-helpers.ts';
+import { leaveTable } from './local-table.ts';
 
 const ok = <T,>(value: T) => ({ ok: true as const, value });
 const failed = (code: string) => ({ ok: false as const, error: { code, message: code } });
@@ -26,9 +27,9 @@ const LOBBY: LobbyView = {
   code: 'QX7K2M',
   started: false,
   seats: [
-    { seat: 0, kind: 'human', name: 'Anna', connected: true },
-    { seat: 1, kind: 'human', name: 'Ben', connected: false },
-    { seat: 2, kind: 'open', name: null, connected: false },
+    { seat: 0, kind: 'human', name: 'Anna', faction: 'nesh', connected: true },
+    { seat: 1, kind: 'human', name: 'Ben', faction: null, connected: false },
+    { seat: 2, kind: 'open', name: null, faction: null, connected: false },
   ],
 };
 
@@ -50,10 +51,16 @@ function fakeServer(seat = 0) {
       Promise.resolve(ok(ticketFor(seat)))
     ),
     start: () => (calls.push('start'), Promise.resolve(ok(LOBBY))),
+    faction: (faction) => (calls.push(`faction:${faction}`), Promise.resolve(ok(LOBBY))),
     command: (command) => (
       calls.push(`command:${command.type}`),
-      Promise.resolve(failed('turn.notYours'))
+      Promise.resolve(
+        command.type === 'ActivateSystem'
+          ? ok({ version: 999, undoable: true })
+          : failed('turn.notYours'),
+      )
     ),
+    undo: () => (calls.push('undo'), Promise.resolve(ok(1000))),
     close: () => calls.push('close'),
   };
   setConnector((handlers) => {
@@ -102,6 +109,22 @@ describe('Online-Partie im Browser', () => {
     expect(JSON.parse(localStorage.getItem('stellar.online.ticket') ?? '{}')).toEqual(ticketFor(0));
   });
 
+  it('Lobby: jeder sieht die Fraktionen, wählt seine eigene auf dem eigenen Gerät', async () => {
+    const server = fakeServer(1);
+    render(<App />);
+    await act(() => useOnlineStore.getState().join('QX7K2M'));
+    act(() => server.emit().lobby(LOBBY));
+    expect(screen.getByTestId('lobby-seat-1').textContent).toContain('Fraktion noch offen');
+    expect(screen.getByTestId('lobby-seat-0').textContent).not.toContain('Fraktion noch offen');
+    fireEvent.click(screen.getByRole('button', { name: 'Fraktion wählen' }));
+    const dialog = screen.getByRole('dialog', { name: 'Fraktion wählen' });
+    expect(dialog.textContent).toContain('P2 wählt eine Fraktion');
+    fireEvent.click(screen.getByRole('button', { name: 'Wählen' }));
+    await flush();
+    expect(server.calls.some((call) => call.startsWith('faction:'))).toBe(true);
+    expect(screen.queryByRole('dialog', { name: 'Fraktion wählen' })).toBeNull();
+  });
+
   it('beitreten: unbekannte Codes melden einen Fehler, Gäste warten auf den Gastgeber', async () => {
     const server = fakeServer(1);
     render(<App />);
@@ -130,10 +153,29 @@ describe('Online-Partie im Browser', () => {
     expect(useGameStore.getState().error?.code).toBe('turn.notYours');
   });
 
+  it('Rückgängig: nach einem zurücknehmbaren Schritt bittet der Knopf den Server um Rücknahme', async () => {
+    const game = keepSecrets(started());
+    leaveTable();
+    const server = fakeServer(0);
+    await act(() => useOnlineStore.getState().join('QX7K2M'));
+    const mine = { ...game, version: 999 };
+    act(() => server.emit().game({ state: mine, events: [] }));
+    const me = seatPlayerId(0);
+    act(() => useGameStore.setState({ game: { ...mine, pickQueue: [me] } }));
+    useGameStore.getState().send({ type: 'ActivateSystem', issuedBy: me, system: 'x' as never });
+    await flush();
+    expect(useGameStore.getState().undoVersion).toBe(999);
+    useGameStore.getState().undo();
+    await flush();
+    expect(server.calls).toContain('undo');
+    expect(useGameStore.getState().undoVersion).toBeNull();
+  });
+
   it('ist ein Mitspieler dran, zeigt das Zugfeld nur, wer gerade überlegt', async () => {
+    const game = keepSecrets(started());
+    leaveTable();
     const server = fakeServer(2);
     await act(() => useOnlineStore.getState().join('QX7K2M'));
-    const game = keepSecrets(started());
     act(() => server.emit().game({ state: game, events: [] }));
     expect(currentActor(game)).not.toBe(seatPlayerId(2));
     render(<TurnPanel game={game} />);

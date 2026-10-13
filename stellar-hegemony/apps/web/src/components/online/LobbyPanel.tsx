@@ -1,9 +1,12 @@
-import { Users } from 'lucide-react';
+import { Shield, Users } from 'lucide-react';
 import type { LobbyView, SeatTicket } from '@stellar/application';
 import type { ReactElement } from 'react';
 import type { MessageKey } from '../../i18n.ts';
+import { factionLabel } from '../../labels.ts';
 import { useOnlineStore } from '../../online/online-store.ts';
-import { useT } from '../../use-translation.ts';
+import { suggestion, useFactionPick } from '../../setup/faction-draft.ts';
+import { content } from '../../store.ts';
+import { useLanguage, useT } from '../../use-translation.ts';
 import { OnlineError } from './OnlineError.tsx';
 
 type LobbySeatView = LobbyView['seats'][number];
@@ -16,6 +19,7 @@ function seatState(seat: LobbySeatView): MessageKey {
 
 function SeatRow(props: { readonly seat: LobbySeatView; readonly mine: boolean }): ReactElement {
   const t = useT();
+  const language = useLanguage();
   const { seat, mine } = props;
   return (
     <li className={`lobby-seat ${seat.kind}`} data-testid={`lobby-seat-${String(seat.seat)}`}>
@@ -24,6 +28,9 @@ function SeatRow(props: { readonly seat: LobbySeatView; readonly mine: boolean }
       {seat.seat === 0 && <span className="badge">{t('seatHost')}</span>}
       {mine && <span className="badge">{t('seatYou')}</span>}
       <span className={`seat-state ${seatState(seat)}`}>{t(seatState(seat))}</span>
+      <span className="seat-faction">
+        {seat.faction === null ? t('factionOpen') : factionLabel(seat.faction, language)}
+      </span>
     </li>
   );
 }
@@ -39,7 +46,23 @@ function HostControls({ ticket }: { readonly ticket: SeatTicket }): ReactElement
   );
 }
 
-/** Wartesaal: Code zum Weitersagen, Plätze mit Verbindungsstatus, Start für den Gastgeber. */
+/** Öffnet die Fraktionswahl auf dem eigenen Gerät. */
+function FactionButton({ ticket }: { readonly ticket: SeatTicket }): ReactElement {
+  const t = useT();
+  const lobby = useOnlineStore((state) => state.lobby);
+  const begin = useFactionPick((state) => state.begin);
+  return (
+    <button
+      type="button"
+      className="icon-button"
+      onClick={() => begin(suggestion(content.factions, lobby?.seats ?? [], ticket.seat))}
+    >
+      <Shield size={16} aria-hidden="true" /> {t('chooseFaction')}
+    </button>
+  );
+}
+
+/** Wartesaal: Code zum Weitersagen, Plätze mit Verbindung und Fraktion, Start für den Gastgeber. */
 export function LobbyPanel(): ReactElement | null {
   const t = useT();
   const { ticket, lobby, leave } = useOnlineStore();
@@ -58,6 +81,7 @@ export function LobbyPanel(): ReactElement | null {
           <SeatRow key={seat.seat} seat={seat} mine={seat.seat === ticket.seat} />
         ))}
       </ol>
+      <FactionButton ticket={ticket} />
       <HostControls ticket={ticket} />
       <button type="button" onClick={leave}>
         {t('leaveOnline')}
