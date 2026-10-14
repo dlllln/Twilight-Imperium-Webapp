@@ -6,6 +6,8 @@ import type { DecisionContext } from '../eventsourcing/command.ts';
 import { chain } from '../game/event-chain.ts';
 import { evolveGame, type GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
+import type { PlanetState } from '../planet/planet-state.ts';
+import { deployEvents, planetCaptured } from '../production/unit-deployment.ts';
 import type { PlanetId, PlayerId } from '../shared/ids.ts';
 import { findCapability, isStructure } from '../unit/unit-capabilities.ts';
 import type { UnitCatalog } from '../unit/unit-catalog.ts';
@@ -38,8 +40,8 @@ function defenseFire(
   if (owner === undefined || landed.length === 0) return [];
   const sidesOfVolley = { player: owner, target: attacker };
   const volley = rollVolley(random, state.config.rules.dieSides, shooters, sidesOfVolley);
-  const { destroyed } = suggestHitAssignment(landed, volley.hits, content.units);
-  return [{ type: 'SpaceCannonDefenseFired', planet, volley, destroyed }];
+  const hits = suggestHitAssignment(landed, volley.hits, content.units);
+  return [{ type: 'SpaceCannonDefenseFired', planet, volley, ...hits }];
 }
 
 /** Treffer jeder Seite: erst Schadensresistenz, dann die günstigsten Einheiten. */
@@ -108,23 +110,33 @@ export function groundCombat(
   return [rolled, ...groundCombat(after, planet, attacker, decision, round + 1)];
 }
 
-/** RR 25.5: Wer mit Bodentruppen auf dem Planeten steht, übernimmt die Kontrolle. */
-function controlEvents(
-  state: GameState,
-  planet: PlanetId,
-  player: PlayerId,
-  catalog: UnitCatalog,
-): readonly GameEvent[] {
-  const planetState = state.planets[planet];
-  const holds = sides(state, planet, player, catalog).mine.length > 0;
-  if (planetState === undefined || !holds || planetState.controller === player) return [];
-  const structuresDestroyed = planetState.units
+const foreignStructures = (planet: PlanetState, player: PlayerId, catalog: UnitCatalog) =>
+  planet.units
     .filter((unit) => {
       const definition = catalog.find(unit.type, unit.owner);
       return unit.owner !== player && definition !== undefined && isStructure(definition);
     })
     .map((unit) => unit.id);
-  return [{ type: 'PlanetControlGained', player, planet, structuresDestroyed }];
+
+/**
+ * RR 25.5: Wer mit Bodentruppen auf dem Planeten steht, übernimmt die Kontrolle.
+ * PoK Mech: Hatte ein anderer Spieler den Planeten, können Fähigkeiten Einheiten einsetzen.
+ */
+function controlEvents(
+  state: GameState,
+  planet: PlanetId,
+  player: PlayerId,
+  { content }: DecisionContext,
+): readonly GameEvent[] {
+  const planetState = state.planets[planet];
+  const holds = sides(state, planet, player, content.units).mine.length > 0;
+  if (planetState === undefined || !holds || planetState.controller === player) return [];
+  const structuresDestroyed = foreignStructures(planetState, player, content.units);
+  const fires = planetCaptured(planetState.controller !== null);
+  return [
+    { type: 'PlanetControlGained', player, planet, structuresDestroyed },
+    ...deployEvents({ state, player, planet, content, fires }),
+  ];
 }
 
 /** Abwehrfeuer, Bodenkampf und Kontrolle für einen Planeten mit gelandeten Truppen. */
@@ -137,5 +149,5 @@ export const resolveLanding = (
   chain(state, [
     (current) => defenseFire(current, planet, player, decision),
     (current) => groundCombat(current, planet, player, decision),
-    (current) => controlEvents(current, planet, player, decision.content.units),
+    (current) => controlEvents(current, planet, player, decision),
   ]);

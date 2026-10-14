@@ -4,7 +4,6 @@ import type { PlanetState } from '../planet/planet-state.ts';
 import type { PlanetId, UnitId } from '../shared/ids.ts';
 import { takeUnits } from '../tactical/tactical-reducers.ts';
 import type {
-  GroundCombatRoundRolled,
   GroundForcesCommitted,
   InvasionEvent,
   PlanetControlGained,
@@ -42,7 +41,15 @@ function commit(state: GameState, event: GroundForcesCommitted): GameState {
   }, landed);
 }
 
-function groundRound(state: GameState, event: GroundCombatRoundRolled): GameState {
+/** Treffer auf einem Planeten: Schadensresistenz beschädigt, der Rest wird zerstört. */
+interface PlanetHits {
+  readonly planet: PlanetId;
+  /** Fehlt in Events aus der Zeit vor den Mechs. */
+  readonly sustained?: readonly UnitId[];
+  readonly destroyed: readonly UnitId[];
+}
+
+function planetHits(state: GameState, event: PlanetHits): GameState {
   const hit = new Set(event.sustained);
   const damaged = updatePlanet(state, event.planet, (planet) => ({
     ...planet,
@@ -62,15 +69,15 @@ function controlGained(state: GameState, event: PlanetControlGained): GameState 
 }
 
 export const invasionReducers: ReducerMap<GameState, InvasionEvent> = {
-  BombardmentRolled: (state, event) => removeUnits(state, event.destroyed),
+  BombardmentRolled: planetHits,
   CenterTokenRemoved: (state, event) =>
     updatePlayer({ ...state, centerTokenRemoved: true }, event.player, (player) => ({
       ...player,
       victoryPoints: player.victoryPoints + event.victoryPoints,
     })),
   GroundForcesCommitted: commit,
-  SpaceCannonDefenseFired: (state, event) => removeUnits(state, event.destroyed),
-  GroundCombatRoundRolled: groundRound,
+  SpaceCannonDefenseFired: planetHits,
+  GroundCombatRoundRolled: planetHits,
   GroundCombatEnded: (state) => state,
   PlanetControlGained: controlGained,
 };

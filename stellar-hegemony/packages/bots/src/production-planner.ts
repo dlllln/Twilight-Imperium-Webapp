@@ -1,5 +1,6 @@
 import {
   canBeProduced,
+  canSustainDamage,
   type GameCommand,
   isGroundForce,
   isShip,
@@ -21,7 +22,11 @@ function efficiency(unit: UnitDefinition, dieSides: number): number {
   return (hits * unit.cost.unitsPerCost) / Math.max(1, unit.cost.resources);
 }
 
-/** Erst Bodentruppen für weitere Eroberungen, dann Schiffe nach Kampfwert je Ressource. */
+/**
+ * Erst einfache Bodentruppen für weitere Eroberungen, dann Schiffe nach Kampfwert je Ressource.
+ * Schwere Bodentruppen mit Schadensresistenz (PoK Mech) kommen zuletzt: Bots kaufen sie nur mit
+ * dem Rest des Budgets, als Rückgrat für Einmarsch und Verteidigung.
+ */
 function wishList(view: BotView): readonly UnitDefinition[] {
   const { dieSides } = view.state.config.rules;
   const units = producibleUnits(view.state, view.player, contentOf(view).units);
@@ -29,7 +34,8 @@ function wishList(view: BotView): readonly UnitDefinition[] {
   const ships = units
     .filter((unit) => isShip(unit) && !unit.isFighter)
     .sort((a, b) => efficiency(b, dieSides) - efficiency(a, dieSides));
-  return [...ground, ...ships];
+  const heavy = ground.filter(canSustainDamage);
+  return [...ground.filter((unit) => !canSustainDamage(unit)), ...ships, ...heavy];
 }
 
 /** Erhöht die Bestellung eines Typs oder legt sie an. */

@@ -638,7 +638,37 @@ größer.
 | `pinchStep`, `usePointers` (`use-pan-zoom.ts`)       | Reine Geste plus dünner Hook: Zwei Finger liefern Zoomfaktor und Verschiebung, Maus und ein Finger bleiben ein Ziehen (Low Coupling).                           |
 | Tests: `local-table.ts` (`seatTable`)                | Testattrappe des Servers (Dependency Inversion über `Remote`): Komponententests bedienen alle Plätze, das Produkt kennt nur den eigenen.                        |
 
-## 27. Iterationen
+## 27. Iteration 23 im Detail (ganze Karte, freier Blick, Benachrichtigungen, Mechs)
+
+Die Karte liegt in der Partie immer ganz im freien Bereich zwischen Spielern (links), Vorräten
+(oben), Hand (unten) sowie Benachrichtigungen und Reitern (rechts). Sie wird dadurch auf jedem
+Bildschirm so groß wie möglich, und kein Fenster liegt mehr über einem System. Den Platz für die
+Benachrichtigungen hält die Karte nur frei, wenn sie dadurch höchstens 15 % kleiner wird; auf eher
+quadratischen Bildschirmen liegen die Meldungen kurz über der Karte. Der Blick ist frei: Die rechte
+Maustaste (oder Umschalt) dreht und neigt die Karte, zwei verdrehte Finger drehen sie, Knöpfe und
+die Tasten Q, E und T drehen in Achtelschritten und wechseln zur Draufsicht; „Ansicht
+zurücksetzen“ führt zum Blick vom eigenen Heimatsystem zurück. Was man entscheiden muss, ploppt
+unten rechts wie eine Benachrichtigung auf; darüber erscheinen kurz die Züge der anderen. Ein
+abgelehnter Befehl bleibt rot stehen, bis man ihn schließt. Die Flächen der Anzeigen teilen sich
+Farben und Schatten, Ressourcen und Einfluss stehen auf einem Schildchen unter jedem Planeten.
+
+Mit der Erweiterung kommt als Erstes der Mech: eine Bodeneinheit mit Schadensresistenz (Kosten 2,
+Kampf 6, höchstens 4). Jede Fraktion hat dazu eine eigene Mech-Fähigkeit; zwei davon setzen Mechs
+kostenlos aus der Verstärkung ein (nach einer Eroberung bzw. nach dem Bau von mindestens 3
+Bodentruppen). Schadensresistenz wirkt nun auch gegen Bombardement und Verteidigungsfeuer.
+
+| Element                                                 | Prinzip                                                                                                                                                        |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `map-frame.ts` (`hudInsets`, `frameBounds`, `freeBand`) | Reine Funktionen: Bildschirmränder in Pixeln werden zu einer viewBox; Pixi-Bild, SVG-Flächen und Knöpfe nutzen dieselbe Abbildung (DRY, Low Coupling).         |
+| `BoardView.tilt`, `lift(point, height, tilt)`           | Die Neigung gehört zum Blick (Information Expert); alle Abbildungen fragen sie dort ab, statt eine feste Konstante zu kennen.                                  |
+| `orbit-store.ts` (`orbitBy`, `orbitTo`, `toggleTop`)    | Eigene kleine Ablage für die Verstellung des Spielers; die Grundrichtung vom Heimatsystem bleibt in `board-camera` (Single Responsibility).                    |
+| `pinchStep` mit `twist`, `useGestures`                  | Reine Geste plus dünner Hook: Zwei Finger liefern Zoom, Verschiebung und Drehung; die rechte Maustaste schaltet Ziehen auf Drehen um (Polymorphie über Modus). |
+| `NoticeStack`, `useTurnPanelKey`, `fresh-notices.ts`    | Entscheidungen bleiben in `TurnPanel` (keine Kopie); ein Schlüssel sagt, wann eine neue Entscheidung aufploppt. Meldungen entstehen aus dem Verlauf (DRY).     |
+| Mech als Daten (`units.ts`), `mechAbilityOf`            | Open/Closed: Produktion, Transport, Kampf und Reparatur fragen Fähigkeiten ab, nicht den Typ; der Mech brauchte dort keinen neuen Code.                        |
+| `DeployRule`, `deployEvents`, `UnitsDeployed` (Domain)  | Einsetzen als Daten an der Fraktionsfähigkeit (Strategy); ein eigenes Event hält das Event Sourcing nachvollziehbar, `supplyAllows` prüft das Limit (Expert).  |
+| Bombardement und Verteidigungsfeuer mit `sustained`     | Dieselbe Trefferzuteilung wie im Bodenkampf (DRY): erst Schadensresistenz, dann die billigsten Einheiten; alte Events ohne das Feld bleiben abspielbar.        |
+
+## 28. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -664,8 +694,9 @@ größer.
 | 20  | Nahzoom statt Systemansicht, Shader-Planeten        | ✓     |
 | 21  | Schräger Blick vom Heimatsystem, eigene Planeten    | ✓     |
 | 22  | Nur private Lobbys, Zugverlauf, Rückgängig, Tablet  | ✓     |
+| 23  | Ganze Karte, freier Blick, Meldungen, Mechs (PoK)   | ✓     |
 
-## 28. Befehle
+## 29. Befehle
 
 ```
 pnpm install

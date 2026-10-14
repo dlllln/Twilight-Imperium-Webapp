@@ -2,7 +2,7 @@ import type { WormholeKind } from '@stellar/domain';
 import { Container, Graphics, Sprite } from 'pixi.js';
 import { HEX_SIZE, hexToPixel, type Point } from '../hex-geometry.ts';
 import { seatColor } from '../seat-colors.ts';
-import { lift, plus, projectedCorners, turn } from './board-view.ts';
+import { lift, plus, project, projectedCorners, turn } from './board-view.ts';
 import { type BoardFrame, flatImage, type Placed, standing, stroked } from './board-pieces.ts';
 import { controlRing, planetPiece, planetShadow, shipPiece, tokenChips } from './hex-pieces.ts';
 import {
@@ -105,7 +105,7 @@ function border(
   if (trim === null) return null;
   return (graphics, { view, line }) => {
     const outline = flatPoints(projectedCorners(view, center, HEX_SIZE * trim.inset));
-    const width = trim.width * line * lift(turn(view, center)).scale;
+    const width = trim.width * line * project(view, center).scale;
     softFrame(graphics, outline, width, trim.color, trim.strength);
   };
 }
@@ -115,6 +115,7 @@ const planetAt = (hex: SceneHex, center: Point, index: number, frame: BoardFrame
   lift(
     plus(turn(frame.view, center), planetSpots(hex.planets.length)[index] ?? ORIGIN),
     PLANET_HEIGHT,
+    frame.view.tilt,
   );
 
 /** Ringe in der Farbe des Besitzers um kontrollierte Planeten. */
@@ -139,7 +140,7 @@ function highlightFrame(hex: SceneHex, center: Point, layer: Container) {
   const [color, stroke] = HIGHLIGHT_STROKES[hex.highlight];
   return stroked(layer, (graphics, { view, line }) => {
     const outline = flatPoints(projectedCorners(view, center, HEX_SIZE * 0.97));
-    const width = stroke * line * lift(turn(view, center)).scale;
+    const width = stroke * line * project(view, center).scale;
     graphics
       .poly(outline)
       .stroke({ width: width * 2.5, color, alpha: 0.22 })

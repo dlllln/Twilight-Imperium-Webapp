@@ -118,6 +118,13 @@ function TurnContent({ game, player }: TurnProps): ReactElement {
   return <ActiveTurn key={player} game={game} player={player} />;
 }
 
+/** Welche Unterbrechung ansteht, als Name (für den Schlüssel der Benachrichtigung). */
+function interruptionKind(game: GameState, player: PlayerId): string {
+  if (findPlayer(game, player)?.secretChoice != null) return 'secret';
+  if (reactionActor(game) === player) return 'reaction';
+  return excessActionCards(game, player) > 0 ? 'discard' : '';
+}
+
 /** Was jede Phase unterbricht: Geheimauftrags-Wahl, Reaktion, Ablegen über dem Limit. */
 function interruption(game: GameState, player: PlayerId): ReactElement | null {
   if (findPlayer(game, player)?.secretChoice != null)
@@ -161,6 +168,22 @@ function BotNotice({ game, player }: TurnProps): ReactElement {
       </p>
     </section>
   );
+}
+
+/**
+ * Schlüssel der offenen Entscheidung: Ändert er sich, ploppt die Benachrichtigung neu auf;
+ * `null`, wenn es nichts zu zeigen gibt.
+ */
+export function useTurnPanelKey(game: GameState): string | null {
+  const actor = useHumanActor(game);
+  const bot = useOthersTurn(game);
+  const chosen = useHandStore((state) => state.chosen?.card ?? '');
+  if (game.phase === 'gameOver') return 'gameOver';
+  if (bot !== null) return `wait-${bot}`;
+  if (actor === null || !hasTurnPanel(game, actor)) return null;
+  const { secondary, tactical, transaction } = game.actionPhase ?? {};
+  const parts = [game.phase, game.round, interruptionKind(game, actor), secondary?.card];
+  return [...parts, tactical != null, transaction != null, chosen].join('|');
 }
 
 /** Ein kurzer Satz zur Phase, solange Tipps eingeschaltet sind. */

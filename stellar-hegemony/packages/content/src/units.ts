@@ -9,6 +9,7 @@ export const UNIT_TYPES = {
   fighter: unitTypeId('fighter'),
   sunbreaker: unitTypeId('sunbreaker'),
   infantry: unitTypeId('infantry'),
+  mech: unitTypeId('mech'),
   orbitalBattery: unitTypeId('orbitalBattery'),
   orbitalDock: unitTypeId('orbitalDock'),
 } as const;
@@ -97,6 +98,16 @@ export const BASE_UNITS: readonly UnitDefinition[] = [
     capabilities: [],
     componentLimit: 'unlimited',
   },
+  // Erweiterung (PoK Mech): schwere Bodentruppe mit Schadensresistenz; Fähigkeiten je Fraktion.
+  {
+    id: UNIT_TYPES.mech,
+    category: 'groundForce',
+    isFighter: false,
+    cost: single(2),
+    combat: { hitOn: 6, dice: 1 },
+    capabilities: [{ kind: 'sustainDamage' }],
+    componentLimit: 4,
+  },
   {
     id: UNIT_TYPES.orbitalBattery,
     category: 'structure',
@@ -127,6 +138,7 @@ export const UNIT_NAMES: Readonly<Record<string, LocalizedText>> = {
   [UNIT_TYPES.fighter]: { de: 'Jäger', en: 'Fighter' },
   [UNIT_TYPES.sunbreaker]: { de: 'Sonnenbrecher', en: 'Sunbreaker' },
   [UNIT_TYPES.infantry]: { de: 'Infanterie', en: 'Infantry' },
+  [UNIT_TYPES.mech]: { de: 'Mech', en: 'Mech' },
   [UNIT_TYPES.orbitalBattery]: { de: 'PVS', en: 'PDS' },
   [UNIT_TYPES.orbitalDock]: { de: 'Raumdock', en: 'Space Dock' },
 };

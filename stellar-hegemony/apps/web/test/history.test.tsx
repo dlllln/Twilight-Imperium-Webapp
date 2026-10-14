@@ -54,13 +54,16 @@ describe('Zugverlauf „Was ist passiert?“', () => {
       { type: 'ShipsMoved', player: P1, system: 'b07', movements: [{}, {}] },
       { type: 'GravityRiftRolled', player: P1, ship: 'x', roll: 3, destroyed: false },
       { type: 'PlanetControlGained', player: P1, planet: 'p', structuresDestroyed: [] },
+      { type: 'UnitsDeployed', player: P1, ability: 'beachhead', planet: 'p', units: [{}] },
     ] as unknown as GameEvent[];
     expect(historyLines(events).map((line) => line.kind)).toEqual([
       'round',
       'activated',
       'moved',
       'conquered',
+      'deployed',
     ]);
+    expect(historyLines(events)[4]).toMatchObject({ planet: 'p', count: 1 });
     expect(historyLines(events)[2]).toMatchObject({ count: 2, system: 'b07' });
   });
 

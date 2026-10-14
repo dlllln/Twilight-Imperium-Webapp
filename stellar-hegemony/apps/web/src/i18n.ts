@@ -42,6 +42,10 @@ const DICTIONARY = {
     de: 'bewegt Schiffe nach {system} ({count})',
     en: 'moves ships to {system} ({count})',
   },
+  'history.deployed': {
+    de: 'setzt Mechs auf {planet} ein ({count})',
+    en: 'deploys mechs on {planet} ({count})',
+  },
   'history.produced': {
     de: 'baut Einheiten in {system} ({count})',
     en: 'builds units in {system} ({count})',
@@ -69,8 +73,8 @@ const DICTIONARY = {
   settings: { de: 'Einstellungen', en: 'Settings' },
   closeUp: { de: 'Aus der Nähe', en: 'Close up' },
   systemHint: {
-    de: 'Ein Klick fährt an ein System heran; das Mausrad zoomt stufenlos bis an die Planeten.',
-    en: 'Click a system to fly in; the mouse wheel zooms smoothly down to the planets.',
+    de: 'Ein Klick fährt an ein System heran; das Mausrad zoomt stufenlos bis an die Planeten, die rechte Maustaste dreht und neigt die Karte.',
+    en: 'Click a system to fly in; the mouse wheel zooms smoothly down to the planets, the right mouse button rotates and tilts the map.',
   },
   systemHintGame: {
     de: 'Klick wählt das System und zeigt seine Knöpfe; ein zweiter Klick fährt heran, das Mausrad zoomt bis an die Planeten.',
@@ -79,6 +83,10 @@ const DICTIONARY = {
   zoomIn: { de: 'Hineinzoomen', en: 'Zoom in' },
   zoomOut: { de: 'Herauszoomen', en: 'Zoom out' },
   resetView: { de: 'Ansicht zurücksetzen', en: 'Reset view' },
+  rotateLeft: { de: 'Karte nach links drehen (Q)', en: 'Rotate map left (Q)' },
+  rotateRight: { de: 'Karte nach rechts drehen (E)', en: 'Rotate map right (E)' },
+  topView: { de: 'Draufsicht (T)', en: 'Top view (T)' },
+  tiltedView: { de: 'Schräge Ansicht (T)', en: 'Tilted view (T)' },
   soundToggle: { de: 'Klang', en: 'Sound' },
   volume: { de: 'Lautstärke', en: 'Volume' },
   animationsToggle: { de: 'Animationen', en: 'Animations' },
@@ -87,6 +95,8 @@ const DICTIONARY = {
   language: { de: 'Sprache', en: 'Language' },
   sidebar: { de: 'Spielübersicht', en: 'Game overview' },
   closeDrawer: { de: 'Übersicht schließen', en: 'Close overview' },
+  dismissNotice: { de: 'Meldung schließen', en: 'Dismiss' },
+  tabCards: { de: 'Karten', en: 'Cards' },
   endTurn: { de: 'Zug beenden', en: 'End turn' },
   currentPhase: { de: 'Aktuelle Phase', en: 'Current phase' },
   viewSystem: { de: 'System ansehen', en: 'View system' },

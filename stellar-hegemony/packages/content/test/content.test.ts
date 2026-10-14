@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   botFleet,
   canBeProduced,
+  canSustainDamage,
   countsTowardFleetLimit,
   findCapability,
+  isGroundForce,
+  occupiesCapacity,
   playerId,
   StaticUnitCatalog,
   validateFleet,
@@ -12,6 +15,7 @@ import {
 import {
   abilitiesOf,
   BASE_RULE_NUMBERS,
+  mechAbilityOf,
   BASE_UNITS,
   FACTION_PROFILES,
   FACTIONS,
@@ -54,6 +58,21 @@ describe('Content: Grundwerte der Einheiten', () => {
     expect(byId(UNIT_TYPES.orbitalBattery)?.componentLimit).toBe(6);
   });
 
+  it('PoK Mech: Bodentruppe für 2 Ressourcen, trifft bei 6, Schadensresistenz, 4 im Vorrat', () => {
+    const mech = byId(UNIT_TYPES.mech);
+    expect(mech?.cost).toEqual({ resources: 2, unitsPerCost: 1 });
+    expect(mech?.combat).toEqual({ hitOn: 6, dice: 1 });
+    expect(mech?.componentLimit).toBe(4);
+    expect(mech && isGroundForce(mech) && occupiesCapacity(mech)).toBe(true);
+    expect(mech && canSustainDamage(mech)).toBe(true);
+    expect(
+      FACTIONS.flatMap((f) => [
+        ...f.startingForces.space,
+        ...f.startingForces.planets.flatMap((p) => p.units),
+      ]).some((stack) => stack.type === UNIT_TYPES.mech),
+    ).toBe(false);
+  });
+
   it('RR 48: Jäger und Infanterie kommen zu zweit für eine Ressource', () => {
     expect(byId(UNIT_TYPES.fighter)?.cost).toEqual({ resources: 1, unitsPerCost: 2 });
     expect(byId(UNIT_TYPES.infantry)?.cost).toEqual({ resources: 1, unitsPerCost: 2 });
@@ -87,15 +106,30 @@ describe('Content: Grundwerte der Einheiten', () => {
 });
 
 describe('Content: Fraktionsfähigkeiten (RR 27.21)', () => {
-  it('RR 27.21: jede Fraktion hat zwei eigene Fähigkeiten mit Name und Wirkung', () => {
+  it('RR 27.21: jede Fraktion hat zwei eigene Fähigkeiten und eine Mech-Fähigkeit mit Name und Wirkung (PoK Mech)', () => {
     for (const faction of FACTIONS) {
-      expect(faction.abilities).toHaveLength(2);
+      expect(faction.abilities).toHaveLength(3);
+      expect(faction.abilities.at(-1)).toBe(mechAbilityOf(faction.id));
       for (const ability of faction.abilities) {
         expect(factionAbilityText(ability.id)?.name.de.length).toBeGreaterThan(0);
         expect(factionAbilityText(ability.id)?.effect.en.length).toBeGreaterThan(0);
       }
     }
     expect(abilitiesOf('unbekannt')).toEqual([]);
+    expect(mechAbilityOf('unbekannt')).toBeUndefined();
+  });
+
+  it('PoK Mech: jede Mech-Fähigkeit betrifft Mechs, per Einheitenwert oder Einsatz', () => {
+    const ids = new Set<string>();
+    for (const faction of FACTIONS) {
+      const mech = mechAbilityOf(faction.id);
+      const targets = mech?.modifiers.flatMap((modifier) => modifier.target.types ?? []) ?? [];
+      const units = [...targets, ...(mech?.deploy === undefined ? [] : [mech.deploy.unit])];
+      expect(units.length).toBeGreaterThan(0);
+      expect(units.every((type) => type === UNIT_TYPES.mech)).toBe(true);
+      ids.add(mech?.id ?? '');
+    }
+    expect(ids.size).toBe(FACTIONS.length);
   });
 
   it('RR 27.21: Einheitenwerte der Fähigkeiten zielen auf vorhandene Einheiten', () => {

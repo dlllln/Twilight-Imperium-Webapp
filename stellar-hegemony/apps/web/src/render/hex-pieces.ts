@@ -27,11 +27,27 @@ function planetBody(planet: ScenePlanet, diameter: number): Mesh<MeshGeometry, S
 
 /** Ressourcen und Einfluss unter dem Planeten; beim Nahzoom übernimmt die Beschriftung im DOM. */
 function planetValues(planet: ScenePlanet, diameter: number, labels: Container): void {
-  const y = diameter / 2 + 6;
+  const y = diameter / 2 + 7;
   labels.addChild(
-    label(String(planet.definition.resources), RESOURCE_STYLE, -5, y),
-    label(String(planet.definition.influence), INFLUENCE_STYLE, 5, y),
+    valueBadge(y),
+    label(String(planet.definition.resources), RESOURCE_STYLE, -BADGE_HALF / 2, y),
+    label(String(planet.definition.influence), INFLUENCE_STYLE, BADGE_HALF / 2, y),
   );
+}
+
+const BADGE_HALF = 12;
+const BADGE_HEIGHT = 12;
+
+/** Dunkles Schildchen mit Trennstrich: links Ressourcen (gold), rechts Einfluss (blau). */
+function valueBadge(y: number): Graphics {
+  const top = y - BADGE_HEIGHT / 2;
+  return new Graphics()
+    .roundRect(-BADGE_HALF, top, BADGE_HALF * 2, BADGE_HEIGHT, BADGE_HEIGHT / 2)
+    .fill({ color: 0x060a18, alpha: 0.82 })
+    .stroke({ width: 0.7, color: GOLD, alpha: 0.6 })
+    .moveTo(0, top + 2.5)
+    .lineTo(0, top + BADGE_HEIGHT - 2.5)
+    .stroke({ width: 0.6, color: 0xffffff, alpha: 0.3 });
 }
 
 function techDot(specialty: string, radius: number): Graphics {

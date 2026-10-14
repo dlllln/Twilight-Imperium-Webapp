@@ -30,14 +30,29 @@ function wordsOf(line: HistoryLine, game: GameState, language: Language): Words 
 const fill = (text: string, words: Words): string =>
   text.replace(/\{(\w+)\}/g, (gap, key: string) => String(words[key] ?? gap));
 
-function Entry({ line, game }: { readonly line: HistoryLine; readonly game: GameState }) {
+/** Eine Zeile in Worten: wer (mit Farbe) und was; auch für die Benachrichtigungen. */
+export function HistoryText({
+  line,
+  game,
+}: {
+  readonly line: HistoryLine;
+  readonly game: GameState;
+}): ReactElement {
   const t = useT();
   const language = useLanguage();
   const text = fill(t(`history.${line.kind}` as MessageKey), wordsOf(line, game, language));
-  if (!('player' in line)) return <li className="history-round">{text}</li>;
+  if (!('player' in line)) return <>{text}</>;
   return (
-    <li>
+    <>
       <PlayerTag game={game} id={line.player} /> {text}
+    </>
+  );
+}
+
+function Entry({ line, game }: { readonly line: HistoryLine; readonly game: GameState }) {
+  return (
+    <li className={'player' in line ? undefined : 'history-round'}>
+      <HistoryText line={line} game={game} />
     </li>
   );
 }

@@ -1,5 +1,5 @@
 import { findPlayer, type GameState } from '../game/game-state.ts';
-import type { PlayerId } from '../shared/ids.ts';
+import type { PlayerId, UnitTypeId } from '../shared/ids.ts';
 import type { StrategyMechanic } from '../strategy/strategy-card.ts';
 import type { UnitModifier } from '../technology/technology-definition.ts';
 
@@ -34,11 +34,26 @@ export const NO_FACTION_RULES: FactionRules = {
   freeSecondaries: [],
 };
 
+/** Wann eine Fähigkeit eine Einheit ohne Produktion einsetzt (PoK Mech). */
+export type DeployTrigger =
+  /** Man übernimmt bei einem Einmarsch einen Planeten, den ein anderer Spieler kontrolliert hat. */
+  | { readonly kind: 'planetCaptured' }
+  /** Man produziert auf einmal mindestens `minimum` Bodentruppen. */
+  | { readonly kind: 'groundForcesProduced'; readonly minimum: number };
+
+/** Einsatz ohne Produktion: eine Einheit kommt kostenlos aus der Verstärkung auf den Planeten. */
+export interface DeployRule {
+  readonly unit: UnitTypeId;
+  readonly trigger: DeployTrigger;
+}
+
 /** Eine Fraktionsfähigkeit als Daten: Einheitenwerte wie bei Technologien und Regelwerte. */
 export interface FactionAbility {
   readonly id: string;
   readonly modifiers: readonly UnitModifier[];
   readonly rules: Partial<FactionRules>;
+  /** Optionaler Einsatz einer Einheit aus der Verstärkung. */
+  readonly deploy?: DeployRule;
 }
 
 type NumericRule = Exclude<keyof FactionRules, 'freeSecondaries'>;

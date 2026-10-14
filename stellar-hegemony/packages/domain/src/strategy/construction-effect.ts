@@ -1,7 +1,7 @@
 import type { GameEvent } from '../game/game-events.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
 import type { StructuresPlaced } from '../production/production-events.ts';
-import { ownedOnBoard } from '../production/production.ts';
+import { ownedOnBoard } from '../production/unit-supply.ts';
 import {
   type Check,
   type DomainError,

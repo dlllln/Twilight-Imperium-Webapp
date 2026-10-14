@@ -23,6 +23,7 @@ const REVERSIBLE: ReadonlySet<GameEvent['type']> = new Set<GameEvent['type']>([
   'TradeGoodsSpent',
   'UnitsProduced',
   'StructuresPlaced',
+  'UnitsDeployed',
   'GroundForcesCommitted',
   'PlanetControlGained',
 ]);

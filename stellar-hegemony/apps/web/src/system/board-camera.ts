@@ -6,6 +6,7 @@ import { blendView, type BoardView, sameView, viewFrom } from '../render/board-v
 import type { SceneHex } from '../render/scene-model.ts';
 import { useSettingsStore } from '../settings-store.ts';
 import { useCameraStore } from './camera-store.ts';
+import { type Orbit, useOrbitStore } from './orbit-store.ts';
 import { easeInOut } from './viewport-tween.ts';
 
 /** Dauer der Drehung, falls sich der eigene Platz ändert (z. B. nach dem Beitreten). */
@@ -71,8 +72,8 @@ export interface BoardLook {
   readonly target: BoardView;
 }
 
-/** Blick auf das Brett, immer vom Heimatsystem des Menschen am Bildschirm aus. */
-export function useBoardView(hexes: readonly SceneHex[]): BoardLook {
+/** Grundrichtung vom Heimatsystem aus; sie dreht sich weich, wenn der eigene Platz wechselt. */
+function useHomeView(hexes: readonly SceneHex[]): BoardLook {
   const { target, playing } = useTargetView(hexes);
   const [view, setView] = useState(target);
   const current = useRef(view);
@@ -88,5 +89,21 @@ export function useBoardView(hexes: readonly SceneHex[]): BoardLook {
     useCameraStore.getState().back();
     return turnBoard(current.current, target, setView);
   }, [target, turning]);
+  return { view, target };
+}
+
+/** Grundrichtung plus die eigene Drehung und Neigung des Spielers. */
+const withOrbit = (home: BoardView, orbit: Orbit): BoardView => ({
+  angle: home.angle + orbit.turn,
+  tilt: orbit.tilt,
+});
+
+/** Blick auf das Brett: vom Heimatsystem des Menschen am Bildschirm aus, frei dreh- und neigbar. */
+export function useBoardView(hexes: readonly SceneHex[]): BoardLook {
+  const home = useHomeView(hexes);
+  const turn = useOrbitStore((state) => state.turn);
+  const tilt = useOrbitStore((state) => state.tilt);
+  const view = useMemo(() => withOrbit(home.view, { turn, tilt }), [home.view, turn, tilt]);
+  const target = useMemo(() => withOrbit(home.target, { turn, tilt }), [home.target, turn, tilt]);
   return { view, target };
 }

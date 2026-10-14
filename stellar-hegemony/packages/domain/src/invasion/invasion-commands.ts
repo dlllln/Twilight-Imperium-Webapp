@@ -1,4 +1,5 @@
 import { rollVolley, type Shooter } from '../combat/dice.ts';
+import { suggestHitAssignment } from '../combat/hit-assignment.ts';
 import { evaluatePayment, NO_PAYMENT, type Payment, paymentEvents } from '../economy/payment.ts';
 import type { Command, CommandHandler, DecisionContext } from '../eventsourcing/command.ts';
 import { chain } from '../game/event-chain.ts';
@@ -93,7 +94,7 @@ function bombardShooters(
     });
 }
 
-/** RR 20.1/20.2: Je Planet ein Wurf aller zugeteilten Einheiten; Treffer zerstören Bodentruppen. */
+/** RR 20.1/20.2: Je Planet ein Wurf aller zugeteilten Einheiten; Treffer treffen Bodentruppen. */
 function bombardPlanet(
   state: GameState,
   system: SystemId,
@@ -106,8 +107,9 @@ function bombardPlanet(
   const defenders = groundForcesOn(state, planet, content.units, (id) => id !== player);
   const target = defenders[0]?.owner ?? player;
   const volley = rollVolley(random, state.config.rules.dieSides, shooters, { player, target });
-  const destroyed = defenders.slice(0, volley.hits).map((unit) => unit.id);
-  return [{ type: 'BombardmentRolled', system, planet, volley, destroyed }];
+  // PoK Mech: Schadensresistenz fängt auch Bombardement-Treffer ab (Regelentscheidung).
+  const hits = suggestHitAssignment(defenders, volley.hits, content.units);
+  return [{ type: 'BombardmentRolled', system, planet, volley, ...hits }];
 }
 
 export const bombardHandler = {

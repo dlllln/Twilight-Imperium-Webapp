@@ -1,6 +1,11 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
 import type { GameState } from '../game/game-state.ts';
-import type { ProductionEvent, StructuresPlaced, UnitsProduced } from './production-events.ts';
+import type {
+  ProductionEvent,
+  StructuresPlaced,
+  UnitsDeployed,
+  UnitsProduced,
+} from './production-events.ts';
 
 function produce(state: GameState, event: UnitsProduced): GameState {
   const system = state.systems[event.system];
@@ -29,7 +34,18 @@ function placeStructures(state: GameState, event: StructuresPlaced): GameState {
   return { ...state, planets, nextUnitNumber: state.nextUnitNumber + event.placements.length };
 }
 
+/** Eingesetzte Einheiten stehen auf dem Planeten; die Ids zählen wie produzierte weiter. */
+function deploy(state: GameState, event: UnitsDeployed): GameState {
+  const target = state.planets[event.planet];
+  const planets =
+    target === undefined
+      ? state.planets
+      : { ...state.planets, [target.id]: { ...target, units: [...target.units, ...event.units] } };
+  return { ...state, planets, nextUnitNumber: state.nextUnitNumber + event.units.length };
+}
+
 export const productionReducers: ReducerMap<GameState, ProductionEvent> = {
   UnitsProduced: produce,
   StructuresPlaced: placeStructures,
+  UnitsDeployed: deploy,
 };

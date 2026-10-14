@@ -48,11 +48,16 @@ export const boundsCenter = (bounds: Bounds): Point => ({
  * Zoom, bei dem ein Feld die Hälfte der Bildhöhe füllt. Das Feld liegt gekippt und an
  * seiner Stelle um `scale` perspektivisch vergrößert oder verkleinert auf dem Brett.
  */
-export function systemZoom(bounds: Bounds, screen: ScreenSize, scale = 1): number {
+export function systemZoom(
+  bounds: Bounds,
+  screen: ScreenSize,
+  scale = 1,
+  flatten = FORESHORTEN,
+): number {
   if (screen.width <= 0 || screen.height <= 0) return FOCUS_ZOOM;
   const fit = Math.min(screen.width / bounds.width, screen.height / bounds.height);
   const span = Math.min(screen.width, screen.height) * SYSTEM_FILL;
-  return clamp(span / (HEX_SIZE * SQRT3 * FORESHORTEN * scale * fit), 1, ZOOM_MAX);
+  return clamp(span / (HEX_SIZE * SQRT3 * flatten * scale * fit), 1, ZOOM_MAX);
 }
 
 /** Ansicht, in der `point` (Kartenkoordinaten) mittig und mit `zoom` vergrößert steht. */

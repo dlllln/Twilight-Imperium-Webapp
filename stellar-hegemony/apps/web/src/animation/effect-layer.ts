@@ -1,6 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import { hexToPixel, HEX_SIZE } from '../hex-geometry.ts';
-import { type BoardView, FLAT_VIEW, FORESHORTEN, project } from '../render/board-view.ts';
+import { type BoardView, FLAT_VIEW, foreshorten, project } from '../render/board-view.ts';
 import { hexOf } from '../render/palette.ts';
 import { seatColor } from '../seat-colors.ts';
 import type { MapEffect } from './map-effects.ts';
@@ -62,7 +62,7 @@ function drawRing(graphic: Graphics, effect: RingEffect, t: number, view: BoardV
   const color = colorOf(effect);
   const grow = effect.kind === 'arrive' ? 1 - t : t;
   const radius = HEX_SIZE * (0.3 + 0.7 * grow) * center.scale;
-  const flat = FORESHORTEN;
+  const flat = foreshorten(view);
   graphic
     .ellipse(center.x, center.y, radius, radius * flat)
     .stroke({ width: 4 * center.scale, color, alpha: 1 - t });

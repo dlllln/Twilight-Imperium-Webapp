@@ -23,6 +23,8 @@ import type { UnitDefinition } from '../unit/unit-definition.ts';
 import { UnitNumbering } from '../unit/unit-numbering.ts';
 import type { UnitsProduced } from './production-events.ts';
 import { isBlockaded, productionLimit, productionSites } from './production-queries.ts';
+import { deployEvents, groundForcesProduced } from './unit-deployment.ts';
+import { supplyAllows } from './unit-supply.ts';
 
 export interface ProductionOrder {
   readonly type: UnitTypeId;
@@ -88,23 +90,11 @@ export const productionCost = (resolved: readonly Resolved[]): number =>
 const totalCount = (resolved: readonly Resolved[]) =>
   resolved.reduce((sum, r) => sum + r.order.count, 0);
 
-export function ownedOnBoard(state: GameState, player: PlayerId, type: UnitTypeId): number {
-  const units = [
-    ...Object.values(state.systems).flatMap((system) => system.spaceUnits),
-    ...Object.values(state.planets).flatMap((planet) => planet.units),
-  ];
-  return units.filter((unit) => unit.owner === player && unit.type === type).length;
-}
-
 /** RR 24.5: Mehr Einheiten, als die Vorratsgrenze erlaubt, gibt es nicht. */
 const withinSupply = (input: ProductionInput, resolved: readonly Resolved[]): boolean =>
-  resolved.every(({ order, definition }) => {
-    const limit = definition.componentLimit;
-    return (
-      limit === 'unlimited' ||
-      ownedOnBoard(input.state, input.player, order.type) + order.count <= limit
-    );
-  });
+  resolved.every(({ order, definition }) =>
+    supplyAllows(input.state, input.player, definition, order.count),
+  );
 
 function groundPlacement(input: ProductionInput, resolved: readonly Resolved[]): Check {
   const needsPlanet = resolved.some(({ definition }) => isGroundForce(definition));
@@ -187,9 +177,25 @@ function limitsAfter(input: ProductionInput, events: readonly GameEvent[]): Chec
   );
 }
 
+/** PoK Mech: Fähigkeiten, die nach genügend produzierten Bodentruppen eine Einheit einsetzen. */
+function deploysAfter(
+  input: ProductionInput,
+  events: readonly GameEvent[],
+  produced: UnitsProduced,
+): readonly GameEvent[] {
+  if (produced.planet === null) return [];
+  return deployEvents({
+    state: events.reduce(evolveGame, input.state),
+    player: input.player,
+    planet: produced.planet,
+    content: input.decision.content,
+    fires: groundForcesProduced(produced.ground.length),
+  });
+}
+
 /**
  * Pure Fabrication für alle Produktionswege (Taktikaktion, Kriegsführung sekundär):
- * prüft Bestellung, Bezahlung und Grenzen und liefert die Events.
+ * prüft Bestellung, Bezahlung und Grenzen und liefert die Events samt Einsätzen aus Fähigkeiten.
  */
 export function productionEvents(
   input: ProductionInput,
@@ -198,8 +204,10 @@ export function productionEvents(
   return andThen(resolved, (orders) =>
     andThen(capacityChecks(input, orders), () =>
       andThen(payFor(input, orders), (payment) => {
-        const events: readonly GameEvent[] = [...payment, producedEvent(input, orders)];
-        return map(limitsAfter(input, events), () => events);
+        const produced = producedEvent(input, orders);
+        const events: readonly GameEvent[] = [...payment, produced];
+        const deployed = () => [...events, ...deploysAfter(input, events, produced)];
+        return map(limitsAfter(input, events), deployed);
       }),
     ),
   );

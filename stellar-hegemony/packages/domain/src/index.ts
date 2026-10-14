@@ -91,6 +91,8 @@ export * from './production/production-queries.ts';
 export * from './unit/unit-numbering.ts';
 export * from './production/production-events.ts';
 export * from './production/production-reducers.ts';
+export * from './production/unit-supply.ts';
+export * from './production/unit-deployment.ts';
 export * from './production/production.ts';
 export * from './production/production-quote.ts';
 export * from './technology/technology-definition.ts';

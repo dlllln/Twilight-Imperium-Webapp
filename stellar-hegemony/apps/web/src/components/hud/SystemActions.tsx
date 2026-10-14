@@ -3,7 +3,7 @@ import { Crosshair, type LucideIcon, ZoomIn } from 'lucide-react';
 import type { PointerEvent, ReactElement } from 'react';
 import { useGameStore, useHumanActor } from '../../game-store.ts';
 import { HEX_SIZE, hexToPixel } from '../../hex-geometry.ts';
-import { type BoardView, FORESHORTEN, project } from '../../render/board-view.ts';
+import { type BoardView, foreshorten, project } from '../../render/board-view.ts';
 import { type SystemAction, systemActions } from '../../hud/system-actions.ts';
 import type { MessageKey } from '../../i18n.ts';
 import type { SceneHex } from '../../render/scene-model.ts';
@@ -15,7 +15,7 @@ const BUTTON = 46;
 const GAP = 8;
 const LIFT = 10;
 /** Halbe Höhe eines gekippten Felds im Bild (vor der Perspektive). */
-const HALF_HEIGHT = ((HEX_SIZE * Math.sqrt(3)) / 2) * FORESHORTEN;
+const HALF_HEIGHT = (HEX_SIZE * Math.sqrt(3)) / 2;
 
 const LOOKS: Readonly<Record<SystemAction, readonly [LucideIcon, MessageKey]>> = {
   view: [ZoomIn, 'viewSystem'],
@@ -89,7 +89,7 @@ interface Where {
 
 function placement({ hex, viewport, view }: Where, count: number, band: Band) {
   const center = project(view, hexToPixel(hex.position));
-  const half = HALF_HEIGHT * center.scale;
+  const half = HALF_HEIGHT * foreshorten(view) * center.scale;
   const width = count * BUTTON + (count - 1) * GAP;
   const x = viewport.panX + center.x * viewport.zoom - width / 2;
   const above = viewport.panY + (center.y - half) * viewport.zoom - BUTTON - LIFT;

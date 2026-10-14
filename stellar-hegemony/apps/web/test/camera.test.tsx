@@ -106,7 +106,19 @@ describe('Kamera der Sternenkarte', () => {
         { x: 260, y: 120 },
       ],
     );
-    expect(step).toEqual({ factor: 2, center: { x: 160, y: 120 }, dx: 10, dy: 20 });
+    expect(step).toEqual({ factor: 2, center: { x: 160, y: 120 }, dx: 10, dy: 20, twist: 0 });
+    const turned = pinchStep(
+      [
+        { x: 100, y: 100 },
+        { x: 200, y: 100 },
+      ],
+      [
+        { x: 150, y: 50 },
+        { x: 150, y: 150 },
+      ],
+    );
+    expect(turned.twist).toBeCloseTo(Math.PI / 2);
+    expect(turned.factor).toBeCloseTo(1);
   });
 
   it('am Tablet: zwei Finger zoomen die Karte, ein Finger verschiebt sie und wählt dann nichts', () => {

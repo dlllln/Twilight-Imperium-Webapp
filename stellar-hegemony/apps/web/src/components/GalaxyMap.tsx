@@ -15,8 +15,14 @@ import {
 } from 'react';
 import { type MapEffect, mapEffects } from '../animation/map-effects.ts';
 import { useGameStore } from '../game-store.ts';
-import { type Bounds, hexToPixel, padBounds, type Point, toSvgPoints } from '../hex-geometry.ts';
-import { boardBounds, type BoardView, project, projectedCorners } from '../render/board-view.ts';
+import { type Bounds, hexToPixel, type Point, toSvgPoints } from '../hex-geometry.ts';
+import {
+  boardBounds,
+  type BoardView,
+  foreshorten,
+  project,
+  projectedCorners,
+} from '../render/board-view.ts';
 import { useBoardView } from '../system/board-camera.ts';
 import type { Language } from '../i18n.ts';
 import { gameScene, layoutScene, type SceneHex } from '../render/scene-model.ts';
@@ -27,7 +33,8 @@ import { usePanZoom } from '../use-pan-zoom.ts';
 import { HexTooltip } from './HexTooltip.tsx';
 import { MapControls } from './MapControls.tsx';
 import { glideCamera, useCameraStore } from '../system/camera-store.ts';
-import { useElementSize } from '../system/use-element-size.ts';
+import { frameBounds, freeBand, hudInsets, type Insets } from '../system/map-frame.ts';
+import { type Size, useElementSize } from '../system/use-element-size.ts';
 import {
   boundsCenter,
   CLOSE_ZOOM,
@@ -41,7 +48,7 @@ import { PhaseDock } from './hud/PhaseDock.tsx';
 import { PlayerRail } from './hud/PlayerRail.tsx';
 import { ResourceBar } from './hud/ResourceBar.tsx';
 import { SystemActions } from './hud/SystemActions.tsx';
-import { TurnFloat } from './hud/TurnFloat.tsx';
+import { NoticeStack } from './hud/NoticeStack.tsx';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
 const PixiCanvas = lazy(() =>
@@ -74,19 +81,34 @@ function useScene(): readonly SceneHex[] {
 }
 
 const NO_EFFECTS: readonly MapEffect[] = [];
+const NO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
 
-/** In der Partie liegen Spieler links, Vorräte oben und die Hand unten über der Karte; dafür bleibt Platz. */
-const HUD_MARGINS = { top: 80, bottom: 150, left: 230, right: 80 } as const;
+interface Band {
+  readonly top: number;
+  readonly bottom: number;
+}
 
-function useBounds(hexes: readonly SceneHex[], view: BoardView): Bounds {
+interface MapFrame {
+  readonly bounds: Bounds;
+  /** Freies Band zwischen Vorräten und Hand (viewBox), für die Knöpfe am System. */
+  readonly band: Band;
+}
+
+/** In der Partie liegt die Karte ganz im freien Bereich zwischen den Anzeigen. */
+function useFrame(hexes: readonly SceneHex[], view: BoardView, size: Size): MapFrame {
   const playing = useGameStore((state) => state.game !== null);
+  const { width, height } = size;
   return useMemo(() => {
-    const bounds = boardBounds(
+    const board = boardBounds(
       view,
       hexes.map((hex) => hexToPixel(hex.position)),
     );
-    return playing ? padBounds(bounds, HUD_MARGINS) : bounds;
-  }, [hexes, view, playing]);
+    const screen = { width, height };
+    if (!playing) return { bounds: board, band: freeBand(board, screen, NO_INSETS) };
+    const insets = hudInsets(board, screen);
+    const bounds = frameBounds(board, screen, insets);
+    return { bounds, band: freeBand(bounds, screen, insets) };
+  }, [hexes, view, playing, width, height]);
 }
 
 /** Effekte des letzten Zugs, wenn Animationen eingeschaltet sind. */
@@ -139,6 +161,7 @@ function HexTarget({ hex, view, hovered, onHover, onPick }: TargetProps): ReactE
 interface TargetsProps {
   readonly hexes: readonly SceneHex[];
   readonly bounds: Bounds;
+  readonly band: Band;
   readonly viewport: Viewport;
   readonly view: BoardView;
   readonly onPick: (hex: SceneHex) => void;
@@ -149,7 +172,7 @@ const viewBoxOf = (b: Bounds): string =>
   [b.minX, b.minY, b.width, b.height].map((value) => String(value)).join(' ');
 
 /** Knöpfe über dem in der Partie gewählten System. */
-function ChosenActions({ hexes, bounds, viewport, view, onView }: Omit<TargetsProps, 'onPick'>) {
+function ChosenActions({ hexes, band, viewport, view, onView }: Omit<TargetsProps, 'onPick'>) {
   const game = useGameStore((state) => state.game);
   const selected = useGameStore((state) => state.selected);
   const chosen = hexes.find((hex) => hex.systemId !== null && hex.systemId === selected);
@@ -160,8 +183,8 @@ function ChosenActions({ hexes, bounds, viewport, view, onView }: Omit<TargetsPr
       hex={chosen}
       viewport={viewport}
       view={view}
-      top={bounds.minY + HUD_MARGINS.top}
-      bottom={bounds.minY + bounds.height - HUD_MARGINS.bottom}
+      top={band.top}
+      bottom={band.bottom}
       onView={onView}
     />
   );
@@ -169,7 +192,7 @@ function ChosenActions({ hexes, bounds, viewport, view, onView }: Omit<TargetsPr
 
 /** SVG-Ebene über dem Pixi-Bild, mit derselben Abbildung wie `worldTransform`. */
 const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
-  { hexes, bounds, viewport, view, onPick, onView },
+  { hexes, bounds, band, viewport, view, onPick, onView },
   svg,
 ): ReactElement {
   const { hovered, hover } = useGalaxyStore();
@@ -188,7 +211,7 @@ const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
           />
         ))}
       </g>
-      <ChosenActions {...{ hexes, bounds, viewport, view, onView }} />
+      <ChosenActions {...{ hexes, bounds, band, viewport, view, onView }} />
     </svg>
   );
 });
@@ -206,7 +229,7 @@ function useFlyTo(bounds: Bounds, view: BoardView, svg: RefObject<SVGSVGElement 
       const { game, select } = useGameStore.getState();
       if (game !== null) select(hex.systemId);
       const at = project(view, hexToPixel(hex.position));
-      const zoom = systemZoom(bounds, svgSize(svg), at.scale);
+      const zoom = systemZoom(bounds, svgSize(svg), at.scale, foreshorten(view));
       useCameraStore.getState().focus(focusViewport(bounds, at, zoom));
     },
     [bounds, view, svg],
@@ -269,8 +292,10 @@ function Hud({ game }: { readonly game: GameState }): ReactElement {
     <>
       <PlayerRail game={game} />
       <ResourceBar game={game} />
-      <TurnFloat game={game} />
-      <PhaseDock game={game} />
+      <div className="hud-corner">
+        <NoticeStack game={game} />
+        <PhaseDock game={game} />
+      </div>
       <HandDock game={game} />
     </>
   );
@@ -291,13 +316,11 @@ const Overlays = memo(function Overlays(): ReactElement | null {
 });
 
 /** Kamera der Karte: Heranfahren an Systeme und stufenloser Zoom, beide über dieselbe SVG-Abbildung. */
-function useMapCamera(bounds: Bounds, view: BoardView) {
-  const svg = useRef<SVGSVGElement>(null);
+function useMapCamera(bounds: Bounds, view: BoardView, svg: RefObject<SVGSVGElement | null>) {
   const flyTo = useFlyTo(bounds, view, svg);
   const zoom = useZoom(bounds, svg);
-  const size = useElementSize(svg);
   useEscapeBack();
-  return { svg, size, flyTo, zoom };
+  return { flyTo, zoom };
 }
 
 /** Ohne WebGL zeigt die Karte nur die SVG-Felder. */
@@ -323,13 +346,20 @@ function MapTooltip({
   return <HexTooltip hex={hex} x={cursor.x} y={cursor.y} />;
 }
 
+/** Blick, Bildausschnitt und Kamera der Karte. */
+function useMapView(hexes: readonly SceneHex[]) {
+  const { view, target } = useBoardView(hexes);
+  const svg = useRef<SVGSVGElement>(null);
+  const size = useElementSize(svg);
+  const { bounds, band } = useFrame(hexes, target, size);
+  return { view, svg, size, bounds, band, ...useMapCamera(bounds, view, svg) };
+}
+
 export function GalaxyMap(): ReactElement {
   const viewport = useGalaxyStore((state) => state.viewport);
   const hexes = useScene();
   const effects = useMapEffects();
-  const { view, target } = useBoardView(hexes);
-  const bounds = useBounds(hexes, target);
-  const { svg, size, flyTo, zoom } = useMapCamera(bounds, view);
+  const { view, svg, size, bounds, band, flyTo, zoom } = useMapView(hexes);
   const { cursor, touch, wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
   const [flat, onUnavailable] = useFlatFallback();
   const pick = usePicking(wasDrag, flyTo);
@@ -340,7 +370,12 @@ export function GalaxyMap(): ReactElement {
           <PixiCanvas {...{ hexes, bounds, viewport, view, effects, onUnavailable }} />
         </Suspense>
       )}
-      <HexTargets {...{ hexes, bounds, viewport, view }} ref={svg} onPick={pick} onView={flyTo} />
+      <HexTargets
+        {...{ hexes, bounds, band, viewport, view }}
+        ref={svg}
+        onPick={pick}
+        onView={flyTo}
+      />
       <CloseUpLabels {...{ hexes, bounds, viewport, view, size }} />
       <MapTooltip hexes={hexes} cursor={cursor} touch={touch} />
       <MapControls onZoom={(factor) => zoom(factor)} onReset={useCameraStore.getState().back} />

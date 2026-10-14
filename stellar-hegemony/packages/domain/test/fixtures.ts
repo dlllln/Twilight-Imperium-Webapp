@@ -79,6 +79,7 @@ export const T = {
   battleship: unitTypeId('battleship'),
   fighter: unitTypeId('fighter'),
   infantry: unitTypeId('infantry'),
+  mech: unitTypeId('mech'),
   dock: unitTypeId('dock'),
   battery: unitTypeId('battery'),
   escort: unitTypeId('escort'),
@@ -139,6 +140,15 @@ const definitions: readonly UnitDefinition[] = [
     combat: { hitOn: 8, dice: 1 },
     capabilities: [],
     componentLimit: 'unlimited',
+  },
+  {
+    id: T.mech,
+    category: 'groundForce',
+    isFighter: false,
+    cost: { resources: 2, unitsPerCost: 1 },
+    combat: { hitOn: 6, dice: 1 },
+    capabilities: [{ kind: 'sustainDamage' }],
+    componentLimit: 4,
   },
   {
     id: T.dock,

@@ -17,6 +17,7 @@ import {
   readyPlanets,
   splitGain,
 } from '../src/index.ts';
+import { UNIT_TYPES } from '@stellar/content';
 import { apply, botGame, contextFor, playBots } from './bot-game.ts';
 
 const SEED = 3;
@@ -38,6 +39,11 @@ describe('KI-Bots: ganze Partien', () => {
       const kinds = new Set(run.commands.map((command) => command.type));
       for (const kind of ['ActivateSystem', 'MoveShips', 'ProduceUnits', 'CastVotes'])
         expect(kinds.has(kind as never)).toBe(true);
+      // PoK Mech: Mechs kauft der Bot nur mit dem Rest des Budgets, also als letzte Bestellung.
+      const orders = run.commands.flatMap((c) => (c.type === 'ProduceUnits' ? [c.orders] : []));
+      const withMech = orders.filter((list) => list.some((o) => o.type === UNIT_TYPES.mech));
+      expect(withMech.length).toBeGreaterThan(0);
+      expect(withMech.every((list) => list.at(-1)?.type === UNIT_TYPES.mech)).toBe(true);
     },
     60_000,
   );

@@ -27,6 +27,7 @@ const CUES: Readonly<Partial<Record<GameEvent['type'], SoundCue>>> = {
   UnitsDestroyed: 'explosion',
   PlanetControlGained: 'capture',
   UnitsProduced: 'produce',
+  UnitsDeployed: 'produce',
   StrategyCardPicked: 'card',
   ActionCardPlayed: 'card',
   TechnologyResearched: 'research',

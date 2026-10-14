@@ -1,5 +1,6 @@
 import { type PointerEvent, type RefObject, useRef, useState, type WheelEvent } from 'react';
 import { useGalaxyStore } from './store.ts';
+import { useOrbitStore } from './system/orbit-store.ts';
 import { stopCamera } from './system/viewport-tween.ts';
 
 /** Zoom je Pixel Mausradweg: eine Raste (100 px) vergrößert um gut ein Viertel. */
@@ -10,6 +11,10 @@ const PAGE_PIXELS = 400;
 const MAX_WHEEL_STEP = 2;
 /** Ab so vielen Pixeln gilt ein Klick als Ziehen und wählt kein Feld. */
 const DRAG_THRESHOLD = 5;
+/** Drehen und Neigen mit rechter Maustaste (oder Umschalt): Bogenmaß je Pixel. */
+const TURN_PER_PIXEL = 0.006;
+const TILT_PER_PIXEL = 0.004;
+const SECONDARY_BUTTON = 2;
 
 interface Point {
   readonly x: number;
@@ -27,6 +32,8 @@ export interface PanZoomHandlers {
   readonly onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
   readonly onPointerMove: (event: PointerEvent<HTMLElement>) => void;
   readonly onWheel: (event: WheelEvent<HTMLElement>) => void;
+  /** Die rechte Maustaste dreht die Karte; ein Kontextmenü stört dabei. */
+  readonly onContextMenu: (event: { preventDefault: () => void }) => void;
 }
 
 /** Ziehen hält eine laufende Kamerafahrt an, sonst würde sie die Verschiebung überschreiben. */
@@ -54,10 +61,12 @@ type Pair = readonly [Point, Point];
 
 const middle = ([a, b]: Pair): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 const span = ([a, b]: Pair): number => Math.hypot(a.x - b.x, a.y - b.y);
+const direction = ([a, b]: Pair): number => Math.atan2(b.y - a.y, b.x - a.x);
+const wrap = (angle: number): number => Math.atan2(Math.sin(angle), Math.cos(angle));
 
 /**
  * Zwei Finger (reine Funktion): Der Abstand ändert den Zoom um den Mittelpunkt, ein Wandern
- * des Mittelpunkts verschiebt die Karte – wie bei Karten-Apps auf dem Tablet.
+ * des Mittelpunkts verschiebt die Karte, ein Verdrehen dreht sie – wie bei Karten-Apps.
  */
 export function pinchStep(before: Pair, after: Pair) {
   const from = middle(before);
@@ -67,12 +76,15 @@ export function pinchStep(before: Pair, after: Pair) {
     center: to,
     dx: to.x - from.x,
     dy: to.y - from.y,
+    twist: wrap(direction(after) - direction(before)),
   };
 }
 
 interface Gestures {
   readonly pan: (dx: number, dy: number) => void;
   readonly zoomAt: (factor: number, client: Point) => void;
+  /** Dreht (Bogenmaß) und neigt die Karte. */
+  readonly orbit: (turn: number, tilt: number) => void;
 }
 
 type PointerHandlers = Pick<
@@ -91,12 +103,21 @@ function pinch(gestures: Gestures, before: Pair, after: Pair): void {
   const step = pinchStep(before, after);
   gestures.zoomAt(step.factor, step.center);
   gestures.pan(step.dx, step.dy);
+  gestures.orbit(step.twist, 0);
 }
 
 /** Finger (oder Maus) auf der Karte und wie weit sie seit dem Aufsetzen gewandert sind. */
 interface Touches {
   readonly points: Map<number, Point>;
   travelled: number;
+  /** Rechte Maustaste oder Umschalt: Ziehen dreht und neigt statt zu verschieben. */
+  orbiting: boolean;
+}
+
+/** Ein Zeiger zieht: verschieben oder, im Drehmodus, drehen und neigen. */
+function drag(touches: Touches, gestures: Gestures, dx: number, dy: number): void {
+  if (touches.orbiting) gestures.orbit(-dx * TURN_PER_PIXEL, -dy * TILT_PER_PIXEL);
+  else gestures.pan(dx, dy);
 }
 
 /** Ein Finger oder die Maus verschiebt, zwei Finger zoomen; gemeldet in Bildschirm-Pixeln. */
@@ -114,16 +135,17 @@ function moveFinger(touches: Touches, gestures: Gestures, event: PointerEvent<HT
   const dy = event.clientY - before.y;
   touches.travelled += Math.hypot(dx, dy);
   const after = firstTwo(touches.points);
-  if (pair === null || after === null) gestures.pan(dx, dy);
+  if (pair === null || after === null) drag(touches, gestures, dx, dy);
   else pinch(gestures, pair, after);
 }
 
 function usePointers(gestures: Gestures): PointerHandlers {
-  const touches = useRef<Touches>({ points: new Map(), travelled: 0 }).current;
+  const touches = useRef<Touches>({ points: new Map(), travelled: 0, orbiting: false }).current;
   const release = (event: PointerEvent<HTMLElement>) => touches.points.delete(event.pointerId);
   return {
     onPointerDown: (event) => {
       if (touches.points.size === 0) touches.travelled = 0;
+      touches.orbiting = event.button === SECONDARY_BUTTON || event.shiftKey;
       touches.points.set(event.pointerId, pointOf(event));
     },
     onPointerUp: release,
@@ -131,6 +153,17 @@ function usePointers(gestures: Gestures): PointerHandlers {
     wasDrag: () => touches.travelled > DRAG_THRESHOLD,
     moveTo: (event) => moveFinger(touches, gestures, event),
   };
+}
+
+/** Was Ziehen, Zoomen und Drehen an Karte und Blick ändern; Pixel werden in SVG-Einheiten umgerechnet. */
+function useGestures(
+  svg: RefObject<SVGSVGElement | null>,
+  viewWidth: number,
+  zoomAt: (factor: number, client: Point) => void,
+): Gestures {
+  const scale = () => viewWidth / Math.max(1, svg.current?.clientWidth ?? 1);
+  const orbit = useOrbitStore((state) => state.orbitBy);
+  return { pan: useDragPan(scale), zoomAt, orbit };
 }
 
 /** Zeigerposition relativ zur Karte, nicht zum Element darunter (z. B. einem Knopf über dem System). */
@@ -146,8 +179,8 @@ function useCursor() {
 }
 
 /**
- * Ziehen verschiebt, Mausrad und zwei Finger zoomen zum Zeiger hin. Bildschirm-Pixel werden in
- * SVG-Einheiten umgerechnet.
+ * Ziehen verschiebt, Mausrad und zwei Finger zoomen zum Zeiger hin; rechte Maustaste, Umschalt
+ * oder zwei verdrehte Finger drehen und neigen. Bildschirm-Pixel werden in SVG-Einheiten umgerechnet.
  */
 export function usePanZoom(
   svg: RefObject<SVGSVGElement | null>,
@@ -155,8 +188,7 @@ export function usePanZoom(
   zoomAt: (factor: number, client: Point) => void,
 ): PanZoomHandlers {
   const { cursor, touch, track } = useCursor();
-  const scale = () => viewWidth / Math.max(1, svg.current?.clientWidth ?? 1);
-  const { moveTo, ...pointers } = usePointers({ pan: useDragPan(scale), zoomAt });
+  const { moveTo, ...pointers } = usePointers(useGestures(svg, viewWidth, zoomAt));
   return {
     cursor,
     touch,
@@ -166,5 +198,6 @@ export function usePanZoom(
       moveTo(event);
     },
     onWheel: (event) => zoomAt(wheelFactor(event.deltaY, event.deltaMode), pointOf(event)),
+    onContextMenu: (event) => event.preventDefault(),
   };
 }

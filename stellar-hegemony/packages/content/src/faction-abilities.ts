@@ -14,8 +14,44 @@ const ability = (
 
 const ONE = 1;
 const TWO = 2;
+const THREE = 3;
+/** Weltraumkanone der Wächter-Mechs: trifft bei 8, ein Würfel, nur das eigene System. */
+const SENTINEL_CANNON = { hitOn: 8, dice: 1 };
 
-export const FACTION_ABILITIES: Readonly<Record<string, readonly FactionAbility[]>> = {
+const MECH = { types: [U.mech] };
+
+/*
+ * Erweiterung (PoK Mech): Jede Fraktion hat genau eine eigene Mech-Fähigkeit. Sie ist die
+ * dritte Fähigkeit der Fraktion; `mechAbilityOf` findet sie für Anzeige und Tests.
+ */
+const MECH_ABILITIES: Readonly<Record<string, FactionAbility>> = {
+  aurel: ability('twin-mounts', [{ target: MECH, change: { dice: ONE } }]),
+  orun: ability('warding-song', [{ target: MECH, change: { add: [{ kind: 'planetaryShield' }] } }]),
+  sel: ability('contract-walkers', [
+    { target: MECH, change: { set: { cost: { resources: ONE, unitsPerCost: ONE } } } },
+  ]),
+  karth: {
+    ...ability('beachhead', []),
+    deploy: { unit: U.mech, trigger: { kind: 'planetCaptured' } },
+  },
+  nesh: ability('sentinel-frames', [
+    {
+      target: MECH,
+      change: { add: [{ kind: 'spaceCannon', profile: SENTINEL_CANNON, range: 0 }] },
+    },
+  ]),
+  quel: {
+    ...ability('brood-walkers', []),
+    deploy: { unit: U.mech, trigger: { kind: 'groundForcesProduced', minimum: THREE } },
+  },
+};
+
+const withMech = (faction: string, abilities: readonly FactionAbility[]) => {
+  const mech = MECH_ABILITIES[faction];
+  return mech === undefined ? abilities : [...abilities, mech];
+};
+
+const BASE_ABILITIES: Readonly<Record<string, readonly FactionAbility[]>> = {
   aurel: [
     ability('shipyard-league', [
       {
@@ -52,8 +88,21 @@ export const FACTION_ABILITIES: Readonly<Record<string, readonly FactionAbility[
   ],
 };
 
+/** Alle Fähigkeiten je Fraktion: zwei aus dem Grundspiel, dazu die Mech-Fähigkeit. */
+export const FACTION_ABILITIES: Readonly<Record<string, readonly FactionAbility[]>> =
+  Object.fromEntries(
+    Object.entries(BASE_ABILITIES).map(([faction, abilities]) => [
+      faction,
+      withMech(faction, abilities),
+    ]),
+  );
+
 export const abilitiesOf = (faction: string): readonly FactionAbility[] =>
   FACTION_ABILITIES[faction] ?? [];
+
+/** Die Mech-Fähigkeit einer Fraktion (Erweiterung), falls sie eine hat. */
+export const mechAbilityOf = (faction: string): FactionAbility | undefined =>
+  MECH_ABILITIES[faction];
 
 export interface FactionAbilityText {
   readonly name: LocalizedText;
@@ -140,6 +189,48 @@ export const FACTION_ABILITY_TEXTS: Readonly<Record<string, FactionAbilityText>>
   'brood-fleets': text(
     { de: 'Brutflotten', en: 'Brood Fleets' },
     { de: 'Dein Flottenlimit ist um 1 höher.', en: 'Your fleet limit is 1 higher.' },
+  ),
+  'twin-mounts': text(
+    { de: 'Doppellafetten', en: 'Twin Mounts' },
+    {
+      de: 'Mech: Deine Mechs würfeln im Kampf 1 Würfel mehr.',
+      en: 'Mech: Your mechs roll 1 additional die in combat.',
+    },
+  ),
+  'warding-song': text(
+    { de: 'Schutzgesang', en: 'Warding Song' },
+    {
+      de: 'Mech: Deine Mechs haben Planetaren Schild. Ein Planet mit deinem Mech kann nicht bombardiert werden.',
+      en: 'Mech: Your mechs have planetary shield. A planet with your mech cannot be bombarded.',
+    },
+  ),
+  'contract-walkers': text(
+    { de: 'Vertragsläufer', en: 'Contract Walkers' },
+    {
+      de: 'Mech: Deine Mechs kosten nur 1 Ressource.',
+      en: 'Mech: Your mechs cost only 1 resource.',
+    },
+  ),
+  beachhead: text(
+    { de: 'Brückenkopf', en: 'Beachhead' },
+    {
+      de: 'Mech: Übernimmst du bei einem Einmarsch einen Planeten, den ein anderer Spieler kontrolliert hat, kommt 1 Mech aus deiner Verstärkung kostenlos auf diesen Planeten.',
+      en: 'Mech: When you take over a planet another player controlled during an invasion, 1 mech from your reinforcements is placed on that planet for free.',
+    },
+  ),
+  'sentinel-frames': text(
+    { de: 'Wächterrahmen', en: 'Sentinel Frames' },
+    {
+      de: 'Mech: Deine Mechs haben Weltraumkanone 8 (nur im eigenen System).',
+      en: 'Mech: Your mechs have space cannon 8 (own system only).',
+    },
+  ),
+  'brood-walkers': text(
+    { de: 'Brutläufer', en: 'Brood Walkers' },
+    {
+      de: 'Mech: Produzierst du auf einmal mindestens 3 Bodentruppen, kommt zusätzlich 1 Mech aus deiner Verstärkung kostenlos auf denselben Planeten.',
+      en: 'Mech: When you produce at least 3 ground forces at once, 1 additional mech from your reinforcements is placed on the same planet for free.',
+    },
   ),
 };
 

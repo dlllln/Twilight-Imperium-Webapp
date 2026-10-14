@@ -32,8 +32,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     'galaxy',
     { de: 'Die Galaxie', en: 'The galaxy' },
     {
-      de: 'Jedes Sechseck ist ein System. Unter jedem Planeten stehen Ressourcen (links) und Einfluss (rechts). Die Zahlen am Rand markieren die Heimatsysteme, in der Mitte liegt die Thronwelt. Nebel, Asteroiden, Supernovae und Gravitationsrisse erschweren den Flug. Mausrad oder zwei Finger zoomen, Ziehen verschiebt.',
-      en: 'Each hexagon is a system. Below each planet you see resources (left) and influence (right). The numbers on the rim mark home systems; the throne world sits in the centre. Nebulae, asteroids, supernovae and gravity rifts hinder travel. Scroll or pinch to zoom, drag to pan.',
+      de: 'Jedes Sechseck ist ein System. Unter jedem Planeten stehen Ressourcen (links) und Einfluss (rechts). Die Zahlen am Rand markieren die Heimatsysteme, in der Mitte liegt die Thronwelt. Nebel, Asteroiden, Supernovae und Gravitationsrisse erschweren den Flug. Mausrad oder zwei Finger zoomen, Ziehen verschiebt; die rechte Maustaste oder zwei verdrehte Finger drehen und neigen die Karte, auch bis zur Draufsicht.',
+      en: 'Each hexagon is a system. Below each planet you see resources (left) and influence (right). The numbers on the rim mark home systems; the throne world sits in the centre. Nebulae, asteroids, supernovae and gravity rifts hinder travel. Scroll or pinch to zoom, drag to pan; the right mouse button or two twisting fingers rotate and tilt the map, down to a top view.',
     },
   ),
   step(
@@ -77,8 +77,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     'turn',
     { de: 'Dein Zug', en: 'Your turn' },
     {
-      de: 'In der Aktionsphase handelt jeder reihum einmal. Taktisch: ein System mit einem Taktikmarker aktivieren, Schiffe hineinfliegen, kämpfen, landen und bauen. Strategisch: die eigene Karte ausspielen. Passen darf, wer seine Karte genutzt hat.',
-      en: 'In the action phase everyone acts once per turn. Tactical: activate a system with a tactic token, fly ships in, fight, land and build. Strategic: play your own card. You may pass once your card is used.',
+      de: 'In der Aktionsphase handelt jeder reihum einmal. Taktisch: ein System mit einem Taktikmarker aktivieren, Schiffe hineinfliegen, kämpfen, landen und bauen. Strategisch: die eigene Karte ausspielen. Passen darf, wer seine Karte genutzt hat. Was du entscheiden musst, ploppt unten rechts auf; darüber erscheint kurz, was die anderen gerade tun.',
+      en: 'In the action phase everyone acts once per turn. Tactical: activate a system with a tactic token, fly ships in, fight, land and build. Strategic: play your own card. You may pass once your card is used. Whatever you have to decide pops up at the bottom right; above it you briefly see what the others are doing.',
     },
   ),
   step(

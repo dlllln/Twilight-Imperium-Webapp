@@ -49,7 +49,7 @@ export const anomalyTexture = (kind: AnomalyKind): Texture =>
   cached(`anomaly:${kind}`, () => paintAnomaly(kind, ANOMALY_SIZE), true);
 
 const isGroundPiece = (type: string): boolean =>
-  ['infantry', 'orbitalBattery', 'orbitalDock'].includes(type);
+  ['infantry', 'mech', 'orbitalBattery', 'orbitalDock'].includes(type);
 
 export function unitTexture(type: string, seat: number): Texture {
   const ground = isGroundPiece(type);

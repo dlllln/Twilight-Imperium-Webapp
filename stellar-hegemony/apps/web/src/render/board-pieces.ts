@@ -1,6 +1,6 @@
 import { type Container, Graphics, PerspectiveMesh, type Texture } from 'pixi.js';
 import type { Point } from '../hex-geometry.ts';
-import { type BoardView, FORESHORTEN, lift, plus, project, turn } from './board-view.ts';
+import { type BoardView, foreshorten, lift, plus, project, turn } from './board-view.ts';
 
 /*
  * Bausteine der schrägen Karte: Jedes Stück wird einmal gebaut und bei jedem neuen Blick
@@ -75,8 +75,12 @@ export interface Footing {
 export function standing(footing: Footing, parts: readonly (readonly [Container, Container])[]) {
   for (const [layer, display] of parts) layer.addChild(display);
   const arrange = ({ view }: BoardFrame) => {
-    const at = lift(plus(turn(view, footing.center), footing.offset), footing.height ?? 0);
-    const squash = footing.flat === true ? FORESHORTEN : 1;
+    const at = lift(
+      plus(turn(view, footing.center), footing.offset),
+      footing.height ?? 0,
+      view.tilt,
+    );
+    const squash = footing.flat === true ? foreshorten(view) : 1;
     for (const [, display] of parts) {
       display.position.set(at.x, at.y);
       display.scale.set(at.scale, at.scale * squash);

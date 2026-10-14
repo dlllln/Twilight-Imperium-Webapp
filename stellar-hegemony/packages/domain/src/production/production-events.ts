@@ -17,4 +17,13 @@ export interface StructuresPlaced extends DomainEvent<'StructuresPlaced'> {
   readonly placements: readonly { readonly planet: PlanetId; readonly unit: Unit }[];
 }
 
-export type ProductionEvent = UnitsProduced | StructuresPlaced;
+/** PoK Mech: Eine Fraktionsfähigkeit setzt Einheiten kostenlos aus der Verstärkung auf einen Planeten. */
+export interface UnitsDeployed extends DomainEvent<'UnitsDeployed'> {
+  readonly player: PlayerId;
+  /** Id der auslösenden Fraktionsfähigkeit. */
+  readonly ability: string;
+  readonly planet: PlanetId;
+  readonly units: readonly Unit[];
+}
+
+export type ProductionEvent = UnitsProduced | StructuresPlaced | UnitsDeployed;

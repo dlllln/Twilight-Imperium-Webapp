@@ -15,7 +15,7 @@ import { type SidebarTab, useSidebarStore } from './sidebar-store.ts';
 import { StrategyCardGrid } from './StrategyCardGrid.tsx';
 
 const TABS: readonly (readonly [SidebarTab, MessageKey, LucideIcon])[] = [
-  ['turn', 'strategyCards', Layers],
+  ['turn', 'tabCards', Layers],
   ['score', 'tabScore', Trophy],
   ['empire', 'tabEmpire', Flag],
   ['history', 'tabHistory', History],

@@ -23,6 +23,12 @@ export type HistoryLine =
     }
   | { readonly kind: 'conquered'; readonly player: PlayerId; readonly planet: string }
   | {
+      readonly kind: 'deployed';
+      readonly player: PlayerId;
+      readonly planet: string;
+      readonly count: number;
+    }
+  | {
       readonly kind: 'spaceCombat';
       readonly player: PlayerId;
       readonly rival: PlayerId;
@@ -57,6 +63,12 @@ const DESCRIBE: Describers = {
     player,
     system,
     count: movements.length,
+  }),
+  UnitsDeployed: ({ player, planet, units }) => ({
+    kind: 'deployed',
+    player,
+    planet,
+    count: units.length,
   }),
   UnitsProduced: ({ player, system, space, ground }) => ({
     kind: 'produced',

@@ -64,7 +64,7 @@ describe('Einheiten (RR 23) über Fähigkeiten statt Typabfragen', () => {
     const result = requireUnitDefinition(catalog, unitTypeId('nope'));
     expect(result.ok ? null : result.error.code).toBe('unit.unknownType');
     expect(requireUnitDefinition(catalog, T.carrier).ok).toBe(true);
-    expect(catalog.all()).toHaveLength(10);
+    expect(catalog.all()).toHaveLength(11);
   });
 
   it('RR 66/73: beschädigen und reparieren erzeugt neue Werte', () => {

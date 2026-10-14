@@ -4,7 +4,10 @@ import { boardEdges } from '../src/render/board-grid.ts';
 import {
   blendView,
   boardBounds,
+  clampTilt,
   FLAT_VIEW,
+  MAX_TILT,
+  MIN_TILT,
   lift,
   project,
   turn,
@@ -36,11 +39,23 @@ describe('Schräger Blick auf das Brett', () => {
   });
 
   it('das Brett dreht sich beim Platzwechsel über den kürzeren Weg', () => {
-    const from = { angle: Math.PI * 0.9 };
-    const to = { angle: -Math.PI * 0.9 };
+    const from = { angle: Math.PI * 0.9, tilt: 0.5 };
+    const to = { angle: -Math.PI * 0.9, tilt: 0.9 };
     const middle = blendView(from, to, 0.5);
     expect(Math.abs(Math.cos(middle.angle) + 1)).toBeLessThan(1e-9);
     expect(blendView(from, to, 1).angle).toBeCloseTo(from.angle + Math.PI * 0.2);
+    expect(middle.tilt).toBeCloseTo(0.7);
+  });
+
+  it('in der Draufsicht erscheint das Brett ungestaucht, bei starker Neigung flacher', () => {
+    const top = { ...FLAT_VIEW, tilt: MIN_TILT };
+    const steep = { ...FLAT_VIEW, tilt: MAX_TILT };
+    const height = (view: typeof top) =>
+      project(view, { x: 0, y: 100 }).y - project(view, { x: 0, y: -100 }).y;
+    expect(height(top)).toBeCloseTo(200, 0);
+    expect(height(steep)).toBeLessThan(height(FLAT_VIEW));
+    expect(clampTilt(MAX_TILT + 1)).toBe(MAX_TILT);
+    expect(clampTilt(-1)).toBe(MIN_TILT);
   });
 
   it('der Bildausschnitt umfasst das ganze Brett samt Brettkante', () => {

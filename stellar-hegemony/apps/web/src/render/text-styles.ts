@@ -9,7 +9,7 @@ const TEXT_RESOLUTION = 4;
 
 export const RESOURCE_STYLE: TextStyleOptions = {
   fontFamily: UI_FONT,
-  fontSize: 11,
+  fontSize: 9.5,
   fontWeight: '700',
   fill: GOLD_BRIGHT,
   stroke: OUTLINE,

@@ -8,11 +8,15 @@ export interface PlanetAssignment {
   readonly planet: PlanetId;
 }
 
-/** RR 20: Bombardement eines Planeten; Treffer zerstören fremde Bodentruppen. */
+/**
+ * RR 20: Bombardement eines Planeten; Treffer zerstören fremde Bodentruppen.
+ * PoK Mech: Bodentruppen mit Schadensresistenz fangen Treffer ab (`sustained`).
+ */
 export interface BombardmentRolled extends DomainEvent<'BombardmentRolled'> {
   readonly system: SystemId;
   readonly planet: PlanetId;
   readonly volley: Volley;
+  readonly sustained: readonly UnitId[];
   readonly destroyed: readonly UnitId[];
 }
 
@@ -33,6 +37,7 @@ export interface GroundForcesCommitted extends DomainEvent<'GroundForcesCommitte
 export interface SpaceCannonDefenseFired extends DomainEvent<'SpaceCannonDefenseFired'> {
   readonly planet: PlanetId;
   readonly volley: Volley;
+  readonly sustained: readonly UnitId[];
   readonly destroyed: readonly UnitId[];
 }
 

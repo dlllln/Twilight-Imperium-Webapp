@@ -90,6 +90,25 @@ const OUTLINES: Readonly<Record<string, Outline>> = {
     [0.32, 0.36],
     [0.32, 0.18],
   ],
+  mech: [
+    [0.38, 0.04],
+    [0.62, 0.04],
+    [0.66, 0.16],
+    [0.92, 0.22],
+    [0.96, 0.5],
+    [0.8, 0.52],
+    [0.74, 0.62],
+    [0.82, 0.96],
+    [0.58, 0.96],
+    [0.5, 0.68],
+    [0.42, 0.96],
+    [0.18, 0.96],
+    [0.26, 0.62],
+    [0.2, 0.52],
+    [0.04, 0.5],
+    [0.08, 0.22],
+    [0.34, 0.16],
+  ],
   orbitalBattery: [
     [0.42, 0.05],
     [0.58, 0.05],
@@ -107,6 +126,11 @@ const DETAILS: Readonly<
   Record<string, (c: CanvasRenderingContext2D, w: number, h: number) => void>
 > = {
   carrier: (c, w, h) => c.fillRect(w * 0.35, h * 0.42, w * 0.4, h * 0.16),
+  // Sichtschlitz im Kopf und Brustplatte des Mechs.
+  mech: (c, w, h) => {
+    c.fillRect(w * 0.42, h * 0.08, w * 0.16, h * 0.05);
+    c.fillRect(w * 0.36, h * 0.28, w * 0.28, h * 0.2);
+  },
   dreadnought: (c, w, h) => {
     for (const x of [0.4, 0.7]) {
       c.beginPath();
@@ -211,7 +235,7 @@ function paintDock(context: CanvasRenderingContext2D, color: Rgb, size: number) 
   context.fillRect(size * 0.44, size * 0.1, size * 0.12, size * 0.8);
 }
 
-const isGround = (type: string) => type === 'infantry' || type === 'orbitalBattery';
+const isGround = (type: string) => ['infantry', 'mech', 'orbitalBattery'].includes(type);
 
 /** Zeichnet eine Einheit als Miniatur in der gegebenen Spielerfarbe. */
 export function paintUnit(

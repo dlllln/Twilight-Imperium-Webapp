@@ -1,6 +1,6 @@
 import type { Container, Graphics } from 'pixi.js';
 import { HEX_SIZE, hexCorners, hexToPixel, type Point } from '../hex-geometry.ts';
-import { type BoardView, lift, type Projected, SLAB, turn } from './board-view.ts';
+import { type BoardView, lift, project, type Projected, SLAB, turn } from './board-view.ts';
 import { type BoardFrame, type Placed, stroked } from './board-pieces.ts';
 import { colorOf, mix, rgbOf } from './palette.ts';
 import type { SceneHex } from './scene-model.ts';
@@ -53,7 +53,8 @@ function wall(graphics: Graphics, edge: BoardEdge, view: BoardView, line: number
   if (facing.y <= 0) return;
   const a = turn(view, edge.a);
   const b = turn(view, edge.b);
-  const shape = [lift(a), lift(b), lift(b, -SLAB), lift(a, -SLAB)];
+  const { tilt } = view;
+  const shape = [lift(a, 0, tilt), lift(b, 0, tilt), lift(b, -SLAB, tilt), lift(a, -SLAB, tilt)];
   const light = 0.35 + 0.3 * (-facing.x / Math.hypot(facing.x, facing.y));
   graphics.poly(flat(shape)).fill(colorOf(mix([0, 0, 0], WALL, light + 0.4)));
   const [, , low, lowA] = shape;
@@ -65,8 +66,8 @@ function wall(graphics: Graphics, edge: BoardEdge, view: BoardView, line: number
 }
 
 function seam(graphics: Graphics, edge: BoardEdge, view: BoardView, line: number) {
-  const a = lift(turn(view, edge.a));
-  const b = lift(turn(view, edge.b));
+  const a = project(view, edge.a);
+  const b = project(view, edge.b);
   const scale = (a.scale + b.scale) / 2;
   const [color, width, alpha] = edge.outer ? [RIM, 1.6, 0.7] : [SEAM, 0.9, 0.3];
   graphics
