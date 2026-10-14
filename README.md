@@ -1,5 +1,6 @@
 # Sternenthron
 
+Die Dokumentation zu Stellar Hegemony steht in [stellar-hegemony/README.md](stellar-hegemony/README.md).
 Browser-Strategiespiel für 2 bis 6 Spieler (Menschen und KI): Hex-Galaxie, Strategiekarten, Flottenkampf, Bodeninvasionen, Technologien, Ratsabstimmungen und ein Wettrennen um 10 Siegpunkte. Alle Namen, Fraktionen, Texte und Grafiken sind eigene Inhalte.
 
 ## Starten
