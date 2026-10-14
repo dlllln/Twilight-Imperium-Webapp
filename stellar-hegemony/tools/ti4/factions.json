@@ -70,5 +70,273 @@
   {
     "path": "factions/norr-front.jpg",
     "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/norr.face.jpg"
+  },
+  {
+    "path": "factions/arborec-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/arborec_icon.png"
+  },
+  {
+    "path": "factions/arborec-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/arborec.back.jpg"
+  },
+  {
+    "path": "factions/arborec-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/arborec.face.jpg"
+  },
+  {
+    "path": "factions/creuss-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/creuss_icon.png"
+  },
+  {
+    "path": "factions/creuss-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/creuss.back.jpg"
+  },
+  {
+    "path": "factions/creuss-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/creuss.face.jpg"
+  },
+  {
+    "path": "factions/jolnar-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/jolnar_icon.png"
+  },
+  {
+    "path": "factions/jolnar-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/jolnar.back.jpg"
+  },
+  {
+    "path": "factions/jolnar-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/jolnar.face.jpg"
+  },
+  {
+    "path": "factions/l1z1x-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/l1z1x_icon.png"
+  },
+  {
+    "path": "factions/l1z1x-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/l1z1x.back.jpg"
+  },
+  {
+    "path": "factions/l1z1x-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/l1z1x.face.jpg"
+  },
+  {
+    "path": "factions/mentak-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/mentak_icon.png"
+  },
+  {
+    "path": "factions/mentak-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/mentak.back.jpg"
+  },
+  {
+    "path": "factions/mentak-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/mentak.face.jpg"
+  },
+  {
+    "path": "factions/muaat-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/muaat_icon.png"
+  },
+  {
+    "path": "factions/muaat-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/muaat.back.jpg"
+  },
+  {
+    "path": "factions/muaat-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/muaat.face.jpg"
+  },
+  {
+    "path": "factions/nekro-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/nekro_icon.png"
+  },
+  {
+    "path": "factions/nekro-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/nekro.back.jpg"
+  },
+  {
+    "path": "factions/nekro-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/nekro.face.jpg"
+  },
+  {
+    "path": "factions/saar-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/saar_icon.png"
+  },
+  {
+    "path": "factions/saar-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/saar.back.jpg"
+  },
+  {
+    "path": "factions/saar-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/saar.face.jpg"
+  },
+  {
+    "path": "factions/winnu-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/winnu_icon.png"
+  },
+  {
+    "path": "factions/winnu-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/winnu.back.jpg"
+  },
+  {
+    "path": "factions/winnu-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/winnu.face.jpg"
+  },
+  {
+    "path": "factions/yin-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/yin_icon.png"
+  },
+  {
+    "path": "factions/yin-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/yin.back.jpg"
+  },
+  {
+    "path": "factions/yin-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/yin.face.jpg"
+  },
+  {
+    "path": "factions/yssaril-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/yssaril_icon.png"
+  },
+  {
+    "path": "factions/yssaril-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/yssaril.back.jpg"
+  },
+  {
+    "path": "factions/yssaril-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/yssaril.face.jpg"
+  },
+  {
+    "path": "factions/argent-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/argent_icon.png"
+  },
+  {
+    "path": "factions/argent-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/argent.back.jpg"
+  },
+  {
+    "path": "factions/argent-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/argent.face.jpg"
+  },
+  {
+    "path": "factions/vuilraith-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/vuilraith_icon.png"
+  },
+  {
+    "path": "factions/vuilraith-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/vuilraith.back.jpg"
+  },
+  {
+    "path": "factions/vuilraith-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/vuilraith.face.jpg"
+  },
+  {
+    "path": "factions/empyrean-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/empyrean_icon.png"
+  },
+  {
+    "path": "factions/empyrean-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/empyrean.back.jpg"
+  },
+  {
+    "path": "factions/empyrean-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/empyrean.face.jpg"
+  },
+  {
+    "path": "factions/mahact-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/mahact_icon.png"
+  },
+  {
+    "path": "factions/mahact-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/mahact.back.jpg"
+  },
+  {
+    "path": "factions/mahact-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/mahact.face.jpg"
+  },
+  {
+    "path": "factions/nomad-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/nomad_icon.png"
+  },
+  {
+    "path": "factions/nomad-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/nomad.back.jpg"
+  },
+  {
+    "path": "factions/nomad-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/nomad.face.jpg"
+  },
+  {
+    "path": "factions/naazrokha-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/naazrokha_icon.png"
+  },
+  {
+    "path": "factions/naazrokha-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/naazrokha.back.jpg"
+  },
+  {
+    "path": "factions/naazrokha-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/naazrokha.face.jpg"
+  },
+  {
+    "path": "factions/ul-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/ul_icon.png"
+  },
+  {
+    "path": "factions/ul-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/ul.back.jpg"
+  },
+  {
+    "path": "factions/ul-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/pok/ul.face.jpg"
+  },
+  {
+    "path": "factions/keleres-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/keleres_icon.png"
+  },
+  {
+    "path": "factions/keleres-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/codex.vigil/keleres.back.jpg"
+  },
+  {
+    "path": "factions/keleres-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/codex.vigil/keleres.face.jpg"
+  },
+  {
+    "path": "factions/bastion-icon.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/factions/bastion.png"
+  },
+  {
+    "path": "factions/bastion-reference.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/quick_reference/TE/bastion.png"
+  },
+  {
+    "path": "factions/deepwrought-icon.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/factions/deepwrought.png"
+  },
+  {
+    "path": "factions/deepwrought-reference.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/quick_reference/TE/deepwrought.png"
+  },
+  {
+    "path": "factions/firmament-icon.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/factions/firmament.png"
+  },
+  {
+    "path": "factions/firmament-reference.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/quick_reference/TE/firmament.png"
+  },
+  {
+    "path": "factions/crimson-icon.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/factions/crimson.png"
+  },
+  {
+    "path": "factions/crimson-reference.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/quick_reference/TE/crimson.png"
+  },
+  {
+    "path": "factions/ralnel-icon.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/factions/ralnel.png"
+  },
+  {
+    "path": "factions/ralnel-reference.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/quick_reference/TE/ralnel.png"
   }
 ]

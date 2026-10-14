@@ -1,5 +1,11 @@
 import * as Tabs from '@radix-ui/react-tabs';
-import { FACTION_NAMES, FACTION_PROFILES, FACTIONS, factionAbilityText } from '@stellar/content';
+import {
+  FACTION_NAMES,
+  FACTION_PROFILES,
+  TI4_FACTIONS as FACTIONS,
+  TI4_FACTION_METADATA,
+  factionAbilityText,
+} from '@stellar/content';
 import type { FactionDefinition } from '@stellar/domain';
 import { ChevronLeft, type LucideIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
@@ -9,6 +15,7 @@ import { seatColor } from '../../seat-colors.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { FactionEmblem } from '../simulator/FactionEmblem.tsx';
 import { FactionOriginalSheets, FactionPortrait } from './FactionArtwork.tsx';
+import { EDITION_NAMES, FactionBrowser } from './FactionBrowser.tsx';
 
 const MAX_COMPLEXITY = 3;
 
@@ -53,16 +60,11 @@ function FactionTile({ id, props }: { readonly id: string; readonly props: Choos
 }
 
 function FactionList(props: ChooserProps): ReactElement {
-  const t = useT();
   return (
     <aside className="sim-panel sim-faction-list">
       <h2 className="sim-title">{props.title}</h2>
       <p className="sim-kicker">{props.kicker}</p>
-      <div className="faction-grid" role="radiogroup" aria-label={t('faction')}>
-        {FACTIONS.map(({ id }) => (
-          <FactionTile key={id} id={id} props={props} />
-        ))}
-      </div>
+      <FactionBrowser>{(id) => <FactionTile key={id} id={id} props={props} />}</FactionBrowser>
     </aside>
   );
 }
@@ -131,6 +133,25 @@ function Details({ faction }: { readonly faction: FactionDefinition }): ReactEle
   );
 }
 
+function FactionDetails({ faction }: { readonly faction: FactionDefinition }): ReactElement {
+  const language = useLanguage();
+  const original = TI4_FACTION_METADATA[faction.id];
+  return (
+    <>
+      <Details faction={faction} />
+      <p className="ti4-adapted-note">
+        <strong>
+          {language === 'de' ? 'Originale Starttechnologien: ' : 'Original starting technologies: '}
+        </strong>
+        {original?.originalTechnologies.join(', ') || (language === 'de' ? 'Keine' : 'None')}
+        {original !== undefined &&
+          original.technologyChoice > 0 &&
+          (language === 'de' ? ' · Auswahl vorbelegt' : ' · Preset choice')}
+      </p>
+    </>
+  );
+}
+
 function FactionTabs({ id }: { readonly id: string }): ReactElement {
   const t = useT();
   const language = useLanguage();
@@ -143,10 +164,15 @@ function FactionTabs({ id }: { readonly id: string }): ReactElement {
         <Tabs.Trigger value="lore">{t('lore')}</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="summary">
+        <p className="ti4-adapted-note">
+          {language === 'de'
+            ? 'Spielregeln der Webapp: Sonderregeln, Anführer und Technologien sind vereinfacht. Die vollständigen Originalregeln findest du auf dem Fraktionsbogen.'
+            : 'Web app rules: special rules, leaders and technologies are simplified. The faction sheet shows the complete original rules.'}
+        </p>
         <Summary id={id} />
       </Tabs.Content>
       <Tabs.Content value="details">
-        {faction !== undefined && <Details faction={faction} />}
+        {faction !== undefined && <FactionDetails faction={faction} />}
       </Tabs.Content>
       <Tabs.Content value="lore">
         <p className="faction-lore">{FACTION_PROFILES[id]?.lore[language]}</p>
@@ -163,7 +189,7 @@ function FactionHead({ id }: { readonly id: string }): ReactElement {
       <FactionPortrait id={id} />
       <div>
         <p className="ti4-faction-original-name">
-          Twilight Imperium · {factionArtwork(id)?.name[language]}
+          Twilight Imperium · {EDITION_NAMES[TI4_FACTION_METADATA[id]?.edition ?? 'base']}
         </p>
         <h2>{FACTION_NAMES[id]?.[language]}</h2>
         <Complexity level={FACTION_PROFILES[id]?.complexity ?? 1} />

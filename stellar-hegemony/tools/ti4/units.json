@@ -382,5 +382,37 @@
   {
     "path": "tiles/01_Jord.png",
     "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/01_Jord.png"
+  },
+  {
+    "path": "units/org_fs.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_fs.png"
+  },
+  {
+    "path": "units/azr_fs.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_fs.png"
+  },
+  {
+    "path": "units/grn_fs.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_fs.png"
+  },
+  {
+    "path": "units/ylw_fs.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_fs.png"
+  },
+  {
+    "path": "units/blu_fs.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_fs.png"
+  },
+  {
+    "path": "units/red_fs.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_fs.png"
+  },
+  {
+    "path": "units/ppl_fs.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_fs.png"
+  },
+  {
+    "path": "units/gry_fs.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_fs.png"
   }
 ]

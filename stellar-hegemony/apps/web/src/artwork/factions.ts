@@ -1,6 +1,8 @@
 import type { Language } from '../i18n.ts';
+import { OFFICIAL_FACTION_ARTWORK } from './official-faction-artwork.ts';
 
 export interface FactionArtwork {
+  readonly referenceOnly?: boolean;
   readonly name: Readonly<Record<Language, string>>;
   readonly icon: string;
   readonly illustration: string;
@@ -21,12 +23,15 @@ const artwork = (id: string, de: string, en: string): FactionArtwork => ({
 
 /** Original TI4 artwork for the existing factions; their custom game rules stay intact. */
 export const FACTION_ARTWORK: Readonly<Record<string, FactionArtwork>> = {
+  ...OFFICIAL_FACTION_ARTWORK,
   aurel: artwork('sol', 'Föderation Sol', 'The Federation of Sol'),
   orun: artwork('naalu', 'Naalu-Kollektiv', 'The Naalu Collective'),
   sel: artwork('hacan', 'Emirate von Hacan', 'The Emirates of Hacan'),
   karth: artwork('letnev', 'Baronie Letnev', 'The Barony of Letnev'),
   nesh: artwork('xxcha', 'Xxcha-Königreich', 'The Xxcha Kingdom'),
   quel: artwork('norr', 'Sardakk N’orr', 'Sardakk N’orr'),
+  vyr: artwork('jolnar', 'Universitäten von Jol-Nar', 'The Universities of Jol-Nar'),
+  tarn: artwork('saar', 'Clan von Saar', 'The Clan of Saar'),
 };
 
 export const factionArtwork = (id: string): FactionArtwork | undefined => FACTION_ARTWORK[id];

@@ -1,6 +1,7 @@
 import type { FleetRules, TacticCard, UnitTypeId } from '@stellar/domain';
 import type { LocalizedText } from './localized.ts';
 import { UNIT_TYPES as U } from './units.ts';
+import { TI4_FACTION_PROFILES } from './official-factions.ts';
 
 /*
  * Inhalte des Kampfsimulators: Grenzen beim Flottenbau, eigene Taktikkarten und kurze,
@@ -15,6 +16,7 @@ export const SIMULATOR_RULES: FleetRules & {
 /** Schiffe, die im Simulator gebaut werden können, vom größten zum kleinsten. */
 export const SIMULATOR_SHIPS: readonly UnitTypeId[] = [
   U.sunbreaker,
+  U.flagship,
   U.dreadnought,
   U.cruiser,
   U.carrier,
@@ -72,6 +74,7 @@ export interface FactionProfile {
 }
 
 export const FACTION_PROFILES: Readonly<Record<string, FactionProfile>> = {
+  ...TI4_FACTION_PROFILES,
   aurel: {
     complexity: 1,
     lore: {

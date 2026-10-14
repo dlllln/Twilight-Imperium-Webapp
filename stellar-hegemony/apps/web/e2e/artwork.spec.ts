@@ -7,7 +7,7 @@ test('original faction and unit images load in the simulator on a narrow screen'
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Kampfsimulator' }).click();
-  await page.getByRole('radio', { name: 'Handelsbund von Sel' }).click();
+  await page.getByRole('radio', { name: 'Emirate von Hacan' }).click();
   const portrait = page.getByRole('img', { name: 'Emirate von Hacan', exact: true });
   await expect(portrait).toHaveAttribute('src', '/ti4/factions/hacan-back.jpg');
   await expect
@@ -21,7 +21,7 @@ test('original faction and unit images load in the simulator on a narrow screen'
     .toBeLessThanOrEqual(390);
   await page.getByRole('button', { name: 'Wählen', exact: true }).click();
   const miniatures = page.locator('.ship-card img[src^="/ti4/units/"]');
-  await expect(miniatures).toHaveCount(6);
+  await expect(miniatures).toHaveCount(7);
   for (const image of await miniatures.all()) {
     await expect
       .poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth))

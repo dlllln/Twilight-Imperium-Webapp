@@ -15,6 +15,7 @@ import { UNIT_TYPES } from './units.ts';
  * Größenordnung orientieren sich am Spielgefühl, nicht an einer Vorlage.
  */
 export interface PlanetSeed {
+  readonly id?: string;
   readonly name: string;
   readonly resources: number;
   readonly influence: number;
@@ -31,7 +32,7 @@ export const slug = (name: string): string =>
 const PLANET_NAMES: Record<string, LocalizedText> = {};
 
 function planet(seed: PlanetSeed): PlanetDefinition {
-  const id = planetId(slug(seed.name));
+  const id = planetId(seed.id ?? slug(seed.name));
   PLANET_NAMES[id] = { de: seed.name, en: seed.name };
   return {
     id,

@@ -15,6 +15,7 @@ import {
   FACTION_NAMES,
   FACTION_PROFILES,
   FACTIONS,
+  ALL_FACTIONS,
   factionAbilityText,
   galaxyTemplate,
   LEADERS,
@@ -92,7 +93,7 @@ describe('Content: Erweiterung für 7–8 Spieler (PoK)', () => {
   it('der Content-Adapter kennt Vorlagen bis 8 Spieler', () => {
     const content = createBaseContent();
     expect(content.galaxyTemplate(8)).toEqual(galaxyTemplate(8));
-    expect(content.factions).toBe(FACTIONS);
+    expect(content.factions).toBe(ALL_FACTIONS);
   });
 });
 

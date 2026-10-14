@@ -10,7 +10,11 @@ export function FactionPortrait({ id }: { readonly id: string }): ReactElement |
   const language = useLanguage();
   if (artwork === undefined) return null;
   return (
-    <div className="ti4-faction-portrait">
+    <div
+      className={
+        artwork.referenceOnly === true ? 'ti4-faction-portrait reference' : 'ti4-faction-portrait'
+      }
+    >
       <img
         className="ti4-faction-illustration"
         src={artwork.illustration}
@@ -37,11 +41,13 @@ export function FactionOriginalSheets({ id }: { readonly id: string }): ReactEle
           name={artwork.name[language]}
           side={german ? 'Vorderseite' : 'Front'}
         />
-        <SheetLink
-          image={artwork.illustration}
-          name={artwork.name[language]}
-          side={german ? 'Rückseite' : 'Back'}
-        />
+        {artwork.referenceOnly !== true && (
+          <SheetLink
+            image={artwork.illustration}
+            name={artwork.name[language]}
+            side={german ? 'Rückseite' : 'Back'}
+          />
+        )}
       </div>
       <OriginalCredit source={artwork.source} />
     </details>

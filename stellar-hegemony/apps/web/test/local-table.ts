@@ -1,5 +1,5 @@
 import { createGameCommand, setupCommands } from '@stellar/application';
-import { BASE_RULE_NUMBERS } from '@stellar/content';
+import { BASE_RULE_NUMBERS, FACTIONS } from '@stellar/content';
 import {
   andThen,
   createGameHandler,
@@ -52,7 +52,7 @@ export function createLocalGame(
   layout: MapLayout,
   playerCount: number,
   seed: number,
-  picks: readonly (string | null)[] = [],
+  picks: readonly (string | null)[] = FACTIONS.map((faction) => faction.id),
 ): Result<GameState, DomainError> {
   const table = {
     gameId: gameId('test'),

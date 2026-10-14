@@ -1,5 +1,6 @@
 /** Original TI4 miniatures, served locally from the pinned AsyncTI4 asset snapshot. */
 export const UNIT_ART_CODES: Readonly<Record<string, string>> = {
+  flagship: 'fs',
   carrier: 'cv',
   cruiser: 'ca',
   destroyer: 'dd',

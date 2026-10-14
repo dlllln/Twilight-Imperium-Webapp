@@ -1,4 +1,4 @@
-import { FACTIONS } from '@stellar/content';
+import { TI4_FACTIONS as FACTIONS } from '@stellar/content';
 import type {
   BattleOutcome,
   FleetOrder,

@@ -11,6 +11,7 @@ import { abilitiesOf } from './faction-abilities.ts';
 import type { LocalizedText } from './localized.ts';
 import { GALAXY_TILES, homeTile, p, slug } from './systems.ts';
 import { UNIT_TYPES } from './units.ts';
+import { TI4_FACTIONS, TI4_FACTION_NAMES } from './official-factions.ts';
 
 /*
  * Eigene Fraktionen mit eigenen Namen und Heimatwelten: acht für bis zu 8 Spieler. Sie
@@ -133,12 +134,16 @@ export const FACTIONS: readonly FactionDefinition[] = SEEDS.map((seed) => ({
   abilities: abilitiesOf(seed.id),
 }));
 
-export const FACTION_NAMES: Readonly<Record<string, LocalizedText>> = Object.fromEntries(
-  SEEDS.map((seed) => [seed.id, seed.name]),
-);
+export const FACTION_NAMES: Readonly<Record<string, LocalizedText>> = {
+  ...Object.fromEntries(SEEDS.map((seed) => [seed.id, seed.name] as const)),
+  ...TI4_FACTION_NAMES,
+};
+
+/** Official factions first for new games; earlier saved games keep their original IDs. */
+export const ALL_FACTIONS: readonly FactionDefinition[] = [...TI4_FACTIONS, ...FACTIONS];
 
 /** Galaxie-Tafeln plus Heimatsysteme: alles, was auf dem Spielplan liegen kann. */
 export const ALL_TILES: readonly SystemTile[] = [
   ...GALAXY_TILES,
-  ...FACTIONS.map((faction) => faction.homeSystem),
+  ...ALL_FACTIONS.map((faction) => faction.homeSystem),
 ];

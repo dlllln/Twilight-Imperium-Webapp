@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { FACTIONS } from '@stellar/content';
+import { TI4_FACTIONS as FACTIONS } from '@stellar/content';
 import { type LobbyView, seatPlayerId } from '@stellar/application';
 import type { GameState, PlayerId } from '@stellar/domain';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';

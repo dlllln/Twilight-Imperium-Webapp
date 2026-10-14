@@ -1,4 +1,4 @@
-import { BASE_RULE_NUMBERS, createBaseContent } from '@stellar/content';
+import { BASE_RULE_NUMBERS, createBaseContent, FACTIONS } from '@stellar/content';
 import {
   andThen,
   createGameHandler,
@@ -42,7 +42,7 @@ export function apply(state: GameState, command: GameCommand, seed: number): Gam
 }
 
 const seat = (index: number): GameCommand => {
-  const faction = content.factions[index] ?? content.factions[0];
+  const faction = FACTIONS[index] ?? FACTIONS[0];
   if (faction === undefined) throw new Error('Keine Fraktion');
   return {
     type: 'SeatPlayer',

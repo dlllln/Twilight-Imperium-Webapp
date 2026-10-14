@@ -1,6 +1,7 @@
 import type { FactionAbility } from '@stellar/domain';
 import type { LocalizedText } from './localized.ts';
 import { UNIT_TYPES as U } from './units.ts';
+import { OFFICIAL_FACTION_DATA } from './official-faction-data.ts';
 
 /*
  * Eigene Fraktionsfähigkeiten: je Fraktion zwei (acht Fraktionen). Sie nutzen dieselben Bausteine wie
@@ -114,12 +115,22 @@ export const FACTION_ABILITIES: Readonly<Record<string, readonly FactionAbility[
     ]),
   );
 
+const OFFICIAL_ABILITIES: Readonly<Record<string, readonly FactionAbility[]>> = Object.fromEntries(
+  OFFICIAL_FACTION_DATA.map((seed) => [
+    seed.id,
+    (FACTION_ABILITIES[seed.archetype] ?? []).map((entry) => ({
+      ...entry,
+      id: `ti4:${seed.id}:${entry.id}`,
+    })),
+  ]),
+);
+
 export const abilitiesOf = (faction: string): readonly FactionAbility[] =>
-  FACTION_ABILITIES[faction] ?? [];
+  OFFICIAL_ABILITIES[faction] ?? FACTION_ABILITIES[faction] ?? [];
 
 /** Die Mech-Fähigkeit einer Fraktion (Erweiterung), falls sie eine hat. */
 export const mechAbilityOf = (faction: string): FactionAbility | undefined =>
-  MECH_ABILITIES[faction];
+  OFFICIAL_ABILITIES[faction]?.at(-1) ?? MECH_ABILITIES[faction];
 
 export interface FactionAbilityText {
   readonly name: LocalizedText;
@@ -294,4 +305,4 @@ export const FACTION_ABILITY_TEXTS: Readonly<Record<string, FactionAbilityText>>
 };
 
 export const factionAbilityText = (id: string): FactionAbilityText | undefined =>
-  FACTION_ABILITY_TEXTS[id];
+  FACTION_ABILITY_TEXTS[id.startsWith('ti4:') ? (id.split(':').at(-1) ?? id) : id];

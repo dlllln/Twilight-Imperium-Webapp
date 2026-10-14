@@ -7,6 +7,7 @@ export const WORLD = { width: 1600, height: 1000 } as const;
 
 /** Größere Schiffe stehen größer auf der Bühne. */
 export const SHIP_SCALE: Readonly<Record<string, number>> = {
+  flagship: 1.4,
   sunbreaker: 1.5,
   dreadnought: 1.25,
   carrier: 1.1,
@@ -50,7 +51,7 @@ const SQUADRON = { x: 200, y: -290, gapX: 58, gapY: 46, rows: 3 } as const;
 /** Jede zweite Reihe rückt etwas vor, damit die Formation lebendig wirkt. */
 const STAGGER = 36;
 const FIGHTER_SCALE = 0.4;
-const RANK = ['sunbreaker', 'dreadnought', 'cruiser', 'carrier', 'destroyer'];
+const RANK = ['sunbreaker', 'flagship', 'dreadnought', 'cruiser', 'carrier', 'destroyer'];
 
 const rank = (type: string): number => {
   const index = RANK.indexOf(type);

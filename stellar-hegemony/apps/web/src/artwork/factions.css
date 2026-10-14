@@ -7,6 +7,50 @@
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
 }
 
+.simulator.stage-faction .sim-faction {
+  grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.simulator.stage-faction .sim-faction-list {
+  min-width: 0;
+  max-height: calc(100dvh - 70px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.ti4-faction-filters {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.ti4-faction-filters input,
+.ti4-faction-filters select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.ti4-faction-count,
+.ti4-adapted-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ti4-faction-portrait.reference .ti4-faction-illustration {
+  width: 560%;
+  height: auto;
+  top: 0;
+}
+
+@media (max-width: 760px) {
+  .simulator.stage-faction .sim-faction {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .simulator.stage-faction .sim-faction-list {
+    max-height: 450px;
+  }
+}
+
 .faction-grid button .ti4-faction-label {
   margin-top: 6px;
   color: var(--text);

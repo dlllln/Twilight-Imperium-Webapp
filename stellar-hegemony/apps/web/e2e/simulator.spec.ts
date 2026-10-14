@@ -12,8 +12,8 @@ test('Kampfsimulator: Fraktion wählen, Flotte bauen, kämpfen bis zum Ergebnis'
   await page.goto('/');
   await page.getByRole('button', { name: 'Kampfsimulator' }).click();
   const simulator = page.getByRole('dialog', { name: 'Kampfsimulator' });
-  await simulator.getByRole('radio', { name: 'Sternwacht Nesh' }).click();
-  await expect(simulator.getByRole('heading', { name: 'Sternwacht Nesh' })).toBeVisible();
+  await simulator.getByRole('radio', { name: 'Xxcha-Königreich' }).click();
+  await expect(simulator.getByRole('heading', { name: 'Xxcha-Königreich' })).toBeVisible();
   await page.getByRole('button', { name: 'Wählen' }).click();
 
   await expect(page.getByRole('button', { name: 'Kampf!' })).toBeDisabled();

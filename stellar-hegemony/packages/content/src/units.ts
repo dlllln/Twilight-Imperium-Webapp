@@ -3,6 +3,7 @@ import type { LocalizedText } from './localized.ts';
 
 export const UNIT_TYPES = {
   carrier: unitTypeId('carrier'),
+  flagship: unitTypeId('flagship'),
   cruiser: unitTypeId('cruiser'),
   destroyer: unitTypeId('destroyer'),
   dreadnought: unitTypeId('dreadnought'),
@@ -19,6 +20,17 @@ const pair = { resources: 1, unitsPerCost: 2 };
 
 /** Grundwerte der Einheiten. Verbesserungen kommen über Technologien (Iteration 7). */
 export const BASE_UNITS: readonly UnitDefinition[] = [
+  {
+    id: UNIT_TYPES.flagship,
+    category: 'ship',
+    isFighter: false,
+    cost: single(8),
+    combat: { hitOn: 7, dice: 2 },
+    move: 1,
+    capacity: 3,
+    capabilities: [{ kind: 'sustainDamage' }],
+    componentLimit: 1,
+  },
   {
     id: UNIT_TYPES.carrier,
     category: 'ship',
@@ -131,6 +143,7 @@ export const BASE_UNITS: readonly UnitDefinition[] = [
 ];
 
 export const UNIT_NAMES: Readonly<Record<string, LocalizedText>> = {
+  [UNIT_TYPES.flagship]: { de: 'Flaggschiff', en: 'Flagship' },
   [UNIT_TYPES.carrier]: { de: 'Träger', en: 'Carrier' },
   [UNIT_TYPES.cruiser]: { de: 'Kreuzer', en: 'Cruiser' },
   [UNIT_TYPES.destroyer]: { de: 'Zerstörer', en: 'Destroyer' },

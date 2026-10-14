@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { LEADER_KINDS, type RewardEffect, unlockOf } from '@stellar/domain';
-import { BASE_UNITS, createBaseContent, FACTIONS, LEADERS, leaderText } from '../src/index.ts';
+import {
+  BASE_UNITS,
+  createBaseContent,
+  ALL_FACTIONS as FACTIONS,
+  LEADERS,
+  leaderText,
+} from '../src/index.ts';
 
 const unitIds = new Set(BASE_UNITS.map((unit) => unit.id));
 

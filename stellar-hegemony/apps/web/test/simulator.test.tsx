@@ -57,12 +57,12 @@ describe('Kampfsimulator', () => {
   it('Fraktion wählen zeigt Komplexität, Fähigkeiten und eigenen Hintergrund', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Kampfsimulator' }));
-    fireEvent.click(within(simulator()).getByRole('radio', { name: 'Dominion Karth' }));
-    expect(screen.getByRole('heading', { name: 'Dominion Karth' })).toBeTruthy();
+    fireEvent.click(within(simulator()).getByRole('radio', { name: 'Baronie Letnev' }));
+    expect(screen.getByRole('heading', { name: 'Baronie Letnev' })).toBeTruthy();
     expect(screen.getByRole('img', { name: 'Baronie Letnev' }).getAttribute('src')).toBe(
       '/ti4/factions/letnev-back.jpg',
     );
-    expect(screen.getByText('Twilight Imperium · Baronie Letnev')).toBeTruthy();
+    expect(screen.getByText('Twilight Imperium · Grundspiel')).toBeTruthy();
     expect(screen.getByLabelText(/Komplexität/)).toBeTruthy();
     expect(screen.getByText('Schwere Panzerung')).toBeTruthy();
     fireEvent.mouseDown(screen.getByRole('tab', { name: 'Hintergrund' }));
@@ -70,7 +70,7 @@ describe('Kampfsimulator', () => {
   });
 
   it('die Werft prüft Flotte, Ressourcen und Produktionslimit', () => {
-    openAndChoose('Dominion Karth');
+    openAndChoose('Baronie Letnev');
     const launch = screen.getByRole('button', { name: 'Kampf!' });
     expect(launch).toHaveProperty('disabled', true);
     expect(screen.getByText('Baue mindestens ein Kriegsschiff.')).toBeTruthy();
@@ -83,12 +83,12 @@ describe('Kampfsimulator', () => {
   });
 
   it('Kampf: Feuer bis zum Ergebnis, dann der nächste Kampf der Serie', () => {
-    openAndChoose('Dominion Karth');
+    openAndChoose('Baronie Letnev');
     buildFleet();
     fireEvent.click(screen.getByRole('button', { name: 'Kampf!' }));
     expect(screen.getByText('Raumkampf')).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Angreifer' }).textContent).toContain(
-      'Dominion Karth',
+      'Baronie Letnev',
     );
     expect(screen.getByTestId('fleet-you').textContent).toContain('2 Schlachtschiff');
     expect(['Sieg', 'Niederlage', 'Unentschieden']).toContain(fightToTheEnd());
@@ -98,7 +98,7 @@ describe('Kampfsimulator', () => {
   });
 
   it('eine Taktikkarte gilt für eine Runde und verlässt danach die Hand', () => {
-    openAndChoose('Handelsbund von Sel');
+    openAndChoose('Emirate von Hacan');
     buildFleet();
     fireEvent.click(screen.getByRole('button', { name: 'Kampf!' }));
     const card = screen.getByRole('button', { name: /Überladung/ });
@@ -113,7 +113,7 @@ describe('Kampfsimulator', () => {
   it('nach drei Kämpfen ist die Serie entschieden; Escape verlässt den Simulator', () => {
     expect(seriesScore(['sim-you', 'sim-you'] as never).over).toBe(true);
     expect(seriesScore(['sim-you', null] as never).over).toBe(false);
-    openAndChoose('Dominion Karth');
+    openAndChoose('Baronie Letnev');
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'Kampfsimulator' })).toBeNull();
   });

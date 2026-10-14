@@ -8,6 +8,7 @@ import {
 } from '@stellar/domain';
 import type { LocalizedText } from './localized.ts';
 import { UNIT_TYPES as U } from './units.ts';
+import { OFFICIAL_FACTION_DATA } from './official-faction-data.ts';
 
 /*
  * Eigene Anführer (Erweiterung Schritt 3): je Fraktion ein Agent, ein Kommandant und ein Held.
@@ -179,7 +180,7 @@ const TARN: readonly LeaderDefinition[] = [
 ];
 
 /** Alle Anführer, je Fraktion in der Reihenfolge Agent, Kommandant, Held. */
-export const LEADERS: readonly LeaderDefinition[] = [
+const LEGACY_LEADERS: readonly LeaderDefinition[] = [
   ...AUREL,
   ...ORUN,
   ...SEL,
@@ -189,6 +190,27 @@ export const LEADERS: readonly LeaderDefinition[] = [
   ...VYR,
   ...TARN,
 ];
+
+const adaptedLeader = (
+  faction: string,
+  id: string,
+  original: LeaderDefinition,
+): LeaderDefinition => ({
+  ...original,
+  id: leaderId(id),
+  faction: factionId(faction),
+});
+
+const OFFICIAL_LEADERS = OFFICIAL_FACTION_DATA.flatMap((seed) =>
+  seed.leaders.flatMap((entry) => {
+    const original = LEGACY_LEADERS.find(
+      (candidate) => candidate.faction === seed.archetype && candidate.kind === entry.kind,
+    );
+    return original === undefined ? [] : [adaptedLeader(seed.id, entry.id, original)];
+  }),
+);
+
+export const LEADERS: readonly LeaderDefinition[] = [...LEGACY_LEADERS, ...OFFICIAL_LEADERS];
 
 export interface LeaderText {
   readonly name: LocalizedText;
@@ -407,4 +429,19 @@ export const LEADER_TEXTS: Readonly<Record<string, LeaderText>> = {
   ),
 };
 
-export const leaderText = (id: string): LeaderText | undefined => LEADER_TEXTS[id];
+const OFFICIAL_LEADER_TEXTS: Readonly<Record<string, LeaderText>> = Object.fromEntries(
+  OFFICIAL_FACTION_DATA.flatMap((seed) =>
+    seed.leaders.flatMap((entry) => {
+      const original = LEGACY_LEADERS.find(
+        (candidate) => candidate.faction === seed.archetype && candidate.kind === entry.kind,
+      );
+      const previous = original === undefined ? undefined : LEADER_TEXTS[original.id];
+      return previous === undefined
+        ? []
+        : [[entry.id, { ...previous, name: { de: entry.name, en: entry.name } }]];
+    }),
+  ),
+);
+
+export const leaderText = (id: string): LeaderText | undefined =>
+  OFFICIAL_LEADER_TEXTS[id] ?? LEADER_TEXTS[id];

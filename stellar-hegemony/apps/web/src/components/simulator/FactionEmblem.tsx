@@ -1,4 +1,4 @@
-import { FACTIONS } from '@stellar/content';
+import { ALL_FACTIONS as FACTIONS } from '@stellar/content';
 import { type ReactElement, useState } from 'react';
 import { factionArtwork } from '../../artwork/factions.ts';
 import '../../artwork/factions.css';
