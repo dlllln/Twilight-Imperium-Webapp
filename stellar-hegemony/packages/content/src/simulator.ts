@@ -114,4 +114,18 @@ export const FACTION_PROFILES: Readonly<Record<string, FactionProfile>> = {
       en: 'The Swarm replaces every lost ship with two smaller ones.',
     },
   },
+  vyr: {
+    complexity: 2,
+    lore: {
+      de: 'Das Archiv sammelt jede Sternkarte, und wer sie lesen will, zahlt mit Wissen.',
+      en: 'The Archive collects every star chart, and whoever wants to read one pays in knowledge.',
+    },
+  },
+  tarn: {
+    complexity: 2,
+    lore: {
+      de: 'In den Freihäfen gilt nur ein Gesetz: Die Fracht kommt immer an.',
+      en: 'The Free Ports keep a single law: the cargo always arrives.',
+    },
+  },
 };

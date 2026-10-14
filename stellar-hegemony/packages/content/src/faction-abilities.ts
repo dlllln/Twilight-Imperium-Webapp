@@ -3,7 +3,7 @@ import type { LocalizedText } from './localized.ts';
 import { UNIT_TYPES as U } from './units.ts';
 
 /*
- * Eigene Fraktionsfähigkeiten: je Fraktion zwei. Sie nutzen dieselben Bausteine wie
+ * Eigene Fraktionsfähigkeiten: je Fraktion zwei (acht Fraktionen). Sie nutzen dieselben Bausteine wie
  * Technologien (Einheitenwerte) und wenige Regelwerte; Namen und Texte sind eigene Entwürfe.
  */
 const ability = (
@@ -44,6 +44,13 @@ const MECH_ABILITIES: Readonly<Record<string, FactionAbility>> = {
     ...ability('brood-walkers', []),
     deploy: { unit: U.mech, trigger: { kind: 'groundForcesProduced', minimum: THREE } },
   },
+  vyr: ability('lorekeeper-frames', [{ target: MECH, change: { hitOn: -ONE } }]),
+  tarn: ability('forge-walkers', [
+    {
+      target: MECH,
+      change: { add: [{ kind: 'production', bonus: ONE, addsPlanetResources: false }] },
+    },
+  ]),
 };
 
 const withMech = (faction: string, abilities: readonly FactionAbility[]) => {
@@ -85,6 +92,16 @@ const BASE_ABILITIES: Readonly<Record<string, readonly FactionAbility[]>> = {
   quel: [
     ability('swarm-tactics', [{ target: { fighters: true }, change: { hitOn: -ONE } }]),
     ability('brood-fleets', [], { fleetLimit: ONE }),
+  ],
+  vyr: [
+    ability('open-stacks', [], { freeSecondaries: ['technology'] }),
+    ability('scholars-council', [], { actionCardHandLimit: TWO, extraVotes: ONE }),
+  ],
+  tarn: [
+    ability('blockade-runners', [
+      { target: { types: [U.cruiser] }, change: { move: ONE, hitOn: -ONE } },
+    ]),
+    ability('free-harbours', [], { freeSecondaries: ['trade'], statusTradeGoods: ONE }),
   ],
 };
 
@@ -230,6 +247,48 @@ export const FACTION_ABILITY_TEXTS: Readonly<Record<string, FactionAbilityText>>
     {
       de: 'Mech: Produzierst du auf einmal mindestens 3 Bodentruppen, kommt zusätzlich 1 Mech aus deiner Verstärkung kostenlos auf denselben Planeten.',
       en: 'Mech: When you produce at least 3 ground forces at once, 1 additional mech from your reinforcements is placed on the same planet for free.',
+    },
+  ),
+  'open-stacks': text(
+    { de: 'Offene Bestände', en: 'Open Stacks' },
+    {
+      de: 'Die Sekundärfähigkeit der Technologie kostet dich keinen Strategiemarker.',
+      en: 'The secondary ability of Technology costs you no strategy token.',
+    },
+  ),
+  'scholars-council': text(
+    { de: 'Gelehrtenrat', en: "Scholars' Council" },
+    {
+      de: 'Du darfst 2 Aktionskarten mehr halten und gibst bei Abstimmungen 1 Stimme zusätzlich ab.',
+      en: 'You may hold 2 more action cards and cast 1 additional vote.',
+    },
+  ),
+  'lorekeeper-frames': text(
+    { de: 'Hüterrahmen', en: 'Lorekeeper Frames' },
+    {
+      de: 'Mech: Deine Mechs treffen bei einem um 1 niedrigeren Wurf.',
+      en: 'Mech: Your mechs hit on a roll 1 lower.',
+    },
+  ),
+  'blockade-runners': text(
+    { de: 'Blockadebrecher', en: 'Blockade Runners' },
+    {
+      de: 'Deine Kreuzer haben Bewegung +1 und treffen bei einem um 1 niedrigeren Wurf.',
+      en: 'Your cruisers have +1 move and hit on a roll 1 lower.',
+    },
+  ),
+  'free-harbours': text(
+    { de: 'Freihäfen', en: 'Free Harbours' },
+    {
+      de: 'Die Sekundärfähigkeit des Handels kostet dich keinen Strategiemarker. In jeder Statusphase erhältst du 1 Handelsware.',
+      en: 'The secondary ability of Trade costs you no strategy token. In every status phase you gain 1 trade good.',
+    },
+  ),
+  'forge-walkers': text(
+    { de: 'Schmiedeläufer', en: 'Forge Walkers' },
+    {
+      de: 'Mech: Deine Mechs haben Produktion 1. Im System eines Mechs darfst du also auch ohne Raumdock 1 Einheit produzieren.',
+      en: 'Mech: Your mechs have production 1, so you may produce 1 unit in a system with your mech even without a space dock.',
     },
   ),
 };

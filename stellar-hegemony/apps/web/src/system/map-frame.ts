@@ -19,9 +19,14 @@ export interface Insets {
 const WIDE: Insets = { top: 76, right: 432, bottom: 78, left: 226 };
 /** Rechts nur die Reiter der Übersicht; Benachrichtigungen liegen dann kurz über der Karte. */
 const SLIM_RIGHT = 84;
-/** Schmale Bildschirme: Spieler und Vorräte stehen oben übereinander. */
-const NARROW: Insets = { top: 128, right: 12, bottom: 70, left: 12 };
+/** Schmale Bildschirme: Spieler und Vorräte oben übereinander, Meldungen unten über der Hand. */
+const NARROW: Insets = { top: 128, right: 12, bottom: 230, left: 12 };
 const NARROW_WIDTH = 760;
+/** Tablets hochkant nutzen dieselbe Anordnung wie schmale Bildschirme. */
+const PORTRAIT_WIDTH = 1100;
+
+const narrow = (screen: ScreenSize): boolean =>
+  screen.width < NARROW_WIDTH || (screen.width <= PORTRAIT_WIDTH && screen.height >= screen.width);
 /** Platz für Benachrichtigungen bleibt nur frei, wenn die Karte dadurch kaum kleiner wird. */
 const KEEP_SCALE = 0.85;
 
@@ -38,7 +43,7 @@ export function fitScale(bounds: Bounds, screen: ScreenSize, insets: Insets): nu
 
 /** Welche Ränder die Anzeigen bei dieser Bildschirmgröße belegen. */
 export function hudInsets(bounds: Bounds, screen: ScreenSize): Insets {
-  if (screen.width < NARROW_WIDTH) return NARROW;
+  if (narrow(screen)) return NARROW;
   const slim = { ...WIDE, right: SLIM_RIGHT };
   const keep = fitScale(bounds, screen, WIDE) >= KEEP_SCALE * fitScale(bounds, screen, slim);
   return keep ? WIDE : slim;

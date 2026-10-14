@@ -33,3 +33,5 @@ export type ExplorationCardId = Brand<string, 'ExplorationCardId'>;
 export const explorationCardId = (value: string): ExplorationCardId => value as ExplorationCardId;
 export type RelicId = Brand<string, 'RelicId'>;
 export const relicId = (value: string): RelicId => value as RelicId;
+export type LeaderId = Brand<string, 'LeaderId'>;
+export const leaderId = (value: string): LeaderId => value as LeaderId;

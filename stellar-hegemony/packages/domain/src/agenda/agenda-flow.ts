@@ -156,6 +156,18 @@ export function resolveAgenda(
   ]);
 }
 
+/** Ohne wählbares Ergebnis (kein passender Planet) wird die Agenda ohne Wirkung abgelegt. */
+const discardUnelectable = (
+  state: GameState,
+  agenda: AgendaDefinition,
+  number: number,
+  context: DecisionContext,
+) =>
+  chain(state, [
+    () => [{ type: 'AgendaDiscarded', agenda: agenda.id }],
+    (current) => nextAgenda(current, number + 1, context),
+  ]);
+
 /** Nach der letzten Stimme: auszählen, bei Gleichstand entscheidet der Sprecher (RR 2.19). */
 export function afterVoting(state: GameState, context: DecisionContext): readonly GameEvent[] {
   const phase = state.agendaPhase;
@@ -163,6 +175,7 @@ export function afterVoting(state: GameState, context: DecisionContext): readonl
   if (phase === null || agenda === undefined || phase.awaiting.length > 0) return [];
   const best = leaders(tally(outcomesFor(state, agenda, context.content), phase.votes));
   const [single] = best;
+  if (best.length === 0) return discardUnelectable(state, agenda, phase.number, context);
   if (best.length === 1 && single !== undefined) return resolveAgenda(state, single, context);
   return [{ type: 'AgendaTied', outcomes: best }];
 }

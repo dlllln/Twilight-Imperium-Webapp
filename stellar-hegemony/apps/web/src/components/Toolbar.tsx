@@ -10,7 +10,7 @@ import { useSimulatorStore } from '../simulator/simulator-store.ts';
 import { useGalaxyStore } from '../store.ts';
 import { useTutorialStore } from '../tutorial/tutorial-store.ts';
 
-const PLAYER_COUNTS = [3, 4, 5, 6] as const;
+const PLAYER_COUNTS = [3, 4, 5, 6, 7, 8] as const;
 
 /** Eigenes Zeichen: ein Sechseck mit Stern, passend zur Karte. */
 function BrandMark(): ReactElement {

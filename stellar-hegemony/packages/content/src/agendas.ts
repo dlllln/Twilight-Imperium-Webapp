@@ -11,7 +11,7 @@ import type { LocalizedText } from './localized.ts';
 import { UNIT_TYPES } from './units.ts';
 
 /*
- * Eigener Agendasatz des Sternenrats: 9 Gesetze und 15 Direktiven. Namen, Wirkungen
+ * Eigener Agendasatz des Sternenrats: 10 Gesetze und 18 Direktiven. Namen, Wirkungen
  * und Texte sind eigene Entwürfe; nur der Ablauf der Abstimmung folgt dem Regelwerk.
  */
 const FOR_AGAINST: Election = { kind: 'forAgainst' };
@@ -150,6 +150,32 @@ export const AGENDAS: readonly AgendaDefinition[] = [
     [step('opponents', { kind: 'gainCommandTokens', pool: 'fleet', amount: ONE })],
   ),
   directive('tribunal', PLAYER, [step('elected', { kind: 'discardActionCards', count: null })]),
+  // Erweiterung (Schritt 4): ein Gesetz und drei Direktiven.
+  law('austerity-act', FOR_AGAINST, { kind: 'commodityLimitAll', delta: -ONE }, [
+    step('supporters', { kind: 'gainCommandTokens', pool: 'tactic', amount: ONE }),
+  ]),
+  directive('frontier-bounty', OUTER_PLANET, [
+    step('elected', { kind: 'gainTradeGoods', amount: TWO }),
+    step('elected', {
+      kind: 'placeUnits',
+      unit: UNIT_TYPES.infantry,
+      count: ONE,
+      where: 'electedPlanet',
+    }),
+  ]),
+  directive('imperial-census', PLAYER, [
+    step('elected', { kind: 'gainCommandTokens', pool: 'strategy', amount: ONE }),
+    step('elected', { kind: 'drawActionCards', count: ONE }),
+  ]),
+  directive(
+    'veterans-charter',
+    FOR_AGAINST,
+    [
+      step('all', { kind: 'repairUnits' }),
+      step('all', { kind: 'gainCommandTokens', pool: 'fleet', amount: ONE }),
+    ],
+    [step('supporters', { kind: 'gainTradeGoods', amount: ONE })],
+  ),
 ];
 
 export interface AgendaText {
@@ -366,6 +392,42 @@ export const AGENDA_TEXTS: Readonly<Record<string, AgendaText>> = {
     {
       de: 'Wähle einen Spieler. Er wirft alle Aktionskarten ab.',
       en: 'Elect a player. They discard all of their action cards.',
+    },
+  ),
+  'austerity-act': text(
+    { de: 'Sparhaushalt', en: 'Austerity Act' },
+    {
+      de: 'Gesetz: Das Rohstofflimit jedes Spielers sinkt um 1.',
+      en: 'Law: Every player’s commodity limit drops by 1.',
+    },
+    {
+      de: 'Wer dagegen gestimmt hat, legt 1 Marker aus seinem Nachschub in seinen Taktikpool.',
+      en: 'Each player who voted against places 1 token from reinforcements into their tactic pool.',
+    },
+  ),
+  'frontier-bounty': text(
+    { de: 'Grenzprämie', en: 'Frontier Bounty' },
+    {
+      de: 'Wähle einen Planeten außerhalb der Heimatsysteme. Sein Besitzer erhält 2 Handelswaren und setzt 1 Infanterie darauf.',
+      en: 'Elect a planet outside the home systems. Its controller gains 2 trade goods and places 1 infantry on it.',
+    },
+  ),
+  'imperial-census': text(
+    { de: 'Reichszählung', en: 'Imperial Census' },
+    {
+      de: 'Wähle einen Spieler. Er legt 1 Marker aus seinem Nachschub in seinen Strategiepool und zieht 1 Aktionskarte.',
+      en: 'Elect a player. They place 1 token from reinforcements into their strategy pool and draw 1 action card.',
+    },
+  ),
+  'veterans-charter': text(
+    { de: 'Veteranencharta', en: "Veterans' Charter" },
+    {
+      de: 'Jeder Spieler repariert alle seine Einheiten und legt 1 Marker aus seinem Nachschub in seinen Flottenpool.',
+      en: 'Each player repairs all their units and places 1 token from reinforcements into their fleet pool.',
+    },
+    {
+      de: 'Wer dagegen gestimmt hat, erhält 1 Handelsware.',
+      en: 'Each player who voted against gains 1 trade good.',
     },
   ),
 };

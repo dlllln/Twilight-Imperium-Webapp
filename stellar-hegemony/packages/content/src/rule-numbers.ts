@@ -4,7 +4,7 @@ import type { RuleNumbers } from '@stellar/domain';
 export const BASE_RULE_NUMBERS: RuleNumbers = {
   dieSides: 10,
   minPlayers: 3,
-  maxPlayers: 6,
+  maxPlayers: 8,
   victoryPointOptions: [10, 14],
   commandTokensPerPlayer: 16,
   startingCommandPools: { tactic: 3, fleet: 3, strategy: 2 },

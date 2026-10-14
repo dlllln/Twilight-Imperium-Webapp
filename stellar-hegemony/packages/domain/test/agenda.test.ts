@@ -209,6 +209,13 @@ describe('Ergebnis abhandeln (RR 2.2 iii, RR 2.19)', () => {
     expect(state.agendaPhase?.tied).toEqual(['for', 'against']);
   });
 
+  it('RR 2.19: gibt es keinen wählbaren Planeten, wird die Agenda ohne Wirkung abgelegt', () => {
+    const start = agendaGame(['survey', 'stimulus']);
+    const state = run(start, [abstain(BLUE), abstain(GREEN), abstain(RED)]);
+    expect(state.agendaDeck.discard).toContain(AG('survey'));
+    expect(state.agendaPhase).toMatchObject({ number: 2, agenda: AG('stimulus'), tied: null });
+  });
+
   it('RR 2.4: nach zwei Agenden werden alle Planeten bereit und die nächste Runde beginnt', () => {
     const first = decide(agendaGame(['stimulus', 'audit']), 'for');
     const { state, events } = step(

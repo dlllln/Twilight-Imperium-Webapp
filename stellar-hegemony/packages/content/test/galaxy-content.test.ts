@@ -45,22 +45,37 @@ describe('Content: Systemtafeln', () => {
   });
 });
 
-describe('Content: Galaxie-Vorlagen für 3–6 Spieler', () => {
-  it.each([3, 4, 5, 6])('%i Spieler: Felder und Tafelzahl passen zusammen', (players) => {
+describe('Content: Galaxie-Vorlagen für 3–8 Spieler', () => {
+  it.each([3, 4, 5, 6, 7, 8])('%i Spieler: Felder und Tafelzahl passen zusammen', (players) => {
     const template = galaxyTemplate(players);
+    const ring = players >= 7 ? 4 : 3;
     expect(template?.homeSlots).toHaveLength(players);
     expect(template && template.blueTiles + template.redTiles).toBe(template?.systemSlots.length);
-    expect(template?.homeSlots.every((home) => hexDistance(ORIGIN, home) === 3)).toBe(true);
+    expect(template?.homeSlots.every((home) => hexDistance(ORIGIN, home) === ring)).toBe(true);
   });
+
+  it.each([7, 8])(
+    'PoK %i Spieler: der Vorrat reicht für die große Galaxie, jeder Heimat-Platz hat Nachbarn',
+    (players) => {
+      const template = galaxyTemplate(players);
+      const blue = ALL_TILES.filter((tile) => tile.back === 'blue').length;
+      expect(template?.blueTiles).toBeLessThanOrEqual(blue);
+      expect(template?.redTiles).toBeLessThanOrEqual(RED_TILES.length);
+      for (const home of template?.homeSlots ?? []) {
+        const near = template?.systemSlots.filter((slot) => hexDistance(slot, home) === 1);
+        expect(near?.length).toBeGreaterThanOrEqual(3);
+      }
+    },
+  );
 
   it('keine Vorlage für nicht unterstützte Spielerzahlen', () => {
     expect(galaxyTemplate(2)).toBeUndefined();
-    expect(galaxyTemplate(7)).toBeUndefined();
+    expect(galaxyTemplate(9)).toBeUndefined();
   });
 
   it('jede erzeugte Galaxie ist gültig', () => {
     fc.assert(
-      fc.property(fc.integer({ min: 3, max: 6 }), fc.nat(), (players, seed) => {
+      fc.property(fc.integer({ min: 3, max: 8 }), fc.nat(), (players, seed) => {
         const template = galaxyTemplate(players);
         if (template === undefined) return false;
         const layout = generateGalaxyLayout(template, content.tiles, new LinearRandom(seed));

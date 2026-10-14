@@ -357,7 +357,7 @@ mitgespeichert, damit eine Aufhebung sie exakt zurücknimmt.
 
 ## 15. Iteration 11 im Detail
 
-Jede unserer sechs Fraktionen hat zwei eigene Fähigkeiten (RR 27.21). Sie sind Daten
+Jede unserer Fraktionen (seit Iteration 26 acht) hat zwei eigene Fähigkeiten (RR 27.21). Sie sind Daten
 (`FactionAbility`): Einheitenwerte über dieselben Bausteine wie Technologien und wenige Regelwerte
 (Zusatzstimmen, Handkartenlimit, Einkommen in der Statusphase, Flottenlimit, kostenlose
 Sekundärfähigkeiten). Dazu kommen KI-Gegner im Paket `@stellar/bots`: Sie spielen über genau
@@ -696,7 +696,52 @@ Strahlenkranz (matt, wenn genutzt); der Hinweis am Zeiger nennt Anlagen und Fäh
 | `scene-model` mit `frontier`, `cache`, `legendary`          | Reine Daten für Pixi, Hinweis und Nahbeschriftung (Pure Fabrication); das Zeichnen kennt keine Domainregeln.                                          |
 | `fresh-notices.ts` mit `REVEALS`                            | Eine Liste sagt, welche eigenen Zeilen trotzdem aufploppen (Daten statt Verzweigung, Open/Closed).                                                    |
 
-## 29. Iterationen
+## 29. Iteration 25 im Detail (Anführer)
+
+Jede Fraktion hat drei eigene Anführer. Der Agent ist von Beginn an bereit: Seine Aktion wirkt
+einmal je Runde (erschöpft, in der Statusphase wieder bereit). Der Kommandant schaltet sich frei,
+sobald eine Bedingung erfüllt ist (etwa sechs Planeten oder vier Technologien), und wirkt dann
+dauerhaft wie eine weitere Fraktionsfähigkeit. Der Held wird mit drei erfüllten Zielen frei und
+wirkt einmal stark, danach ist er aus dem Spiel. Namen, Texte und Wirkungen sind eigene Entwürfe.
+
+Agent und freier Held liegen als Karte in der Hand und werden wie Relikte angetippt. Der Reiter
+„Reich“ zeigt die Anführer aller Spieler mit Zustand, bei gesperrten mit Bedingung und Fortschritt
+(z. B. „gesperrt 4/6“). Freischalten und Einsetzen stehen im Verlauf. Abgelehnte Befehle zur
+Erkundung, zu Relikten und Anführern haben jetzt eigene Fehlertexte.
+
+| Element                                                           | Prinzip                                                                                                                                |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `component-action.ts` (`rewardAction`, `componentTiming`)         | Eine Komponentenaktion für Relikte, legendäre Planeten und Anführer (DRY); der Präfix der Fehlercodes ist ein Parameter (Open/Closed). |
+| Agent und Held als Liste von `RewardEffect`                       | Dieselben Wirkungen wie bei der Erkundung (Interpreter); neue Anführer sind reine Daten.                                               |
+| Kommandant als `passive` Fraktionsfähigkeit, `commanderAbilities` | Kampf, Produktion und Regelwerte fragen Fähigkeiten ab, nicht den Anführer (Polymorphie, Low Coupling).                                |
+| `leaderUnlockEvents` nach jedem Command                           | Freischalten folgt aus öffentlichem Stand, ein eigenes Event hält es nachvollziehbar (Event Sourcing, Information Expert).             |
+| `leaderProgress`, `usableLeaders` (Domain), `LeadersPanel` (Web)  | Die Domain rechnet Fortschritt und Nutzbarkeit, die Oberfläche zeigt nur an (Controller/Expert, keine Regel im Web).                   |
+| Anführer als `TableEntry` in der Hand                             | Dieselbe Bedienung wie für Relikte; nur Gesicht und Befehl sind neu (Polymorphie über `kind`).                                         |
+
+## 30. Iteration 26 im Detail (acht Fraktionen, 7–8 Spieler, weitere Karten)
+
+Zwei neue eigene Fraktionen kommen dazu: das Archiv von Vyr (Gelehrte, Technologie und
+Aktionskarten) und die Freihäfen von Tarn (Handel, schnelle Kreuzer, Mechs mit Produktion). Beide
+haben Heimatsystem, Fähigkeiten, Mech-Fähigkeit und drei Anführer wie die anderen. Damit sind bis
+zu acht Spieler möglich: Ab sieben Spielern hat die Galaxie vier Ringe, die Heimatsysteme liegen
+außen, und der äußere Ring ist nur neben ihnen belegt. Neue blaue und rote Systeme füllen den
+Vorrat. Dazu kommen vier Technologien, sechs Aktionskarten, vier öffentliche und zwei geheime
+Ziele und vier Agenden, alles eigene Entwürfe mit den vorhandenen Wirkungsbausteinen.
+
+In der Oberfläche lässt sich die Spielerzahl bis 8 wählen; ab sieben Spielern rückt die
+Spielerleiste enger zusammen. Tablets hochkant nutzen die schmale Anordnung (Spieler oben in einer
+Reihe, Meldungen unten), dadurch wird die Karte dort deutlich größer. Eine Agenda, für die kein
+Planet wählbar ist, wird jetzt ohne Wirkung abgelegt, statt die Agendaphase anzuhalten.
+
+| Element                                                  | Prinzip                                                                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Fraktionen, Anführer, Karten als Daten (`content`)       | Open/Closed: neue Fraktionen und Karten brauchten keinen neuen Regelcode, nur Einträge mit vorhandenen Bausteinen.              |
+| Galaxievorlagen für 7 und 8 Spieler (`galaxy-templates`) | Reine Daten mit Ring und Heimatplätzen; der Generator und die Darstellung folgen dem Layout ohne festen Radius (Low Coupling).  |
+| `SEAT_COLORS` (Anwendung) und `seat-colors.ts` (Web)     | Eine Farbliste je Platz bis 8; Domain und Oberfläche teilen die Reihenfolge (Konsistenz, DRY im Sinne einer Quelle je Schicht). |
+| `discardUnelectable` in `agenda-flow.ts`                 | Ein Sonderfall bekommt einen eigenen Namen statt eines Leerlaufs (Robustheit, Single Responsibility).                           |
+| `hudInsets` mit `narrow(screen)`, Media Query hochkant   | Bildschirmform entscheidet einmal in einer reinen Funktion, CSS folgt derselben Regel (Information Expert).                     |
+
+## 31. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -724,8 +769,10 @@ Strahlenkranz (matt, wenn genutzt); der Hinweis am Zeiger nennt Anlagen und Fäh
 | 22  | Nur private Lobbys, Zugverlauf, Rückgängig, Tablet  | ✓     |
 | 23  | Ganze Karte, freier Blick, Meldungen, Mechs (PoK)   | ✓     |
 | 24  | Erkundung, Relikte, legendäre Planeten (PoK)        | ✓     |
+| 25  | Anführer: Agent, Kommandant, Held (PoK)             | ✓     |
+| 26  | Acht Fraktionen, 7–8 Spieler, weitere Karten (PoK)  | ✓     |
 
-## 30. Befehle
+## 32. Befehle
 
 ```
 pnpm install

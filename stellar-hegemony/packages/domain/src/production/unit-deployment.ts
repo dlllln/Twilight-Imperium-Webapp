@@ -1,5 +1,6 @@
 import type { DeployTrigger } from '../faction/faction-ability.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
+import { commanderAbilities } from '../leaders/leader-queries.ts';
 import type { ContentPort } from '../ports/content-port.ts';
 import type { PlanetId, PlayerId } from '../shared/ids.ts';
 import { UnitNumbering } from '../unit/unit-numbering.ts';
@@ -27,9 +28,11 @@ export const groundForcesProduced =
   (trigger: DeployTrigger): boolean =>
     trigger.kind === 'groundForcesProduced' && count >= trigger.minimum;
 
+/** Fraktionsfähigkeiten und freie Kommandanten (PoK Anführer) können Einheiten einsetzen. */
 const abilitiesOf = (state: GameState, player: PlayerId, content: ContentPort) => {
   const faction = findPlayer(state, player)?.faction;
-  return content.factions.find((candidate) => candidate.id === faction)?.abilities ?? [];
+  const own = content.factions.find((candidate) => candidate.id === faction)?.abilities ?? [];
+  return [...own, ...commanderAbilities(state, player, content)];
 };
 
 /**

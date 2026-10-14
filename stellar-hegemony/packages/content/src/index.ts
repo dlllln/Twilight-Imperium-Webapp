@@ -14,3 +14,4 @@ export * from './faction-abilities.ts';
 export * from './simulator.ts';
 export * from './exploration-cards.ts';
 export * from './relics.ts';
+export * from './leaders.ts';

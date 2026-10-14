@@ -5,6 +5,7 @@ import type {
   RelicDefinition,
 } from '../exploration/exploration-definition.ts';
 import type { FactionDefinition } from '../faction/faction-definition.ts';
+import type { LeaderDefinition } from '../leaders/leader-definition.ts';
 import type { GalaxyTemplate } from '../galaxy/map-layout.ts';
 import type { ObjectiveDefinition } from '../objective/objective-definition.ts';
 import type { TileCatalog } from '../galaxy/tile-catalog.ts';
@@ -28,5 +29,7 @@ export interface ContentPort {
   /** PoK Erkundung: alle Erkundungskarten (mit Exemplaren) und Relikte. */
   readonly explorationCards: readonly ExplorationCardDefinition[];
   readonly relics: readonly RelicDefinition[];
+  /** PoK Anführer: Agenten, Kommandanten und Helden aller Fraktionen. */
+  readonly leaders: readonly LeaderDefinition[];
   galaxyTemplate(playerCount: number): GalaxyTemplate | undefined;
 }

@@ -102,7 +102,7 @@ describe('Hand am unteren Rand', () => {
     expect(card('Passen')).toBeTruthy();
   });
 
-  it('RR 12: wer noch geheime Aufträge wählt, bekommt keine Zugkarten', () => {
+  it('RR 12: wer noch geheime Aufträge wählt, bekommt keine Zugkarten (der Agent liegt nur da)', () => {
     const fresh = started();
     const actor = currentActor(fresh);
     const entries = handEntries({
@@ -112,6 +112,7 @@ describe('Hand am unteren Rand', () => {
       selected: null,
       choosing: false,
     });
-    expect(entries).toEqual([]);
+    expect(entries.filter((entry) => entry.kind !== 'leader')).toEqual([]);
+    expect(entries.some((entry) => entry.playable)).toBe(false);
   });
 });

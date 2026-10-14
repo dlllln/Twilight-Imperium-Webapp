@@ -14,6 +14,7 @@ import { PlayersPanel } from './PlayersPanel.tsx';
 import { type SidebarTab, useSidebarStore } from './sidebar-store.ts';
 import { StrategyCardGrid } from './StrategyCardGrid.tsx';
 import { ExplorationPanel } from '../exploration/ExplorationPanel.tsx';
+import { LeadersPanel } from '../exploration/LeadersPanel.tsx';
 
 const TABS: readonly (readonly [SidebarTab, MessageKey, LucideIcon])[] = [
   ['turn', 'tabCards', Layers],
@@ -76,6 +77,7 @@ function DrawerBody({ game, open }: { readonly game: GameState; readonly open: b
         <PlayersPanel game={game} />
       </TabPanel>
       <TabPanel value="empire">
+        <LeadersPanel game={game} />
         <TechnologyPanel game={game} />
         <FactionsPanel game={game} />
         <LawsPanel game={game} />

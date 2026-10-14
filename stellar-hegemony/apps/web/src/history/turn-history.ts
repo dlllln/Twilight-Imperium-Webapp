@@ -61,6 +61,13 @@ export type HistoryLine =
       readonly planet: string;
       readonly ability: string;
     }
+  | { readonly kind: 'leaderUnlocked'; readonly player: PlayerId; readonly leader: string }
+  | {
+      readonly kind: 'leaderUsed';
+      readonly player: PlayerId;
+      readonly leader: string;
+      readonly purged: boolean;
+    }
   | {
       readonly kind: 'cacheCollected';
       readonly player: PlayerId;
@@ -131,6 +138,8 @@ const DESCRIBE: Describers = {
     planet,
     ability: planet,
   }),
+  LeaderUnlocked: ({ player, leader }) => ({ kind: 'leaderUnlocked', player, leader }),
+  LeaderUsed: ({ player, leader, purged }) => ({ kind: 'leaderUsed', player, leader, purged }),
   TradeGoodsCacheCollected: ({ player, system, amount }) => ({
     kind: 'cacheCollected',
     player,

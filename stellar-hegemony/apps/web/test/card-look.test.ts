@@ -9,7 +9,8 @@ describe('Aussehen der Handkarten', () => {
     const game = keepSecrets(started());
     const actor = currentActor(game);
     const input = { game, actor, viewer: actor, selected: null, choosing: false };
-    const looks = handEntries(input).map(lookOf);
+    const picks = handEntries(input).filter((entry) => entry.kind === 'pick');
+    const looks = picks.map(lookOf);
     expect(looks).toHaveLength(8);
     expect(new Set(looks).size).toBe(8);
   });

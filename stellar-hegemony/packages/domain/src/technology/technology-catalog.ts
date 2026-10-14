@@ -8,6 +8,7 @@ import type { TechnologyDefinition, UnitModifier } from './technology-definition
 import { applyChange, matches } from './unit-modifiers.ts';
 import { factionRule } from '../faction/faction-ability.ts';
 import { passiveRelics } from '../exploration/relic-queries.ts';
+import { commanderAbilities } from '../leaders/leader-queries.ts';
 
 /** Technologien eines Spielers als Stammdaten, in der Reihenfolge des Erwerbs. */
 export function ownedTechnologies(
@@ -19,7 +20,7 @@ export function ownedTechnologies(
   return owned.flatMap((id) => content.technologies.find((tech) => tech.id === id) ?? []);
 }
 
-/** Alles, was Einheitenwerte eines Spielers ändert: Technologien, Fraktionsfähigkeiten, Relikte. */
+/** Alles, was Einheitenwerte ändert: Technologien, Fraktionsfähigkeiten, Relikte, Kommandanten. */
 export interface ModifierSource {
   readonly upgrades?: UnitTypeId;
   readonly modifiers: readonly UnitModifier[];
@@ -76,6 +77,7 @@ export const technologyCatalog = (state: GameState, content: ContentPort): UnitC
     ...ownedTechnologies(state, player, content),
     ...factionAbilitiesOf(state, player, content),
     ...passiveRelics(state, player, content),
+    ...commanderAbilities(state, player, content),
   ]);
 
 /** Entscheidungskontext, in dem alle Einheitenwerte die Technologien berücksichtigen. */

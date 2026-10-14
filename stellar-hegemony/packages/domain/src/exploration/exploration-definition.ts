@@ -17,7 +17,7 @@ export type FragmentKind = ExplorationDeckKind;
 
 /**
  * Sofortige Wirkung als Daten (Interpreter in `reward-effects.ts`). Erkundungskarten,
- * Relikte und legendäre Planeten teilen sich diese Wirkungen; alles wirkt ohne Wahl.
+ * Relikte, legendäre Planeten und Anführer teilen sich diese Wirkungen; alles wirkt ohne Wahl.
  */
 export type RewardEffect =
   | { readonly kind: 'gainTradeGoods'; readonly amount: number }
@@ -31,7 +31,13 @@ export type RewardEffect =
   | { readonly kind: 'repairUnits' }
   /** Kommandomarker aus dem Nachschub in den Taktikpool. */
   | { readonly kind: 'gainCommandTokens'; readonly amount: number }
-  | { readonly kind: 'gainVictoryPoints'; readonly amount: number };
+  | { readonly kind: 'gainVictoryPoints'; readonly amount: number }
+  /** PoK Anführer: offene Reliktfragmente einer Art, z. B. Grenzfragmente als Joker. */
+  | {
+      readonly kind: 'gainRelicFragments';
+      readonly fragment: FragmentKind;
+      readonly count: number;
+    };
 
 export type RewardKind = RewardEffect['kind'];
 

@@ -22,6 +22,8 @@ import { objectiveSetupEvents, type ObjectiveSetupEvent } from '../objective/obj
 import type { TechnologiesGranted } from '../technology/technology-events.ts';
 import type { ExplorationPrepared } from '../exploration/exploration-events.ts';
 import { explorationSetupEvent } from '../exploration/exploration-setup.ts';
+import type { LeadersAssigned } from '../leaders/leader-events.ts';
+import { leaderSetupEvents } from '../leaders/leader-setup.ts';
 import type { GameStarted, StrategyPhaseStarted } from './phase-events.ts';
 
 export type StartGame = Command<'StartGame'>;
@@ -52,6 +54,7 @@ type StartEvent =
   | AgendaDeckPrepared
   | FactionAbilitiesGranted
   | ExplorationPrepared
+  | LeadersAssigned
   | StrategyPhaseStarted;
 
 /** Fähigkeiten jeder Fraktion gelten ab Spielstart. */
@@ -121,6 +124,7 @@ export const startGameHandler = {
       ...homes,
       ...grants(state, context),
       ...abilities(state, context),
+      ...leaderSetupEvents(state, context),
       ...deckEvents(state, context),
       { type: 'StrategyPhaseStarted', round: 1, pickQueue: pickQueueFor(state, speaker.id) },
     ]);

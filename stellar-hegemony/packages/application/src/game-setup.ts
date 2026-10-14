@@ -10,8 +10,17 @@ import {
   type PlayerId,
 } from '@stellar/domain';
 
-/** Feste Farbreihenfolge der Plätze, passend zu den Heimat-Markierungen der Karte. */
-const COLORS: readonly PlayerColor[] = ['orange', 'blue', 'green', 'yellow', 'purple', 'red'];
+/** Feste Farbreihenfolge der Plätze, passend zu den Heimat-Markierungen der Karte (bis 8 Plätze). */
+export const SEAT_COLORS: readonly PlayerColor[] = [
+  'orange',
+  'blue',
+  'green',
+  'yellow',
+  'purple',
+  'red',
+  'pink',
+  'black',
+];
 
 export const seatPlayerId = (seat: number): PlayerId => playerId(`p${String(seat + 1)}`);
 
@@ -58,7 +67,7 @@ function seatCommand(name: string, seat: number, faction: FactionDefinition | un
     type: 'SeatPlayer',
     issuedBy: seatPlayerId(seat),
     name,
-    color: COLORS[seat] ?? 'black',
+    color: SEAT_COLORS[seat] ?? 'black',
     faction: faction?.id ?? factionId('unbekannt'),
     commodityLimit: faction?.commodityLimit ?? 0,
   } as const;

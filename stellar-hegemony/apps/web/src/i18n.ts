@@ -103,6 +103,74 @@ const DICTIONARY = {
     de: 'nutzt {ability} auf {planet}',
     en: 'uses {ability} on {planet}',
   },
+  'history.leaderUnlocked': {
+    de: 'schaltet {leader} frei',
+    en: 'unlocks {leader}',
+  },
+  'history.leaderUsed': { de: 'setzt {leader} ein', en: 'sends {leader} into action' },
+  leaderAgent: { de: 'Agent', en: 'Agent' },
+  leaderCommander: { de: 'Kommandant', en: 'Commander' },
+  leaderHero: { de: 'Held', en: 'Hero' },
+  leadersTitle: { de: 'Anführer', en: 'Leaders' },
+  leaderLocked: { de: 'gesperrt', en: 'locked' },
+  leaderReady: { de: 'bereit', en: 'ready' },
+  leaderActive: { de: 'aktiv', en: 'active' },
+  leaderPurged: { de: 'aus dem Spiel', en: 'purged' },
+  'exploration.notAction': {
+    de: 'Das geht nur als Aktion im eigenen Zug',
+    en: 'Only as an action on your own turn',
+  },
+  'exploration.noEffect': {
+    de: 'Das würde gerade nichts bewirken',
+    en: 'That would have no effect right now',
+  },
+  'exploration.noFrontierToken': {
+    de: 'Im aktiven System liegt kein Grenzmarker',
+    en: 'There is no frontier token in the active system',
+  },
+  'exploration.noShips': {
+    de: 'Du hast kein Schiff im aktiven System',
+    en: 'You have no ship in the active system',
+  },
+  'exploration.noTechnology': {
+    de: 'Dafür brauchst du den Tiefraumscanner',
+    en: 'You need the Deep-Space Scanner for that',
+  },
+  'exploration.deckEmpty': { de: 'Keine Grenzkarten mehr', en: 'No frontier cards left' },
+  'relic.noAction': { de: 'Dieses Relikt hat keine Aktion', en: 'This relic has no action' },
+  'relic.notOwned': { de: 'Dieses Relikt hast du nicht', en: 'You do not hold this relic' },
+  'relic.exhausted': { de: 'Das Relikt ist erschöpft', en: 'The relic is exhausted' },
+  'relic.invalidFragments': {
+    de: 'Nötig sind 3 Fragmente einer Art',
+    en: '3 fragments of one kind are needed',
+  },
+  'relic.fragmentsMissing': {
+    de: 'Diese Fragmente hast du nicht',
+    en: 'You do not hold these fragments',
+  },
+  'relic.deckEmpty': { de: 'Es gibt keine Relikte mehr', en: 'There are no relics left' },
+  'legendary.unknown': {
+    de: 'Das ist kein legendärer Planet',
+    en: 'That is not a legendary planet',
+  },
+  'legendary.notControlled': {
+    de: 'Du kontrollierst diesen Planeten nicht',
+    en: 'You do not control this planet',
+  },
+  'legendary.exhausted': { de: 'In dieser Runde schon genutzt', en: 'Already used this round' },
+  'leader.notAction': {
+    de: 'Anführer nur als Aktion im eigenen Zug',
+    en: 'Leaders only as an action on your own turn',
+  },
+  'leader.noEffect': {
+    de: 'Der Anführer würde gerade nichts bewirken',
+    en: 'The leader would have no effect right now',
+  },
+  'leader.noAction': { de: 'Dieser Anführer hat keine Aktion', en: 'This leader has no action' },
+  'leader.notOwned': { de: 'Dieser Anführer gehört dir nicht', en: 'This leader is not yours' },
+  'leader.locked': { de: 'Der Anführer ist noch gesperrt', en: 'The leader is still locked' },
+  'leader.exhausted': { de: 'Der Anführer ist erschöpft', en: 'The leader is exhausted' },
+  'leader.purged': { de: 'Der Anführer ist aus dem Spiel', en: 'The leader has been purged' },
   'history.cacheCollected': {
     de: 'sammelt {amount} Handelswaren in {system} ein',
     en: 'collects {amount} trade goods in {system}',
@@ -424,8 +492,8 @@ const DICTIONARY = {
     en: 'Mark home systems with H.',
   },
   'galaxy.homeSlots': {
-    de: 'Es braucht 3 bis 6 Heimat-Plätze (H).',
-    en: 'The map needs 3 to 6 home slots (H).',
+    de: 'Es braucht 3 bis 8 Heimat-Plätze (H).',
+    en: 'The map needs 3 to 8 home slots (H).',
   },
   'galaxy.noTemplate': {
     de: 'Für diese Spielerzahl gibt es keine Vorlage.',

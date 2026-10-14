@@ -28,6 +28,10 @@ const REVERSIBLE: ReadonlySet<GameEvent['type']> = new Set<GameEvent['type']>([
   'PlanetControlGained',
   // PoK: Ein Depot abzuholen verrät nichts; es lag offen im System.
   'TradeGoodsCacheCollected',
+  // PoK Anführer: Freischalten folgt allein aus dem offenen Spielstand und verrät nichts;
+  // nach dem Zurücknehmen prüft der nächste Command die Bedingung neu.
+  'LeaderUnlocked',
+  'FactionAbilitiesGranted',
 ]);
 
 /** Ob sich die Events eines Schritts zurücknehmen lassen, ohne dass jemand etwas Neues weiß. */

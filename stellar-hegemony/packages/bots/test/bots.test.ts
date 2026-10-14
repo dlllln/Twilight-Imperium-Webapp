@@ -10,6 +10,7 @@ import {
   shipsOf,
   technologyId,
   updatePlayer,
+  withTechnologies,
 } from '@stellar/domain';
 import {
   botView,
@@ -34,7 +35,7 @@ const viewOf = (state: GameState, player: PlayerId) =>
   botView(state, player, contextFor(state, SEED));
 
 describe('KI-Bots: ganze Partien', () => {
-  it.each([3, 4, 6])(
+  it.each([3, 4, 6, 7, 8])(
     '%i Bots spielen eine Partie bis zum Ende, jeder Zug ist regelkonform',
     (n) => {
       const start = botGame(n, SEED);
@@ -54,8 +55,28 @@ describe('KI-Bots: ganze Partien', () => {
       // PoK Erkundung: freie Planeten werden beim Übernehmen erkundet.
       const cards = (state: GameState) => Object.values(state.exploration.decks).flat().length;
       expect(cards(run.state)).toBeLessThan(cards(start));
+      // PoK Anführer: Agenten werden genutzt; mindestens ein Kommandant oder Held wird frei.
+      expect(kinds.has('UseLeader')).toBe(true);
+      const unlocked = run.state.players.flatMap((player) =>
+        player.leaders.filter((leader) => leader.kind !== 'agent' && leader.status !== 'locked'),
+      );
+      expect(unlocked.length).toBeGreaterThan(0);
     },
-    60_000,
+    // Partien mit 7–8 Spielern dauern deutlich länger als die kleinen.
+    150_000,
+  );
+
+  it.each([7, 8])(
+    'RR 76 (PoK %i Spieler): jeder Bot nimmt genau eine Strategiekarte, der Sprecher steht fest',
+    (n) => {
+      const start = botGame(n, SEED);
+      expect(start.speaker).not.toBeNull();
+      const picked = playBots(start, SEED, 200, (s) => s.phase === 'action').state;
+      const holders = Object.values(picked.strategyCards).map((card) => card.holder);
+      for (const player of picked.players)
+        expect(holders.filter((holder) => holder === player.id)).toHaveLength(1);
+      expect(holders.filter((holder) => holder === null)).toHaveLength(8 - n);
+    },
   );
 
   it('der Bot schlägt nur Commands vor, die die Domain annimmt', () => {
@@ -78,6 +99,23 @@ describe('KI-Bots: ganze Partien', () => {
     const waiting = state.players.find((player) => player.id !== currentActor(state));
     expect(waiting).toBeDefined();
     expect(heuristicBot.nextCommand(state, waiting?.id ?? P1, contextFor(state, SEED))).toBeNull();
+  });
+});
+
+describe('KI-Bots: neue Fraktionen (PoK 8 Spieler)', () => {
+  it('PoK Mech: Tarn-Mechs haben Produktion 1, Vyr-Mechs treffen bei 5, Tarn-Kreuzer sind schneller', () => {
+    const state = botGame(8, SEED);
+    const units = withTechnologies(contextFor(state, SEED), state).content.units;
+    const vyr = playerId('p7');
+    const tarn = playerId('p8');
+    expect(state.players.map((player) => player.faction).slice(6)).toEqual(['vyr', 'tarn']);
+    const forge = units.find(UNIT_TYPES.mech, tarn)?.capabilities;
+    expect(forge?.find((capability) => capability.kind === 'production')).toMatchObject({
+      bonus: 1,
+    });
+    expect(units.find(UNIT_TYPES.mech, vyr)?.combat?.hitOn).toBe(5);
+    expect(units.find(UNIT_TYPES.cruiser, tarn)).toMatchObject({ move: 3, combat: { hitOn: 6 } });
+    expect(units.find(UNIT_TYPES.mech, P1)?.combat?.hitOn).toBe(6);
   });
 });
 
@@ -130,6 +168,12 @@ describe('KI-Bots: Planer', () => {
     ]);
   });
 
+  it('PoK Anführer: zu Beginn sind nur die Agenten bereit, kein Kommandant ist schon frei', () => {
+    const start = botGame(6, SEED);
+    for (const player of start.players)
+      expect(player.leaders.map((leader) => leader.status)).toEqual(['ready', 'locked', 'locked']);
+  });
+
   it('RR 27.21: zu Beginn verliert niemand Einheiten an Flottenlimit oder Kapazität', () => {
     const state = botGame(6, SEED);
     const ships = state.players.map(
@@ -167,7 +211,7 @@ describe('KI-Bots: Erkundung und Relikte (PoK)', () => {
     expect(purgeFragments(viewOf(empty, actor))).toEqual([]);
   });
 
-  it('PoK Relikt, PoK Legendäre Planeten: Reliktaktionen und legendäre Fähigkeiten vor dem Passen', () => {
+  it('PoK Relikt, PoK Legendäre Planeten, PoK Anführer: Relikt-, Planeten- und Agentenaktionen vor dem Passen', () => {
     const start = inAction();
     const actor = currentActor(start) ?? P1;
     const legendary = Object.values(start.planets).find(
@@ -182,7 +226,7 @@ describe('KI-Bots: Erkundung und Relikte (PoK)', () => {
       relics: [{ id: relicId('trade-prism'), exhausted: false }],
     }));
     const commands = componentActions(viewOf(state, actor)).map((command) => command.type);
-    expect(commands).toEqual(['UseRelic', 'UseLegendaryAbility']);
+    expect(commands).toEqual(['UseRelic', 'UseLegendaryAbility', 'UseLeader']);
   });
 
   it('PoK Grenzmarker: mit Scanner und Schiff erkundet der Bot am Ende der Taktikaktion', () => {

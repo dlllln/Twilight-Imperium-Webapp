@@ -12,6 +12,8 @@ import {
   explorationCardId,
   type RelicDefinition,
   relicId,
+  type LeaderDefinition,
+  leaderId,
   factionId,
   type FactionDefinition,
   type GalaxyTemplate,
@@ -646,6 +648,38 @@ export const RELICS: readonly RelicDefinition[] = [
 
 export const RL = (id: string) => relicId(id);
 
+export const LD = (id: string) => leaderId(id);
+
+/** Nur „f-red“ hat Anführer; die anderen Testfraktionen bleiben ohne (PoK Anführer optional). */
+export const LEADERS: readonly LeaderDefinition[] = [
+  {
+    id: LD('scout'),
+    faction: factionId('f-red'),
+    kind: 'agent',
+    action: [{ kind: 'gainCommodities', amount: 1 }],
+  },
+  {
+    id: LD('marshal'),
+    faction: factionId('f-red'),
+    kind: 'commander',
+    unlock: { kind: 'controlPlanets', count: 6 },
+    passive: {
+      modifiers: [{ target: { types: [T.cruiser] }, change: { move: 1 } }],
+      rules: { fleetLimit: 1 },
+      deploy: { unit: T.infantry, trigger: { kind: 'planetCaptured' } },
+    },
+  },
+  {
+    id: LD('warlord'),
+    faction: factionId('f-red'),
+    kind: 'hero',
+    action: [
+      { kind: 'placeUnits', unit: T.infantry, count: 2 },
+      { kind: 'gainTradeGoods', amount: 2 },
+    ],
+  },
+];
+
 export const content: ContentPort = {
   units: catalog,
   tiles: new StaticTileCatalog(TILES),
@@ -657,6 +691,7 @@ export const content: ContentPort = {
   agendas: AGENDAS,
   explorationCards: EXPLORATION_CARDS,
   relics: RELICS,
+  leaders: LEADERS,
   galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
 };
 

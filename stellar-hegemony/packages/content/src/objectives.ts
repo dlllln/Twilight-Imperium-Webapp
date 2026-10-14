@@ -8,8 +8,8 @@ import type { LocalizedText } from './localized.ts';
 import { UNIT_TYPES } from './units.ts';
 
 /*
- * Eigene Aufträge: 10 öffentliche der Stufe I (1 Punkt), 10 der Stufe II (2 Punkte) und
- * 20 geheime (1 Punkt). Namen, Anforderungen und Texte sind eigene Entwürfe.
+ * Eigene Aufträge: 12 öffentliche der Stufe I (1 Punkt), 12 der Stufe II (2 Punkte) und
+ * 22 geheime (1 Punkt). Namen, Anforderungen und Texte sind eigene Entwürfe.
  */
 const STAGE_ONE_POINTS = 1;
 const STAGE_TWO_POINTS = 2;
@@ -53,6 +53,9 @@ export const STAGE_ONE_OBJECTIVES: readonly ObjectiveDefinition[] = [
   one('built-frontier', { kind: 'structuredPlanets', count: 4 }),
   one('wild-space', { kind: 'systemsWithShips', where: 'anomaly', count: 2 }),
   one('throne-watch', { kind: 'systemsWithShips', where: 'adjacentToCenter', count: 2 }),
+  // Erweiterung (Schritt 4).
+  one('far-patrols', { kind: 'systemsWithShips', where: 'anyNonHome', count: 5 }),
+  one('first-walkers', { kind: 'units', type: UNIT_TYPES.mech, count: 2 }),
 ];
 
 export const STAGE_TWO_OBJECTIVES: readonly ObjectiveDefinition[] = [
@@ -66,6 +69,9 @@ export const STAGE_TWO_OBJECTIVES: readonly ObjectiveDefinition[] = [
   two('fortified-realm', { kind: 'structuredPlanets', count: 7 }),
   two('seat-of-power', { kind: 'systemsWithShips', where: 'center', count: 1 }),
   two('learned-worlds', { kind: 'specialtyPlanets', count: 3 }),
+  // Erweiterung (Schritt 4).
+  two('chain-of-command', { kind: 'systemsWithTokens', count: 8 }),
+  two('iron-host', { kind: 'units', type: UNIT_TYPES.mech, count: 4 }),
 ];
 
 export const SECRET_OBJECTIVES: readonly ObjectiveDefinition[] = [
@@ -89,6 +95,9 @@ export const SECRET_OBJECTIVES: readonly ObjectiveDefinition[] = [
   secret('bloody-harvest', { kind: 'roundStat', stat: 'shipsDestroyed', count: 5 }, 'action'),
   secret('lightning-campaign', { kind: 'roundStat', stat: 'planetsGained', count: 3 }, 'action'),
   secret('boots-on-ground', { kind: 'roundStat', stat: 'groundCombatsWon', count: 1 }, 'action'),
+  // Erweiterung (Schritt 4).
+  secret('dread-armada', { kind: 'units', type: UNIT_TYPES.dreadnought, count: 4 }),
+  secret('tech-hoard', { kind: 'technologiesInColors', colors: 3, perColor: 2 }),
 ];
 
 export const OBJECTIVES: readonly ObjectiveDefinition[] = [
@@ -337,6 +346,42 @@ export const OBJECTIVE_TEXTS: Readonly<Record<string, ObjectiveText>> = {
     'Boots on the Ground',
     'Gewinne in dieser Runde einen Bodenkampf.',
     'Win a ground combat this round.',
+  ),
+  'far-patrols': text(
+    'Ferne Patrouillen',
+    'Far Patrols',
+    'Habe Schiffe in 5 Systemen außerhalb deines Heimatsystems.',
+    'Have ships in 5 systems outside your home system.',
+  ),
+  'first-walkers': text(
+    'Erste Läufer',
+    'First Walkers',
+    'Habe 2 Mechs auf dem Spielplan.',
+    'Have 2 mechs on the board.',
+  ),
+  'chain-of-command': text(
+    'Befehlskette',
+    'Chain of Command',
+    'Habe Kommandomarker in 8 Systemen.',
+    'Have command tokens in 8 systems.',
+  ),
+  'iron-host': text(
+    'Eisernes Heer',
+    'Iron Host',
+    'Habe 4 Mechs auf dem Spielplan.',
+    'Have 4 mechs on the board.',
+  ),
+  'dread-armada': text(
+    'Schreckensarmada',
+    'Dread Armada',
+    'Habe 4 Schlachtschiffe auf dem Spielplan.',
+    'Have 4 dreadnoughts on the board.',
+  ),
+  'tech-hoard': text(
+    'Wissensschatz',
+    'Hoard of Knowledge',
+    'Besitze je 2 Technologien in 3 Farben.',
+    'Own 2 technologies in each of 3 colours.',
   ),
 };
 

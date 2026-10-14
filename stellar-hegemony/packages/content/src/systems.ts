@@ -97,6 +97,15 @@ export const BLUE_TILES: readonly SystemTile[] = [
   blue('b24', p('Wyrm', 2, 2, 'hazardous', 'cybernetic')),
   { ...blue('b25', p('Torus', 1, 2, 'cultural')), wormholes: ['alpha'] },
   { ...blue('b26', p('Spirale', 2, 1, 'hazardous')), wormholes: ['beta'] },
+  // Erweiterung für 7–8 Spieler: weitere eigene Systeme, damit die große Galaxie voll wird.
+  blue('b27', p('Aster Vale', 2, 2, 'cultural')),
+  blue('b28', p('Hollowmere', 3, 1, 'hazardous', 'biotic')),
+  blue('b29', p('Drask', 1, 0, 'industrial'), p('Drask Prime', 2, 2, 'industrial', 'cybernetic')),
+  blue('b30', p('Lumen', 0, 3, 'cultural', 'propulsion')),
+  blue('b31', p('Korrigan', 4, 2, 'hazardous')),
+  blue('b32', p('Seraph', 1, 1, 'cultural'), p('Tolwyn', 2, 1, 'hazardous')),
+  blue('b33', p('Marrow', 3, 2, 'industrial', 'warfare')),
+  blue('b34', p('Quillon', 2, 3, 'cultural')),
 ];
 
 const red = (id: string, extra: Partial<SystemTile>): SystemTile => ({
@@ -120,6 +129,13 @@ export const RED_TILES: readonly SystemTile[] = [
   red('r10', {}),
   red('r11', { wormholes: ['alpha'] }),
   red('r12', { wormholes: ['beta'] }),
+  // Erweiterung für 7–8 Spieler.
+  red('r13', { anomaly: 'asteroidField' }),
+  red('r14', { anomaly: 'nebula' }),
+  red('r15', { anomaly: 'gravityRift' }),
+  red('r16', {}),
+  red('r17', {}),
+  red('r18', {}),
 ];
 
 /** Heimatsystem einer Fraktion (Rückseite „home“, liegt nur auf Heimat-Plätzen). */

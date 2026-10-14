@@ -11,6 +11,8 @@ import { CardArtwork } from '../cards/CardArtwork.tsx';
 
 function tableArtwork(entry: TableEntry): CardArtworkSource {
   switch (entry.kind) {
+    case 'leader':
+      return RELIC_BACK;
     case 'relic':
       return RELIC_BACK;
     case 'fragment':
