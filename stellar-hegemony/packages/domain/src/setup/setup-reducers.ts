@@ -58,6 +58,7 @@ const FRESH_PLAYER = {
   factionRules: NO_FACTION_RULES,
   relicFragments: [],
   relics: [],
+  leaders: [],
 } as const satisfies Partial<PlayerState>;
 
 function seatPlayer(state: GameState, event: PlayerSeated): GameState {

@@ -10,6 +10,7 @@ import {
   Handshake,
   Landmark,
   type LucideIcon,
+  Medal,
   Megaphone,
   Puzzle,
   Radar,
@@ -44,6 +45,7 @@ const ICONS: Readonly<Record<CardLook, LucideIcon>> = {
   relic: Gem,
   fragment: Puzzle,
   legendary: Sparkles,
+  leader: Medal,
 };
 
 const CENTER_X = ART_WIDTH / 2;

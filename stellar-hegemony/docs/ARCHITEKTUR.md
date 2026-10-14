@@ -696,7 +696,29 @@ Strahlenkranz (matt, wenn genutzt); der Hinweis am Zeiger nennt Anlagen und Fäh
 | `scene-model` mit `frontier`, `cache`, `legendary`          | Reine Daten für Pixi, Hinweis und Nahbeschriftung (Pure Fabrication); das Zeichnen kennt keine Domainregeln.                                          |
 | `fresh-notices.ts` mit `REVEALS`                            | Eine Liste sagt, welche eigenen Zeilen trotzdem aufploppen (Daten statt Verzweigung, Open/Closed).                                                    |
 
-## 29. Iterationen
+## 29. Iteration 25 im Detail (Anführer)
+
+Jede Fraktion hat drei eigene Anführer. Der Agent ist von Beginn an bereit: Seine Aktion wirkt
+einmal je Runde (erschöpft, in der Statusphase wieder bereit). Der Kommandant schaltet sich frei,
+sobald eine Bedingung erfüllt ist (etwa sechs Planeten oder vier Technologien), und wirkt dann
+dauerhaft wie eine weitere Fraktionsfähigkeit. Der Held wird mit drei erfüllten Zielen frei und
+wirkt einmal stark, danach ist er aus dem Spiel. Namen, Texte und Wirkungen sind eigene Entwürfe.
+
+Agent und freier Held liegen als Karte in der Hand und werden wie Relikte angetippt. Der Reiter
+„Reich“ zeigt die Anführer aller Spieler mit Zustand, bei gesperrten mit Bedingung und Fortschritt
+(z. B. „gesperrt 4/6“). Freischalten und Einsetzen stehen im Verlauf. Abgelehnte Befehle zur
+Erkundung, zu Relikten und Anführern haben jetzt eigene Fehlertexte.
+
+| Element                                                           | Prinzip                                                                                                                                |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `component-action.ts` (`rewardAction`, `componentTiming`)         | Eine Komponentenaktion für Relikte, legendäre Planeten und Anführer (DRY); der Präfix der Fehlercodes ist ein Parameter (Open/Closed). |
+| Agent und Held als Liste von `RewardEffect`                       | Dieselben Wirkungen wie bei der Erkundung (Interpreter); neue Anführer sind reine Daten.                                               |
+| Kommandant als `passive` Fraktionsfähigkeit, `commanderAbilities` | Kampf, Produktion und Regelwerte fragen Fähigkeiten ab, nicht den Anführer (Polymorphie, Low Coupling).                                |
+| `leaderUnlockEvents` nach jedem Command                           | Freischalten folgt aus öffentlichem Stand, ein eigenes Event hält es nachvollziehbar (Event Sourcing, Information Expert).             |
+| `leaderProgress`, `usableLeaders` (Domain), `LeadersPanel` (Web)  | Die Domain rechnet Fortschritt und Nutzbarkeit, die Oberfläche zeigt nur an (Controller/Expert, keine Regel im Web).                   |
+| Anführer als `TableEntry` in der Hand                             | Dieselbe Bedienung wie für Relikte; nur Gesicht und Befehl sind neu (Polymorphie über `kind`).                                         |
+
+## 30. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -724,8 +746,9 @@ Strahlenkranz (matt, wenn genutzt); der Hinweis am Zeiger nennt Anlagen und Fäh
 | 22  | Nur private Lobbys, Zugverlauf, Rückgängig, Tablet  | ✓     |
 | 23  | Ganze Karte, freier Blick, Meldungen, Mechs (PoK)   | ✓     |
 | 24  | Erkundung, Relikte, legendäre Planeten (PoK)        | ✓     |
+| 25  | Anführer: Agent, Kommandant, Held (PoK)             | ✓     |
 
-## 30. Befehle
+## 31. Befehle
 
 ```
 pnpm install

@@ -3124,6 +3124,9 @@ select option {
 [data-look='legendary'] {
   --look: #f6d77a;
 }
+[data-look='leader'] {
+  --look: #d98bf0;
+}
 
 .hand-dock .hand-card {
   --look-soft: color-mix(in srgb, var(--look) 45%, transparent);
@@ -4429,4 +4432,64 @@ body {
 
 .hand-dock .table-card .hand-title {
   font-size: 12px;
+}
+
+/* ---------- Iteration 25: Anführer ---------- */
+
+.leader-player {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.leader-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leader-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2px 8px;
+  align-items: baseline;
+  padding: 5px 8px;
+  border-left: 3px solid #d98bf0;
+  border-radius: 4px;
+  background: rgba(217, 139, 240, 0.08);
+  font-size: 12px;
+}
+
+.leader-kind {
+  color: #d98bf0;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.leader-status {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.leader-text {
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+
+.leader-row.leader-locked,
+.leader-row.leader-purged {
+  border-left-color: #5c6178;
+  background: rgba(92, 97, 120, 0.1);
+}
+
+.leader-row.leader-purged .leader-name {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.leader-row.leader-exhausted {
+  opacity: 0.7;
 }

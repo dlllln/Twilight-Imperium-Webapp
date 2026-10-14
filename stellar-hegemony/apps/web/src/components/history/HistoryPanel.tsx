@@ -6,6 +6,7 @@ import type { HistoryLine } from '../../history/turn-history.ts';
 import type { Language, MessageKey } from '../../i18n.ts';
 import {
   explorationCardLabel,
+  leaderLabel,
   legendaryLabel,
   objectiveLabel,
   planetLabel,
@@ -35,6 +36,7 @@ const LOOKUPS: Readonly<Record<string, Lookup>> = {
   find: (id, _, language) => explorationCardLabel(id, language),
   relic: (id, _, language) => relicLabel(id, language),
   ability: (id, _, language) => legendaryLabel(id, language),
+  leader: (id, _, language) => leaderLabel(id, language),
 };
 
 /** Die Lücken einer Zeile in der gewählten Sprache. */

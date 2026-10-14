@@ -5,6 +5,7 @@ import {
   explorationCardText,
   FACTION_NAMES,
   factionAbilityText,
+  leaderText,
   legendaryText,
   objectiveText,
   planetName,
@@ -88,3 +89,13 @@ export const legendaryLabel = (planet: string, language: Language): string =>
 
 export const legendaryEffect = (planet: string, language: Language): string =>
   legendaryText(planet)?.effect[language] ?? '';
+
+export const leaderLabel = (id: string, language: Language): string =>
+  leaderText(id)?.name[language] ?? id;
+
+export const leaderEffect = (id: string, language: Language): string =>
+  leaderText(id)?.effect[language] ?? '';
+
+/** Freischaltbedingung eines Kommandanten oder Helden; Agenten haben keine. */
+export const leaderUnlock = (id: string, language: Language): string =>
+  leaderText(id)?.unlock?.[language] ?? '';

@@ -51,6 +51,8 @@ function tableCommand(entry: TableEntry) {
   if (entry.kind === 'relic') return { type: 'UseRelic', issuedBy, relic: entry.relic.id } as const;
   if (entry.kind === 'legendary')
     return { type: 'UseLegendaryAbility', issuedBy, planet: entry.planet } as const;
+  if (entry.kind === 'leader')
+    return { type: 'UseLeader', issuedBy, leader: entry.leader.id } as const;
   return entry.purge === null
     ? null
     : ({ type: 'PurgeRelicFragments', issuedBy, fragments: entry.purge } as const);

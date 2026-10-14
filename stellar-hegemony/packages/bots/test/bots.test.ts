@@ -54,6 +54,12 @@ describe('KI-Bots: ganze Partien', () => {
       // PoK Erkundung: freie Planeten werden beim Übernehmen erkundet.
       const cards = (state: GameState) => Object.values(state.exploration.decks).flat().length;
       expect(cards(run.state)).toBeLessThan(cards(start));
+      // PoK Anführer: Agenten werden genutzt; mindestens ein Kommandant oder Held wird frei.
+      expect(kinds.has('UseLeader')).toBe(true);
+      const unlocked = run.state.players.flatMap((player) =>
+        player.leaders.filter((leader) => leader.kind !== 'agent' && leader.status !== 'locked'),
+      );
+      expect(unlocked.length).toBeGreaterThan(0);
     },
     60_000,
   );
@@ -130,6 +136,12 @@ describe('KI-Bots: Planer', () => {
     ]);
   });
 
+  it('PoK Anführer: zu Beginn sind nur die Agenten bereit, kein Kommandant ist schon frei', () => {
+    const start = botGame(6, SEED);
+    for (const player of start.players)
+      expect(player.leaders.map((leader) => leader.status)).toEqual(['ready', 'locked', 'locked']);
+  });
+
   it('RR 27.21: zu Beginn verliert niemand Einheiten an Flottenlimit oder Kapazität', () => {
     const state = botGame(6, SEED);
     const ships = state.players.map(
@@ -167,7 +179,7 @@ describe('KI-Bots: Erkundung und Relikte (PoK)', () => {
     expect(purgeFragments(viewOf(empty, actor))).toEqual([]);
   });
 
-  it('PoK Relikt, PoK Legendäre Planeten: Reliktaktionen und legendäre Fähigkeiten vor dem Passen', () => {
+  it('PoK Relikt, PoK Legendäre Planeten, PoK Anführer: Relikt-, Planeten- und Agentenaktionen vor dem Passen', () => {
     const start = inAction();
     const actor = currentActor(start) ?? P1;
     const legendary = Object.values(start.planets).find(
@@ -182,7 +194,7 @@ describe('KI-Bots: Erkundung und Relikte (PoK)', () => {
       relics: [{ id: relicId('trade-prism'), exhausted: false }],
     }));
     const commands = componentActions(viewOf(state, actor)).map((command) => command.type);
-    expect(commands).toEqual(['UseRelic', 'UseLegendaryAbility']);
+    expect(commands).toEqual(['UseRelic', 'UseLegendaryAbility', 'UseLeader']);
   });
 
   it('PoK Grenzmarker: mit Scanner und Schiff erkundet der Bot am Ende der Taktikaktion', () => {

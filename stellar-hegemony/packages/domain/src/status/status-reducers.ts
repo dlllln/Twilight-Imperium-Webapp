@@ -1,6 +1,7 @@
 import type { ReducerMap } from '../eventsourcing/domain-event.ts';
 import { type GameState, updatePlayer } from '../game/game-state.ts';
 import { readyExploration } from '../exploration/exploration-reducers.ts';
+import { readyLeaders } from '../leaders/leader-reducers.ts';
 import type { Unit } from '../unit/unit.ts';
 import type { StatusEvent } from './status-events.ts';
 
@@ -38,10 +39,10 @@ const repaired = (units: readonly Unit[]): readonly Unit[] =>
 const mapValues = <T>(record: Readonly<Record<string, T>>, update: (value: T) => T) =>
   Object.fromEntries(Object.entries(record).map(([id, value]) => [id, update(value)]));
 
-/** RR 73.6–73.8: bereitmachen (auch Relikte und legendäre Marker), reparieren, Karten zurück. */
+/** RR 73.6–73.8: bereitmachen (auch Relikte, legendäre Marker, Agenten), reparieren, Karten zurück. */
 function endRound(state: GameState): GameState {
   return {
-    ...readyExploration(state),
+    ...readyLeaders(readyExploration(state)),
     planets: mapValues(state.planets, (p) => ({
       ...p,
       exhausted: false,

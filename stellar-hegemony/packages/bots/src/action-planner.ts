@@ -95,7 +95,7 @@ const actionCards = (view: BotView): readonly GameCommand[] =>
     target: NO_TARGET,
   }));
 
-/** Eigener Zug: Fragmente eintauschen, Taktik bei lohnenden Zielen, Strategie, Karten, Relikte, Passen. */
+/** Eigener Zug: Fragmente eintauschen, Taktik, Strategie, Karten, Relikte und Anführer, Passen. */
 function mainTurn(view: BotView): readonly GameCommand[] {
   return [
     ...purgeFragments(view),

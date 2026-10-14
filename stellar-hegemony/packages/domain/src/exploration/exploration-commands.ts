@@ -1,24 +1,22 @@
-import { timingOpen } from '../action-card/card-timing.ts';
-import { endTurn } from '../action/action-commands.ts';
 import { findPlanetDefinition } from '../economy/payment.ts';
 import type { Command, CommandHandler, DecisionContext } from '../eventsourcing/command.ts';
 import { evolveGame, type GameEvent } from '../game/game-events.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
-import {
-  type Check,
-  type DomainError,
-  domainError,
-  firstFailure,
-  guard,
-} from '../shared/domain-error.ts';
+import { type Check, domainError, firstFailure, guard } from '../shared/domain-error.ts';
 import type { PlanetId, PlayerId, RelicId } from '../shared/ids.ts';
-import { err, map, ok, type Result } from '../shared/result.ts';
+import { err, ok } from '../shared/result.ts';
 import { tacticalStepCheck } from '../tactical/tactical-commands.ts';
-import type { FragmentKind, RewardEffect } from './exploration-definition.ts';
+import {
+  asComponentAction,
+  type ComponentEvents,
+  componentTiming,
+  rewardAction,
+} from './component-action.ts';
+import type { FragmentKind } from './exploration-definition.ts';
 import { exploreFrontierEvents } from './explore.ts';
 import { fragmentSetValid, frontierConditions, holdsFragments } from './exploration-queries.ts';
 import { findRelic } from './relic-queries.ts';
-import { rewardEvents, rewardUsable, type RewardSituation } from './reward-effects.ts';
+import { rewardEvents } from './reward-effects.ts';
 
 /** PoK Grenzmarker: am Ende der Taktikaktion den Marker im aktivierten System erkunden. */
 export type ExploreFrontier = Command<'ExploreFrontier'>;
@@ -38,16 +36,10 @@ export interface UseLegendaryAbility extends Command<'UseLegendaryAbility'> {
   readonly planet: PlanetId;
 }
 
-type Events = Result<readonly GameEvent[], DomainError>;
+type Events = ComponentEvents;
 
-/** RR 51: Eine Komponentenaktion beendet nach ihrer Wirkung den Zug. */
-function asComponentAction(state: GameState, player: PlayerId, events: readonly GameEvent[]) {
-  const after = events.reduce(evolveGame, state);
-  return [...events, ...endTurn(after, player, after.actionPhase?.passed ?? [])];
-}
-
-const componentTiming = (state: GameState, player: PlayerId): Check =>
-  guard(timingOpen(state, player, 'action'), 'exploration.notAction', 'Nur als eigene Aktion');
+const componentChecks = (state: GameState, player: PlayerId): Check =>
+  componentTiming(state, player, 'exploration');
 
 export const exploreFrontierHandler = {
   commandType: 'ExploreFrontier',
@@ -77,7 +69,7 @@ function onGain(state: GameState, player: PlayerId, relic: RelicId, context: Dec
 function purgeChecks(state: GameState, command: PurgeRelicFragments): Check {
   const { issuedBy: player, fragments } = command;
   return firstFailure([
-    componentTiming(state, player),
+    componentChecks(state, player),
     guard(fragmentSetValid(fragments), 'relic.invalidFragments', 'Drei Fragmente einer Art'),
     guard(holdsFragments(state, player, fragments), 'relic.fragmentsMissing', 'Fragmente fehlen'),
   ]);
@@ -100,28 +92,6 @@ export const purgeRelicFragmentsHandler = {
   },
 } as const satisfies CommandHandler<GameState, PurgeRelicFragments, GameEvent>;
 
-/** Eine Belohnung als Komponentenaktion: Quelle, Zusatzprüfungen und das Nutzungs-Event. */
-interface RewardAction {
-  readonly input: RewardSituation;
-  readonly reward: RewardEffect;
-  readonly checks: readonly Check[];
-  readonly used: GameEvent;
-}
-
-function rewardAction(action: RewardAction, context: DecisionContext): Events {
-  const { input, reward, used } = action;
-  const checked = firstFailure([
-    componentTiming(input.state, input.player),
-    ...action.checks,
-    guard(rewardUsable(input, reward), 'exploration.noEffect', 'Die Fähigkeit hätte keine Wirkung'),
-  ]);
-  return map(checked, () => {
-    const after = evolveGame(input.state, used);
-    const resolved = rewardEvents({ ...input, state: after, random: context.random }, reward);
-    return asComponentAction(input.state, input.player, [used, ...resolved]);
-  });
-}
-
 export const useRelicHandler = {
   commandType: 'UseRelic',
   decide(state: GameState, command: UseRelic, context: DecisionContext): Events {
@@ -135,7 +105,8 @@ export const useRelicHandler = {
       guard(owned !== undefined, 'relic.notOwned', 'Du hältst dieses Relikt nicht'),
       guard(owned?.exhausted !== true, 'relic.exhausted', 'Das Relikt ist erschöpft'),
     ];
-    return rewardAction({ input, reward: effect.reward, checks, used }, context);
+    const rewards = [effect.reward];
+    return rewardAction({ input, rewards, checks, used, scope: 'exploration' }, context);
   },
 } as const satisfies CommandHandler<GameState, UseRelic, GameEvent>;
 
@@ -158,6 +129,6 @@ export const useLegendaryAbilityHandler = {
     const input = { state, player, planet, source: planet, content: context.content };
     const used: GameEvent = { type: 'LegendaryAbilityUsed', player, planet };
     const checks = legendaryChecks(state, player, planet);
-    return rewardAction({ input, reward: ability, checks, used }, context);
+    return rewardAction({ input, rewards: [ability], checks, used, scope: 'exploration' }, context);
   },
 } as const satisfies CommandHandler<GameState, UseLegendaryAbility, GameEvent>;

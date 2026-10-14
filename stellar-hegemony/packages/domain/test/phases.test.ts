@@ -70,6 +70,8 @@ describe('StartGame (RR 76.1: Sprecher und Kartenauslage)', () => {
       'HomeSystemPlaced',
       'HomeSystemPlaced',
       'TechnologiesGranted',
+      // PoK Anführer: nur die Testfraktion „f-red“ hat Anführer.
+      'LeadersAssigned',
       'ObjectivesPrepared',
       'PublicObjectiveRevealed',
       'PublicObjectiveRevealed',

@@ -35,6 +35,8 @@ const CUES: Readonly<Partial<Record<GameEvent['type'], SoundCue>>> = {
   RelicDrawn: 'research',
   RelicUsed: 'card',
   LegendaryAbilityUsed: 'card',
+  LeaderUsed: 'card',
+  LeaderUnlocked: 'research',
   TradeGoodsCacheCollected: 'produce',
   TechnologyResearched: 'research',
   ObjectiveScored: 'score',

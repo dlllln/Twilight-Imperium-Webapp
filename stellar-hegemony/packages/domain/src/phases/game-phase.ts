@@ -65,6 +65,7 @@ export class ActionPhase extends BasePhase {
     'PurgeRelicFragments',
     'UseRelic',
     'UseLegendaryAbility',
+    'UseLeader',
   ];
   next(): PhaseName {
     return 'status';

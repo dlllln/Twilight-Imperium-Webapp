@@ -7,6 +7,7 @@ import type { RandomPort } from '../ports/random-port.ts';
 import { ownedOnBoard } from '../production/unit-supply.ts';
 import type { PlanetId, PlayerId } from '../shared/ids.ts';
 import { UnitNumbering } from '../unit/unit-numbering.ts';
+import { chain } from '../game/event-chain.ts';
 import type { RewardEffect, RewardKind } from './exploration-definition.ts';
 
 /** Lage, in der eine Belohnung geprüft wird. */
@@ -118,6 +119,11 @@ const RULES: RewardRules = {
     usable: ALWAYS,
     resolve: ({ player }, { amount }) => [{ type: 'VictoryPointsGained', player, points: amount }],
   },
+  gainRelicFragments: {
+    usable: ALWAYS,
+    resolve: ({ player }, { fragment, count }) =>
+      Array.from({ length: count }, () => ({ type: 'RelicFragmentGained', player, fragment })),
+  },
 };
 
 // TypeScript kann die Art der Belohnung nicht mit der Regel korrelieren.
@@ -130,3 +136,17 @@ export const rewardUsable = (input: RewardSituation, effect: RewardEffect): bool
 /** Events der Belohnung; ohne Wirkung keine (Erkundung wirkt so weit wie möglich). */
 export const rewardEvents = (input: RewardInput, effect: RewardEffect): readonly GameEvent[] =>
   rewardUsable(input, effect) ? ruleOf(effect).resolve(input, effect) : [];
+
+/** Mehrere Belohnungen (Anführer): Sie wirken, sobald mindestens eine etwas bewirkt. */
+export const rewardsUsable = (input: RewardSituation, rewards: readonly RewardEffect[]): boolean =>
+  rewards.some((reward) => rewardUsable(input, reward));
+
+/** Belohnungen nacheinander; jede sieht den Zustand nach den vorherigen (z. B. Einheitennummern). */
+export const rewardListEvents = (
+  input: RewardInput,
+  rewards: readonly RewardEffect[],
+): readonly GameEvent[] =>
+  chain(
+    input.state,
+    rewards.map((reward) => (state: GameState) => rewardEvents({ ...input, state }, reward)),
+  );

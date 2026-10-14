@@ -3,6 +3,7 @@ import {
   type GameCommand,
   purgeOptions,
   usableLegendaryPlanets,
+  usableLeaders,
   usableRelics,
 } from '@stellar/domain';
 import { type BotView, contentOf, issued } from './bot-view.ts';
@@ -17,7 +18,7 @@ export const purgeFragments = (view: BotView): readonly GameCommand[] =>
         fragments,
       }));
 
-/** Reliktaktionen und legendäre Fähigkeiten, die gerade etwas bewirken (vor dem Passen). */
+/** Relikt-, Planeten- und Anführeraktionen (PoK), die gerade etwas bewirken (vor dem Passen). */
 export const componentActions = (view: BotView): readonly GameCommand[] => [
   ...usableRelics(view.state, view.player, contentOf(view)).map((relic) => ({
     type: 'UseRelic' as const,
@@ -28,6 +29,11 @@ export const componentActions = (view: BotView): readonly GameCommand[] => [
     type: 'UseLegendaryAbility' as const,
     ...issued(view),
     planet,
+  })),
+  ...usableLeaders(view.state, view.player, contentOf(view)).map((leader) => ({
+    type: 'UseLeader' as const,
+    ...issued(view),
+    leader,
   })),
 ];
 

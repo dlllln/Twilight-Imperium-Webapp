@@ -9,6 +9,7 @@ import type {
 import type { FactionRules } from '../faction/faction-ability.ts';
 import type { FragmentKind } from '../exploration/exploration-definition.ts';
 import type { OwnedRelic } from '../exploration/exploration-state.ts';
+import type { OwnedLeader } from '../leaders/leader-state.ts';
 import type { PoolCounts } from './command-sheet.ts';
 
 export type PlayerColor =
@@ -43,4 +44,6 @@ export interface PlayerState {
   readonly relicFragments: readonly FragmentKind[];
   /** PoK Relikt: offen gehaltene Relikte. */
   readonly relics: readonly OwnedRelic[];
+  /** PoK Anführer: Agent, Kommandant und Held der Fraktion mit offenem Zustand. */
+  readonly leaders: readonly OwnedLeader[];
 }

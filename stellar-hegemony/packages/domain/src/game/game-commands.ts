@@ -86,6 +86,8 @@ import {
   type UseRelic,
   useRelicHandler,
 } from '../exploration/exploration-commands.ts';
+import { type UseLeader, useLeaderHandler } from '../leaders/leader-commands.ts';
+import { leaderUnlockEvents } from '../leaders/leader-unlock.ts';
 import { progressTactical } from '../combat/tactical-flow.ts';
 import { phaseOf } from '../phases/game-phase.ts';
 import { withTechnologies } from '../technology/technology-catalog.ts';
@@ -130,7 +132,8 @@ export type GameCommand =
   | ExploreFrontier
   | PurgeRelicFragments
   | UseRelic
-  | UseLegendaryAbility;
+  | UseLegendaryAbility
+  | UseLeader;
 
 type HandlerMap = {
   readonly [K in GameCommand['type']]: CommandHandler<
@@ -175,6 +178,7 @@ const handlers: HandlerMap = {
   PurgeRelicFragments: purgeRelicFragmentsHandler,
   UseRelic: useRelicHandler,
   UseLegendaryAbility: useLegendaryAbilityHandler,
+  UseLeader: useLeaderHandler,
 };
 
 /** Während ein Zeitfenster offen ist, sind nur Reaktionen erlaubt (RR 3.10). */
@@ -183,7 +187,10 @@ const REACTIONS: readonly string[] = ['PlayActionCard', 'PassReaction', 'Discard
 const reactionOpen = (state: GameState) =>
   state.reactionWindow !== null || state.pendingPlay !== null;
 
-/** Nach jedem Command läuft die Taktikaktion weiter, bis wieder jemand entscheiden muss. */
+/**
+ * Nach jedem Command läuft die Taktikaktion weiter, bis wieder jemand entscheiden muss;
+ * danach gelten die Grenzen des Spielplans, zuletzt werden Anführer frei (PoK Anführer).
+ */
 function withFlow(
   state: GameState,
   events: readonly GameEvent[],
@@ -192,7 +199,9 @@ function withFlow(
   const after = events.reduce(evolveGame, state);
   const progressed = [...events, ...progressTactical(after, context)];
   const settled = progressed.slice(events.length).reduce(evolveGame, after);
-  return [...progressed, ...boardLimitEvents(settled, context.content)];
+  const limits = boardLimitEvents(settled, context.content);
+  const final = limits.reduce(evolveGame, settled);
+  return [...progressed, ...limits, ...leaderUnlockEvents(final, context.content)];
 }
 
 /** Ob der Command überhaupt an der Reihe ist: Partie läuft, Phase passt, kein Zeitfenster offen. */

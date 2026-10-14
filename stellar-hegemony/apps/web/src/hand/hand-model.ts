@@ -7,6 +7,8 @@ import {
   type GameState,
   handCards,
   type HandCard,
+  leadersOf,
+  type OwnedLeader,
   type OwnedRelic,
   type PlanetId,
   type PlayerId,
@@ -16,6 +18,7 @@ import {
   strategyCardsOf,
   strategyEffectFor,
   timingOpen,
+  usableLeaders,
   usableLegendaryPlanets,
   usableRelics,
 } from '@stellar/domain';
@@ -55,6 +58,12 @@ export type HandEntry =
       readonly playable: boolean;
     }
   | {
+      readonly kind: 'leader';
+      readonly leader: OwnedLeader;
+      readonly player: PlayerId;
+      readonly playable: boolean;
+    }
+  | {
       readonly kind: 'legendary';
       readonly planet: PlanetId;
       readonly used: boolean;
@@ -63,7 +72,10 @@ export type HandEntry =
     };
 
 /** Die Karten, die vor einem Spieler offen liegen (Relikte, Fragmente, legendäre Planeten). */
-export type TableEntry = Extract<HandEntry, { kind: 'relic' | 'fragment' | 'legendary' }>;
+export type TableEntry = Extract<
+  HandEntry,
+  { kind: 'relic' | 'fragment' | 'legendary' | 'leader' }
+>;
 
 export interface HandInput {
   readonly game: GameState;
@@ -177,7 +189,24 @@ function legendaryEntries(input: HandInput, player: PlayerId): readonly TableEnt
     }));
 }
 
-/** Was vor dem eigenen Platz liegt: Relikte, Fragmente und legendäre Planeten. */
+/** PoK Anführer mit Komponentenaktion: der Agent immer, der Held, sobald er frei ist. */
+const inHand = (leader: OwnedLeader): boolean =>
+  leader.kind === 'agent' ||
+  (leader.kind === 'hero' && leader.status !== 'locked' && leader.status !== 'purged');
+
+function leaderEntries(input: HandInput, player: PlayerId): readonly TableEntry[] {
+  const usable = componentOpen(input, player) ? usableLeaders(input.game, player, content) : [];
+  return leadersOf(input.game, player, content)
+    .filter(inHand)
+    .map(({ id, kind, status }) => ({
+      kind: 'leader',
+      leader: { id, kind, status },
+      player,
+      playable: usable.includes(id),
+    }));
+}
+
+/** Was vor dem eigenen Platz liegt: Relikte, Fragmente, legendäre Planeten, Anführer. */
 export function tableEntries(input: HandInput): readonly TableEntry[] {
   const { viewer } = input;
   if (viewer === null) return [];
@@ -185,6 +214,7 @@ export function tableEntries(input: HandInput): readonly TableEntry[] {
     ...relicEntries(input, viewer),
     ...fragmentEntries(input, viewer),
     ...legendaryEntries(input, viewer),
+    ...leaderEntries(input, viewer),
   ];
 }
 
@@ -204,10 +234,17 @@ function tableKey(entry: TableEntry): string {
       return entry.fragment;
     case 'legendary':
       return entry.planet;
+    case 'leader':
+      return entry.leader.id;
   }
 }
 
-const TABLE_KINDS: ReadonlySet<HandEntry['kind']> = new Set(['relic', 'fragment', 'legendary']);
+const TABLE_KINDS: ReadonlySet<HandEntry['kind']> = new Set([
+  'relic',
+  'fragment',
+  'legendary',
+  'leader',
+]);
 
 export const isTable = (entry: HandEntry): entry is TableEntry => TABLE_KINDS.has(entry.kind);
 

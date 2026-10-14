@@ -28,7 +28,8 @@ export type CardLook =
   | 'veto'
   | 'relic'
   | 'fragment'
-  | 'legendary';
+  | 'legendary'
+  | 'leader';
 
 const STRATEGY_LOOKS: Readonly<Record<StrategyMechanic, CardLook>> = {
   commandTokens: 'leadership',

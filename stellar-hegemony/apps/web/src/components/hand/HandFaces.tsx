@@ -8,6 +8,8 @@ import {
   actionCardLabel,
   actionCardTiming,
   deckLabel,
+  leaderEffect,
+  leaderLabel,
   legendaryEffect,
   legendaryLabel,
   planetLabel,
@@ -78,7 +80,30 @@ function tableTitle(entry: TableEntry, t: Translate, language: Language): string
       return `${t('fragmentKind')}: ${deckLabel(entry.fragment, language)}`;
     case 'legendary':
       return legendaryLabel(entry.planet, language);
+    case 'leader':
+      return leaderLabel(entry.leader.id, language);
   }
+}
+
+export const LEADER_KIND_KEYS = {
+  agent: 'leaderAgent',
+  commander: 'leaderCommander',
+  hero: 'leaderHero',
+} as const;
+
+/** Anführer als Karte: Art, Name, Wirkung; erschöpfte Agenten tragen ein Schild. */
+function leaderFace(
+  entry: Extract<TableEntry, { kind: 'leader' }>,
+  t: Translate,
+  language: Language,
+) {
+  const { id, kind, status } = entry.leader;
+  return {
+    kicker: t(LEADER_KIND_KEYS[kind]),
+    title: leaderLabel(id, language),
+    text: leaderEffect(id, language),
+    marks: status === 'exhausted' && stamp(t('exhausted')),
+  };
 }
 
 function fragmentText(entry: Extract<TableEntry, { kind: 'fragment' }>, t: Translate): string {
@@ -111,6 +136,8 @@ function tableFace(entry: TableEntry, t: Translate, language: Language): Face {
         text: legendaryEffect(entry.planet, language),
         marks: entry.used && stamp(t('usedThisRound')),
       };
+    case 'leader':
+      return leaderFace(entry, t, language);
   }
 }
 
