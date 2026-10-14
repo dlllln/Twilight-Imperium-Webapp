@@ -1,0 +1,149 @@
+.ti4-faction-emblem {
+  display: block;
+  object-fit: contain;
+  padding: 4px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
+}
+
+.faction-grid button .ti4-faction-label {
+  margin-top: 6px;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.ti4-faction-portrait {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--hud-line);
+  border-radius: 14px;
+  background: #0a1022;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.ti4-faction-portrait .ti4-faction-illustration {
+  position: absolute;
+  width: 292%;
+  max-width: none;
+  height: auto;
+  left: 0;
+  top: -26%;
+}
+
+.ti4-faction-portrait .faction-emblem {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  border-radius: 50%;
+  background: rgba(5, 9, 18, 0.85);
+}
+
+.sim-faction-detail .faction-head > div.ti4-faction-portrait {
+  flex: none;
+}
+
+.ti4-faction-original-name {
+  margin: 0 0 10px;
+  color: var(--hud-gold);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+.ti4-faction-sheets {
+  padding: 12px 14px;
+  border: 1px solid var(--hud-line);
+  border-radius: 10px;
+  color: var(--text);
+  background: rgba(6, 12, 25, 0.65);
+  font-size: 12px;
+}
+
+.ti4-faction-sheets summary {
+  cursor: pointer;
+  color: var(--hud-gold);
+  font-weight: 600;
+}
+
+.ti4-faction-sheets p {
+  line-height: 1.6;
+}
+
+.ti4-faction-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ti4-faction-sheet-grid a {
+  color: var(--hud-gold);
+  text-decoration: none;
+}
+
+.ti4-faction-sheet-grid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 5px;
+  border-radius: 6px;
+}
+
+.ti4-faction-credit {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.ti4-faction-credit a {
+  color: var(--hud-gold);
+}
+
+@media (max-width: 760px) {
+  .simulator.stage-faction {
+    padding: 20px 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .simulator.stage-faction .sim-faction {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+  }
+
+  .simulator.stage-faction .sim-faction > * {
+    min-width: 0;
+  }
+
+  .simulator.stage-faction .sim-faction-list {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .simulator.stage-faction .faction-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .simulator.stage-faction .faction-head > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .simulator.stage-faction .faction-head h2 {
+    font-size: clamp(24px, 7vw, 34px);
+    overflow-wrap: anywhere;
+  }
+
+  .ti4-faction-portrait {
+    width: 180px;
+    height: 180px;
+  }
+
+  .ti4-faction-sheet-grid {
+    grid-template-columns: 1fr;
+  }
+}

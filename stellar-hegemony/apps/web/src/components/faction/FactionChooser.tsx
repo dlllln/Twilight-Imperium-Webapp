@@ -3,11 +3,12 @@ import { FACTION_NAMES, FACTION_PROFILES, FACTIONS, factionAbilityText } from '@
 import type { FactionDefinition } from '@stellar/domain';
 import { ChevronLeft, type LucideIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
+import { factionArtwork } from '../../artwork/factions.ts';
 import { planetLabel, technologyLabel, unitLabel } from '../../labels.ts';
-import { planetImage } from '../../render/images.ts';
 import { seatColor } from '../../seat-colors.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { FactionEmblem } from '../simulator/FactionEmblem.tsx';
+import { FactionOriginalSheets, FactionPortrait } from './FactionArtwork.tsx';
 
 const MAX_COMPLEXITY = 3;
 
@@ -41,6 +42,7 @@ function FactionTile({ id, props }: { readonly id: string; readonly props: Choos
       onClick={() => props.onPreview(id)}
     >
       <FactionEmblem id={id} size={72} />
+      <span className="ti4-faction-label">{factionArtwork(id)?.name[language]}</span>
       {seat !== undefined && (
         <span className="seat-badge" style={{ background: seatColor(seat) }}>
           P{seat}
@@ -77,18 +79,6 @@ function Complexity({ level }: { readonly level: number }): ReactElement {
         <i key={index} className={index < level ? 'on' : ''} />
       ))}
     </p>
-  );
-}
-
-/** Heimatwelt der Fraktion als großer Planet, davor ihr Wappen. */
-function FactionOrb({ id }: { readonly id: string }): ReactElement {
-  const home = definitionOf(id)?.homeSystem.planets[0];
-  const image = home === undefined ? null : planetImage(home.id, home.trait ?? 'plain');
-  return (
-    <div className="faction-orb">
-      {image !== null && <img src={image} alt="" />}
-      <FactionEmblem id={id} size={88} />
-    </div>
   );
 }
 
@@ -170,8 +160,11 @@ function FactionHead({ id }: { readonly id: string }): ReactElement {
   const language = useLanguage();
   return (
     <header className="faction-head">
-      <FactionOrb id={id} />
+      <FactionPortrait id={id} />
       <div>
+        <p className="ti4-faction-original-name">
+          Twilight Imperium · {factionArtwork(id)?.name[language]}
+        </p>
         <h2>{FACTION_NAMES[id]?.[language]}</h2>
         <Complexity level={FACTION_PROFILES[id]?.complexity ?? 1} />
         <p className="faction-commodities">
@@ -189,6 +182,7 @@ function FactionDetail(props: ChooserProps): ReactElement {
     <div className="sim-faction-detail">
       <FactionHead id={selected} />
       <FactionTabs key={selected} id={selected} />
+      <FactionOriginalSheets key={`art-${selected}`} id={selected} />
       <footer className="sim-actions">
         <button type="button" className="hex-button" onClick={props.onBack}>
           <ChevronLeft size={16} aria-hidden="true" /> {t('back')}

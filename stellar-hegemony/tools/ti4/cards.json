@@ -1,0 +1,162 @@
+[
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_01.png",
+    "path": "cards/strategy/1.png"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_02.png",
+    "path": "cards/strategy/2.png"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_03.png",
+    "path": "cards/strategy/3.png"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_04.png",
+    "path": "cards/strategy/4.png"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_05.png",
+    "path": "cards/strategy/5.png"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_06.png",
+    "path": "cards/strategy/6.png"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_07.png",
+    "path": "cards/strategy/7.png"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_08.png",
+    "path": "cards/strategy/8.png"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/action/base/0.face.jpg",
+    "path": "cards/action.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/action.back.jpg",
+    "path": "cards/action-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/agenda/base/0.face.jpg",
+    "path": "cards/agenda.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/agenda.back.jpg",
+    "path": "cards/agenda-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/objective/public_1/base/0.face.jpg",
+    "path": "cards/objective-public1.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/objective/public_1.back.jpg",
+    "path": "cards/objective-public1-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/objective/public_2/base/0.face.jpg",
+    "path": "cards/objective-public2.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/objective/public_2.back.jpg",
+    "path": "cards/objective-public2-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/objective/secret/base/0.face.jpg",
+    "path": "cards/objective-secret.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/objective/secret.back.jpg",
+    "path": "cards/objective-secret-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/blue/base/0.face.jpg",
+    "path": "cards/technology-blue.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/blue.back.jpg",
+    "path": "cards/technology-blue-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/green/base/0.face.jpg",
+    "path": "cards/technology-green.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/green.back.jpg",
+    "path": "cards/technology-green-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/red/base/0.face.jpg",
+    "path": "cards/technology-red.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/red.back.jpg",
+    "path": "cards/technology-red-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/yellow/base/0.face.jpg",
+    "path": "cards/technology-yellow.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/yellow.back.jpg",
+    "path": "cards/technology-yellow-back.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/unit_upgrade/base/0.face.jpg",
+    "path": "cards/technology-unit.jpg"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/unit_upgrade.back.jpg",
+    "path": "cards/technology-unit-back.jpg"
+  },
+  {
+    "path": "cards/exploration-cultural.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/exploration/cultural/pok/0.face.jpg"
+  },
+  {
+    "path": "cards/exploration-cultural-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/exploration/cultural.back.jpg"
+  },
+  {
+    "path": "cards/exploration-hazardous.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/exploration/hazardous/pok/0.face.jpg"
+  },
+  {
+    "path": "cards/exploration-hazardous-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/exploration/hazardous.back.jpg"
+  },
+  {
+    "path": "cards/exploration-industrial.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/exploration/industrial/pok/0.face.jpg"
+  },
+  {
+    "path": "cards/exploration-industrial-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/exploration/industrial.back.jpg"
+  },
+  {
+    "path": "cards/exploration-frontier.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/exploration/frontier/pok/0.face.jpg"
+  },
+  {
+    "path": "cards/exploration-frontier-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/exploration/frontier.back.jpg"
+  },
+  {
+    "path": "cards/relic.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/relic/pok/0.face.jpg"
+  },
+  {
+    "path": "cards/relic-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/relic.back.jpg"
+  },
+  {
+    "path": "cards/legendary.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/legendary_planet/pok/0.face.jpg"
+  },
+  {
+    "path": "cards/legendary-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/legendary_planet/pok/0.back.jpg"
+  }
+]

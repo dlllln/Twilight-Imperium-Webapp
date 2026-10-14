@@ -1,7 +1,9 @@
 import type { TechnologyDefinition } from '@stellar/domain';
 import type { ReactElement } from 'react';
+import { technologyArtwork } from '../../artwork/cards.ts';
 import { technologyEffectText, technologyLabel } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
 
 /** Farbiges Kärtchen einer Technologie; Aufwertungen haben keine Farbe (RR 80.7). */
 export function TechnologyChip({
@@ -15,6 +17,7 @@ export function TechnologyChip({
       className={`tech-chip tech-${technology.color ?? 'upgrade'}`}
       title={technologyEffectText(technology.id, language)}
     >
+      <CardArtwork artwork={technologyArtwork(technology.color)} className="ti4-tech-chip-art" />
       {technologyLabel(technology.id, language)}
     </span>
   );

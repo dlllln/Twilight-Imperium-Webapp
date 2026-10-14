@@ -1,0 +1,386 @@
+[
+  {
+    "path": "units/org_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_cv.png"
+  },
+  {
+    "path": "units/org_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_ca.png"
+  },
+  {
+    "path": "units/org_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_dd.png"
+  },
+  {
+    "path": "units/org_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_dn.png"
+  },
+  {
+    "path": "units/org_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_ff.png"
+  },
+  {
+    "path": "units/org_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_ws.png"
+  },
+  {
+    "path": "units/org_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_gf.png"
+  },
+  {
+    "path": "units/org_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_mf.png"
+  },
+  {
+    "path": "units/org_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_pd.png"
+  },
+  {
+    "path": "units/org_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_sd.png"
+  },
+  {
+    "path": "units/azr_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_cv.png"
+  },
+  {
+    "path": "units/azr_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_ca.png"
+  },
+  {
+    "path": "units/azr_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_dd.png"
+  },
+  {
+    "path": "units/azr_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_dn.png"
+  },
+  {
+    "path": "units/azr_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_ff.png"
+  },
+  {
+    "path": "units/azr_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_ws.png"
+  },
+  {
+    "path": "units/azr_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_gf.png"
+  },
+  {
+    "path": "units/azr_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_mf.png"
+  },
+  {
+    "path": "units/azr_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_pd.png"
+  },
+  {
+    "path": "units/azr_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_sd.png"
+  },
+  {
+    "path": "units/grn_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_cv.png"
+  },
+  {
+    "path": "units/grn_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_ca.png"
+  },
+  {
+    "path": "units/grn_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_dd.png"
+  },
+  {
+    "path": "units/grn_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_dn.png"
+  },
+  {
+    "path": "units/grn_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_ff.png"
+  },
+  {
+    "path": "units/grn_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_ws.png"
+  },
+  {
+    "path": "units/grn_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_gf.png"
+  },
+  {
+    "path": "units/grn_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_mf.png"
+  },
+  {
+    "path": "units/grn_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_pd.png"
+  },
+  {
+    "path": "units/grn_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_sd.png"
+  },
+  {
+    "path": "units/ylw_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_cv.png"
+  },
+  {
+    "path": "units/ylw_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_ca.png"
+  },
+  {
+    "path": "units/ylw_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_dd.png"
+  },
+  {
+    "path": "units/ylw_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_dn.png"
+  },
+  {
+    "path": "units/ylw_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_ff.png"
+  },
+  {
+    "path": "units/ylw_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_ws.png"
+  },
+  {
+    "path": "units/ylw_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_gf.png"
+  },
+  {
+    "path": "units/ylw_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_mf.png"
+  },
+  {
+    "path": "units/ylw_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_pd.png"
+  },
+  {
+    "path": "units/ylw_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_sd.png"
+  },
+  {
+    "path": "units/blu_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_cv.png"
+  },
+  {
+    "path": "units/blu_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_ca.png"
+  },
+  {
+    "path": "units/blu_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_dd.png"
+  },
+  {
+    "path": "units/blu_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_dn.png"
+  },
+  {
+    "path": "units/blu_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_ff.png"
+  },
+  {
+    "path": "units/blu_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_ws.png"
+  },
+  {
+    "path": "units/blu_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_gf.png"
+  },
+  {
+    "path": "units/blu_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_mf.png"
+  },
+  {
+    "path": "units/blu_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_pd.png"
+  },
+  {
+    "path": "units/blu_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_sd.png"
+  },
+  {
+    "path": "units/red_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_cv.png"
+  },
+  {
+    "path": "units/red_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_ca.png"
+  },
+  {
+    "path": "units/red_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_dd.png"
+  },
+  {
+    "path": "units/red_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_dn.png"
+  },
+  {
+    "path": "units/red_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_ff.png"
+  },
+  {
+    "path": "units/red_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_ws.png"
+  },
+  {
+    "path": "units/red_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_gf.png"
+  },
+  {
+    "path": "units/red_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_mf.png"
+  },
+  {
+    "path": "units/red_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_pd.png"
+  },
+  {
+    "path": "units/red_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_sd.png"
+  },
+  {
+    "path": "units/ppl_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_cv.png"
+  },
+  {
+    "path": "units/ppl_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_ca.png"
+  },
+  {
+    "path": "units/ppl_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_dd.png"
+  },
+  {
+    "path": "units/ppl_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_dn.png"
+  },
+  {
+    "path": "units/ppl_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_ff.png"
+  },
+  {
+    "path": "units/ppl_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_ws.png"
+  },
+  {
+    "path": "units/ppl_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_gf.png"
+  },
+  {
+    "path": "units/ppl_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_mf.png"
+  },
+  {
+    "path": "units/ppl_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_pd.png"
+  },
+  {
+    "path": "units/ppl_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_sd.png"
+  },
+  {
+    "path": "units/gry_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_cv.png"
+  },
+  {
+    "path": "units/gry_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_ca.png"
+  },
+  {
+    "path": "units/gry_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_dd.png"
+  },
+  {
+    "path": "units/gry_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_dn.png"
+  },
+  {
+    "path": "units/gry_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_ff.png"
+  },
+  {
+    "path": "units/gry_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_ws.png"
+  },
+  {
+    "path": "units/gry_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_gf.png"
+  },
+  {
+    "path": "units/gry_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_mf.png"
+  },
+  {
+    "path": "units/gry_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_pd.png"
+  },
+  {
+    "path": "units/gry_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_sd.png"
+  },
+  {
+    "path": "tiles/00_blue.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/00_blue.png"
+  },
+  {
+    "path": "tiles/00_red.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/00_red.png"
+  },
+  {
+    "path": "tiles/00_gray.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/00_gray.png"
+  },
+  {
+    "path": "tiles/00_green.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/00_green.png"
+  },
+  {
+    "path": "tiles/44_Asteroids.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/44_Asteroids.png"
+  },
+  {
+    "path": "tiles/42_Nebula.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/42_Nebula.png"
+  },
+  {
+    "path": "tiles/43_Supernova.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/43_Supernova.png"
+  },
+  {
+    "path": "tiles/41_GravityRift.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/41_GravityRift.png"
+  },
+  {
+    "path": "tiles/39_AlphaWH.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/39_AlphaWH.png"
+  },
+  {
+    "path": "tiles/40_BetaWH.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/40_BetaWH.png"
+  },
+  {
+    "path": "tiles/46_Void.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/46_Void.png"
+  },
+  {
+    "path": "tiles/19_Wellon.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/19_Wellon.png"
+  },
+  {
+    "path": "tiles/20_VefutII.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/20_VefutII.png"
+  },
+  {
+    "path": "tiles/24_MeharXull.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/24_MeharXull.png"
+  },
+  {
+    "path": "tiles/18_MR.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/18_MR.png"
+  },
+  {
+    "path": "tiles/01_Jord.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/01_Jord.png"
+  }
+]

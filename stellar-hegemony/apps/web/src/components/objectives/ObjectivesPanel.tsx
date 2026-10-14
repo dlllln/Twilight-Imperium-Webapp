@@ -2,10 +2,12 @@ import { Panel } from '../ui/Panel.tsx';
 import { Target } from 'lucide-react';
 import { findPlayer, type GameState, type PlayerId, scoringOptions } from '@stellar/domain';
 import type { ReactElement } from 'react';
+import { objectiveArtwork } from '../../artwork/cards.ts';
 import { useViewer } from '../../game-store.ts';
 import { content } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
 import { ObjectiveCard } from './ObjectiveCard.tsx';
 import { ScoreAction } from './ScoreAction.tsx';
 
@@ -31,21 +33,27 @@ function VictoryTrack({ game }: { readonly game: GameState }): ReactElement {
   );
 }
 
-function PublicRow({ game }: { readonly game: GameState }): ReactElement {
+/** Unrevealed slots show only the real stage-specific back, never their face. */
+function HiddenObjective({ stage }: { readonly stage: number }): ReactElement {
   const t = useT();
+  return (
+    <li className={`objective-card hidden stage-${String(stage)}`}>
+      <CardArtwork
+        artwork={objectiveArtwork('public', stage === 1 ? 1 : 2)}
+        className="ti4-hidden-objective-art"
+      />
+      <span>{stage === 1 ? t('stageOne') : t('stageTwo')}</span>
+    </li>
+  );
+}
+
+function PublicRow({ game }: { readonly game: GameState }): ReactElement {
   return (
     <ol className="objective-row">
       {game.objectives.public.map((slot, index) => {
         const definition = definitionOf(slot.id);
         if (!slot.revealed || definition === undefined)
-          return (
-            <li
-              key={`${slot.id}-${String(index)}`}
-              className={`objective-card hidden stage-${String(slot.stage)}`}
-            >
-              {slot.stage === 1 ? t('stageOne') : t('stageTwo')}
-            </li>
-          );
+          return <HiddenObjective key={`${slot.id}-${String(index)}`} stage={slot.stage} />;
         return <ObjectiveCard key={slot.id} game={game} definition={definition} />;
       })}
     </ol>

@@ -1,7 +1,9 @@
 import type { AgendaView, GameState } from '@stellar/domain';
 import type { ReactElement } from 'react';
+import { AGENDA_BACK, agendaFrame } from '../../artwork/cards.ts';
 import { agendaLabel, agendaPassedText, agendaRejectedText } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
 import { outcomeLabel } from './outcome-label.ts';
 
 /** Zwischenstand: Stimmen je Ergebnis, nur Ergebnisse mit Stimmen. */
@@ -33,8 +35,10 @@ export function AgendaCard(props: {
   const { agenda } = props.view;
   const rejected = agenda.election.kind === 'forAgainst';
   return (
-    <article className={`agenda-card ${agenda.kind}`}>
+    <article className={`agenda-card ti4-print-card ${agenda.kind}`}>
+      <CardArtwork artwork={agendaFrame(agenda.id)} className="ti4-print-frame" />
       <header>
+        <CardArtwork artwork={AGENDA_BACK} className="ti4-card-mark" />
         <span className="badge">{t('agendaNumber').replace('{n}', String(props.number))}</span>
         <span className="agenda-kind">{t(agenda.kind)}</span>
       </header>

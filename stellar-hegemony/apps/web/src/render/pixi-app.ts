@@ -1,4 +1,5 @@
 import { Application } from 'pixi.js';
+import { preloadOriginalArtwork } from './original-artwork.ts';
 
 /** Pixi misst Text sofort; die Schriften müssen daher vorher geladen sein. */
 const FONT_FACES = ["700 30px 'Cinzel'", "700 10px 'Exo 2'", "400 10px 'Exo 2'"];
@@ -17,7 +18,7 @@ export async function createApplication(host: HTMLElement): Promise<Application>
     autoDensity: true,
     autoStart: false,
   });
-  await loadFonts();
+  await Promise.all([loadFonts(), preloadOriginalArtwork()]);
   return app;
 }
 

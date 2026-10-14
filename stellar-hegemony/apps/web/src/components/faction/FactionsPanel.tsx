@@ -6,6 +6,7 @@ import { factionAbilityEffect, factionAbilityLabel, factionLabel } from '../../l
 import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
+import { FactionEmblem } from '../simulator/FactionEmblem.tsx';
 
 function FactionEntry({
   game,
@@ -19,6 +20,7 @@ function FactionEntry({
   return (
     <li data-testid={`faction-${player.id}`}>
       <div className="faction-head">
+        <FactionEmblem id={player.faction} size={42} />
         <PlayerTag game={game} id={player.id} />
         <strong>{factionLabel(player.faction, language)}</strong>
       </div>

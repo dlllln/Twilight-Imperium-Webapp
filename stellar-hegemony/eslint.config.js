@@ -85,7 +85,19 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.js', '**/*.config.ts'],
+    files: ['**/*.js', '**/*.mjs', '**/*.config.ts'],
     ...tseslint.configs.disableTypeChecked,
+  },
+  {
+    files: ['tools/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        Buffer: 'readonly',
+        process: 'readonly',
+        console: 'readonly',
+        fetch: 'readonly',
+        AbortSignal: 'readonly',
+      },
+    },
   },
 );

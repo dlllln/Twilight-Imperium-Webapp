@@ -58,15 +58,27 @@ test('Ein Klick zeigt die Knöpfe am System, Ansehen fährt auf der Karte heran;
   if (page === undefined) throw new Error('kein Gerät');
   const home = page.locator('[data-seat="1"][data-system]');
   await home.click();
+  const overview = await home.boundingBox();
+  if (overview === null) throw new Error('Heimatsystem nicht sichtbar');
   await page.getByRole('button', { name: 'System ansehen' }).click();
   const signs = page.getByRole('list', { name: 'Aus der Nähe' });
   await expect(signs).toContainText('Raumdock');
   await expect(page.getByRole('region', { name: 'Systemansicht' })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(signs).toBeHidden();
-  const box = await home.boundingBox();
-  if (box === null) throw new Error('Heimatsystem nicht sichtbar');
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  // The signs disappear below the close-up threshold while the return flight still runs.
+  await expect
+    .poll(async () => {
+      const current = await home.boundingBox();
+      if (current === null) return Infinity;
+      return Math.max(
+        ...(['x', 'y', 'width', 'height'] as const).map((axis) =>
+          Math.abs(current[axis] - overview[axis]),
+        ),
+      );
+    })
+    .toBeLessThan(0.5);
+  await home.hover();
   for (let step = 0; step < 12; step += 1) await page.mouse.wheel(0, -120);
   await expect(signs).toBeVisible();
   await page.getByRole('button', { name: 'Ansicht zurücksetzen' }).click();

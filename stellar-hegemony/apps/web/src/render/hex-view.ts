@@ -2,6 +2,8 @@ import type { WormholeKind } from '@stellar/domain';
 import { Container, Graphics, Sprite } from 'pixi.js';
 import { HEX_SIZE, hexToPixel, type Point } from '../hex-geometry.ts';
 import { seatColor } from '../seat-colors.ts';
+import { boardArtwork, boardHasWormholeArt } from '../artwork/board.ts';
+import { originalTexture } from './original-artwork.ts';
 import { lift, plus, project, projectedCorners, turn } from './board-view.ts';
 import { type BoardFrame, flatImage, type Placed, standing, stroked } from './board-pieces.ts';
 import {
@@ -69,6 +71,8 @@ const flatPoints = (points: readonly Point[]): number[] => points.flatMap(({ x, 
 
 /** Kachelfläche und Anomalie flach auf dem Brett. */
 function ground(hex: SceneHex, center: Point, layers: HexLayers): Placed[] {
+  const original = originalTexture(boardArtwork(hex));
+  if (original !== undefined) return [flatImage(layers.base, original, center, HALF_TILE)];
   const placed = [flatImage(layers.base, tileTexture(hex.back, variantOf(hex)), center, HALF_TILE)];
   if (hex.anomaly !== undefined && hex.anomaly !== 'supernova')
     placed.push(flatImage(layers.base, anomalyTexture(hex.anomaly), center, HALF_ANOMALY));
@@ -173,7 +177,8 @@ function supernova(center: Point, layer: Container): Placed {
 /** Leuchtende Elemente: Spielerrand, Kontrollringe, Supernova, Hervorhebung. */
 function glow(hex: SceneHex, center: Point, layer: Container): DrawnHex {
   const placed: Placed[] = [];
-  if (hex.anomaly === 'supernova') placed.push(supernova(center, layer));
+  if (hex.anomaly === 'supernova' && originalTexture(boardArtwork(hex)) === undefined)
+    placed.push(supernova(center, layer));
   const frame = border(hex, center);
   if (frame !== null) placed.push(stroked(layer, frame));
   if (hex.planets.some((planet) => planet.controllerSeat !== null))
@@ -223,9 +228,15 @@ function ships(hex: SceneHex, center: Point, layers: HexLayers): Placed[] {
   });
 }
 
+function wormholesOnBoard(hex: SceneHex): readonly WormholeKind[] {
+  const drawnWormholes =
+    boardHasWormholeArt(hex) && originalTexture(boardArtwork(hex)) !== undefined;
+  return drawnWormholes ? [] : hex.wormholes;
+}
+
 /** Wurmlöcher, Platznummer und Kommandomarker. */
 function markers(hex: SceneHex, center: Point, layers: HexLayers): Placed[] {
-  const placed = hex.wormholes.map((kind, index) =>
+  const placed = wormholesOnBoard(hex).map((kind, index) =>
     standing({ center, offset: { x: WORMHOLE_SPOT.x, y: WORMHOLE_SPOT.y + index * 20 } }, [
       [layers.content, wormholeToken(kind)],
     ]),

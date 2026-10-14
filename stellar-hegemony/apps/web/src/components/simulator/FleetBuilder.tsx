@@ -9,9 +9,9 @@ import {
 } from '@stellar/domain';
 import { ChevronLeft, Factory, Minus, Plus, Swords } from 'lucide-react';
 import type { ReactElement } from 'react';
+import { UnitArtwork } from '../../artwork/UnitArtwork.tsx';
 import { errorText } from '../../i18n.ts';
 import { unitLabel } from '../../labels.ts';
-import { shipImage } from '../../render/images.ts';
 import { catalogFor, seatOf, YOU } from '../../simulator/simulator-rules.ts';
 import { useSimulatorStore } from '../../simulator/simulator-store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
@@ -101,7 +101,6 @@ function ShipCard({ type }: { readonly type: UnitTypeId }): ReactElement {
   const { order, faction, rival } = useSimulatorStore();
   const limit = catalogFor(faction, rival).find(type, YOU)?.componentLimit ?? 0;
   const count = order[type] ?? 0;
-  const image = shipImage(type, seatOf(YOU));
   const name = unitLabel(type, language);
   return (
     <li className="ship-card" aria-label={name}>
@@ -109,7 +108,7 @@ function ShipCard({ type }: { readonly type: UnitTypeId }): ReactElement {
       <p className="ship-owned">
         {t('owned')}: {count}/{limit === 'unlimited' ? '∞' : limit}
       </p>
-      {image !== null && <img src={image} alt="" />}
+      <UnitArtwork type={type} seat={seatOf(YOU)} large />
       <ShipFacts type={type} />
       <Stepper type={type} count={count} />
     </li>

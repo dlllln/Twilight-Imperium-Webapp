@@ -1,0 +1,74 @@
+[
+  {
+    "path": "factions/sol-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/sol_icon.png"
+  },
+  {
+    "path": "factions/sol-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/sol.back.jpg"
+  },
+  {
+    "path": "factions/sol-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/sol.face.jpg"
+  },
+  {
+    "path": "factions/naalu-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/naalu_icon.png"
+  },
+  {
+    "path": "factions/naalu-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/naalu.back.jpg"
+  },
+  {
+    "path": "factions/naalu-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/naalu.face.jpg"
+  },
+  {
+    "path": "factions/hacan-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/hacan_icon.png"
+  },
+  {
+    "path": "factions/hacan-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/hacan.back.jpg"
+  },
+  {
+    "path": "factions/hacan-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/hacan.face.jpg"
+  },
+  {
+    "path": "factions/letnev-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/letnev_icon.png"
+  },
+  {
+    "path": "factions/letnev-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/letnev.back.jpg"
+  },
+  {
+    "path": "factions/letnev-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/letnev.face.jpg"
+  },
+  {
+    "path": "factions/xxcha-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/xxcha_icon.png"
+  },
+  {
+    "path": "factions/xxcha-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/xxcha.back.jpg"
+  },
+  {
+    "path": "factions/xxcha-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/xxcha.face.jpg"
+  },
+  {
+    "path": "factions/norr-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/norr_icon.png"
+  },
+  {
+    "path": "factions/norr-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/norr.back.jpg"
+  },
+  {
+    "path": "factions/norr-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/norr.face.jpg"
+  }
+]

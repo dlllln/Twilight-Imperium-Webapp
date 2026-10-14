@@ -1,9 +1,13 @@
 import { findPlayer, type GameState, type ObjectiveId, type PlayerId } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
+import { objectiveArtwork } from '../../artwork/cards.ts';
 import { useGameStore } from '../../game-store.ts';
 import { objectiveLabel, objectiveRequirement } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { Actions } from '../game/FormParts.tsx';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
+
+const SECRET_BACK = objectiveArtwork('secret', null);
 
 const toggled = (list: readonly ObjectiveId[], id: ObjectiveId) =>
   list.includes(id) ? list.filter((other) => other !== id) : [...list, id];
@@ -16,13 +20,14 @@ function SecretOption(props: {
 }): ReactElement {
   const language = useLanguage();
   return (
-    <label className="objective-option">
+    <label className="objective-option ti4-secret-option">
       <input
         type="checkbox"
         checked={props.checked}
         disabled={props.disabled}
         onChange={props.onToggle}
       />
+      <CardArtwork artwork={SECRET_BACK} className="ti4-secret-choice-art" />
       <strong>{objectiveLabel(props.id, language)}</strong>
       <span className="hint">{objectiveRequirement(props.id, language)}</span>
     </label>

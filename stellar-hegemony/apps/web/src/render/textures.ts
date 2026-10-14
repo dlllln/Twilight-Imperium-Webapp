@@ -1,6 +1,8 @@
 import type { AnomalyKind, TileBack } from '@stellar/domain';
 import { CanvasSource, Texture } from 'pixi.js';
 import { seatColor } from '../seat-colors.ts';
+import { unitArtwork } from '../artwork/units.ts';
+import { originalTexture } from './original-artwork.ts';
 import { paintAnomaly } from './anomaly-texture.ts';
 import { paintNebula } from './nebula-texture.ts';
 import { hexOf, type Rgb, rgbOf } from './palette.ts';
@@ -52,6 +54,8 @@ const isGroundPiece = (type: string): boolean =>
   ['infantry', 'mech', 'orbitalBattery', 'orbitalDock'].includes(type);
 
 export function unitTexture(type: string, seat: number): Texture {
+  const original = originalTexture(unitArtwork(type, seat));
+  if (original !== undefined) return original;
   const ground = isGroundPiece(type);
   const width = ground ? GROUND_SIZE : SHIP_SIZE.width;
   const height = ground ? GROUND_SIZE : SHIP_SIZE.height;
@@ -73,6 +77,8 @@ export const detailPlanetTexture = (id: string, look: PlanetLook): Texture =>
   cached(`planet-detail:${id}`, () => paintPlanet(id, look, DETAIL.planet));
 
 export function detailUnitTexture(type: string, seat: number): Texture {
+  const original = originalTexture(unitArtwork(type, seat));
+  if (original !== undefined) return original;
   const ground = isGroundPiece(type);
   const width = ground ? DETAIL.ground : DETAIL.ship.width;
   const height = ground ? DETAIL.ground : DETAIL.ship.height;

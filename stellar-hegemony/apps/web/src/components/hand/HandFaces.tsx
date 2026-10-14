@@ -1,7 +1,14 @@
 import type { GameState, StrategyCardState } from '@stellar/domain';
 import type { ReactElement, ReactNode } from 'react';
-import { lookOf } from '../../hand/card-look.ts';
-import { entryKey, type HandEntry, isTable, type TableEntry } from '../../hand/hand-model.ts';
+import {
+  actionFrame,
+  fragmentFrame,
+  legendaryFrame,
+  relicFrame,
+  strategyFrame,
+  type CardArtworkSource,
+} from '../../artwork/cards.ts';
+import { type HandEntry, isTable, type TableEntry } from '../../hand/hand-model.ts';
 import type { Language, MessageKey } from '../../i18n.ts';
 import {
   actionCardEffect,
@@ -17,7 +24,8 @@ import {
 } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from '../game/card-text.ts';
-import { CardArt, CardFrame } from './CardArt.tsx';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
+import { CardArt } from './CardArt.tsx';
 
 /** Was auf einer Karte steht: Überschrift, Name, Text und Zeichen im Bildfenster. */
 interface Face {
@@ -136,7 +144,26 @@ function faceOf(game: GameState, entry: HandEntry, t: Translate, language: Langu
   }
 }
 
-/** Die Vorderseite einer Handkarte: Zierrahmen, Bildfenster mit Motiv, Name und Text. */
+function tableFrame(entry: TableEntry): CardArtworkSource {
+  switch (entry.kind) {
+    case 'relic':
+      return relicFrame(entry.relic.id);
+    case 'fragment':
+      return fragmentFrame(entry.fragment);
+    case 'legendary':
+      return legendaryFrame(entry.planet);
+  }
+}
+
+function frameOf(entry: HandEntry): CardArtworkSource {
+  if (isTable(entry)) return tableFrame(entry);
+  if (entry.kind === 'action') return actionFrame(entry.card.definition.id);
+  if (entry.kind === 'pick' || entry.kind === 'strategic')
+    return strategyFrame(entry.card.mechanic);
+  return strategyFrame(entry.kind === 'tactical' ? 'warfare' : 'commandTokens');
+}
+
+/** Original scanned frame and emblem, with the app's own localized playable effects. */
 export function HandFace({
   game,
   entry,
@@ -149,13 +176,15 @@ export function HandFace({
   const face = faceOf(game, entry, t, language);
   return (
     <>
-      <CardFrame />
-      <CardArt look={lookOf(entry)} seed={entryKey(entry)} />
-      {face.marks}
-      <span className="hand-kicker">{face.kicker}</span>
-      <strong className="hand-title">{face.title}</strong>
-      <span className="hand-rule" aria-hidden="true" />
-      <span className="hand-text">{face.text}</span>
+      <CardArtwork artwork={frameOf(entry)} className="hand-print-frame" />
+      <span className="hand-print-copy">
+        <CardArt entry={entry} />
+        {face.marks}
+        <span className="hand-kicker">{face.kicker}</span>
+        <strong className="hand-title">{face.title}</strong>
+        <span className="hand-rule" aria-hidden="true" />
+        <span className="hand-text">{face.text}</span>
+      </span>
     </>
   );
 }

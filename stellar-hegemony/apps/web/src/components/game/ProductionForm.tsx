@@ -1,5 +1,6 @@
 import {
   type GameState,
+  findPlayer,
   isGroundForce,
   type PlanetId,
   type PlayerId,
@@ -12,6 +13,7 @@ import {
   unitTypeId,
 } from '@stellar/domain';
 import { type ReactElement, type ReactNode, useState } from 'react';
+import { UnitArtwork } from '../../artwork/UnitArtwork.tsx';
 import { unitLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
 import { unitsOf } from '../../unit-stats.ts';
@@ -60,6 +62,22 @@ function useProduction(props: ProductionFormProps) {
 
 type Production = ReturnType<typeof useProduction>;
 
+function ProductionUnits({
+  props,
+  form,
+}: {
+  readonly props: ProductionFormProps;
+  readonly form: Production;
+}) {
+  return (
+    <UnitSteppers
+      form={form}
+      seat={(findPlayer(props.game, props.player)?.seat ?? 0) + 1}
+      units={producibleUnits(props.game, props.player, unitsOf(props.game))}
+    />
+  );
+}
+
 function QuoteLine({ quote }: { readonly quote: Production['quote'] }): ReactElement {
   const t = useT();
   return (
@@ -76,20 +94,24 @@ function QuoteLine({ quote }: { readonly quote: Production['quote'] }): ReactEle
 function UnitSteppers({
   form,
   units,
+  seat,
 }: {
   readonly form: Production;
   readonly units: readonly UnitDefinition[];
+  readonly seat: number;
 }) {
   const language = useLanguage();
   const room = form.quote.count < form.quote.limit;
   return units.map((unit) => (
-    <Stepper
-      key={unit.id}
-      label={unitLabel(unit.id, language)}
-      value={form.counts[unit.id] ?? 0}
-      canAdd={room}
-      onChange={(delta) => form.change(unit.id, delta)}
-    />
+    <div key={unit.id} className="production-unit">
+      <UnitArtwork type={unit.id} seat={seat} />
+      <Stepper
+        label={unitLabel(unit.id, language)}
+        value={form.counts[unit.id] ?? 0}
+        canAdd={room}
+        onChange={(delta) => form.change(unit.id, delta)}
+      />
+    </div>
   ));
 }
 
@@ -117,10 +139,7 @@ export function ProductionForm(props: ProductionFormProps): ReactElement {
     <div className="choice-form production-form">
       <h3>{t('production')}</h3>
       <QuoteLine quote={form.quote} />
-      <UnitSteppers
-        form={form}
-        units={producibleUnits(props.game, props.player, unitsOf(props.game))}
-      />
+      <ProductionUnits props={props} form={form} />
       <GroundPlanet form={form} />
       <PaymentPicker
         game={props.game}

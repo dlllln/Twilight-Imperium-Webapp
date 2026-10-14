@@ -1,5 +1,7 @@
 import { FACTIONS } from '@stellar/content';
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
+import { factionArtwork } from '../../artwork/factions.ts';
+import '../../artwork/factions.css';
 import { hashString } from '../../render/noise.ts';
 import { seatColor } from '../../seat-colors.ts';
 
@@ -36,14 +38,13 @@ function EmblemGradient({ id, color }: { readonly id: string; readonly color: st
   );
 }
 
-/** Eigenes Wappen einer Fraktion: Sechseck in ihrer Farbe mit einem Sternzeichen. */
-export function FactionEmblem({
-  id,
-  size = 64,
-}: {
+interface EmblemProps {
   readonly id: string;
   readonly size?: number;
-}): ReactElement {
+}
+
+/** The previous geometric emblem remains available when an image cannot load. */
+function FallbackEmblem({ id, size = 64 }: EmblemProps): ReactElement {
   const color = factionColor(id);
   const gradient = `emblem-${id}`;
   return (
@@ -64,5 +65,24 @@ export function FactionEmblem({
       <polygon points={starPoints(id)} fill="#fff6d8" opacity="0.92" />
       <circle cx={CENTER} cy={CENTER} r="6" fill={color} />
     </svg>
+  );
+}
+
+/** Authentic Twilight Imperium faction symbol, shared by chooser, HUD and simulator. */
+export function FactionEmblem({ id, size = 64 }: EmblemProps): ReactElement {
+  const artwork = factionArtwork(id);
+  const [failedImage, setFailedImage] = useState<string | null>(null);
+  if (artwork === undefined || failedImage === artwork.icon)
+    return <FallbackEmblem id={id} size={size} />;
+  return (
+    <img
+      className="faction-emblem ti4-faction-emblem"
+      src={artwork.icon}
+      width={size}
+      height={size}
+      alt=""
+      aria-hidden="true"
+      onError={() => setFailedImage(artwork.icon)}
+    />
   );
 }

@@ -10,10 +10,12 @@ import {
   type TechnologyId,
 } from '@stellar/domain';
 import { type ReactElement, type ReactNode, useState } from 'react';
+import { technologyArtwork, technologyFrame } from '../../artwork/cards.ts';
 import { planetLabel, technologyEffectText, technologyLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
 import { type ResearchOption, researchOptions, specialtyPlanets } from '../../technology-view.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
 import { Actions } from '../game/FormParts.tsx';
 import { PaymentPicker, usePayment } from '../game/PaymentPicker.tsx';
 import { Prerequisites } from './TechnologyChip.tsx';
@@ -73,7 +75,9 @@ function OptionRow({
   const { technology, missing } = option;
   const checked = form.chosen.includes(technology.id);
   return (
-    <label className={`tech-option${missing.length > 0 ? ' locked' : ''}`}>
+    <label className={`tech-option ti4-print-card${missing.length > 0 ? ' locked' : ''}`}>
+      <CardArtwork artwork={technologyFrame(technology.id)} className="ti4-print-frame" />
+      <CardArtwork artwork={technologyArtwork(technology.color)} className="ti4-technology-art" />
       <input
         type="checkbox"
         checked={checked}

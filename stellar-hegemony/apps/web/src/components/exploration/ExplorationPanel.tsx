@@ -8,6 +8,13 @@ import {
 import { Compass } from 'lucide-react';
 import type { ReactElement } from 'react';
 import {
+  explorationArtwork,
+  explorationFrame,
+  fragmentArtwork,
+  RELIC_BACK,
+  RELIC_DECK_BACK,
+} from '../../artwork/cards.ts';
+import {
   deckLabel,
   explorationCardEffect,
   explorationCardLabel,
@@ -15,8 +22,30 @@ import {
   relicLabel,
 } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { Panel } from '../ui/Panel.tsx';
+
+function DeckDiscard({
+  card,
+  deck,
+}: {
+  readonly card: string;
+  readonly deck: ExplorationDeckKind;
+}) {
+  const language = useLanguage();
+  return (
+    <li
+      className="ti4-print-card ti4-exploration-discard"
+      title={explorationCardEffect(card, language)}
+    >
+      <CardArtwork artwork={explorationFrame(card, deck)} className="ti4-print-frame" />
+      <CardArtwork artwork={explorationArtwork(deck)} className="ti4-discard-back" />
+      <strong>{explorationCardLabel(card, language)}</strong>
+      <span>{explorationCardEffect(card, language)}</span>
+    </li>
+  );
+}
 
 /** Ein Erkundungsstapel: verdeckt übrig, offen abgelegt; die Ablage lässt sich aufklappen. */
 function DeckRow({ game, deck }: { readonly game: GameState; readonly deck: ExplorationDeckKind }) {
@@ -26,6 +55,7 @@ function DeckRow({ game, deck }: { readonly game: GameState; readonly deck: Expl
   const discards = game.exploration.discards[deck];
   return (
     <li className={`deck-row deck-${deck}`}>
+      <CardArtwork artwork={explorationArtwork(deck)} className="ti4-exploration-deck" />
       <span className="deck-name">{deckLabel(deck, language)}</span>
       <span className="deck-count" title={t('deckLeft')}>
         {left}
@@ -34,9 +64,7 @@ function DeckRow({ game, deck }: { readonly game: GameState; readonly deck: Expl
         <summary title={t('deckDiscards')}>{discards.length}</summary>
         <ul>
           {discards.map((card, index) => (
-            <li key={`${card}-${String(index)}`} title={explorationCardEffect(card, language)}>
-              {explorationCardLabel(card, language)}
-            </li>
+            <DeckDiscard key={`${card}-${String(index)}`} card={card} deck={deck} />
           ))}
         </ul>
       </details>
@@ -54,6 +82,7 @@ function FragmentChips({ fragments }: { readonly fragments: readonly FragmentKin
         if (count === 0) return null;
         return (
           <span key={kind} className={`fragment-chip deck-${kind}`}>
+            <CardArtwork artwork={fragmentArtwork(kind)} className="ti4-fragment-chip-art" />
             {deckLabel(kind, language)} ×{count}
           </span>
         );
@@ -77,10 +106,24 @@ function PlayerFinds({ game, player }: { readonly game: GameState; readonly play
           className={relic.exhausted ? 'relic-chip exhausted' : 'relic-chip'}
           title={relicEffect(relic.id, language)}
         >
+          <CardArtwork artwork={RELIC_BACK} className="ti4-relic-chip-art" />
           {relicLabel(relic.id, language)}
           {relic.exhausted && ` · ${t('exhausted')}`}
         </span>
       ))}
+    </li>
+  );
+}
+
+function RelicDeck({ left }: { readonly left: number }): ReactElement {
+  const t = useT();
+  return (
+    <li className="deck-row deck-relic">
+      <CardArtwork artwork={RELIC_DECK_BACK} className="ti4-exploration-deck" />
+      <span className="deck-name">{t('relicDeck')}</span>
+      <span className="deck-count" title={t('deckLeft')}>
+        {left}
+      </span>
     </li>
   );
 }
@@ -97,12 +140,7 @@ export function ExplorationPanel({ game }: { readonly game: GameState }): ReactE
         {EXPLORATION_DECKS.map((deck) => (
           <DeckRow key={deck} game={game} deck={deck} />
         ))}
-        <li className="deck-row deck-relic">
-          <span className="deck-name">{t('relicDeck')}</span>
-          <span className="deck-count" title={t('deckLeft')}>
-            {game.exploration.relicDeck.length}
-          </span>
-        </li>
+        <RelicDeck left={game.exploration.relicDeck.length} />
       </ul>
       {finds.length === 0 ? (
         <p className="hint">{t('noFinds')}</p>

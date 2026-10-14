@@ -1,0 +1,36 @@
+.unit-figure img,
+.unit-pill img,
+.ship-card img {
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.unit-figure img {
+  height: 56px;
+}
+
+.unit-pill img {
+  height: 24px;
+}
+
+.production-unit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.production-unit > img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 3px #000a);
+}
+
+.production-unit .stepper {
+  flex: 1;
+}
+
+.production-unit .stepper > span {
+  flex: 1;
+}

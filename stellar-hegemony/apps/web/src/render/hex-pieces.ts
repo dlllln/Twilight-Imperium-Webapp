@@ -1,4 +1,5 @@
-import { Container, Graphics, type Mesh, type MeshGeometry, type Shader, Sprite } from 'pixi.js';
+import { Container, Graphics, Sprite } from 'pixi.js';
+import { originalPlanetPiece } from './planet-artwork.ts';
 import { planetMesh } from './planet-mesh.ts';
 import { GOLD } from './palette.ts';
 import type { ScenePlanet, UnitCount } from './scene-model.ts';
@@ -7,6 +8,7 @@ import { hexOf } from './palette.ts';
 import { seatColor } from '../seat-colors.ts';
 import { unitTexture } from './textures.ts';
 import type { Projected } from './board-view.ts';
+import { fitTexture } from './original-artwork.ts';
 
 const EXHAUSTED_TINT = 0x5a5a6a;
 const TECH_COLORS: Readonly<Record<string, number>> = {
@@ -19,7 +21,13 @@ const TECH_COLORS: Readonly<Record<string, number>> = {
 const seatHex = (seat: number): number => hexOf(seatColor(seat));
 
 /** Planet als Shader-Fläche: scharf in jeder Zoomstufe. */
-function planetBody(planet: ScenePlanet, diameter: number): Mesh<MeshGeometry, Shader> {
+function planetBody(planet: ScenePlanet, diameter: number): Container {
+  const original = originalPlanetPiece(
+    planet.look,
+    diameter,
+    planet.exhausted ? EXHAUSTED_TINT : 0xffffff,
+  );
+  if (original !== null) return original;
   const body = planetMesh(planet.id, planet.look, diameter);
   if (planet.exhausted) body.tint = EXHAUSTED_TINT;
   return body;
@@ -64,7 +72,8 @@ function groundUnits(units: readonly UnitCount[], radius: number, labels: Contai
   units.forEach((unit, index) => {
     const icon = new Sprite(unitTexture(unit.type, unit.seat));
     icon.anchor.set(0.5);
-    icon.setSize(10, 10);
+    const size = fitTexture(icon.texture, 10, 10);
+    icon.setSize(size.width, size.height);
     icon.position.set(radius + 6, -radius / 2 + index * 10);
     stack.addChild(dropShadow(icon, GROUND_LIFT), icon);
     if (unit.count > 1)
@@ -144,7 +153,8 @@ export function shipPiece(unit: UnitCount): Figure {
   const fighter = unit.type === 'fighter';
   const sprite = new Sprite(unitTexture(unit.type, unit.seat));
   sprite.anchor.set(0.5);
-  sprite.setSize(fighter ? 14 : 24, fighter ? 9 : 15);
+  const size = fitTexture(sprite.texture, fighter ? 14 : 24, fighter ? 12 : 20);
+  sprite.setSize(size.width, size.height);
   body.addChild(dropShadow(sprite, SHIP_LIFT), sprite);
   if (unit.count > 1) labels.addChild(label(String(unit.count), COUNT_STYLE, 9, 6));
   return { body, labels };

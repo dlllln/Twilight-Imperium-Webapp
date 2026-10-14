@@ -6,6 +6,7 @@ import '@fontsource/exo-2/400.css';
 import '@fontsource/exo-2/700.css';
 import { App } from './App.tsx';
 import './styles.css';
+import './artwork/units.css';
 
 const root = document.getElementById('root');
 if (root !== null) {

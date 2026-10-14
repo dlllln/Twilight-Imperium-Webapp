@@ -1,6 +1,7 @@
 import { Container, Sprite } from 'pixi.js';
 import type { ShipSpot } from '../battle/battle-layout.ts';
 import { detailUnitTexture, glowTexture, SHIP_ASPECT } from './textures.ts';
+import { fitTexture } from './original-artwork.ts';
 
 /** Breite eines Schiffs bei Maßstab 1 auf der Kampfbühne. */
 export const BATTLE_SHIP_WIDTH = 124;
@@ -64,8 +65,8 @@ export class BattleShipPiece {
     this.flame.position.set(-spot.facing * this.width * 0.48, 0);
     const hull = new Sprite(detailUnitTexture(spot.type, spot.seat));
     hull.anchor.set(0.5);
-    hull.width = this.width;
-    hull.height = this.width * SHIP_ASPECT;
+    const size = fitTexture(hull.texture, this.width, this.width * SHIP_ASPECT);
+    hull.setSize(size.width, size.height);
     hull.scale.x *= spot.facing;
     this.damage = damageFx(this.width);
     this.damage.display.visible = spot.damaged;

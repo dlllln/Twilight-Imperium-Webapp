@@ -59,6 +59,10 @@ describe('Kampfsimulator', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Kampfsimulator' }));
     fireEvent.click(within(simulator()).getByRole('radio', { name: 'Dominion Karth' }));
     expect(screen.getByRole('heading', { name: 'Dominion Karth' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Baronie Letnev' }).getAttribute('src')).toBe(
+      '/ti4/factions/letnev-back.jpg',
+    );
+    expect(screen.getByText('Twilight Imperium · Baronie Letnev')).toBeTruthy();
     expect(screen.getByLabelText(/Komplexität/)).toBeTruthy();
     expect(screen.getByText('Schwere Panzerung')).toBeTruthy();
     fireEvent.mouseDown(screen.getByRole('tab', { name: 'Hintergrund' }));

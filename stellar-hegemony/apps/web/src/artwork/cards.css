@@ -1,0 +1,350 @@
+.ti4-card-artwork {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  flex: none;
+  background: #090b10;
+  pointer-events: none;
+}
+
+.ti4-card-artwork img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  max-height: none;
+  object-fit: fill;
+}
+
+/* Only the original scan's rim remains visible. No printed rule can peek between
+   local text or controls, even when their length changes with the language. */
+.ti4-print-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.ti4-print-card > .ti4-print-frame,
+.hand-card > .hand-print-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.ti4-print-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 4px;
+  z-index: 1;
+  border-radius: 4px;
+  background: #0b101b;
+  pointer-events: none;
+}
+
+.ti4-print-card > :not(.ti4-print-frame) {
+  position: relative;
+  z-index: 2;
+}
+
+.hand-card .hand-print-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  height: 100%;
+  min-height: 0;
+  background: #0a0d16;
+  border-radius: 3px;
+}
+
+.hand-print-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0 9px;
+  background: #0a0d16;
+}
+
+.hand-print-copy .hand-art {
+  display: grid;
+  place-items: center;
+  height: 56px;
+  border-radius: 5px;
+  background: #090b10;
+}
+
+.hand-action-art {
+  width: 56px;
+  height: 56px;
+}
+
+.hand-strategy-art {
+  width: 43px;
+  height: 56px;
+}
+
+.hand-world-art {
+  width: 98px;
+  height: 56px;
+}
+
+.hand-print-copy .hand-art img {
+  filter: saturate(1.05);
+}
+
+.hand-print-copy .hand-text {
+  color: #e0e5f3;
+}
+
+.ti4-strategy-art {
+  width: 32px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb, var(--look) 65%, transparent);
+  border-radius: 6px;
+}
+
+.ti4-card-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+}
+
+.action-card:has(> .ti4-print-frame) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 9px 10px;
+}
+
+/* CardFace also appears on reaction prompts outside CardItem. */
+.action-card:has(> .ti4-print-frame)::before {
+  content: '';
+  position: absolute;
+  inset: 0 4px;
+  z-index: 1;
+  background: #0b101b;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.action-card > .ti4-print-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.action-card:has(> .ti4-print-frame) > :not(.ti4-print-frame) {
+  position: relative;
+  z-index: 2;
+}
+
+.action-card header {
+  align-items: center;
+}
+
+.action-card header strong {
+  flex: 1;
+}
+
+.agenda-card.ti4-print-card {
+  padding: 10px 12px;
+}
+
+.agenda-card.ti4-print-card header {
+  align-items: center;
+  gap: 8px;
+}
+
+.agenda-card.ti4-print-card header .agenda-kind {
+  margin-left: auto;
+}
+
+.objective-card.ti4-print-card {
+  min-height: 92px;
+  padding: 10px 10px 10px 50px;
+}
+
+.objective-card > .ti4-objective-art {
+  position: absolute;
+  left: 9px;
+  top: 9px;
+  width: 32px;
+  height: 48px;
+  border-radius: 3px;
+}
+
+.objective-card.ti4-print-card > .points {
+  position: absolute;
+  left: 15px;
+  top: 64px;
+}
+
+.tech-option.ti4-print-card {
+  grid-template-columns: auto 48px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'box art name dots'
+    'box art effect effect';
+  column-gap: 8px;
+  padding: 9px;
+  margin: 4px 0;
+  border: 1px solid color-mix(in srgb, var(--tech) 40%, transparent);
+  border-radius: 5px;
+}
+
+.ti4-technology-art {
+  grid-area: art;
+  width: 48px;
+  height: 32px;
+  align-self: center;
+  border-radius: 3px;
+}
+
+.tech-chip:has(.ti4-tech-chip-art) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px 3px 3px;
+  border-radius: 5px;
+}
+
+.ti4-tech-chip-art {
+  width: 27px;
+  height: 18px;
+  border-radius: 2px;
+}
+
+.secret-choice .objective-option.ti4-secret-option {
+  grid-template-columns: auto 36px minmax(0, 1fr);
+  grid-template-areas:
+    'box art name'
+    'box art rule';
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #944953;
+  border-radius: 5px;
+  background: #0b101b;
+}
+
+.secret-choice .objective-option.ti4-secret-option input {
+  grid-area: box;
+  align-self: start;
+}
+
+.secret-choice .objective-option.ti4-secret-option strong {
+  grid-area: name;
+}
+
+.secret-choice .objective-option.ti4-secret-option .hint {
+  grid-area: rule;
+  grid-column: 3;
+}
+
+.ti4-secret-choice-art {
+  grid-area: art;
+  width: 36px;
+  height: 54px;
+  border-radius: 3px;
+}
+
+.objective-card.hidden:has(.ti4-hidden-objective-art) {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.ti4-hidden-objective-art {
+  width: 26px;
+  height: 39px;
+  border-radius: 3px;
+}
+
+.exploration-panel .deck-row:has(.ti4-exploration-deck) {
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
+.ti4-exploration-deck {
+  width: 24px;
+  height: 36px;
+  border-radius: 3px;
+}
+
+.exploration-panel .deck-discards[open] {
+  grid-column: 2 / -1;
+}
+
+.exploration-panel .deck-discards[open] ul {
+  display: grid;
+  gap: 5px;
+  padding: 0;
+  list-style: none;
+}
+
+.ti4-exploration-discard {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-areas:
+    'art name'
+    'art effect';
+  gap: 3px 8px;
+  padding: 7px;
+  border-radius: 4px;
+}
+
+.ti4-exploration-discard > .ti4-discard-back {
+  grid-area: art;
+  width: 20px;
+  height: 30px;
+  border-radius: 2px;
+}
+
+.ti4-exploration-discard > strong {
+  grid-area: name;
+}
+
+.ti4-exploration-discard > span:not(.ti4-card-artwork) {
+  grid-area: effect;
+  color: var(--muted);
+}
+
+.exploration-panel .fragment-chip,
+.exploration-panel .relic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px 3px 3px;
+  border-radius: 5px;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.ti4-fragment-chip-art {
+  width: 25px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.ti4-relic-chip-art {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+}
+
+@media (max-width: 540px) {
+  .tech-option.ti4-print-card {
+    grid-template-columns: auto 36px minmax(0, 1fr) auto;
+    column-gap: 5px;
+  }
+
+  .ti4-technology-art {
+    width: 36px;
+    height: 24px;
+  }
+}

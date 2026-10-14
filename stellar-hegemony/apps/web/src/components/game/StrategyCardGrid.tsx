@@ -2,10 +2,12 @@ import { Panel } from '../ui/Panel.tsx';
 import { Layers } from 'lucide-react';
 import type { GameState, StrategyCardState } from '@stellar/domain';
 import type { ReactElement } from 'react';
+import { strategyArtwork } from '../../artwork/cards.ts';
 import { useHumanActor } from '../../game-store.ts';
 import { seatColor } from '../../seat-colors.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { strategyLook } from '../../hand/card-look.ts';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
 import { cardText } from './card-text.ts';
 
 function StrategyCardTile({
@@ -25,6 +27,7 @@ function StrategyCardTile({
         data-look={strategyLook(card.mechanic)}
         title={text.primary[language]}
       >
+        <CardArtwork artwork={strategyArtwork(card.mechanic)} className="ti4-strategy-art" />
         <span className="initiative">{card.initiative}</span>
         <span className="card-name">{text.name[language]}</span>
         {holder !== undefined && (

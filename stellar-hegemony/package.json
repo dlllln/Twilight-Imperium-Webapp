@@ -8,6 +8,8 @@
     "node": ">=22"
   },
   "scripts": {
+    "assets:sync": "node tools/sync-ti4-assets.mjs",
+    "assets:check": "node tools/sync-ti4-assets.mjs --check",
     "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json && tsc -p apps/server/tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write .",

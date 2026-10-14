@@ -1,0 +1,926 @@
+[
+  {
+    "path": "factions/sol-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/sol_icon.png",
+    "bytes": 23894,
+    "sha256": "2ca920c9885cc7a3b887048743c29410d150f99fcab7a3414e0cd50d60ff3b01"
+  },
+  {
+    "path": "factions/sol-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/sol.back.jpg",
+    "bytes": 678581,
+    "sha256": "daf973a322d0bf7a0f99568252e4fcf5fa9c4bc676ef146dcde7067aa4acfcd1"
+  },
+  {
+    "path": "factions/sol-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/sol.face.jpg",
+    "bytes": 622378,
+    "sha256": "1363140e223053052e82c46a8c095b927012bf4cc53986610e0951000b8170db"
+  },
+  {
+    "path": "factions/naalu-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/naalu_icon.png",
+    "bytes": 25203,
+    "sha256": "77697e6668113a79e774cee5b09ef096fe2e871472e23b7c9a6bb2d631488aad"
+  },
+  {
+    "path": "factions/naalu-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/naalu.back.jpg",
+    "bytes": 751043,
+    "sha256": "5680b4c3c0ab27ab58d439870b9b86b224bf5ec5c8c983776f2760183c6fb28e"
+  },
+  {
+    "path": "factions/naalu-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/naalu.face.jpg",
+    "bytes": 633079,
+    "sha256": "c9a7f20bbb31c90bc7fb5c3e0f62e46390382332675f130ddf54b2b5e8507b5e"
+  },
+  {
+    "path": "factions/hacan-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/hacan_icon.png",
+    "bytes": 23599,
+    "sha256": "66859efe8695e246cb5c334fd88b6b8675c749cfa4b8397e32925478c077460d"
+  },
+  {
+    "path": "factions/hacan-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/hacan.back.jpg",
+    "bytes": 711030,
+    "sha256": "0e8d9ff7bcbc996dc2fcdf38c4ba1a6dd4936418af33efd51725cf81172a5e58"
+  },
+  {
+    "path": "factions/hacan-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/hacan.face.jpg",
+    "bytes": 683712,
+    "sha256": "e97521d337ea2c48e5ab922854d5bae82a7d9e623769c96c5c3bc6134e4f7c91"
+  },
+  {
+    "path": "factions/letnev-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/letnev_icon.png",
+    "bytes": 20744,
+    "sha256": "47d194b71ceedb228564e1f80bf2e91827f112f0186d21ee5771977dc0fdc2c9"
+  },
+  {
+    "path": "factions/letnev-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/letnev.back.jpg",
+    "bytes": 763579,
+    "sha256": "dbd23b110bb08edfaeeb345a25bb77a030167f6497e0096b3897348fc95961cd"
+  },
+  {
+    "path": "factions/letnev-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/letnev.face.jpg",
+    "bytes": 635045,
+    "sha256": "595ec9d59166959443ab48e23259b1500c725408aaf6891b0595183723702aa6"
+  },
+  {
+    "path": "factions/xxcha-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/xxcha_icon.png",
+    "bytes": 21538,
+    "sha256": "2fde9e4a8f21ef4a494570359fdfcfa26d5cb3fc5fbee21c8b9d17a22ae3421e"
+  },
+  {
+    "path": "factions/xxcha-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/xxcha.back.jpg",
+    "bytes": 777767,
+    "sha256": "b21b336e828479d2ec3661d4cb19676fdeddda558c3776d4c316270cbf72ee99"
+  },
+  {
+    "path": "factions/xxcha-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/xxcha.face.jpg",
+    "bytes": 631107,
+    "sha256": "29ef98321afa90a6c1b7218dc540e16d4ee2ebf4f2d6808707b35041bc65d787"
+  },
+  {
+    "path": "factions/norr-icon.png",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/factions/norr_icon.png",
+    "bytes": 19951,
+    "sha256": "7a3977a89ac77ff3439afe46f8235d4ad6ceb434d398b05efab9ef7b628f9fdf"
+  },
+  {
+    "path": "factions/norr-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/norr.back.jpg",
+    "bytes": 696528,
+    "sha256": "c749ca036f3e76822e0feea64308217560983c5986cb3800816d06a21a03ab49"
+  },
+  {
+    "path": "factions/norr-front.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/factionsheets/base/norr.face.jpg",
+    "bytes": 599677,
+    "sha256": "3ab1250ad1da33594577aece23624c2da3bd9c354711196b4d98a78bf65cc787"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_01.png",
+    "path": "cards/strategy/1.png",
+    "bytes": 226820,
+    "sha256": "03b435eae2c464ca3bc1dbebf3a526db567d2e40c03a6d5a83c3703180d5c629"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_02.png",
+    "path": "cards/strategy/2.png",
+    "bytes": 324102,
+    "sha256": "48eb5fbbd01434fd1bbbfa92810c91082d19538bab502dec318b15983631fc66"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_03.png",
+    "path": "cards/strategy/3.png",
+    "bytes": 239816,
+    "sha256": "3f60f1f8b74fd64e80de1dbe6b882547b97078386d7bb7b159f533481aee6c6a"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_04.png",
+    "path": "cards/strategy/4.png",
+    "bytes": 238187,
+    "sha256": "248a05e544294f103647507b635b479afec74e6e7a3762336965c021f770668b"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_05.png",
+    "path": "cards/strategy/5.png",
+    "bytes": 223538,
+    "sha256": "392614dcfd378bdd0685f3e33cfbe0ee428ee38f3fb1de955e4c0ce03d9a74b8"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_06.png",
+    "path": "cards/strategy/6.png",
+    "bytes": 237054,
+    "sha256": "b6cd3d98d3e03409ab9bfcf7b7c03744fff7a4be3fcb3dedbe2695d4f9e3f92b"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_07.png",
+    "path": "cards/strategy/7.png",
+    "bytes": 213783,
+    "sha256": "ebbf930508aad28439bb77623ae49c507acc72be550dd55da51ab1296025cc5d"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/stratcards/base/strategy_08.png",
+    "path": "cards/strategy/8.png",
+    "bytes": 231481,
+    "sha256": "c4deab9853c38db96b1ba20571bca3042f2f0f1feabf45b8efd591aa592feb44"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/action/base/0.face.jpg",
+    "path": "cards/action.jpg",
+    "bytes": 2710263,
+    "sha256": "0e92dff1b0473d82588bc0e91a45dca33095b6b37e1a4c070edf5ceaa7ff6e3d"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/action.back.jpg",
+    "path": "cards/action-back.jpg",
+    "bytes": 31184,
+    "sha256": "45967c7100012d7ac2009cd184943a46f043daff43a50b9b4cb32bf478e061c3"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/agenda/base/0.face.jpg",
+    "path": "cards/agenda.jpg",
+    "bytes": 1228079,
+    "sha256": "e3ee1fd61f89f03641de18aeea36cf6559f003837c02cd7d1402e5417bbab393"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/agenda.back.jpg",
+    "path": "cards/agenda-back.jpg",
+    "bytes": 35922,
+    "sha256": "308a49e541f5852fe53e29f29bdda6c83162196288a16bcd62a4c9451e05a2d2"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/objective/public_1/base/0.face.jpg",
+    "path": "cards/objective-public1.jpg",
+    "bytes": 287117,
+    "sha256": "efdb6b72a67d2b5afd623257073e4b7a04f90eab00d558dc73de61ea45215bc7"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/objective/public_1.back.jpg",
+    "path": "cards/objective-public1-back.jpg",
+    "bytes": 33976,
+    "sha256": "f0ebe1ef48e102e2f8ec529ad4ad02b2acdb961d356a0b9a6f5fd1e1e2e4c71f"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/objective/public_2/base/0.face.jpg",
+    "path": "cards/objective-public2.jpg",
+    "bytes": 275585,
+    "sha256": "7bfe8b3d4c8738f76e1e7aafabc69e2596cfff6028c740d5e8a394a44f6a0c40"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/objective/public_2.back.jpg",
+    "path": "cards/objective-public2-back.jpg",
+    "bytes": 32723,
+    "sha256": "4aa4e3a0f460385c0297a125aaf43464f16165d8a5fb8d1c2cea90caafe9b4c2"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/objective/secret/base/0.face.jpg",
+    "path": "cards/objective-secret.jpg",
+    "bytes": 543209,
+    "sha256": "8125819974025ba51d983ea3878b63ed4f6a4fd9fe2b99b7ccc1304854b7d9c8"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/objective/secret.back.jpg",
+    "path": "cards/objective-secret-back.jpg",
+    "bytes": 34537,
+    "sha256": "c5dbb5c8d710df88267a8aa0d879b2298b2f8be40a1e4c326e7a7eff5fdbcd49"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/blue/base/0.face.jpg",
+    "path": "cards/technology-blue.jpg",
+    "bytes": 244401,
+    "sha256": "f11c5ff7a9a10defcc92e88ced1a2eaf55d8ce21c81341eb48a0f8f6ebd512b6"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/blue.back.jpg",
+    "path": "cards/technology-blue-back.jpg",
+    "bytes": 20941,
+    "sha256": "592c0fce21b0f4f9342512f3b0e2bbe4a4595c0569231484fe34fdab5207908f"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/green/base/0.face.jpg",
+    "path": "cards/technology-green.jpg",
+    "bytes": 306498,
+    "sha256": "ba6d25ca88fa13dad047855a4e39aafa8e4f193980399bba8c69f875c8f2307f"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/green.back.jpg",
+    "path": "cards/technology-green-back.jpg",
+    "bytes": 21116,
+    "sha256": "332d68f4c98fbe9cb4fa0e9170ca783d7e54b1a50c341604e923b975cef2f7f3"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/red/base/0.face.jpg",
+    "path": "cards/technology-red.jpg",
+    "bytes": 247457,
+    "sha256": "abed9b0c3a1c31b9614993bc6cbb4206cf10b23bf2449cecb060ba0b92608863"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/red.back.jpg",
+    "path": "cards/technology-red-back.jpg",
+    "bytes": 20787,
+    "sha256": "47b1b50f9928964a940b8ffb907abb0702cd8428f98020a9cd51df7512e53a2a"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/yellow/base/0.face.jpg",
+    "path": "cards/technology-yellow.jpg",
+    "bytes": 406697,
+    "sha256": "09d42ebc80b16a0e5a5e720c3d90cf948c6e41a5c885b0cd17161f842a507834"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/yellow.back.jpg",
+    "path": "cards/technology-yellow-back.jpg",
+    "bytes": 21224,
+    "sha256": "637954e64ef4625a1c0ebce2c1b2cea78c57b56e4a9c2512123885024063fae2"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/technology/unit_upgrade/base/0.face.jpg",
+    "path": "cards/technology-unit.jpg",
+    "bytes": 603855,
+    "sha256": "e17f7dd294f615084ea259b1bb4e2528c9ce2c9abcb8f117a51cc99f62139ca6"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/technology/unit_upgrade.back.jpg",
+    "path": "cards/technology-unit-back.jpg",
+    "bytes": 19985,
+    "sha256": "d603d65ff0337d20f104e94ac708efa6504313c7d922d5997300d15656c17eae"
+  },
+  {
+    "path": "cards/exploration-cultural.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/exploration/cultural/pok/0.face.jpg",
+    "bytes": 757332,
+    "sha256": "f0d09edfdde364ce50824e41754bba436e6a8001579c3ebd3d632f22a2200b6a"
+  },
+  {
+    "path": "cards/exploration-cultural-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/exploration/cultural.back.jpg",
+    "bytes": 31816,
+    "sha256": "034a738b1fff757cd619f54b9882b413a161cc197bf556897f15b3cc0224fd83"
+  },
+  {
+    "path": "cards/exploration-hazardous.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/exploration/hazardous/pok/0.face.jpg",
+    "bytes": 758598,
+    "sha256": "648d16c6b03e2db216a62373605d1d954789162dfcdfd0d34fab37dfbfddd514"
+  },
+  {
+    "path": "cards/exploration-hazardous-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/exploration/hazardous.back.jpg",
+    "bytes": 25471,
+    "sha256": "b1de6be648bba4336a2864204be424653ec3bf0afff01048601544f58207b0cc"
+  },
+  {
+    "path": "cards/exploration-industrial.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/exploration/industrial/pok/0.face.jpg",
+    "bytes": 770113,
+    "sha256": "690bcff6da11c57e884e4d65749110d0258eec1fda0c2f1401f6891166e876cc"
+  },
+  {
+    "path": "cards/exploration-industrial-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/exploration/industrial.back.jpg",
+    "bytes": 32602,
+    "sha256": "9eabdeca423cfa546ae6442c5a4700969ee18292ccfe5dad508e79ce07e7b133"
+  },
+  {
+    "path": "cards/exploration-frontier.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/exploration/frontier/pok/0.face.jpg",
+    "bytes": 535327,
+    "sha256": "dc4d982ee2da4363ec69423d156a19f867640d412e3f452403fc5bc34b53c5e9"
+  },
+  {
+    "path": "cards/exploration-frontier-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/exploration/frontier.back.jpg",
+    "bytes": 27530,
+    "sha256": "3b4efb0e2a6f4b9b99527ede395ae1372f243907ee95ab03b386ab3f4c82fe2a"
+  },
+  {
+    "path": "cards/relic.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/relic/pok/0.face.jpg",
+    "bytes": 481297,
+    "sha256": "d12feb74c068e1c11969aa87031e0487c0718e5bc0d91577a8a23cda8cf2c142"
+  },
+  {
+    "path": "cards/relic-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/global/card/relic.back.jpg",
+    "bytes": 37708,
+    "sha256": "7f8a89a4e358f27dfd2a6e25960fbb38be8bf2faba157aa79fe0b4de23e1a42c"
+  },
+  {
+    "path": "cards/legendary.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/legendary_planet/pok/0.face.jpg",
+    "bytes": 162958,
+    "sha256": "57de4eb5b8ed7ec515ff5c11f531bc51671b752a818135ed02beeffab5c75dc0"
+  },
+  {
+    "path": "cards/legendary-back.jpg",
+    "url": "https://raw.githubusercontent.com/TI4-Online/TI4-TTPG/f5750930f0ed3283e15fc891af206eded2ebe739/assets/Textures/en/card/legendary_planet/pok/0.back.jpg",
+    "bytes": 110616,
+    "sha256": "47c4580bccd0ac72b908c08f99e3de3f087102ad642fe425a2549dcd6b2eff24"
+  },
+  {
+    "path": "units/org_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_cv.png",
+    "bytes": 10624,
+    "sha256": "274e4b92aa3a3a914d88dc47779da29bd55c02c5241aac9a1208b2012ba23d0e"
+  },
+  {
+    "path": "units/org_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_ca.png",
+    "bytes": 9341,
+    "sha256": "0a794d15684f3ea5863f0e180c350e83eb3c1c7515eff33f774bdd164b87f1cf"
+  },
+  {
+    "path": "units/org_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_dd.png",
+    "bytes": 8145,
+    "sha256": "92adce9d89308b73d7866edd1599434da579e02b3028c9769071182376c879cf"
+  },
+  {
+    "path": "units/org_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_dn.png",
+    "bytes": 11960,
+    "sha256": "46ac9ec5426971cc6b62ce110b2e03a840d6b552fe3af8fbfbd111e460662d07"
+  },
+  {
+    "path": "units/org_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_ff.png",
+    "bytes": 5231,
+    "sha256": "88598736ce77188f13012e683f5a2fa02a3f6ceb8f9dd27690f086a5fc83cd38"
+  },
+  {
+    "path": "units/org_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_ws.png",
+    "bytes": 9793,
+    "sha256": "3fbe44f188966a5ed626e8d4f379c035f661762e62caee8be821adcc21173636"
+  },
+  {
+    "path": "units/org_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_gf.png",
+    "bytes": 5871,
+    "sha256": "4034d64557312dacfa6275e29150dbc9c69893c122939e07956eec0ec9f80240"
+  },
+  {
+    "path": "units/org_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_mf.png",
+    "bytes": 6914,
+    "sha256": "698d6d9006ef7f85e2f90a928ccc126ee08e97d80cc06400be6f25ebc822d556"
+  },
+  {
+    "path": "units/org_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_pd.png",
+    "bytes": 5244,
+    "sha256": "ac34c390b73cd42aa4afb9ae19792c9c3986f95840b85d24361564f567deeeea"
+  },
+  {
+    "path": "units/org_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/org_sd.png",
+    "bytes": 6808,
+    "sha256": "1b4f75d186a8de7988aa5a01763327a6dfdd48723b7d5d4abf9fe0c402a806ec"
+  },
+  {
+    "path": "units/azr_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_cv.png",
+    "bytes": 12019,
+    "sha256": "a8fb323702975ed52c7b3e1733521f343bc3c75af62fa97e772da9e4c89f320c"
+  },
+  {
+    "path": "units/azr_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_ca.png",
+    "bytes": 10804,
+    "sha256": "533b949dc4af139059d920d52f677182b7709b265d8d77a93c558f05050f7167"
+  },
+  {
+    "path": "units/azr_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_dd.png",
+    "bytes": 9544,
+    "sha256": "01f272ec7d1cc80fd3706cbc684c5beb0c765cadca8237e7a16a2475065e4adc"
+  },
+  {
+    "path": "units/azr_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_dn.png",
+    "bytes": 13505,
+    "sha256": "dd3f147ac8d929b8a1f132755657175a6bea66222f0a0ea2f5e054bf61f518e8"
+  },
+  {
+    "path": "units/azr_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_ff.png",
+    "bytes": 6552,
+    "sha256": "d4e8a08bbc9372a3867b532eb8d8b8b7047fa51fff1f7287bf76df9b9a5f7c34"
+  },
+  {
+    "path": "units/azr_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_ws.png",
+    "bytes": 11275,
+    "sha256": "1d5506c25607da31d08d3144f4d877c1a704ff89a14cfbe143c7ff3cc0251569"
+  },
+  {
+    "path": "units/azr_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_gf.png",
+    "bytes": 7166,
+    "sha256": "cd3d019190340302285f7c15f6b453fbd9c473ad001bb04cb5b44991bfef8e86"
+  },
+  {
+    "path": "units/azr_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_mf.png",
+    "bytes": 8285,
+    "sha256": "c89b6b72855d7dfcecd774fc3e19624c4c5ac2131463913783564c1fca255adf"
+  },
+  {
+    "path": "units/azr_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_pd.png",
+    "bytes": 6481,
+    "sha256": "eff82dcd7e4471db718e4c5f0d4676615835f90e62546f5342dd8c6eea962f99"
+  },
+  {
+    "path": "units/azr_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/azr_sd.png",
+    "bytes": 8132,
+    "sha256": "502223321d2c4abb2b375938aff0eea87ada0d2b49a71021b5b1e8d61d11a8e6"
+  },
+  {
+    "path": "units/grn_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_cv.png",
+    "bytes": 10566,
+    "sha256": "e2b16152cfb59ee1d40651a5d4fd73dc001f4c059e07bd12e71545e440e319ed"
+  },
+  {
+    "path": "units/grn_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_ca.png",
+    "bytes": 9383,
+    "sha256": "2d871ca8346ca8d2778d805a7174f59ac98f6bfbcfaed774b9be2ac6b227b9ec"
+  },
+  {
+    "path": "units/grn_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_dd.png",
+    "bytes": 8153,
+    "sha256": "dc722dcfcec250434ea5848b5efe997b13531ecc822d801eb906960dc134978d"
+  },
+  {
+    "path": "units/grn_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_dn.png",
+    "bytes": 11994,
+    "sha256": "e1c9fb760d823020f5b47809662df16758524440851ea852dbb1c2cc297beb7e"
+  },
+  {
+    "path": "units/grn_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_ff.png",
+    "bytes": 5166,
+    "sha256": "71258affbc9221096944032c5dc6352a7c2236ce9bc42007b06985f9dbe74e79"
+  },
+  {
+    "path": "units/grn_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_ws.png",
+    "bytes": 9827,
+    "sha256": "e01bc6116251ac7d8a22eb73256486f3fc3f3f6db98c6e81e19751dd48495248"
+  },
+  {
+    "path": "units/grn_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_gf.png",
+    "bytes": 5878,
+    "sha256": "396bb79b92c742008a36fb1b907643fc2f1b18678fdc5d48ef251dc48b16c7b8"
+  },
+  {
+    "path": "units/grn_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_mf.png",
+    "bytes": 6895,
+    "sha256": "22e134c33aa309e2da59ddbf15926a25d2f61371dfef45479ee7c89efe62557c"
+  },
+  {
+    "path": "units/grn_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_pd.png",
+    "bytes": 5206,
+    "sha256": "17c85aa288365aea949e8dc0b17c12e5fc34de4bf1018794ec530dcbff2b16c5"
+  },
+  {
+    "path": "units/grn_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/grn_sd.png",
+    "bytes": 6785,
+    "sha256": "5ae9c49dd255ee37f23f8bd4609677d57cafbc2ce3cd3fe76a1c3bea07006fbc"
+  },
+  {
+    "path": "units/ylw_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_cv.png",
+    "bytes": 10294,
+    "sha256": "3b778b3813bc1cd4c57f57a0c3afa1c81f5b17febecc86f579eb64b54f70d707"
+  },
+  {
+    "path": "units/ylw_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_ca.png",
+    "bytes": 9155,
+    "sha256": "d808954ca873ea58a32392edd0a41b7eea37ebc510a60186d82e2fe311b2fd9e"
+  },
+  {
+    "path": "units/ylw_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_dd.png",
+    "bytes": 7907,
+    "sha256": "eaabb82786f355e6ff7de28d0a0d9c605f8bbdc71f9b23c286866e3c9e8707a9"
+  },
+  {
+    "path": "units/ylw_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_dn.png",
+    "bytes": 11468,
+    "sha256": "f705ce37bd74ca2d1bdacc16ca4b94603959e17ac32fd957d23b44599d9fa41b"
+  },
+  {
+    "path": "units/ylw_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_ff.png",
+    "bytes": 5155,
+    "sha256": "e92fcb4936ca77faa859df2cd482882999ab32d78e003a6a0fe2f0165cbfc527"
+  },
+  {
+    "path": "units/ylw_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_ws.png",
+    "bytes": 9516,
+    "sha256": "114399f7d54b2e08e2d34e3905d5f2fde2d75538536d388ea73ff335e7af9a16"
+  },
+  {
+    "path": "units/ylw_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_gf.png",
+    "bytes": 5815,
+    "sha256": "aa03836df89cc287196fbb81b8af036715b481ba4b9699cb503e8a88e72d6e66"
+  },
+  {
+    "path": "units/ylw_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_mf.png",
+    "bytes": 6929,
+    "sha256": "f789a855cf56d1f0c183985020b3acb8772ea7896e077919ecd4be90580e229c"
+  },
+  {
+    "path": "units/ylw_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_pd.png",
+    "bytes": 5137,
+    "sha256": "76fe1c10ac1cc7de873a82750cdfd8be5ecd432691d53bdfd3ec1a499b2f1dff"
+  },
+  {
+    "path": "units/ylw_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ylw_sd.png",
+    "bytes": 6579,
+    "sha256": "e1b5bb79722b3fae7999de679d2dd3eb13c5a72ca8319ca47d2ae03dfb58e8bd"
+  },
+  {
+    "path": "units/blu_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_cv.png",
+    "bytes": 10691,
+    "sha256": "ce0dbfdd95f4c5373c31564f3b13acddd9f9882ec78c9636f14ce95f98026f10"
+  },
+  {
+    "path": "units/blu_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_ca.png",
+    "bytes": 9478,
+    "sha256": "03c1be9546c82469849753892e96a2e8711541e9dbe07c5de5cfe97eb8c3f7d4"
+  },
+  {
+    "path": "units/blu_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_dd.png",
+    "bytes": 8243,
+    "sha256": "68405c87b614fe69ff3d91374dcce70f96aa4f05f4bb3b96970c7ee4acd4de10"
+  },
+  {
+    "path": "units/blu_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_dn.png",
+    "bytes": 12116,
+    "sha256": "77f18a242d2eef07697947dc6866078c611e8a1f709733208c6415d3dbde6902"
+  },
+  {
+    "path": "units/blu_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_ff.png",
+    "bytes": 5270,
+    "sha256": "19d9071e1f88758f2feaf73c049dbb28a3e599598d0f4fba3c13c54045ea40ae"
+  },
+  {
+    "path": "units/blu_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_ws.png",
+    "bytes": 10001,
+    "sha256": "0fcc89c1d679276deca37c55da50603be84d906a50e912c8a890413201a1b56d"
+  },
+  {
+    "path": "units/blu_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_gf.png",
+    "bytes": 5939,
+    "sha256": "a3fd9a367ae7415d134427b595598845e8c8cfa45c28991bb5d8c0752a5fb29b"
+  },
+  {
+    "path": "units/blu_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_mf.png",
+    "bytes": 6858,
+    "sha256": "618eda6a6b076ac7e0e18bea33fa4106e54cc5eecca4c638fc0360c77eb340c3"
+  },
+  {
+    "path": "units/blu_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_pd.png",
+    "bytes": 5229,
+    "sha256": "7eafd1f93adac4b4e02a012a3f5611f7c72d0177cdc2fd48d978c8c135cf3a95"
+  },
+  {
+    "path": "units/blu_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/blu_sd.png",
+    "bytes": 6877,
+    "sha256": "7e2c552e50fed005d1628c41fce3a61d38cc8861e23c01ac79a3640d552d4459"
+  },
+  {
+    "path": "units/red_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_cv.png",
+    "bytes": 10582,
+    "sha256": "df7a44c1e90f6cd2f1af2266844c390d6f12fdbf9feedc4648d5d4efc430f8f0"
+  },
+  {
+    "path": "units/red_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_ca.png",
+    "bytes": 9402,
+    "sha256": "194606a1929c3f4d9a41df0012c028c7195b7e359a64d15d29722f9011ddde3c"
+  },
+  {
+    "path": "units/red_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_dd.png",
+    "bytes": 8166,
+    "sha256": "6dff04a1df5fa95f2e73339adb4af7166527bf69f28c9f75c3bd389ad35c1119"
+  },
+  {
+    "path": "units/red_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_dn.png",
+    "bytes": 11998,
+    "sha256": "d1b413c7dd24753e0284570aebf0874de3f2069c39d8d32ff603714bb92877c8"
+  },
+  {
+    "path": "units/red_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_ff.png",
+    "bytes": 5214,
+    "sha256": "1530440b40add5aeeb753ac838526fc80b4624154ed28e2fcd5d14d3839cfa7c"
+  },
+  {
+    "path": "units/red_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_ws.png",
+    "bytes": 9924,
+    "sha256": "343529cc724eb286a5ac83e0b5effb669575a44832316251d9995ae49e0fe4b9"
+  },
+  {
+    "path": "units/red_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_gf.png",
+    "bytes": 5862,
+    "sha256": "0e11ec9b613619243ec07c692e60650bd678d1b1d90888cbeae685bb3629a9c6"
+  },
+  {
+    "path": "units/red_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_mf.png",
+    "bytes": 6799,
+    "sha256": "a64027fd69e8ffd957d8fdb45c1dda45cf1ac94e65c8e6050edd0f03d61ee1cf"
+  },
+  {
+    "path": "units/red_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_pd.png",
+    "bytes": 5206,
+    "sha256": "29fa900f6d402a3ca974304e8f5416133b7465bad7f00345319a8d6f4c04c33f"
+  },
+  {
+    "path": "units/red_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/red_sd.png",
+    "bytes": 6782,
+    "sha256": "df6382c916efec109fe0be40493d61392f6674ed653ee9e09d2379e140c37a41"
+  },
+  {
+    "path": "units/ppl_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_cv.png",
+    "bytes": 10091,
+    "sha256": "281074d134a5df1b6b16834d359c6790bc9711be77d57f69cd0e2d497f00afa9"
+  },
+  {
+    "path": "units/ppl_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_ca.png",
+    "bytes": 8971,
+    "sha256": "1e87868183ffcd5b9763bae8a264fb3a7919234cbcdd9368fa22e7e29410cc44"
+  },
+  {
+    "path": "units/ppl_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_dd.png",
+    "bytes": 7739,
+    "sha256": "085f75ac5cf3e4a9082a96bea470e51d077a10df35812ea1b0e882553230e2a7"
+  },
+  {
+    "path": "units/ppl_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_dn.png",
+    "bytes": 11269,
+    "sha256": "4300603e0f8a2afaf4fd96c7535e3fbcebbe3049d09697458109f932dfb2353c"
+  },
+  {
+    "path": "units/ppl_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_ff.png",
+    "bytes": 5161,
+    "sha256": "96451ed244f0e4fe73d13713c71780d000ae1c6c577a3e8c6349208d858d668e"
+  },
+  {
+    "path": "units/ppl_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_ws.png",
+    "bytes": 9314,
+    "sha256": "b093ee72d3271244f111876d5bf7961e73dfc68a321970a6c44212de85067309"
+  },
+  {
+    "path": "units/ppl_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_gf.png",
+    "bytes": 5785,
+    "sha256": "86985af58995e7e4e21d01c37cace0301db3fb8d81c67682bd45480bbadedff1"
+  },
+  {
+    "path": "units/ppl_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_mf.png",
+    "bytes": 6889,
+    "sha256": "e74299e858b59c807946f7eed627227833bf3e5c271d55cc443932070cc5d0b9"
+  },
+  {
+    "path": "units/ppl_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_pd.png",
+    "bytes": 5113,
+    "sha256": "e17ff7802e69373292538f1cc9a78fc635249273630ea7b82a69126c08271910"
+  },
+  {
+    "path": "units/ppl_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/ppl_sd.png",
+    "bytes": 6458,
+    "sha256": "bd3ac213e030b33c095bd6cd2fe38d6de5bc04d60e23ad8991d6acbf1ff3a30a"
+  },
+  {
+    "path": "units/gry_cv.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_cv.png",
+    "bytes": 9441,
+    "sha256": "abc0fb67fa4e5d375c5a16d99e226dfd3464b59dbc0a191a30f82fd1c834fad1"
+  },
+  {
+    "path": "units/gry_ca.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_ca.png",
+    "bytes": 8236,
+    "sha256": "f743a087bb27c37a1bb632252f9d322fa256be2d8f1673802f5abf30069333cd"
+  },
+  {
+    "path": "units/gry_dd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_dd.png",
+    "bytes": 6903,
+    "sha256": "7bab866c05a55b2eb3c1ba104b4ab1a19834a923715d6834ccb00654f38b62e8"
+  },
+  {
+    "path": "units/gry_dn.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_dn.png",
+    "bytes": 10918,
+    "sha256": "75eca769ff67291f04e53d7940934b0e16becac01a5aa92f9b2c2123886dfb72"
+  },
+  {
+    "path": "units/gry_ff.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_ff.png",
+    "bytes": 3865,
+    "sha256": "787dc07ed8101fc369feeb0c12e563fff88b3a8a81be77a65b35bd7765174bf5"
+  },
+  {
+    "path": "units/gry_ws.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_ws.png",
+    "bytes": 8833,
+    "sha256": "e545c1a1ac2a213f6289a92890e6379a20bfeac42c7729cd4df5dec174b8477c"
+  },
+  {
+    "path": "units/gry_gf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_gf.png",
+    "bytes": 4617,
+    "sha256": "247bb4fae647673087928bab42ab593608956965c2f1e493210d109e48fc71ab"
+  },
+  {
+    "path": "units/gry_mf.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_mf.png",
+    "bytes": 5460,
+    "sha256": "4c2b4a3fffc1741779985a5a0ae5d76dbec173a03536fd2a7b00ee465fc7d0b6"
+  },
+  {
+    "path": "units/gry_pd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_pd.png",
+    "bytes": 3893,
+    "sha256": "ef20db5573fff10dc5c0e033545886f162aa1a641474bfb4d5e37c421b84044e"
+  },
+  {
+    "path": "units/gry_sd.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/units/gry_sd.png",
+    "bytes": 5595,
+    "sha256": "e5d6e86cf01e10dc2319fd8e7642572497b20e359b7abfaa3c627cc9bae28861"
+  },
+  {
+    "path": "tiles/00_blue.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/00_blue.png",
+    "bytes": 169646,
+    "sha256": "b0c765970266634e65af8260ea71d5fb63a1700be661464bbdd293717986e735"
+  },
+  {
+    "path": "tiles/00_red.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/00_red.png",
+    "bytes": 179864,
+    "sha256": "dda180364ce064d5792829bf8f0fb62b006acf522710ed4475f0eed383cfcb1d"
+  },
+  {
+    "path": "tiles/00_gray.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/00_gray.png",
+    "bytes": 17671,
+    "sha256": "520ae159c3153472df29b90ce4fe08c243b718f46c38c3dfe135f16da8b00c27"
+  },
+  {
+    "path": "tiles/00_green.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/00_green.png",
+    "bytes": 155821,
+    "sha256": "a9e4fdfec7766dfc28f4e86239e5da02713859c05cf9c00e30a24e91e8de6942"
+  },
+  {
+    "path": "tiles/44_Asteroids.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/44_Asteroids.png",
+    "bytes": 192182,
+    "sha256": "cad2b88a5d884c7bc17c9f2f965dbb44aed66074577cb2ea8d1f68db141b7dea"
+  },
+  {
+    "path": "tiles/42_Nebula.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/42_Nebula.png",
+    "bytes": 192204,
+    "sha256": "debfefc5fc27f52a92992d71387a2b97234c66a0ec5378c0e11ba58df5349a02"
+  },
+  {
+    "path": "tiles/43_Supernova.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/43_Supernova.png",
+    "bytes": 189861,
+    "sha256": "8644f79b938e661abd88fb3e934f356271688347cbac9d24d49bbcba630c3851"
+  },
+  {
+    "path": "tiles/41_GravityRift.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/41_GravityRift.png",
+    "bytes": 184777,
+    "sha256": "2a95269f12185f19b15af2072de75cba9fcf3cb64330201984a828c31b922941"
+  },
+  {
+    "path": "tiles/39_AlphaWH.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/39_AlphaWH.png",
+    "bytes": 183537,
+    "sha256": "2f012164e88aac0f468d29a59e33ea8550c1fcd02b3cf77fd4c41fee04c78f52"
+  },
+  {
+    "path": "tiles/40_BetaWH.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/40_BetaWH.png",
+    "bytes": 181754,
+    "sha256": "491f496a76a1760d0ef4f2d2f9ee8ebf2c74f4a3d06ce8e83fc159f19093fab1"
+  },
+  {
+    "path": "tiles/46_Void.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/46_Void.png",
+    "bytes": 164937,
+    "sha256": "8fd20fcf19fddf481bb1bbc3d5a3cd1ca9bdc3a568f8ca5c7496c59a47b5b52a"
+  },
+  {
+    "path": "tiles/19_Wellon.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/19_Wellon.png",
+    "bytes": 187194,
+    "sha256": "894566cc49092584fa5ba122fde2455f03491b5ba25155027c0c7094e32f8a24"
+  },
+  {
+    "path": "tiles/20_VefutII.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/20_VefutII.png",
+    "bytes": 188994,
+    "sha256": "aa30d0399ebb4f91acd26ad2c022a868798a30d631c41c44e186f66a53e8ecf9"
+  },
+  {
+    "path": "tiles/24_MeharXull.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/24_MeharXull.png",
+    "bytes": 179590,
+    "sha256": "fcdb0ff3dbcf62b813742ab0073347770f6f9040e1f11706044fe22c15a323cc"
+  },
+  {
+    "path": "tiles/18_MR.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/18_MR.png",
+    "bytes": 192805,
+    "sha256": "686458884481210f66dd3c81f673f7a913e68190d2a2f9a257852cd13c9abb3d"
+  },
+  {
+    "path": "tiles/01_Jord.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/tiles/01_Jord.png",
+    "bytes": 184600,
+    "sha256": "a9a03ee872dc6818d7af2cd6c2305c79f5e2e55f9b3215c65e5d556b714fcc4e"
+  }
+]

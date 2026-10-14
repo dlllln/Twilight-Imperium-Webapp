@@ -8,6 +8,7 @@ import { hexOf } from './palette.ts';
 import type { PlanetLook } from './planet-texture.ts';
 import { starfield } from './starfield.ts';
 import { detailPlanetTexture, glowTexture, nebulaTexture } from './textures.ts';
+import { originalPlanetPiece } from './planet-artwork.ts';
 
 const LOOKS: readonly PlanetLook[] = ['cultural', 'hazardous', 'industrial', 'plain'];
 /** Zwei große Planeten am unteren Rand, wie aus der Umlaufbahn gesehen. */
@@ -17,6 +18,15 @@ const PLANETS = [
 ] as const;
 /** Fehlschüsse fliegen ein Stück am Ziel vorbei. */
 const MISS_OFFSET = { x: 70, y: 55 } as const;
+
+function planetBody(seed: number, index: number, look: PlanetLook, size: number): Container {
+  const original = originalPlanetPiece(look, size);
+  if (original !== null) return original;
+  const body = new Sprite(detailPlanetTexture(`battle-${String(seed)}-${String(index)}`, look));
+  body.anchor.set(0.5);
+  body.width = body.height = size;
+  return body;
+}
 
 function planetBackdrop(seed: number): Container {
   const display = new Container();
@@ -28,9 +38,7 @@ function planetBackdrop(seed: number): Container {
     halo.tint = 0x8fd0ff;
     halo.alpha = 0.35;
     halo.blendMode = 'add';
-    const body = new Sprite(detailPlanetTexture(`battle-${String(seed)}-${String(index)}`, look));
-    body.anchor.set(0.5);
-    body.width = body.height = spot.size;
+    const body = planetBody(seed, index, look, spot.size);
     halo.position.set(spot.x, spot.y);
     body.position.set(spot.x, spot.y);
     display.addChild(halo, body);
