@@ -146,6 +146,38 @@ const QUEL: readonly LeaderDefinition[] = [
   ]),
 ];
 
+const VYR: readonly LeaderDefinition[] = [
+  agent('vyr', 'archivist-oren-vale', [
+    { kind: 'drawActionCards', count: ONE },
+    { kind: 'gainCommodities', amount: ONE },
+  ]),
+  commander(
+    'vyr',
+    'curator-hesk',
+    { kind: 'ownTechnologies', count: SIX },
+    rules({ statusActionCards: ONE }),
+  ),
+  hero('vyr', 'the-grand-index', [
+    { kind: 'gainRelicFragments', fragment: 'frontier', count: TWO },
+    { kind: 'drawActionCards', count: TWO },
+  ]),
+];
+
+const TARN: readonly LeaderDefinition[] = [
+  agent('tarn', 'jessa-crane', [{ kind: 'gainTradeGoods', amount: TWO }]),
+  commander(
+    'tarn',
+    'harbourmaster-ulric-thane',
+    { kind: 'unitsOnBoard', unit: U.cruiser, count: FOUR },
+    rules({ fleetLimit: ONE }),
+  ),
+  hero('tarn', 'corsair-princess-maelis', [
+    { kind: 'gainCommandTokens', amount: TWO },
+    { kind: 'gainTradeGoods', amount: TWO },
+    { kind: 'repairUnits' },
+  ]),
+];
+
 /** Alle Anführer, je Fraktion in der Reihenfolge Agent, Kommandant, Held. */
 export const LEADERS: readonly LeaderDefinition[] = [
   ...AUREL,
@@ -154,6 +186,8 @@ export const LEADERS: readonly LeaderDefinition[] = [
   ...KARTH,
   ...NESH,
   ...QUEL,
+  ...VYR,
+  ...TARN,
 ];
 
 export interface LeaderText {
@@ -319,6 +353,56 @@ export const LEADER_TEXTS: Readonly<Record<string, LeaderText>> = {
     {
       de: 'Held – Aktion: Setze 4 Infanterie und 1 Mech auf deinen Heimatplaneten und repariere alle deine Einheiten. Danach aus dem Spiel.',
       en: 'Hero – Action: Place 4 infantry and 1 mech on your home planet and repair all of your units. Then removed from the game.',
+    },
+  ),
+  'archivist-oren-vale': text(
+    { de: 'Archivar Oren Vale', en: 'Archivist Oren Vale' },
+    {
+      de: 'Agent – Aktion: Ziehe 1 Aktionskarte und erhalte 1 Rohstoff (höchstens bis zu deinem Rohstofflimit). Danach erschöpft bis zur Statusphase.',
+      en: 'Agent – Action: Draw 1 action card and gain 1 commodity (up to your commodity limit). Then exhausted until the status phase.',
+    },
+  ),
+  'curator-hesk': text(
+    { de: 'Kuratorin Hesk', en: 'Curator Hesk' },
+    {
+      de: 'Kommandant: In jeder Statusphase ziehst du 1 Aktionskarte mehr.',
+      en: 'Commander: In every status phase you draw 1 more action card.',
+    },
+    {
+      de: 'Frei, sobald du 6 Technologien besitzt.',
+      en: 'Unlocked once you own 6 technologies.',
+    },
+  ),
+  'the-grand-index': heroText(
+    { de: 'Der Große Index', en: 'The Grand Index' },
+    {
+      de: 'Held – Aktion: Erhalte 2 Grenzfragmente und ziehe 2 Aktionskarten. Danach aus dem Spiel.',
+      en: 'Hero – Action: Gain 2 frontier fragments and draw 2 action cards. Then removed from the game.',
+    },
+  ),
+  'jessa-crane': text(
+    { de: 'Schmugglerin Jessa Crane', en: 'Smuggler Jessa Crane' },
+    {
+      de: 'Agent – Aktion: Erhalte 2 Handelswaren. Danach erschöpft bis zur Statusphase.',
+      en: 'Agent – Action: Gain 2 trade goods. Then exhausted until the status phase.',
+    },
+  ),
+  'harbourmaster-ulric-thane': text(
+    { de: 'Hafenmeister Ulric Thane', en: 'Harbourmaster Ulric Thane' },
+    {
+      de: 'Kommandant: Dein Flottenlimit ist um 1 höher.',
+      en: 'Commander: Your fleet limit is 1 higher.',
+    },
+    {
+      de: 'Frei, sobald du 4 Kreuzer auf dem Spielplan hast.',
+      en: 'Unlocked once you have 4 cruisers on the board.',
+    },
+  ),
+  'corsair-princess-maelis': heroText(
+    { de: 'Freibeuterfürstin Maelis', en: 'Corsair Princess Maelis' },
+    {
+      de: 'Held – Aktion: Lege 2 Kommandomarker aus deinem Nachschub in deinen Taktikpool, erhalte 2 Handelswaren und repariere alle deine Einheiten. Danach aus dem Spiel.',
+      en: 'Hero – Action: Place 2 command tokens from your reinforcements in your tactic pool, gain 2 trade goods and repair all of your units. Then removed from the game.',
     },
   ),
 };

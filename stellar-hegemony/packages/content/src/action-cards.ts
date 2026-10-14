@@ -8,8 +8,8 @@ import type { LocalizedText } from './localized.ts';
 import { UNIT_TYPES } from './units.ts';
 
 /*
- * Eigener Aktionskartensatz: 19 Karten in 49 Exemplaren. Zwölf sind Materialaktionen
- * (RR 51), sieben Reaktionen in Zeitfenstern. Namen und Texte sind eigene Entwürfe.
+ * Eigener Aktionskartensatz: 25 Karten in 58 Exemplaren. Vierzehn sind Materialaktionen
+ * (RR 51), elf Reaktionen in Zeitfenstern. Namen und Texte sind eigene Entwürfe.
  */
 const card = (
   id: string,
@@ -52,6 +52,18 @@ export const ACTION_CARDS: readonly ActionCardDefinition[] = [
   card('entrenchment', TWO, 'invasion', { kind: 'groundBonus', amount: 1, role: 'defender' }),
   card('landing-drill', TWO, 'invasion', { kind: 'groundBonus', amount: 1, role: 'attacker' }),
   card('free-rider', THREE, 'secondary', { kind: 'freeSecondary' }),
+  // Erweiterung (Schritt 4): sechs weitere Karten mit bekannten Zeitpunkten und Wirkungen.
+  card('emergency-session', TWO, 'action', { kind: 'gainCommandTokens', amount: TWO }),
+  card('border-levy', 1, 'action', { kind: 'tradeGoodsPerNeighbor', amount: TWO }),
+  card('militia-muster', TWO, 'afterActivation', {
+    kind: 'placeUnits',
+    unit: UNIT_TYPES.infantry,
+    count: TWO,
+    where: 'activatedPlanet',
+  }),
+  card('overcharged-guns', 1, 'combatRound', { kind: 'combatBonus', amount: TWO }),
+  card('deflector-surge', TWO, 'afterHits', { kind: 'cancelHits', amount: TWO }),
+  card('scorched-earth', 1, 'invasion', { kind: 'groundBonus', amount: TWO, role: 'defender' }),
 ];
 
 export interface ActionCardText {
@@ -181,6 +193,52 @@ export const ACTION_CARD_TEXTS: Readonly<Record<string, ActionCardText>> = {
     {
       de: 'Sie kostet dich keinen Strategiemarker.',
       en: 'It costs you no strategy token.',
+    },
+  ),
+  'emergency-session': text({ de: 'Notstandssitzung', en: 'Emergency Session' }, ACTION, {
+    de: 'Erhalte 2 Kommandomarker und lege sie in einen Pool deiner Wahl.',
+    en: 'Gain 2 command tokens and place them in a pool of your choice.',
+  }),
+  'border-levy': text({ de: 'Grenzzoll', en: 'Border Levy' }, ACTION, {
+    de: 'Erhalte 2 Handelswaren für jeden deiner Nachbarn.',
+    en: 'Gain 2 trade goods for each of your neighbours.',
+  }),
+  'militia-muster': text(
+    { de: 'Landwehraufgebot', en: 'Militia Muster' },
+    {
+      de: 'Nachdem ein anderer Spieler ein System mit einem deiner Planeten aktiviert hat',
+      en: 'After another player activates a system containing one of your planets',
+    },
+    { de: 'Setze 2 Infanterie auf diesen Planeten.', en: 'Place 2 infantry on that planet.' },
+  ),
+  'overcharged-guns': text(
+    { de: 'Überladene Geschütze', en: 'Overcharged Guns' },
+    {
+      de: 'Zu Beginn einer Raumkampfrunde, an der du beteiligt bist',
+      en: 'At the start of a space combat round you take part in',
+    },
+    {
+      de: '+2 auf alle deine Kampfwürfe in dieser Runde.',
+      en: '+2 to all of your combat rolls this round.',
+    },
+  ),
+  'deflector-surge': text(
+    { de: 'Schildstoß', en: 'Deflector Surge' },
+    {
+      de: 'Nachdem Treffer gegen deine Schiffe erzielt wurden',
+      en: 'After hits are produced against your ships',
+    },
+    { de: 'Wende bis zu 2 dieser Treffer ab.', en: 'Prevent up to 2 of those hits.' },
+  ),
+  'scorched-earth': text(
+    { de: 'Verbrannte Erde', en: 'Scorched Earth' },
+    {
+      de: 'Zu Beginn eines Einmarschs in ein System mit deinen Bodentruppen',
+      en: 'At the start of an invasion of a system with your ground forces',
+    },
+    {
+      de: '+2 auf deine Bodenkampfwürfe während dieses Einmarschs.',
+      en: '+2 to your ground combat rolls during this invasion.',
     },
   ),
 };

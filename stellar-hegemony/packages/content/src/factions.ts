@@ -13,10 +13,10 @@ import { GALAXY_TILES, homeTile, p, slug } from './systems.ts';
 import { UNIT_TYPES } from './units.ts';
 
 /*
- * Eigene Fraktionen mit eigenen Namen und Heimatwelten. Sie unterscheiden sich
- * bisher durch Heimatsystem, Startflotte und Massenprodukte; Fähigkeiten folgen
- * in Iteration 11. Jede Startflotte hat höchstens 3 Nicht-Jäger-Schiffe,
- * damit sie zum Start-Flottenpool passt.
+ * Eigene Fraktionen mit eigenen Namen und Heimatwelten: acht für bis zu 8 Spieler. Sie
+ * unterscheiden sich durch Heimatsystem, Startflotte, Rohstofflimit, Starttechnologien und
+ * Fähigkeiten. Jede Startflotte hat höchstens 3 Nicht-Jäger-Schiffe, damit sie zum
+ * Start-Flottenpool passt.
  */
 const U = UNIT_TYPES;
 
@@ -95,6 +95,32 @@ const SEEDS: readonly FactionSeed[] = [
     planets: [on('Quellis', [U.infantry, 4], [U.orbitalDock, 1]), on('Kiro', [U.infantry, 1])],
     commodityLimit: 3,
     technologies: ['cell-regeneration', 'ion-drive'],
+  },
+  // Erweiterung für 7–8 Spieler: zwei weitere eigene Fraktionen.
+  {
+    id: 'vyr',
+    name: { de: 'Archiv von Vyr', en: 'Vyr Archive' },
+    home: homeTile('home-vyr', p('Vyrhal', 2, 3, 'cultural'), p('Sedra', 2, 1, 'industrial')),
+    space: units([U.carrier, 1], [U.cruiser, 1], [U.destroyer, 1], [U.fighter, 2]),
+    planets: [on('Vyrhal', [U.infantry, 3], [U.orbitalDock, 1]), on('Sedra', [U.infantry, 1])],
+    commodityLimit: 3,
+    technologies: ['deep-space-scanner', 'cell-regeneration'],
+  },
+  {
+    id: 'tarn',
+    name: { de: 'Freihäfen von Tarn', en: 'Tarn Free Ports' },
+    home: homeTile(
+      'home-tarn',
+      p('Tarnhafen', 3, 2, 'industrial'),
+      p('Kesselriff', 1, 1, 'hazardous'),
+    ),
+    space: units([U.carrier, 2], [U.cruiser, 1], [U.fighter, 3]),
+    planets: [
+      on('Tarnhafen', [U.infantry, 3], [U.orbitalDock, 1]),
+      on('Kesselriff', [U.infantry, 1]),
+    ],
+    commodityLimit: 4,
+    technologies: ['target-acquisition'],
   },
 ];
 

@@ -357,7 +357,7 @@ mitgespeichert, damit eine Aufhebung sie exakt zurücknimmt.
 
 ## 15. Iteration 11 im Detail
 
-Jede unserer sechs Fraktionen hat zwei eigene Fähigkeiten (RR 27.21). Sie sind Daten
+Jede unserer Fraktionen (seit Iteration 26 acht) hat zwei eigene Fähigkeiten (RR 27.21). Sie sind Daten
 (`FactionAbility`): Einheitenwerte über dieselben Bausteine wie Technologien und wenige Regelwerte
 (Zusatzstimmen, Handkartenlimit, Einkommen in der Statusphase, Flottenlimit, kostenlose
 Sekundärfähigkeiten). Dazu kommen KI-Gegner im Paket `@stellar/bots`: Sie spielen über genau
@@ -718,7 +718,30 @@ Erkundung, zu Relikten und Anführern haben jetzt eigene Fehlertexte.
 | `leaderProgress`, `usableLeaders` (Domain), `LeadersPanel` (Web)  | Die Domain rechnet Fortschritt und Nutzbarkeit, die Oberfläche zeigt nur an (Controller/Expert, keine Regel im Web).                   |
 | Anführer als `TableEntry` in der Hand                             | Dieselbe Bedienung wie für Relikte; nur Gesicht und Befehl sind neu (Polymorphie über `kind`).                                         |
 
-## 30. Iterationen
+## 30. Iteration 26 im Detail (acht Fraktionen, 7–8 Spieler, weitere Karten)
+
+Zwei neue eigene Fraktionen kommen dazu: das Archiv von Vyr (Gelehrte, Technologie und
+Aktionskarten) und die Freihäfen von Tarn (Handel, schnelle Kreuzer, Mechs mit Produktion). Beide
+haben Heimatsystem, Fähigkeiten, Mech-Fähigkeit und drei Anführer wie die anderen. Damit sind bis
+zu acht Spieler möglich: Ab sieben Spielern hat die Galaxie vier Ringe, die Heimatsysteme liegen
+außen, und der äußere Ring ist nur neben ihnen belegt. Neue blaue und rote Systeme füllen den
+Vorrat. Dazu kommen vier Technologien, sechs Aktionskarten, vier öffentliche und zwei geheime
+Ziele und vier Agenden, alles eigene Entwürfe mit den vorhandenen Wirkungsbausteinen.
+
+In der Oberfläche lässt sich die Spielerzahl bis 8 wählen; ab sieben Spielern rückt die
+Spielerleiste enger zusammen. Tablets hochkant nutzen die schmale Anordnung (Spieler oben in einer
+Reihe, Meldungen unten), dadurch wird die Karte dort deutlich größer. Eine Agenda, für die kein
+Planet wählbar ist, wird jetzt ohne Wirkung abgelegt, statt die Agendaphase anzuhalten.
+
+| Element                                                  | Prinzip                                                                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Fraktionen, Anführer, Karten als Daten (`content`)       | Open/Closed: neue Fraktionen und Karten brauchten keinen neuen Regelcode, nur Einträge mit vorhandenen Bausteinen.              |
+| Galaxievorlagen für 7 und 8 Spieler (`galaxy-templates`) | Reine Daten mit Ring und Heimatplätzen; der Generator und die Darstellung folgen dem Layout ohne festen Radius (Low Coupling).  |
+| `SEAT_COLORS` (Anwendung) und `seat-colors.ts` (Web)     | Eine Farbliste je Platz bis 8; Domain und Oberfläche teilen die Reihenfolge (Konsistenz, DRY im Sinne einer Quelle je Schicht). |
+| `discardUnelectable` in `agenda-flow.ts`                 | Ein Sonderfall bekommt einen eigenen Namen statt eines Leerlaufs (Robustheit, Single Responsibility).                           |
+| `hudInsets` mit `narrow(screen)`, Media Query hochkant   | Bildschirmform entscheidet einmal in einer reinen Funktion, CSS folgt derselben Regel (Information Expert).                     |
+
+## 31. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -747,8 +770,9 @@ Erkundung, zu Relikten und Anführern haben jetzt eigene Fehlertexte.
 | 23  | Ganze Karte, freier Blick, Meldungen, Mechs (PoK)   | ✓     |
 | 24  | Erkundung, Relikte, legendäre Planeten (PoK)        | ✓     |
 | 25  | Anführer: Agent, Kommandant, Held (PoK)             | ✓     |
+| 26  | Acht Fraktionen, 7–8 Spieler, weitere Karten (PoK)  | ✓     |
 
-## 31. Befehle
+## 32. Befehle
 
 ```
 pnpm install

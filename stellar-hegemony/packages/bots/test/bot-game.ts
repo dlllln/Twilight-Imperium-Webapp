@@ -17,7 +17,16 @@ import { SeededRandom } from '@stellar/infrastructure';
 import { heuristicBot } from '../src/index.ts';
 
 export const content = createBaseContent();
-const COLORS: readonly PlayerColor[] = ['orange', 'blue', 'green', 'yellow', 'purple', 'red'];
+const COLORS: readonly PlayerColor[] = [
+  'orange',
+  'blue',
+  'green',
+  'yellow',
+  'purple',
+  'red',
+  'pink',
+  'black',
+];
 
 export const contextFor = (state: GameState, seed: number): DecisionContext => ({
   random: new SeededRandom(seed + state.version),

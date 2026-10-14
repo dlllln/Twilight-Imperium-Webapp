@@ -492,8 +492,8 @@ const DICTIONARY = {
     en: 'Mark home systems with H.',
   },
   'galaxy.homeSlots': {
-    de: 'Es braucht 3 bis 6 Heimat-Plätze (H).',
-    en: 'The map needs 3 to 6 home slots (H).',
+    de: 'Es braucht 3 bis 8 Heimat-Plätze (H).',
+    en: 'The map needs 3 to 8 home slots (H).',
   },
   'galaxy.noTemplate': {
     de: 'Für diese Spielerzahl gibt es keine Vorlage.',

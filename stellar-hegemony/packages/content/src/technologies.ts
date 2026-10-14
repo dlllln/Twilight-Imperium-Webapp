@@ -9,7 +9,8 @@ import { UNIT_TYPES } from './units.ts';
 
 /*
  * Eigener Technologiebaum: je Farbe vier Stufen (0 bis 3 Voraussetzungen derselben
- * Farbe) und eine Aufwertung je Einheit. Namen, Werte und Texte sind eigene.
+ * Farbe) plus eine Technologie der Erweiterung und eine Aufwertung je Einheit. Namen,
+ * Werte und Texte sind eigene.
  */
 const U = UNIT_TYPES;
 
@@ -108,6 +109,20 @@ const COLORED: readonly TechnologyDefinition[] = [
   ]),
   tech('assault-doctrine', 'warfare', repeat('warfare', 3), [
     { target: { types: [U.dreadnought, U.cruiser] }, change: { dice: 1 } },
+  ]),
+  // Erweiterung (Schritt 4): je Farbe eine weitere Technologie.
+  tech('chitin-plating', 'biotic', repeat('biotic', 2), [
+    { target: { types: [U.carrier] }, change: { add: [{ kind: 'sustainDamage' }] } },
+  ]),
+  tech('cargo-lattices', 'propulsion', repeat('propulsion', 1), [
+    { target: { types: [U.dreadnought] }, change: { capacity: 1 } },
+  ]),
+  tech('relay-command', 'cybernetic', repeat('cybernetic', 2), [], { rules: { fleetLimit: 1 } }),
+  tech('siege-mortars', 'warfare', repeat('warfare', 1), [
+    {
+      target: { types: [U.dreadnought] },
+      change: { capability: { kind: 'bombardment', hitOn: -1 } },
+    },
   ]),
 ];
 
@@ -275,6 +290,30 @@ export const TECHNOLOGY_TEXTS: Readonly<Record<string, TechnologyText>> = {
     'Assault Doctrine',
     'Schlachtschiffe und Kreuzer werfen im Kampf 1 Würfel mehr.',
     'Dreadnoughts and cruisers roll 1 more combat die.',
+  ),
+  'chitin-plating': text(
+    'Chitinpanzer',
+    'Chitin Plating',
+    'Träger können Schaden abfangen.',
+    'Carriers can sustain damage.',
+  ),
+  'cargo-lattices': text(
+    'Frachtgitter',
+    'Cargo Lattices',
+    'Schlachtschiffe haben 1 Platz mehr.',
+    'Dreadnoughts have 1 more capacity.',
+  ),
+  'relay-command': text(
+    'Relaiskommando',
+    'Relay Command',
+    'Dein Flottenlimit steigt um 1.',
+    'Your fleet limit rises by 1.',
+  ),
+  'siege-mortars': text(
+    'Belagerungsmörser',
+    'Siege Mortars',
+    'Das Bombardement von Schlachtschiffen trifft um 1 leichter.',
+    'Dreadnought bombardment hits 1 more easily.',
   ),
   'heavy-carrier': text(
     'Schwerlast-Träger',

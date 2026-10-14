@@ -44,6 +44,11 @@ describe('Die ganze Karte im freien Bereich', () => {
     expect(hudInsets(BOARD, { width: 600, height: 900 }).left).toBeLessThan(20);
   });
 
+  it('Tablets hochkant: Spieler oben in einer Reihe, die Karte nutzt die ganze Breite', () => {
+    expect(hudInsets(BOARD, { width: 820, height: 1180 }).left).toBeLessThan(20);
+    expect(hudInsets(BOARD, { width: 1180, height: 820 }).left).toBeGreaterThan(200);
+  });
+
   it('ohne bekannte Bildgröße bleibt es bei der Karte; das freie Band liegt zwischen Vorräten und Hand', () => {
     expect(frameBounds(BOARD, { width: 0, height: 0 }, hudInsets(BOARD, WIDE))).toEqual(BOARD);
     expect(freeBand(BOARD, { width: 0, height: 0 }, hudInsets(BOARD, WIDE))).toEqual({

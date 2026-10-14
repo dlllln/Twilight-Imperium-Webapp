@@ -4268,7 +4268,7 @@ body {
 
 /* Schmale Bildschirme und Tablets im Hochformat */
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
   .app {
     padding: 6px;
     gap: 6px;
@@ -4292,7 +4292,7 @@ body {
 
   .hud-corner {
     right: 8px;
-    left: 8px;
+    left: 76px;
     bottom: 70px;
     width: auto;
     align-items: stretch;
@@ -4492,4 +4492,28 @@ body {
 
 .leader-row.leader-exhausted {
   opacity: 0.7;
+}
+
+/* ---------- Iteration 26: bis zu 8 Spieler ---------- */
+
+/* Ab sieben Spielern rücken die Porträts enger zusammen, damit die Kartenknöpfe frei bleiben. */
+.hud-players:has(> :nth-child(7)) {
+  gap: 4px;
+}
+
+.hud-players:has(> :nth-child(7)) .hud-portrait .faction-emblem {
+  width: 38px;
+  height: 38px;
+}
+
+.hud-players:has(> :nth-child(7)) .hud-portrait button {
+  grid-template-columns: 42px auto;
+  padding: 2px 10px 2px 3px;
+}
+
+/* Schmale Kopfleiste: das Wappen genügt, der Name weicht den Spielangaben. */
+@media (max-width: 900px) {
+  .brand h1 {
+    display: none;
+  }
 }

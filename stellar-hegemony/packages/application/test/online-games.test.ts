@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { currentActor, type GameState, playerId } from '@stellar/domain';
-import { lobbyView, seatFactions, SerialQueue } from '../src/index.ts';
+import { lobbyView, SEAT_COLORS, seatFactions, SerialQueue } from '../src/index.ts';
 import { content, CountingIds, mapFor, onlineGames } from './online-helpers.ts';
 
 const P1 = playerId('p1');
@@ -229,6 +229,23 @@ describe('Fraktionswahl in der Lobby', () => {
       'lobby.started',
     );
   });
+
+  it.each([7, 8])(
+    'PoK %i Spieler: die Lobby startet, jeder Platz hat eigene Farbe, Fraktion und Heimatsystem',
+    async (count) => {
+      const setup = await lobbyWithGuest(count);
+      const started = await setup.online.start(setup.host.code, setup.host.token);
+      expect(started.ok).toBe(true);
+      const state = await stateOf(setup);
+      expect(state.players).toHaveLength(count);
+      expect(state.players.map((player) => player.color)).toEqual(SEAT_COLORS.slice(0, count));
+      expect(new Set(state.players.map((player) => player.faction)).size).toBe(count);
+      const homes = content.factions.map((faction) => faction.homeSystem.id);
+      expect(Object.keys(state.systems).filter((id) => homes.includes(id as never))).toHaveLength(
+        count,
+      );
+    },
+  );
 
   it('gewählte Fraktionen bleiben, freie Plätze füllen der Reihe nach auf, doppelte zählen einmal', () => {
     const all = content.factions.slice(0, 4);
