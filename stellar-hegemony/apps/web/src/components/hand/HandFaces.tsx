@@ -1,9 +1,20 @@
 import type { GameState, StrategyCardState } from '@stellar/domain';
 import type { ReactElement, ReactNode } from 'react';
 import { lookOf } from '../../hand/card-look.ts';
-import { entryKey, type HandEntry } from '../../hand/hand-model.ts';
+import { entryKey, type HandEntry, isTable, type TableEntry } from '../../hand/hand-model.ts';
 import type { Language, MessageKey } from '../../i18n.ts';
-import { actionCardEffect, actionCardLabel, actionCardTiming, systemLabel } from '../../labels.ts';
+import {
+  actionCardEffect,
+  actionCardLabel,
+  actionCardTiming,
+  deckLabel,
+  legendaryEffect,
+  legendaryLabel,
+  planetLabel,
+  relicEffect,
+  relicLabel,
+  systemLabel,
+} from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from '../game/card-text.ts';
 import { CardArt, CardFrame } from './CardArt.tsx';
@@ -55,8 +66,57 @@ function tacticalText(game: GameState, system: string | null, t: Translate, lang
   return `${t('selectedSystem')}: ${systemLabel(game, system, language)}`;
 }
 
+/** Kleines Schild auf der Karte, z. B. „erschöpft“ oder „×2“. */
+const stamp = (text: string) => <span className="hand-count">{text}</span>;
+
+/** Name einer PoK-Karte vor dem Spieler. */
+function tableTitle(entry: TableEntry, t: Translate, language: Language): string {
+  switch (entry.kind) {
+    case 'relic':
+      return relicLabel(entry.relic.id, language);
+    case 'fragment':
+      return `${t('fragmentKind')}: ${deckLabel(entry.fragment, language)}`;
+    case 'legendary':
+      return legendaryLabel(entry.planet, language);
+  }
+}
+
+function fragmentText(entry: Extract<TableEntry, { kind: 'fragment' }>, t: Translate): string {
+  if (entry.playable) return t('purgeNow');
+  return t(entry.purge === null ? 'fragmentHint' : 'purgeLater');
+}
+
+/** Relikt, Reliktfragment oder legendärer Planet als Karte. */
+function tableFace(entry: TableEntry, t: Translate, language: Language): Face {
+  const title = tableTitle(entry, t, language);
+  switch (entry.kind) {
+    case 'relic':
+      return {
+        kicker: t('relicKind'),
+        title,
+        text: relicEffect(entry.relic.id, language),
+        marks: entry.relic.exhausted && stamp(t('exhausted')),
+      };
+    case 'fragment':
+      return {
+        kicker: t('fragmentKind'),
+        title: deckLabel(entry.fragment, language),
+        text: fragmentText(entry, t),
+        marks: entry.count > 1 && stamp(`×${String(entry.count)}`),
+      };
+    case 'legendary':
+      return {
+        kicker: `${t('legendaryKind')} · ${planetLabel(entry.planet, language)}`,
+        title,
+        text: legendaryEffect(entry.planet, language),
+        marks: entry.used && stamp(t('usedThisRound')),
+      };
+  }
+}
+
 /** Inhalt einer Karte je nach Art. */
 function faceOf(game: GameState, entry: HandEntry, t: Translate, language: Language): Face {
+  if (isTable(entry)) return tableFace(entry, t, language);
   const turn = { kicker: t('turnCardKind'), marks: null };
   switch (entry.kind) {
     case 'pick':
@@ -105,6 +165,7 @@ export function useEntryName(): (entry: HandEntry) => string {
   const t = useT();
   const language = useLanguage();
   return (entry) => {
+    if (isTable(entry)) return tableTitle(entry, t, language);
     switch (entry.kind) {
       case 'pick':
         return cardText(entry.card.id).name[language];

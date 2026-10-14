@@ -1,4 +1,5 @@
 import {
+  canExploreFrontier,
   type GameState,
   type MovementOption,
   type PlayerId,
@@ -149,9 +150,25 @@ function ProductionStep({ game, player, system }: TurnProps & { readonly system:
   );
 }
 
+/** Am Ende der Taktikaktion: PoK Grenzmarker erkunden, falls Schiff und Technologie da sind. */
+function DoneStep({ game, player }: TurnProps): ReactElement {
+  const t = useT();
+  const send = useGameStore((state) => state.send);
+  const explore = () => send({ type: 'ExploreFrontier', issuedBy: player });
+  return (
+    <>
+      <p className="hint">{t('tacticalDone')}</p>
+      {canExploreFrontier(game, player, content) && (
+        <button type="button" className="primary" onClick={explore}>
+          {t('exploreFrontier')}
+        </button>
+      )}
+    </>
+  );
+}
+
 /** Das Formular zum aktuellen Schritt der Taktikaktion (Kampfschritte laufen in der Kampfansicht). */
 function StepForm({ game, player, step, system }: TurnProps & TacticalActionState) {
-  const t = useT();
   switch (step) {
     case 'movement':
       return <MovementForm game={game} player={player} />;
@@ -162,7 +179,7 @@ function StepForm({ game, player, step, system }: TurnProps & TacticalActionStat
     case 'production':
       return <ProductionStep game={game} player={player} system={system} />;
     case 'done':
-      return <p className="hint">{t('tacticalDone')}</p>;
+      return <DoneStep game={game} player={player} />;
     default:
       return <CombatPending />;
   }

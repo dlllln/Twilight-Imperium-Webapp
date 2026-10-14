@@ -8,6 +8,10 @@ import {
   type Recipients,
   actionCardId,
   type ContentPort,
+  type ExplorationCardDefinition,
+  explorationCardId,
+  type RelicDefinition,
+  relicId,
   factionId,
   type FactionDefinition,
   type GalaxyTemplate,
@@ -265,7 +269,12 @@ export const TILES: readonly SystemTile[] = [
   tile('b2', 'blue', {
     planets: [
       { id: planetId('beta-1'), resources: 1, influence: 2, trait: 'cultural' },
-      { id: planetId('beta-2'), resources: 0, influence: 1 },
+      {
+        id: planetId('beta-2'),
+        resources: 0,
+        influence: 1,
+        legendary: { kind: 'placeUnits', unit: unitTypeId('infantry'), count: 2 },
+      },
     ],
   }),
   tile('b3', 'blue', {
@@ -275,7 +284,7 @@ export const TILES: readonly SystemTile[] = [
   }),
   tile('b4', 'blue', {
     wormholes: ['alpha'],
-    planets: [{ id: planetId('delta-1'), resources: 1, influence: 1 }],
+    planets: [{ id: planetId('delta-1'), resources: 1, influence: 1, trait: 'hazardous' }],
   }),
   tile('r1', 'red', { anomaly: 'nebula' }),
   tile('r2', 'red', { anomaly: 'asteroidField' }),
@@ -406,6 +415,7 @@ export const TECHNOLOGIES: readonly TechnologyDefinition[] = [
     modifiers: [{ target: { types: [T.carrier] }, change: { set: { move: 2, capacity: 6 } } }],
   }),
   research('breaker-plans', 'warfare', ['warfare']),
+  research('scanner', 'propulsion', [], { rules: { exploresFrontier: true } }),
 ];
 
 const objective = (
@@ -585,6 +595,57 @@ export const AGENDAS: readonly AgendaDefinition[] = [
 
 export const AG = (id: string) => agendaId(id);
 
+const explorationCard = (
+  id: string,
+  deck: ExplorationCardDefinition['deck'],
+  effect: ExplorationCardDefinition['effect'],
+): ExplorationCardDefinition => ({ id: explorationCardId(id), deck, copies: 1, effect });
+
+/** Je Stapel eine Anlage oder Belohnung und ein Fragment; die Grenze mit Depot und Anlage. */
+export const EXPLORATION_CARDS: readonly ExplorationCardDefinition[] = [
+  explorationCard('ore', 'industrial', { kind: 'attachment', resources: 2, influence: 0 }),
+  explorationCard('shard-i', 'industrial', { kind: 'relicFragment' }),
+  explorationCard('archive', 'cultural', {
+    kind: 'attachment',
+    resources: 0,
+    influence: 2,
+    specialty: 'biotic',
+  }),
+  explorationCard('caravan', 'cultural', { kind: 'gainTradeGoods', amount: 2 }),
+  explorationCard('militia', 'hazardous', { kind: 'placeUnits', unit: T.infantry, count: 2 }),
+  explorationCard('shard-h', 'hazardous', { kind: 'relicFragment' }),
+  explorationCard('depot', 'frontier', { kind: 'tradeGoodsCache', amount: 3 }),
+  explorationCard('shard-f', 'frontier', { kind: 'relicFragment' }),
+  explorationCard('drift', 'frontier', { kind: 'attachment', resources: 1, influence: 1 }),
+  explorationCard('envoys', 'frontier', { kind: 'gainCommodities', amount: 2 }),
+];
+
+export const XC = (id: string) => explorationCardId(id);
+
+const relic = (id: string, effect: RelicDefinition['effect']): RelicDefinition => ({
+  id: relicId(id),
+  effect,
+});
+
+/** Je Reliktart mindestens ein Relikt. */
+export const RELICS: readonly RelicDefinition[] = [
+  relic('crown', { kind: 'onGain', reward: { kind: 'gainVictoryPoints', amount: 1 } }),
+  relic('core', { kind: 'onGain', reward: { kind: 'gainCommandTokens', amount: 2 } }),
+  relic('banner', {
+    kind: 'passive',
+    modifiers: [{ target: { types: [T.infantry] }, change: { hitOn: -1 } }],
+    fleetLimit: 1,
+  }),
+  relic('prism', {
+    kind: 'action',
+    reward: { kind: 'gainTradeGoods', amount: 2 },
+    usage: 'exhaust',
+  }),
+  relic('capsule', { kind: 'action', reward: { kind: 'readyPlanets' }, usage: 'purge' }),
+];
+
+export const RL = (id: string) => relicId(id);
+
 export const content: ContentPort = {
   units: catalog,
   tiles: new StaticTileCatalog(TILES),
@@ -594,6 +655,8 @@ export const content: ContentPort = {
   objectives: OBJECTIVES,
   actionCards: ACTION_CARDS,
   agendas: AGENDAS,
+  explorationCards: EXPLORATION_CARDS,
+  relics: RELICS,
   galaxyTemplate: (playerCount) => (playerCount === TEMPLATE.playerCount ? TEMPLATE : undefined),
 };
 

@@ -20,6 +20,8 @@ import type { HomeSystemPlaced } from '../faction/home-events.ts';
 import { homeSystemEvents } from '../faction/home-placement.ts';
 import { objectiveSetupEvents, type ObjectiveSetupEvent } from '../objective/objective-setup.ts';
 import type { TechnologiesGranted } from '../technology/technology-events.ts';
+import type { ExplorationPrepared } from '../exploration/exploration-events.ts';
+import { explorationSetupEvent } from '../exploration/exploration-setup.ts';
 import type { GameStarted, StrategyPhaseStarted } from './phase-events.ts';
 
 export type StartGame = Command<'StartGame'>;
@@ -49,6 +51,7 @@ type StartEvent =
   | ActionDeckPrepared
   | AgendaDeckPrepared
   | FactionAbilitiesGranted
+  | ExplorationPrepared
   | StrategyPhaseStarted;
 
 /** Fähigkeiten jeder Fraktion gelten ab Spielstart. */
@@ -93,6 +96,14 @@ const agendaDeckEvent = (context: DecisionContext): AgendaDeckPrepared => ({
   ),
 });
 
+/** Spielaufbau: Aufträge, Aktions-, Agenda-, Erkundungs- und Reliktstapel (PoK) mischen. */
+const deckEvents = (state: GameState, context: DecisionContext) => [
+  ...objectiveSetupEvents(state, context),
+  actionDeckEvent(context),
+  agendaDeckEvent(context),
+  explorationSetupEvent(state, context),
+];
+
 /** RR 76.1 und Spielaufbau: Sprecher auslosen, Heimatsysteme legen, Strategiephase beginnen. */
 export const startGameHandler = {
   commandType: 'StartGame',
@@ -110,9 +121,7 @@ export const startGameHandler = {
       ...homes,
       ...grants(state, context),
       ...abilities(state, context),
-      ...objectiveSetupEvents(state, context),
-      actionDeckEvent(context),
-      agendaDeckEvent(context),
+      ...deckEvents(state, context),
       { type: 'StrategyPhaseStarted', round: 1, pickQueue: pickQueueFor(state, speaker.id) },
     ]);
   },

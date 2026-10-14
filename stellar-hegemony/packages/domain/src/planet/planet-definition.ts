@@ -1,3 +1,4 @@
+import type { RewardEffect } from '../exploration/exploration-definition.ts';
 import type { PlanetId } from '../shared/ids.ts';
 
 export type PlanetTrait = 'cultural' | 'hazardous' | 'industrial';
@@ -11,4 +12,6 @@ export interface PlanetDefinition {
   readonly influence: number;
   readonly trait?: PlanetTrait;
   readonly technologySpecialty?: TechnologyColor;
+  /** PoK Legendäre Planeten: Komponentenaktion des Besitzers, einmal je Runde. */
+  readonly legendary?: RewardEffect;
 }

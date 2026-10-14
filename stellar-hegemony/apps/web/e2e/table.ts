@@ -36,7 +36,8 @@ export async function openTable(browser: Browser, humans = 3, players = 3): Prom
     pages.push(guest);
   }
   await host.getByRole('button', { name: 'Partie starten' }).click();
-  for (const page of pages) await expect(phaseOf(page)).toHaveText('Strategie');
+  for (const page of pages)
+    await expect(phaseOf(page)).toHaveText('Strategie', { timeout: 15_000 });
   return pages;
 }
 

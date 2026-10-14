@@ -78,6 +78,7 @@ describe('StartGame (RR 76.1: Sprecher und Kartenauslage)', () => {
       'SecretObjectivesDealt',
       'ActionDeckPrepared',
       'AgendaDeckPrepared',
+      'ExplorationPrepared',
       'StrategyPhaseStarted',
     ]);
     // Spielaufbau Schritt 8: alle Exemplare gemischt, noch niemand hat Aktionskarten.

@@ -1,14 +1,18 @@
 import {
   actionCardText,
   agendaText,
+  EXPLORATION_DECK_NAMES,
+  explorationCardText,
   FACTION_NAMES,
   factionAbilityText,
+  legendaryText,
   objectiveText,
   planetName,
+  relicText,
   technologyText,
   unitName,
 } from '@stellar/content';
-import { type GameState, unitTypeId } from '@stellar/domain';
+import { type ExplorationDeckKind, type GameState, unitTypeId } from '@stellar/domain';
 import type { Language } from './i18n.ts';
 
 export const planetLabel = (id: string, language: Language): string =>
@@ -61,3 +65,26 @@ export const factionAbilityLabel = (id: string, language: Language): string =>
 
 export const factionAbilityEffect = (id: string, language: Language): string =>
   factionAbilityText(id)?.effect[language] ?? '';
+
+export const explorationCardLabel = (id: string, language: Language): string =>
+  explorationCardText(id)?.name[language] ?? id;
+
+export const explorationCardEffect = (id: string, language: Language): string =>
+  explorationCardText(id)?.effect[language] ?? '';
+
+/** Name eines Erkundungsstapels oder einer Fragmentart, z. B. „Kulturell“. */
+export const deckLabel = (kind: ExplorationDeckKind, language: Language): string =>
+  EXPLORATION_DECK_NAMES[kind][language];
+
+export const relicLabel = (id: string, language: Language): string =>
+  relicText(id)?.name[language] ?? id;
+
+export const relicEffect = (id: string, language: Language): string =>
+  relicText(id)?.effect[language] ?? '';
+
+/** Name der Fähigkeit eines legendären Planeten (Kennung des Planeten). */
+export const legendaryLabel = (planet: string, language: Language): string =>
+  legendaryText(planet)?.name[language] ?? planet;
+
+export const legendaryEffect = (planet: string, language: Language): string =>
+  legendaryText(planet)?.effect[language] ?? '';

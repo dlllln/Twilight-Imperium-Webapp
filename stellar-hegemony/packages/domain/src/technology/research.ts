@@ -1,4 +1,4 @@
-import { findPlanetDefinition } from '../economy/payment.ts';
+import { currentPlanetDefinition } from '../economy/payment.ts';
 import type { GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
 import type { TechnologyColor } from '../planet/planet-definition.ts';
@@ -49,7 +49,7 @@ function specialtyColors(
 ): Result<readonly TechnologyColor[], DomainError> {
   const colors = planets.flatMap((id) => {
     const planet = state.planets[id];
-    const color = findPlanetDefinition(content.tiles, id)?.technologySpecialty;
+    const color = currentPlanetDefinition(state, content.tiles, id)?.technologySpecialty;
     const usable = planet?.controller === player && !planet.exhausted && color !== undefined;
     return usable ? [color] : [];
   });

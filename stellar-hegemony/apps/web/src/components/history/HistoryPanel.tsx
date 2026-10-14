@@ -4,7 +4,15 @@ import type { ReactElement } from 'react';
 import { useGameStore } from '../../game-store.ts';
 import type { HistoryLine } from '../../history/turn-history.ts';
 import type { Language, MessageKey } from '../../i18n.ts';
-import { objectiveLabel, planetLabel, systemLabel, technologyLabel } from '../../labels.ts';
+import {
+  explorationCardLabel,
+  legendaryLabel,
+  objectiveLabel,
+  planetLabel,
+  relicLabel,
+  systemLabel,
+  technologyLabel,
+} from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from '../game/card-text.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
@@ -14,17 +22,30 @@ type Words = Readonly<Record<string, string | number>>;
 
 const nameOf = (game: GameState, id: PlayerId): string => findPlayer(game, id)?.name ?? id;
 
-/** Die Lücken einer Zeile in der gewählten Sprache: Systeme, Planeten, Karten, Mitspieler. */
+type Lookup = (value: string, game: GameState, language: Language) => string;
+
+/** Welche Lücke wie benannt wird: Systeme, Planeten, Karten, Funde, Relikte, Mitspieler. */
+const LOOKUPS: Readonly<Record<string, Lookup>> = {
+  system: (id, game, language) => systemLabel(game, id, language),
+  planet: (id, _, language) => planetLabel(id, language),
+  card: (id, _, language) => cardText(id).name[language],
+  technology: (id, _, language) => technologyLabel(id, language),
+  objective: (id, _, language) => objectiveLabel(id, language),
+  rival: (id, game) => nameOf(game, id as PlayerId),
+  find: (id, _, language) => explorationCardLabel(id, language),
+  relic: (id, _, language) => relicLabel(id, language),
+  ability: (id, _, language) => legendaryLabel(id, language),
+};
+
+/** Die Lücken einer Zeile in der gewählten Sprache. */
 function wordsOf(line: HistoryLine, game: GameState, language: Language): Words {
-  return {
-    ...line,
-    ...('system' in line ? { system: systemLabel(game, line.system, language) } : {}),
-    ...('planet' in line ? { planet: planetLabel(line.planet, language) } : {}),
-    ...('card' in line ? { card: cardText(line.card).name[language] } : {}),
-    ...('technology' in line ? { technology: technologyLabel(line.technology, language) } : {}),
-    ...('objective' in line ? { objective: objectiveLabel(line.objective, language) } : {}),
-    ...('rival' in line ? { rival: nameOf(game, line.rival) } : {}),
-  };
+  return Object.fromEntries(
+    Object.entries(line).map(([key, value]: [string, string | number]) => {
+      const lookup = LOOKUPS[key];
+      const named = lookup !== undefined && typeof value === 'string';
+      return [key, named ? lookup(value, game, language) : value];
+    }),
+  );
 }
 
 const fill = (text: string, words: Words): string =>

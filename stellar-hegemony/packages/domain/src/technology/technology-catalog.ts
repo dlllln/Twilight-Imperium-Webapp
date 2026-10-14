@@ -7,6 +7,7 @@ import type { UnitDefinition } from '../unit/unit-definition.ts';
 import type { TechnologyDefinition, UnitModifier } from './technology-definition.ts';
 import { applyChange, matches } from './unit-modifiers.ts';
 import { factionRule } from '../faction/faction-ability.ts';
+import { passiveRelics } from '../exploration/relic-queries.ts';
 
 /** Technologien eines Spielers als Stammdaten, in der Reihenfolge des Erwerbs. */
 export function ownedTechnologies(
@@ -18,7 +19,7 @@ export function ownedTechnologies(
   return owned.flatMap((id) => content.technologies.find((tech) => tech.id === id) ?? []);
 }
 
-/** Alles, was Einheitenwerte eines Spielers ändert: Technologien und Fraktionsfähigkeiten. */
+/** Alles, was Einheitenwerte eines Spielers ändert: Technologien, Fraktionsfähigkeiten, Relikte. */
 export interface ModifierSource {
   readonly upgrades?: UnitTypeId;
   readonly modifiers: readonly UnitModifier[];
@@ -74,6 +75,7 @@ export const technologyCatalog = (state: GameState, content: ContentPort): UnitC
   new TechnologyCatalog(content.units, (player) => [
     ...ownedTechnologies(state, player, content),
     ...factionAbilitiesOf(state, player, content),
+    ...passiveRelics(state, player, content),
   ]);
 
 /** Entscheidungskontext, in dem alle Einheitenwerte die Technologien berücksichtigen. */
@@ -82,12 +84,16 @@ export const withTechnologies = (context: DecisionContext, state: GameState): De
   content: { ...context.content, units: technologyCatalog(state, context.content) },
 });
 
-/** Flottenlimit: Marker im Flottenpool plus Boni aus Technologien und Fraktion (RR 28). */
+/** Flottenlimit: Marker im Flottenpool plus Boni aus Technologien, Relikten und Fraktion (RR 28). */
 export function fleetLimitOf(state: GameState, player: PlayerId, content: ContentPort): number {
   const pool = findPlayer(state, player)?.commandPools.fleet ?? 0;
   const bonus = ownedTechnologies(state, player, content).reduce(
     (sum, tech) => sum + (tech.rules?.fleetLimit ?? 0),
     0,
   );
-  return pool + bonus + factionRule(state, player, 'fleetLimit');
+  const relics = passiveRelics(state, player, content).reduce(
+    (sum, relic) => sum + relic.fleetLimit,
+    0,
+  );
+  return pool + bonus + relics + factionRule(state, player, 'fleetLimit');
 }

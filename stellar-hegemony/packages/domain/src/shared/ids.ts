@@ -29,3 +29,7 @@ export type ActionCardId = Brand<string, 'ActionCardId'>;
 export const actionCardId = (value: string): ActionCardId => value as ActionCardId;
 export type AgendaId = Brand<string, 'AgendaId'>;
 export const agendaId = (value: string): AgendaId => value as AgendaId;
+export type ExplorationCardId = Brand<string, 'ExplorationCardId'>;
+export const explorationCardId = (value: string): ExplorationCardId => value as ExplorationCardId;
+export type RelicId = Brand<string, 'RelicId'>;
+export const relicId = (value: string): RelicId => value as RelicId;

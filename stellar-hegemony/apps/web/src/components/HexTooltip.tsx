@@ -7,6 +7,7 @@ import type { SceneHex, ScenePlanet, UnitCount } from '../render/scene-model.ts'
 import { seatColor } from '../seat-colors.ts';
 import { useSettingsStore } from '../settings-store.ts';
 import { useLanguage, useT } from '../use-translation.ts';
+import { explorationCardLabel, legendaryEffect, legendaryLabel } from '../labels.ts';
 
 type Translate = (key: MessageKey) => string;
 
@@ -64,8 +65,44 @@ function PlanetRow({ planet, t }: { readonly planet: ScenePlanet; readonly t: Tr
       <span className="values">
         <b className="resources">{resources}</b>/<b className="influence">{influence}</b>
       </span>
+      <PlanetFinds planet={planet} t={t} />
       <UnitLines units={planet.units} />
     </div>
+  );
+}
+
+/** PoK: legendäre Fähigkeit und Anlagen eines Planeten, je eine kurze Zeile. */
+function PlanetFinds({ planet, t }: { readonly planet: ScenePlanet; readonly t: Translate }) {
+  const language = useLanguage();
+  return (
+    <>
+      {planet.legendary !== null && (
+        <span className={`tooltip-legendary ${planet.legendary}`}>
+          ✦ {legendaryLabel(planet.id, language)}
+          {planet.legendary === 'used' && ` · ${t('usedThisRound')}`}
+          <small>{legendaryEffect(planet.id, language)}</small>
+        </span>
+      )}
+      {planet.attachments.map((card, index) => (
+        <span key={`${card}-${String(index)}`} className="tooltip-attachment">
+          {t('attachment')}: {explorationCardLabel(card, language)}
+        </span>
+      ))}
+    </>
+  );
+}
+
+/** PoK: Grenzmarker und Depot im System. */
+function SystemFinds({ hex, t }: { readonly hex: SceneHex; readonly t: Translate }) {
+  return (
+    <>
+      {hex.frontier && <span className="tooltip-frontier">{t('frontierToken')}</span>}
+      {hex.cache > 0 && (
+        <span className="tooltip-cache">
+          {t('tradeGoodsCache')}: {hex.cache}
+        </span>
+      )}
+    </>
   );
 }
 
@@ -94,6 +131,7 @@ function SystemDetails({ hex, t }: { readonly hex: SceneHex; readonly t: Transla
       {hex.planets.map((planet) => (
         <PlanetRow key={planet.id} planet={planet} t={t} />
       ))}
+      <SystemFinds hex={hex} t={t} />
       <UnitLines units={hex.ships} />
     </>
   );

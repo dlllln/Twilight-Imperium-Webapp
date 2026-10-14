@@ -1,6 +1,6 @@
 import {
   type ContentPort,
-  findPlanetDefinition,
+  currentPlanetDefinition,
   type GameState,
   missingPrerequisites,
   ownedTechnologies,
@@ -52,7 +52,7 @@ export function specialtyPlanets(
   content: ContentPort,
 ): readonly SpecialtyPlanet[] {
   return Object.values(game.planets).flatMap((planet) => {
-    const color = findPlanetDefinition(content.tiles, planet.id)?.technologySpecialty;
+    const color = currentPlanetDefinition(game, content.tiles, planet.id)?.technologySpecialty;
     const usable = planet.controller === player && !planet.exhausted && color !== undefined;
     return usable ? [{ planet: planet.id, color }] : [];
   });

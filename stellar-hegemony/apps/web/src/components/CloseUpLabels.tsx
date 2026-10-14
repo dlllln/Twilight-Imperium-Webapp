@@ -19,6 +19,12 @@ function PlanetTags({ planet }: { readonly planet: ScenePlanet }): ReactElement 
         <span className={`tag tech-${technologySpecialty}`}>{t(technologySpecialty)}</span>
       )}
       {planet.exhausted && <span className="tag">{t('exhausted')}</span>}
+      {planet.legendary !== null && <span className="tag legendary">{t('legendaryKind')}</span>}
+      {planet.attachments.length > 0 && (
+        <span className="tag">
+          {t('attachment')} ×{planet.attachments.length}
+        </span>
+      )}
       {planet.controllerSeat !== null && <SeatChip seat={planet.controllerSeat} />}
     </>
   );

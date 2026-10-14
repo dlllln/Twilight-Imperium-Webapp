@@ -51,6 +51,8 @@ export interface UnitModifier {
 /** Wirkungen außerhalb der Einheitenwerte. */
 export interface RuleModifier {
   readonly fleetLimit?: number;
+  /** PoK Grenzmarker: erlaubt, Grenzmarker im aktivierten System zu erkunden. */
+  readonly exploresFrontier?: boolean;
 }
 
 /**

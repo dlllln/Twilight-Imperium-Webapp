@@ -3115,6 +3115,15 @@ select option {
 [data-look='veto'] {
   --look: #ff7aa8;
 }
+[data-look='relic'] {
+  --look: #e9b949;
+}
+[data-look='fragment'] {
+  --look: #57c7c2;
+}
+[data-look='legendary'] {
+  --look: #f6d77a;
+}
 
 .hand-dock .hand-card {
   --look-soft: color-mix(in srgb, var(--look) 45%, transparent);
@@ -4289,4 +4298,135 @@ body {
   .map-controls {
     bottom: 76px;
   }
+}
+
+/* ---------- Iteration 24: Erkundung, Relikte, legendäre Planeten ---------- */
+
+.deck-cultural {
+  --deck: #e8a0c8;
+}
+.deck-hazardous {
+  --deck: #ff8a5c;
+}
+.deck-industrial {
+  --deck: #7fd18b;
+}
+.deck-frontier {
+  --deck: #8fd3ff;
+}
+.deck-relic {
+  --deck: #e9b949;
+}
+
+.deck-list,
+.finds-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deck-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: start;
+  gap: 8px;
+  padding: 4px 8px;
+  border-left: 3px solid var(--deck);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--deck) 8%, transparent);
+  font-size: 12px;
+}
+
+.deck-count {
+  min-width: 22px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--deck);
+}
+
+.deck-discards summary {
+  cursor: pointer;
+  color: var(--muted, #9aa3b8);
+  font-variant-numeric: tabular-nums;
+}
+
+.deck-discards ul {
+  margin: 4px 0 0;
+  padding-left: 14px;
+  font-size: 11px;
+}
+
+.finds-list {
+  margin-top: 8px;
+}
+
+.player-finds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  font-size: 12px;
+}
+
+.fragment-chip,
+.relic-chip {
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--deck, #e9b949) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--deck, #e9b949) 14%, transparent);
+  white-space: nowrap;
+}
+
+.relic-chip {
+  --deck: #e9b949;
+  color: #f6d98c;
+}
+
+.relic-chip.exhausted {
+  opacity: 0.5;
+}
+
+.tooltip-legendary,
+.tooltip-attachment,
+.tooltip-frontier,
+.tooltip-cache {
+  display: block;
+  flex-basis: 100%;
+  font-size: 11px;
+}
+
+.tooltip-legendary {
+  color: #f6d77a;
+}
+
+.tooltip-legendary.used {
+  opacity: 0.6;
+}
+
+.tooltip-legendary small {
+  display: block;
+  color: var(--muted, #9aa3b8);
+}
+
+.tooltip-attachment {
+  color: #b9e7c1;
+}
+
+.tooltip-frontier {
+  color: #8fd3ff;
+}
+
+.tooltip-cache {
+  color: #f0c96a;
+}
+
+.tag.legendary {
+  border-color: rgba(246, 215, 122, 0.7);
+  color: #f6d77a;
+}
+
+.hand-dock .table-card .hand-title {
+  font-size: 12px;
 }

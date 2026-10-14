@@ -26,6 +26,8 @@ const REVERSIBLE: ReadonlySet<GameEvent['type']> = new Set<GameEvent['type']>([
   'UnitsDeployed',
   'GroundForcesCommitted',
   'PlanetControlGained',
+  // PoK: Ein Depot abzuholen verrät nichts; es lag offen im System.
+  'TradeGoodsCacheCollected',
 ]);
 
 /** Ob sich die Events eines Schritts zurücknehmen lassen, ohne dass jemand etwas Neues weiß. */

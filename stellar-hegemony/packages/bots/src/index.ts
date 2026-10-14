@@ -12,5 +12,6 @@ export * from './move-planner.ts';
 export * from './target-planner.ts';
 export * from './invasion-planner.ts';
 export * from './production-planner.ts';
+export * from './exploration-planner.ts';
 export * from './action-planner.ts';
 export * from './heuristic-bot.ts';

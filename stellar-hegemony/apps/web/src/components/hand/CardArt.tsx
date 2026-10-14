@@ -5,15 +5,18 @@ import {
   Crown,
   Flag,
   FlaskConical,
+  Gem,
   Hammer,
   Handshake,
   Landmark,
   type LucideIcon,
   Megaphone,
+  Puzzle,
   Radar,
   Repeat,
   Rocket,
   Shield,
+  Sparkles,
   Swords,
   Zap,
 } from 'lucide-react';
@@ -38,6 +41,9 @@ const ICONS: Readonly<Record<CardLook, LucideIcon>> = {
   invasion: Rocket,
   echo: Repeat,
   veto: Ban,
+  relic: Gem,
+  fragment: Puzzle,
+  legendary: Sparkles,
 };
 
 const CENTER_X = ART_WIDTH / 2;

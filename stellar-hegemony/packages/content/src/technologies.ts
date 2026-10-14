@@ -54,6 +54,7 @@ const COLORED: readonly TechnologyDefinition[] = [
     [],
     [{ target: { types: [U.destroyer, U.cruiser] }, change: { move: 1 } }],
   ),
+  tech('deep-space-scanner', 'propulsion', [], [], { rules: { exploresFrontier: true } }),
   tech('expanded-holds', 'propulsion', repeat('propulsion', 1), [
     { target: { types: [U.carrier] }, change: { capacity: 1 } },
   ]),
@@ -202,6 +203,12 @@ export const TECHNOLOGY_TEXTS: Readonly<Record<string, TechnologyText>> = {
     'Ion Drive',
     'Zerstörer und Kreuzer bewegen sich 1 weiter.',
     'Destroyers and cruisers move 1 further.',
+  ),
+  'deep-space-scanner': text(
+    'Tiefraumscanner',
+    'Deep-Space Scanner',
+    'Am Ende deiner Taktikaktion darfst du den Grenzmarker im aktivierten System erkunden, wenn du dort ein Schiff hast.',
+    'At the end of your tactical action you may explore the frontier token in the active system if you have a ship there.',
   ),
   'expanded-holds': text(
     'Erweiterte Laderäume',

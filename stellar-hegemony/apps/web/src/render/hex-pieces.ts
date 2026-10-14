@@ -100,6 +100,8 @@ export interface Figure {
 export function planetPiece(planet: ScenePlanet, diameter: number): Figure {
   const body = new Container();
   const labels = new Container();
+  if (planet.legendary !== null)
+    body.addChild(legendaryHalo(diameter / 2, planet.legendary === 'used'));
   body.addChild(planetBody(planet, diameter));
   const specialty = planet.definition.technologySpecialty;
   if (specialty !== undefined) body.addChild(techDot(specialty, diameter / 2));
@@ -161,4 +163,65 @@ export function tokenChips(seats: readonly number[]): Graphics {
     chips.circle(x, 0, 2.2).fill({ color: 0x000000, alpha: 0.35 });
   });
   return chips;
+}
+
+const HALO_RAYS = 16;
+/** Der Kranz beginnt außerhalb des Kontrollrings, damit beide zu sehen sind. */
+const HALO_GAP = 5;
+
+/** Legendärer Planet: goldener Strahlenkranz; ist die Fähigkeit genutzt, wird er matt. */
+function legendaryHalo(radius: number, used: boolean): Graphics {
+  const halo = new Graphics();
+  const alpha = used ? 0.3 : 0.95;
+  const inner = radius + HALO_GAP;
+  halo.circle(0, 0, inner + 2.5).stroke({ width: 5, color: GOLD, alpha: alpha * 0.18 });
+  for (let index = 0; index < HALO_RAYS; index++) {
+    const angle = (index / HALO_RAYS) * Math.PI * 2;
+    const outer = inner + (index % 2 === 0 ? 6 : 3.5);
+    halo
+      .moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner)
+      .lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+  }
+  return halo.stroke({ width: 1.6, color: GOLD, alpha });
+}
+
+const FRONTIER_RADIUS = 9.5;
+const STAR_POINTS = 4;
+
+/** Vierzackiger Stern als Polygon (Kompassrose der Grenzmarker). */
+function starPoints(outer: number, inner: number): number[] {
+  return Array.from({ length: STAR_POINTS * 2 }, (_, index) => {
+    const angle = (index / (STAR_POINTS * 2)) * Math.PI * 2 - Math.PI / 2;
+    const radius = index % 2 === 0 ? outer : inner;
+    return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+  }).flat();
+}
+
+/** PoK Grenzmarker: dunkle Scheibe mit hellblauem Rand und Kompassstern. */
+export function frontierToken(): Graphics {
+  return new Graphics()
+    .circle(0, 1.6, FRONTIER_RADIUS)
+    .fill(0x07101f)
+    .circle(0, 0, FRONTIER_RADIUS)
+    .fill({ color: 0x0b1a33, alpha: 0.95 })
+    .stroke({ width: 1.3, color: 0x8fd3ff })
+    .poly(starPoints(FRONTIER_RADIUS - 2, 2))
+    .fill({ color: 0xcdeeff, alpha: 0.95 });
+}
+
+const COIN_RADIUS = 5;
+const COIN_STEP = 2;
+
+/** Depot mit Handelswaren: kleiner Münzstapel, die Anzahl steht in `labels`. */
+export function cachePiece(amount: number): Figure {
+  const body = new Graphics();
+  const coins = Math.min(amount, 3);
+  for (let index = 0; index < coins; index++)
+    body
+      .ellipse(0, -index * COIN_STEP, COIN_RADIUS, COIN_RADIUS * 0.55)
+      .fill(0xb8892b)
+      .stroke({ width: 0.8, color: GOLD });
+  const labels = new Container();
+  labels.addChild(label(String(amount), COUNT_STYLE, COIN_RADIUS + 5, -COIN_STEP));
+  return { body, labels };
 }

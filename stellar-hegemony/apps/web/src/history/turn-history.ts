@@ -40,6 +40,33 @@ export type HistoryLine =
   | { readonly kind: 'scored'; readonly player: PlayerId; readonly objective: string }
   | { readonly kind: 'traded'; readonly player: PlayerId; readonly rival: PlayerId }
   | { readonly kind: 'passed'; readonly player: PlayerId }
+  /** PoK Erkundung: `find` ist die aufgedeckte Erkundungskarte. */
+  | {
+      readonly kind: 'explored';
+      readonly player: PlayerId;
+      readonly planet: string;
+      readonly find: string;
+    }
+  | {
+      readonly kind: 'frontierExplored';
+      readonly player: PlayerId;
+      readonly system: string;
+      readonly find: string;
+    }
+  | { readonly kind: 'relicGained'; readonly player: PlayerId; readonly relic: string }
+  | { readonly kind: 'relicUsed'; readonly player: PlayerId; readonly relic: string }
+  | {
+      readonly kind: 'legendaryUsed';
+      readonly player: PlayerId;
+      readonly planet: string;
+      readonly ability: string;
+    }
+  | {
+      readonly kind: 'cacheCollected';
+      readonly player: PlayerId;
+      readonly system: string;
+      readonly amount: number;
+    }
   | { readonly kind: 'undone'; readonly player: PlayerId }
   | { readonly kind: 'won'; readonly player: PlayerId };
 
@@ -89,6 +116,27 @@ const DESCRIBE: Describers = {
   ObjectiveScored: ({ player, objective }) => ({ kind: 'scored', player, objective }),
   TransactionCompleted: ({ from, to }) => ({ kind: 'traded', player: from, rival: to }),
   PlayerPassed: ({ player }) => ({ kind: 'passed', player }),
+  PlanetExplored: ({ player, planet, card }) => ({ kind: 'explored', player, planet, find: card }),
+  FrontierExplored: ({ player, system, card }) => ({
+    kind: 'frontierExplored',
+    player,
+    system,
+    find: card,
+  }),
+  RelicDrawn: ({ player, relic }) => ({ kind: 'relicGained', player, relic }),
+  RelicUsed: ({ player, relic }) => ({ kind: 'relicUsed', player, relic }),
+  LegendaryAbilityUsed: ({ player, planet }) => ({
+    kind: 'legendaryUsed',
+    player,
+    planet,
+    ability: planet,
+  }),
+  TradeGoodsCacheCollected: ({ player, system, amount }) => ({
+    kind: 'cacheCollected',
+    player,
+    system,
+    amount,
+  }),
   StepUndone: ({ player }) => ({ kind: 'undone', player }),
   GameWon: ({ player }) => ({ kind: 'won', player }),
 };

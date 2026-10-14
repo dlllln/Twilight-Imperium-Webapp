@@ -28,6 +28,7 @@ import {
 } from './ship-move-validator.ts';
 import type { GravityRiftRolled, ShipsMoved } from './tactical-events.ts';
 import { tacticalReducers } from './tactical-reducers.ts';
+import { collectCache } from '../exploration/explore.ts';
 
 export interface ActivateSystem extends Command<'ActivateSystem'> {
   readonly system: SystemId;
@@ -165,7 +166,9 @@ function movementEvents(
   const rolls = moves.flatMap((move) => riftRollsFor(context, move, decision.random));
   const flown = [...rolls, moved, ...destroyedEvents(context, moves, rolls)];
   const landed = flown.reduce(evolveGame, context.state);
-  const resolved = [...flown, ...leftBehind(context, moves, landed)];
+  const settled = [...flown, ...leftBehind(context, moves, landed)];
+  const arrived = settled.reduce(evolveGame, context.state);
+  const resolved = [...settled, ...collectCache(arrived, player, system, decision.content.units)];
   const after = resolved.reduce(evolveGame, context.state);
   const reached = reachNext(after, 'movement', decision.content);
   return ok([...resolved, reached, ...progressTactical(evolveGame(after, reached), decision)]);

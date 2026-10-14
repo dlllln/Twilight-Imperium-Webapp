@@ -1,17 +1,18 @@
 import { planetName } from '@stellar/content';
-import type {
-  AnomalyKind,
-  ContentPort,
-  GameState,
-  Hex,
-  MapLayout,
-  PlanetDefinition,
-  PlanetState,
-  SystemState,
-  SystemTile,
-  TileBack,
-  Unit,
-  WormholeKind,
+import {
+  type AnomalyKind,
+  type ContentPort,
+  type GameState,
+  type Hex,
+  type MapLayout,
+  type PlanetDefinition,
+  type PlanetState,
+  type SystemState,
+  type SystemTile,
+  type TileBack,
+  type Unit,
+  withAttachments,
+  type WormholeKind,
 } from '@stellar/domain';
 import type { Language } from '../i18n.ts';
 import type { PlanetLook } from './planet-texture.ts';
@@ -31,6 +32,10 @@ export interface ScenePlanet {
   readonly controllerSeat: number | null;
   readonly exhausted: boolean;
   readonly units: readonly UnitCount[];
+  /** PoK Anlagen: Kennungen der Erkundungskarten, die am Planeten liegen. */
+  readonly attachments: readonly string[];
+  /** Legendärer Planet: Fähigkeit bereit oder in dieser Runde schon genutzt; sonst `null`. */
+  readonly legendary: 'ready' | 'used' | null;
 }
 
 export type Highlight = 'none' | 'active' | 'selected' | 'origin';
@@ -52,6 +57,10 @@ export interface SceneHex {
   readonly highlight: Highlight;
   /** Sitz (1-basiert), dem allein Schiffe oder Planeten im System gehören; sonst `null`. */
   readonly control: number | null;
+  /** PoK Grenzmarker, der noch auf Erkundung wartet. */
+  readonly frontier: boolean;
+  /** Handelswaren in einem Depot, die Schiffe abholen können. */
+  readonly cache: number;
 }
 
 export const hexKey = (position: Hex): string => `${String(position.q)},${String(position.r)}`;
@@ -80,21 +89,41 @@ const NO_SEAT: SeatOf = () => null;
 const unitSeat = (seatOf: SeatOf) => (unit: Unit) => seatOf(unit.owner) ?? 0;
 const nameOf = (id: string, language: Language) => planetName(id)?.[language] ?? id;
 
-function scenePlanet(
-  definition: PlanetDefinition,
-  back: TileBack,
-  language: Language,
-  planet: PlanetState | undefined,
-  seatOf: SeatOf,
-): ScenePlanet {
+/** Was der Planet in der Partie mitbringt; im Aufbau ist er unberührt. */
+interface PlanetSituation {
+  readonly language: Language;
+  readonly seatOf: SeatOf;
+  readonly planet?: PlanetState | undefined;
+  readonly usedLegendaries?: readonly string[];
+}
+
+const legendaryOf = (definition: PlanetDefinition, used: readonly string[]) => {
+  if (definition.legendary === undefined) return null;
+  return used.includes(definition.id) ? 'used' : 'ready';
+};
+
+/** Was der Planet in der Partie trägt: Besitzer, Erschöpfung, Truppen, Anlagen. */
+function planetCondition(planet: PlanetState | undefined, seatOf: SeatOf) {
+  if (planet === undefined)
+    return { controllerSeat: null, exhausted: false, units: [], attachments: [] };
+  return {
+    controllerSeat: seatOf(planet.controller),
+    exhausted: planet.exhausted,
+    units: countUnits(planet.units, unitSeat(seatOf)),
+    attachments: (planet.attachments ?? []).map((attachment) => attachment.card),
+  };
+}
+
+function scenePlanet(base: PlanetDefinition, back: TileBack, at: PlanetSituation): ScenePlanet {
+  const { planet } = at;
+  const definition = planet === undefined ? base : withAttachments(base, planet);
   return {
     id: definition.id,
-    name: nameOf(definition.id, language),
+    name: nameOf(definition.id, at.language),
     definition,
     look: lookOf(definition, back),
-    controllerSeat: seatOf(planet?.controller ?? null),
-    exhausted: planet?.exhausted === true,
-    units: countUnits(planet?.units ?? [], unitSeat(seatOf)),
+    ...planetCondition(planet, at.seatOf),
+    legendary: legendaryOf(definition, at.usedLegendaries ?? []),
   };
 }
 
@@ -105,7 +134,14 @@ const tileFields = (tile: SystemTile) => ({
   ...(tile.anomaly === undefined ? {} : { anomaly: tile.anomaly }),
 });
 
-const EMPTY = { ships: [], tokens: [], highlight: 'none', control: null } as const;
+const EMPTY = {
+  ships: [],
+  tokens: [],
+  highlight: 'none',
+  control: null,
+  frontier: false,
+  cache: 0,
+} as const;
 
 const homeSlotHex = (position: Hex, seat: number): SceneHex => ({
   ...EMPTY,
@@ -121,7 +157,7 @@ const homeSlotHex = (position: Hex, seat: number): SceneHex => ({
 
 function layoutSystemHex(position: Hex, tile: SystemTile, language: Language): SceneHex {
   const planets = tile.planets.map((planet) =>
-    scenePlanet(planet, tile.back, language, undefined, NO_SEAT),
+    scenePlanet(planet, tile.back, { language, seatOf: NO_SEAT }),
   );
   return {
     ...EMPTY,
@@ -171,11 +207,29 @@ function controlOf(ships: readonly UnitCount[], planets: readonly ScenePlanet[])
   return seats.size === 1 ? ([...seats][0] ?? null) : null;
 }
 
-function gameHex(lookup: GameLookup, system: SystemState, tile: SystemTile): SceneHex {
+/** PoK: Grenzmarker und Handelswaren-Depot im System. */
+const explorationFields = (game: GameState, system: SystemState) => ({
+  frontier: game.exploration.frontierTokens.includes(system.id),
+  cache: game.exploration.caches[system.id] ?? 0,
+});
+
+/** Planeten eines Systems mit ihrem Stand in der Partie. */
+function gamePlanets(lookup: GameLookup, tile: SystemTile): readonly ScenePlanet[] {
   const { game, language, seatOf } = lookup;
-  const planets = tile.planets.map((planet) =>
-    scenePlanet(planet, tile.back, language, game.planets[planet.id], seatOf),
+  const usedLegendaries = game.exploration.exhaustedLegendaries;
+  return tile.planets.map((definition) =>
+    scenePlanet(definition, tile.back, {
+      language,
+      seatOf,
+      planet: game.planets[definition.id],
+      usedLegendaries,
+    }),
   );
+}
+
+function gameHex(lookup: GameLookup, system: SystemState, tile: SystemTile): SceneHex {
+  const { game, seatOf } = lookup;
+  const planets = gamePlanets(lookup, tile);
   const ships = countUnits(system.spaceUnits, unitSeat(seatOf));
   return {
     ...tileFields(tile),
@@ -188,6 +242,7 @@ function gameHex(lookup: GameLookup, system: SystemState, tile: SystemTile): Sce
     tokens: system.commandTokens.flatMap((player) => seatOf(player) ?? []),
     highlight: lookup.highlights.get(system.id) ?? 'none',
     control: controlOf(ships, planets),
+    ...explorationFields(game, system),
   };
 }
 

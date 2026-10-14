@@ -12,3 +12,5 @@ export * from './action-cards.ts';
 export * from './agendas.ts';
 export * from './faction-abilities.ts';
 export * from './simulator.ts';
+export * from './exploration-cards.ts';
+export * from './relics.ts';

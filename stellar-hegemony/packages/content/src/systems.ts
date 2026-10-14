@@ -3,10 +3,12 @@ import {
   systemId,
   type PlanetDefinition,
   type PlanetTrait,
+  type RewardEffect,
   type SystemTile,
   type TechnologyColor,
 } from '@stellar/domain';
 import type { LocalizedText } from './localized.ts';
+import { UNIT_TYPES } from './units.ts';
 
 /*
  * Eigene Systeme und Planeten (Namen und Werte frei erfunden). Verteilung und
@@ -128,6 +130,58 @@ export const homeTile = (id: string, ...planets: PlanetSeed[]): SystemTile => ({
   wormholes: [],
 });
 
-export const GALAXY_TILES: readonly SystemTile[] = [CENTER_TILE, ...BLUE_TILES, ...RED_TILES];
+/** Blaue Tafel mit einem legendären Planeten (Erweiterung Schritt 2). */
+const legendary = (id: string, seed: PlanetSeed, ability: RewardEffect): SystemTile => {
+  const tile = blue(id, seed);
+  return { ...tile, planets: tile.planets.map((planet) => ({ ...planet, legendary: ability })) };
+};
+
+/**
+ * PoK Legendäre Planeten: zwei eigene Tafeln. Sie liegen wie blaue Tafeln im Vorrat des
+ * Galaxie-Generators und können so in zufälligen Galaxien auftauchen.
+ */
+export const LEGENDARY_TILES: readonly SystemTile[] = [
+  legendary('l01', p('Elysar', 2, 3, 'cultural'), {
+    kind: 'placeUnits',
+    unit: UNIT_TYPES.infantry,
+    count: 2,
+  }),
+  legendary('l02', p('Morgantis', 3, 1, 'hazardous'), {
+    kind: 'gainTradeGoods',
+    amount: 2,
+  }),
+];
+
+export interface LegendaryText {
+  readonly name: LocalizedText;
+  readonly effect: LocalizedText;
+}
+
+/** Name und Text der legendären Fähigkeit je Planet. */
+export const LEGENDARY_TEXTS: Readonly<Record<string, LegendaryText>> = {
+  elysar: {
+    name: { de: 'Heimkehr der Siedler', en: "Settlers' Homecoming" },
+    effect: {
+      de: 'Aktion, einmal je Runde: Setze 2 Infanterie aus deiner Verstärkung auf Elysar.',
+      en: 'Action, once per round: Place 2 infantry from your reinforcements on Elysar.',
+    },
+  },
+  morgantis: {
+    name: { de: 'Tiefenschmelze', en: 'Deep Smelters' },
+    effect: {
+      de: 'Aktion, einmal je Runde: Erhalte 2 Handelswaren.',
+      en: 'Action, once per round: Gain 2 trade goods.',
+    },
+  },
+};
+
+export const legendaryText = (planet: string): LegendaryText | undefined => LEGENDARY_TEXTS[planet];
+
+export const GALAXY_TILES: readonly SystemTile[] = [
+  CENTER_TILE,
+  ...BLUE_TILES,
+  ...LEGENDARY_TILES,
+  ...RED_TILES,
+];
 
 export const planetName = (id: string): LocalizedText | undefined => PLANET_NAMES[id];

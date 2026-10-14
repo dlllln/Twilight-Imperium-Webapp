@@ -6,6 +6,7 @@ import {
   strategyCardsOf,
   usableCards,
 } from '@stellar/domain';
+import { componentActions, explorationFirst, purgeFragments } from './exploration-planner.ts';
 import { type BotView, contentOf, issued, me, type Planner } from './bot-view.ts';
 import { assignHits, declineRetreat } from './combat-planner.ts';
 import { bombardCommands, invasionCommands } from './invasion-planner.ts';
@@ -61,7 +62,7 @@ const STEP_PLANNERS: Readonly<Record<string, Planner>> = {
   bombardment: bombardCommands,
   invasion: invasionCommands,
   production: productionCommands,
-  done: (view) => [{ type: 'EndTacticalAction', ...issued(view) }],
+  done: (view) => [...explorationFirst(view), { type: 'EndTacticalAction', ...issued(view) }],
 };
 
 const tacticalStep: Planner = (view) => {
@@ -94,12 +95,14 @@ const actionCards = (view: BotView): readonly GameCommand[] =>
     target: NO_TARGET,
   }));
 
-/** Eigener Zug: Taktik zuerst, wenn es lohnende Ziele gibt, sonst Strategie, Karten, Passen. */
+/** Eigener Zug: Fragmente eintauschen, Taktik bei lohnenden Zielen, Strategie, Karten, Relikte, Passen. */
 function mainTurn(view: BotView): readonly GameCommand[] {
   return [
+    ...purgeFragments(view),
     ...tacticalTargets(view),
     ...strategicActions(view),
     ...actionCards(view),
+    ...componentActions(view),
     { type: 'Pass', ...issued(view) },
   ];
 }

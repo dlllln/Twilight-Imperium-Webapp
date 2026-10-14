@@ -2,6 +2,7 @@ import type { TileCatalog } from '../galaxy/tile-catalog.ts';
 import type { GameState } from '../game/game-state.ts';
 import { findPlayer } from '../game/game-state.ts';
 import { Planet } from '../planet/planet.ts';
+import { withAttachments } from '../planet/planet-attachments.ts';
 import type { PlanetDefinition } from '../planet/planet-definition.ts';
 import { type DomainError, domainError } from '../shared/domain-error.ts';
 import type { PlanetId, PlayerId } from '../shared/ids.ts';
@@ -26,6 +27,19 @@ export function findPlanetDefinition(
     .all()
     .flatMap((tile) => tile.planets)
     .find((planet) => planet.id === id);
+}
+
+/** PoK Erkundung: Stammdaten eines Planeten samt der Karten, die auf ihm liegen. */
+export function currentPlanetDefinition(
+  state: GameState,
+  tiles: TileCatalog,
+  id: PlanetId,
+): PlanetDefinition | undefined {
+  const definition = findPlanetDefinition(tiles, id);
+  const planet = state.planets[id];
+  return definition === undefined || planet === undefined
+    ? definition
+    : withAttachments(definition, planet);
 }
 
 function planetValue(

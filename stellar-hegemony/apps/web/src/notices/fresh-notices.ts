@@ -3,7 +3,8 @@ import type { HistoryEntry } from '../history/turn-history.ts';
 
 /*
  * Benachrichtigungen unten rechts (reine Funktionen): Was die anderen gerade getan haben, ploppt
- * kurz auf und verschwindet wieder. Eigene Züge kennt man schon, sie erscheinen nur im Verlauf.
+ * kurz auf und verschwindet wieder. Eigene Züge kennt man schon, sie erscheinen nur im Verlauf;
+ * nur was man selbst aufdeckt (Erkundung, Relikte), meldet sich auch beim eigenen Zug.
  */
 
 /** So viele Meldungen stehen höchstens gleichzeitig da. */
@@ -11,10 +12,13 @@ export const NOTICE_LIMIT = 3;
 /** So lange bleibt eine Meldung stehen. */
 export const NOTICE_MS = 6000;
 
-const byOthers = (entry: HistoryEntry, me: PlayerId | null): boolean =>
-  !('player' in entry.line) || entry.line.player !== me;
+/** Was man selbst aufdeckt, kennt man noch nicht: Erkundungsfunde und neue Relikte. */
+const REVEALS: ReadonlySet<string> = new Set(['explored', 'frontierExplored', 'relicGained']);
 
-/** Neue Zeilen nach `after`, die andere betreffen. */
+const byOthers = (entry: HistoryEntry, me: PlayerId | null): boolean =>
+  !('player' in entry.line) || entry.line.player !== me || REVEALS.has(entry.line.kind);
+
+/** Neue Zeilen nach `after`, die andere betreffen oder etwas Neues aufdecken. */
 export function freshEntries(
   history: readonly HistoryEntry[],
   after: number,

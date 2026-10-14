@@ -7,6 +7,8 @@ import type {
   TechnologyId,
 } from '../shared/ids.ts';
 import type { FactionRules } from '../faction/faction-ability.ts';
+import type { FragmentKind } from '../exploration/exploration-definition.ts';
+import type { OwnedRelic } from '../exploration/exploration-state.ts';
 import type { PoolCounts } from './command-sheet.ts';
 
 export type PlayerColor =
@@ -37,4 +39,8 @@ export interface PlayerState {
   readonly roundStats: RoundStats;
   /** Abweichungen der Fraktion von den allgemeinen Regeln (ab Spielstart). */
   readonly factionRules: FactionRules;
+  /** PoK Relikt: offen gehaltene Reliktfragmente. */
+  readonly relicFragments: readonly FragmentKind[];
+  /** PoK Relikt: offen gehaltene Relikte. */
+  readonly relics: readonly OwnedRelic[];
 }

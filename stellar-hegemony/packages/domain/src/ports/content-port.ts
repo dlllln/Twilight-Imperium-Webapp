@@ -1,5 +1,9 @@
 import type { ActionCardDefinition } from '../action-card/action-card-definition.ts';
 import type { AgendaDefinition } from '../agenda/agenda-definition.ts';
+import type {
+  ExplorationCardDefinition,
+  RelicDefinition,
+} from '../exploration/exploration-definition.ts';
 import type { FactionDefinition } from '../faction/faction-definition.ts';
 import type { GalaxyTemplate } from '../galaxy/map-layout.ts';
 import type { ObjectiveDefinition } from '../objective/objective-definition.ts';
@@ -21,5 +25,8 @@ export interface ContentPort {
   readonly objectives: readonly ObjectiveDefinition[];
   readonly actionCards: readonly ActionCardDefinition[];
   readonly agendas: readonly AgendaDefinition[];
+  /** PoK Erkundung: alle Erkundungskarten (mit Exemplaren) und Relikte. */
+  readonly explorationCards: readonly ExplorationCardDefinition[];
+  readonly relics: readonly RelicDefinition[];
   galaxyTemplate(playerCount: number): GalaxyTemplate | undefined;
 }

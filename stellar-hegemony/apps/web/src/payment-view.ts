@@ -2,7 +2,7 @@ import {
   type ContentPort,
   type Currency,
   evaluatePayment,
-  findPlanetDefinition,
+  currentPlanetDefinition,
   type GameState,
   type Payment,
   type PlanetId,
@@ -20,7 +20,7 @@ export function payablePlanets(
     .filter((planet) => planet.controller === player && !planet.exhausted)
     .map((planet) => ({
       planet: planet.id,
-      value: findPlanetDefinition(content.tiles, planet.id)?.[currency] ?? 0,
+      value: currentPlanetDefinition(game, content.tiles, planet.id)?.[currency] ?? 0,
     }));
 }
 

@@ -1,7 +1,7 @@
 import {
   clockwiseFrom,
   type ContentPort,
-  findPlanetDefinition,
+  currentPlanetDefinition,
   findPlayer,
   type GameState,
   ownedTechnologies,
@@ -44,7 +44,7 @@ type Currency = 'resources' | 'influence';
 
 function supplyOf(game: GameState, player: PlayerId, content: ContentPort, currency: Currency) {
   const owned = Object.values(game.planets).filter((planet) => planet.controller === player);
-  const value = (id: PlanetId) => findPlanetDefinition(content.tiles, id)?.[currency] ?? 0;
+  const value = (id: PlanetId) => currentPlanetDefinition(game, content.tiles, id)?.[currency] ?? 0;
   const sum = (ids: readonly PlanetId[]) => ids.reduce((total, id) => total + value(id), 0);
   return {
     ready: sum(owned.filter((planet) => !planet.exhausted).map((planet) => planet.id)),

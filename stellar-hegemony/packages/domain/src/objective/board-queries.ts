@@ -8,6 +8,7 @@ import type { PlanetState } from '../planet/planet-state.ts';
 import type { ContentPort } from '../ports/content-port.ts';
 import type { PlayerId, SystemId } from '../shared/ids.ts';
 import { findPlanetDefinition } from '../economy/payment.ts';
+import { withAttachments } from '../planet/planet-attachments.ts';
 import type { Unit } from '../unit/unit.ts';
 
 /** Heimatsystem eines Spielers laut seiner Fraktion. */
@@ -31,7 +32,7 @@ export interface OwnPlanet {
   readonly definition: PlanetDefinition;
 }
 
-/** Kontrollierte Planeten samt Stammdaten (RR 47). */
+/** Kontrollierte Planeten samt Stammdaten und angelegter Karten (RR 47, PoK Erkundung). */
 export function ownPlanets(
   state: GameState,
   player: PlayerId,
@@ -40,7 +41,7 @@ export function ownPlanets(
   return Object.values(state.planets).flatMap((planet) => {
     const definition = findPlanetDefinition(content.tiles, planet.id);
     return planet.controller === player && definition !== undefined
-      ? [{ state: planet, definition }]
+      ? [{ state: planet, definition: withAttachments(definition, planet) }]
       : [];
   });
 }

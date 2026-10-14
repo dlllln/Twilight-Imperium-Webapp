@@ -13,6 +13,7 @@ import { IconButton } from '../ui/IconButton.tsx';
 import { PlayersPanel } from './PlayersPanel.tsx';
 import { type SidebarTab, useSidebarStore } from './sidebar-store.ts';
 import { StrategyCardGrid } from './StrategyCardGrid.tsx';
+import { ExplorationPanel } from '../exploration/ExplorationPanel.tsx';
 
 const TABS: readonly (readonly [SidebarTab, MessageKey, LucideIcon])[] = [
   ['turn', 'tabCards', Layers],
@@ -68,6 +69,7 @@ function DrawerBody({ game, open }: { readonly game: GameState; readonly open: b
       </div>
       <TabPanel value="turn">
         <StrategyCardGrid game={game} />
+        <ExplorationPanel game={game} />
       </TabPanel>
       <TabPanel value="score">
         <ObjectivesPanel game={game} />

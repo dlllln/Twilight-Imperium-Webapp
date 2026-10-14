@@ -1,4 +1,4 @@
-import { findPlanetDefinition } from '../economy/payment.ts';
+import { currentPlanetDefinition } from '../economy/payment.ts';
 import type { GameState } from '../game/game-state.ts';
 import type { ContentPort } from '../ports/content-port.ts';
 import type { PlanetId, PlayerId, SystemId } from '../shared/ids.ts';
@@ -14,6 +14,7 @@ export interface ProductionSite {
 }
 
 function siteOf(
+  state: GameState,
   content: ContentPort,
   unit: Unit,
   planet: PlanetId | null,
@@ -24,7 +25,7 @@ function siteOf(
   if (production === undefined) return [];
   const resources =
     production.addsPlanetResources && planet !== null
-      ? (findPlanetDefinition(content.tiles, planet)?.resources ?? 0)
+      ? (currentPlanetDefinition(state, content.tiles, planet)?.resources ?? 0)
       : 0;
   return [{ unit, planet, value: production.bonus + resources }];
 }
@@ -42,9 +43,11 @@ export function productionSites(
   const onPlanets = systemState.planetIds.flatMap((planet) =>
     (state.planets[planet]?.units ?? [])
       .filter(own)
-      .flatMap((unit) => siteOf(content, unit, planet)),
+      .flatMap((unit) => siteOf(state, content, unit, planet)),
   );
-  const inSpace = systemState.spaceUnits.filter(own).flatMap((unit) => siteOf(content, unit, null));
+  const inSpace = systemState.spaceUnits
+    .filter(own)
+    .flatMap((unit) => siteOf(state, content, unit, null));
   return [...onPlanets, ...inSpace];
 }
 

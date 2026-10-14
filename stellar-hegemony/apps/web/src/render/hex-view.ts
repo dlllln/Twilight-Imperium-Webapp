@@ -4,7 +4,15 @@ import { HEX_SIZE, hexToPixel, type Point } from '../hex-geometry.ts';
 import { seatColor } from '../seat-colors.ts';
 import { lift, plus, project, projectedCorners, turn } from './board-view.ts';
 import { type BoardFrame, flatImage, type Placed, standing, stroked } from './board-pieces.ts';
-import { controlRing, planetPiece, planetShadow, shipPiece, tokenChips } from './hex-pieces.ts';
+import {
+  cachePiece,
+  controlRing,
+  frontierToken,
+  planetPiece,
+  planetShadow,
+  shipPiece,
+  tokenChips,
+} from './hex-pieces.ts';
 import {
   PLANET_HEIGHT,
   planetDiameter,
@@ -51,6 +59,9 @@ const HIGHLIGHT_STROKES: Readonly<Record<Exclude<Highlight, 'none'>, [number, nu
 
 const WORMHOLE_COLORS: Readonly<Record<WormholeKind, number>> = { alpha: 0xff9b4a, beta: 0x6fd3ff };
 const WORMHOLE_SPOT = { x: 34, y: -22 };
+/** Grenzmarker und Depot liegen in Systemen ohne Planeten, also frei in der Feldmitte. */
+const FRONTIER_SPOT = { x: 0, y: -10 };
+const CACHE_SPOT = { x: -24, y: -14 };
 
 const variantOf = (hex: SceneHex): number => hashString(hex.key) % TILE_VARIANTS;
 const lighten = (color: number): number => colorOf(mix(rgbOf(color), [255, 255, 255], 0.55));
@@ -234,6 +245,25 @@ function markers(hex: SceneHex, center: Point, layers: HexLayers): Placed[] {
   return placed;
 }
 
+/** PoK Grenzmarker und Handelswaren-Depot. */
+function exploration(hex: SceneHex, center: Point, layers: HexLayers): Placed[] {
+  const placed: Placed[] = [];
+  if (hex.frontier)
+    placed.push(
+      standing({ center, offset: FRONTIER_SPOT, flat: true }, [[layers.content, frontierToken()]]),
+    );
+  if (hex.cache > 0) {
+    const { body, labels } = cachePiece(hex.cache);
+    placed.push(
+      standing({ center, offset: CACHE_SPOT }, [
+        [layers.content, body],
+        [layers.labels, labels],
+      ]),
+    );
+  }
+  return placed;
+}
+
 /** Baut ein Hexfeld in alle Ebenen; ausgerichtet wird es erst mit `arrange`. */
 export function drawHex(hex: SceneHex, layers: HexLayers): DrawnHex {
   const center = hexToPixel(hex.position);
@@ -244,6 +274,7 @@ export function drawHex(hex: SceneHex, layers: HexLayers): DrawnHex {
     ...planets(hex, center, layers),
     ...ships(hex, center, layers),
     ...markers(hex, center, layers),
+    ...exploration(hex, center, layers),
   ];
   return { placed, pulse: shine.pulse };
 }

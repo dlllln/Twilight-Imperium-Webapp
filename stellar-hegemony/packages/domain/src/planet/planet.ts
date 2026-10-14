@@ -1,6 +1,7 @@
 import { type DomainError, domainError } from '../shared/domain-error.ts';
 import type { PlayerId } from '../shared/ids.ts';
 import { err, ok, type Result } from '../shared/result.ts';
+import { withAttachments } from './planet-attachments.ts';
 import type { PlanetDefinition } from './planet-definition.ts';
 import type { PlanetState } from './planet-state.ts';
 
@@ -19,7 +20,8 @@ export class Planet {
     if (definition.id !== state.id) {
       return err(domainError('planet.mismatch', 'Stammdaten und Zustand gehören nicht zusammen'));
     }
-    return ok(new Planet(definition, state));
+    // PoK Erkundung: angelegte Karten zählen überall mit, wo Planetenwerte gelesen werden.
+    return ok(new Planet(withAttachments(definition, state), state));
   }
 
   get resources(): number {

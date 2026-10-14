@@ -668,7 +668,35 @@ Bodentruppen). Schadensresistenz wirkt nun auch gegen Bombardement und Verteidig
 | `DeployRule`, `deployEvents`, `UnitsDeployed` (Domain)  | Einsetzen als Daten an der Fraktionsfähigkeit (Strategy); ein eigenes Event hält das Event Sourcing nachvollziehbar, `supplyAllows` prüft das Limit (Expert).  |
 | Bombardement und Verteidigungsfeuer mit `sustained`     | Dieselbe Trefferzuteilung wie im Bodenkampf (DRY): erst Schadensresistenz, dann die billigsten Einheiten; alte Events ohne das Feld bleiben abspielbar.        |
 
-## 28. Iterationen
+## 28. Iteration 24 im Detail (Erkundung, Relikte, legendäre Planeten)
+
+Wer einen unbesetzten Planeten mit Eigenschaft erobert, erkundet ihn: Eine Karte aus dem Stapel
+seiner Eigenschaft (kulturell, gefährlich, industriell) wirkt sofort. Sie bringt Handelswaren,
+Rohstoffe, eine Aktionskarte oder Einheiten, legt eine Anlage an den Planeten (mehr Ressourcen
+oder Einfluss, eine Spezialisierung) oder ist ein Reliktfragment. Systeme ohne Planeten tragen zu
+Beginn einen Grenzmarker; mit der neuen Technologie Tiefraumscanner erkundet man ihn am Ende einer
+Taktikaktion aus dem Grenzstapel. Drei Fragmente einer Art (Grenzfragmente zählen als jede Art)
+werden zu einem Relikt aus einem eigenen Stapel von acht. Zwei legendäre Planeten liegen im Vorrat
+der Galaxie; ihre Fähigkeit wirkt einmal je Runde als Komponentenaktion. Alle Namen und Texte
+sind eigene Entwürfe.
+
+In der Oberfläche liegen Relikte, Fragmente und legendäre Planeten als Karten in der Hand:
+Antippen nutzt ein Relikt, opfert drei Fragmente oder löst die legendäre Fähigkeit aus. Auf der
+Karte stehen Grenzmarker als Kompassstern, Depots als Münzstapel, legendäre Planeten mit goldenem
+Strahlenkranz (matt, wenn genutzt); der Hinweis am Zeiger nennt Anlagen und Fähigkeit. Der Reiter
+„Karten“ zeigt Stapel, Ablagen und die Funde aller Spieler. Eigene Funde melden sich unten rechts.
+
+| Element                                                     | Prinzip                                                                                                                                               |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RewardEffect`, `reward-effects.ts` (Domain)                | Wirkungen als Daten mit einem Interpreter (Interpreter, Open/Closed): Erkundungskarten, Relikte und legendäre Planeten teilen sich dieselben Effekte. |
+| `ExplorationState`, Events `PlanetExplored`, `RelicDrawn` … | Event Sourcing wie bisher: jede Karte und jedes Relikt ist ein Event; verdeckte Stapel zeigt `player-view` nur als Anzahl (Information Hiding).       |
+| `withAttachments`, `currentPlanetDefinition`                | Information Expert: Der Planet kennt seine Werte samt Anlagen; Bezahlen, Forschung, Ziele und die Karte fragen nur noch dort.                         |
+| `purgeOptions`, `usableRelics`, `usableLegendaryPlanets`    | Abfragen in der Domain (Expert); Hand und KI rufen sie auf, statt Regeln zu wiederholen (DRY, Low Coupling).                                          |
+| `tableEntries`, `TableEntry` (Web)                          | Die Hand bleibt eine Liste von Karten (Polymorphie über `kind`); neue Kartenarten brauchen nur Gesicht und Befehl, nicht neue Bedienung.              |
+| `scene-model` mit `frontier`, `cache`, `legendary`          | Reine Daten für Pixi, Hinweis und Nahbeschriftung (Pure Fabrication); das Zeichnen kennt keine Domainregeln.                                          |
+| `fresh-notices.ts` mit `REVEALS`                            | Eine Liste sagt, welche eigenen Zeilen trotzdem aufploppen (Daten statt Verzweigung, Open/Closed).                                                    |
+
+## 29. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -695,8 +723,9 @@ Bodentruppen). Schadensresistenz wirkt nun auch gegen Bombardement und Verteidig
 | 21  | Schräger Blick vom Heimatsystem, eigene Planeten    | ✓     |
 | 22  | Nur private Lobbys, Zugverlauf, Rückgängig, Tablet  | ✓     |
 | 23  | Ganze Karte, freier Blick, Meldungen, Mechs (PoK)   | ✓     |
+| 24  | Erkundung, Relikte, legendäre Planeten (PoK)        | ✓     |
 
-## 29. Befehle
+## 30. Befehle
 
 ```
 pnpm install

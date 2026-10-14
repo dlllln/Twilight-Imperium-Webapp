@@ -25,6 +25,9 @@ function PlayerCounters({ player }: { readonly player: PlayerState }): ReactElem
       <span title={t('handSize')} data-testid={`hand-${player.id}`}>
         ▤ {player.actionCards.length}
       </span>
+      <span title={`${t('relicKind')} / ${t('fragmentKind')}`}>
+        ✦ {player.relics.length}/{player.relicFragments.length}
+      </span>
     </>
   );
 }

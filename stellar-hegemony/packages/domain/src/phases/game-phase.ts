@@ -61,6 +61,10 @@ export class ActionPhase extends BasePhase {
     'PlayActionCard',
     'PassReaction',
     'DiscardActionCards',
+    'ExploreFrontier',
+    'PurgeRelicFragments',
+    'UseRelic',
+    'UseLegendaryAbility',
   ];
   next(): PhaseName {
     return 'status';

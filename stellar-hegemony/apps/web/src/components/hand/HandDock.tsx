@@ -5,7 +5,13 @@ import { AnimatePresence, motion, type PanInfo, useIsPresent } from 'motion/reac
 import { type CSSProperties, type ReactElement, useRef, useState } from 'react';
 import { useGameStore, useHumanActor, useViewer } from '../../game-store.ts';
 import { lookOf } from '../../hand/card-look.ts';
-import { entryKey, type HandEntry, handEntries } from '../../hand/hand-model.ts';
+import {
+  entryKey,
+  type HandEntry,
+  handEntries,
+  isTable,
+  type TableEntry,
+} from '../../hand/hand-model.ts';
 import { useHandStore } from '../../hand/hand-store.ts';
 import { useSettingsStore } from '../../settings-store.ts';
 import { useT } from '../../use-translation.ts';
@@ -34,8 +40,21 @@ const fanned = (offset: number) => ({
   scale: 1,
 });
 
-const testIdOf = (entry: HandEntry): string | undefined =>
-  entry.kind === 'action' ? `card-${entry.card.definition.id}` : undefined;
+const testIdOf = (entry: HandEntry): string | undefined => {
+  if (entry.kind === 'action') return `card-${entry.card.definition.id}`;
+  return isTable(entry) ? entryKey(entry) : undefined;
+};
+
+/** PoK-Karten vor dem Spieler: Relikt nutzen, Fragmente opfern, legendäre Fähigkeit. */
+function tableCommand(entry: TableEntry) {
+  const issuedBy = entry.player;
+  if (entry.kind === 'relic') return { type: 'UseRelic', issuedBy, relic: entry.relic.id } as const;
+  if (entry.kind === 'legendary')
+    return { type: 'UseLegendaryAbility', issuedBy, planet: entry.planet } as const;
+  return entry.purge === null
+    ? null
+    : ({ type: 'PurgeRelicFragments', issuedBy, fragments: entry.purge } as const);
+}
 
 function turnCommand(entry: HandEntry, actor: PlayerId, selected: string | null) {
   if (entry.kind === 'pick')
@@ -48,6 +67,7 @@ function turnCommand(entry: HandEntry, actor: PlayerId, selected: string | null)
 
 /** Der Befehl einer Karte; Aktionskarten spielt ihr Besitzer, alles andere der Spieler am Zug. */
 function commandFor(entry: HandEntry, actor: PlayerId | null, selected: string | null) {
+  if (isTable(entry)) return tableCommand(entry);
   if (entry.kind === 'action') {
     const { card, player } = entry;
     const target = initialTarget(card.targets);
@@ -72,8 +92,10 @@ function usePlay(game: GameState): (entry: HandEntry) => void {
 const needsTargets = (entry: HandEntry): boolean =>
   entry.kind === 'action' && hasTargets(entry.card.targets);
 
-const classOf = (entry: HandEntry): string =>
-  `hand-card${entry.kind === 'action' ? ' action-card' : ''} ${entry.playable ? 'playable' : 'idle'}`;
+const classOf = (entry: HandEntry): string => {
+  const extra = isTable(entry) ? ' table-card' : entry.kind === 'action' ? ' action-card' : '';
+  return `hand-card${extra} ${entry.playable ? 'playable' : 'idle'}`;
+};
 
 interface CardProps {
   readonly game: GameState;

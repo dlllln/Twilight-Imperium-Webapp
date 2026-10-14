@@ -76,6 +76,16 @@ import {
   type CastVotes,
   castVotesHandler,
 } from '../agenda/agenda-commands.ts';
+import {
+  type ExploreFrontier,
+  exploreFrontierHandler,
+  type PurgeRelicFragments,
+  purgeRelicFragmentsHandler,
+  type UseLegendaryAbility,
+  useLegendaryAbilityHandler,
+  type UseRelic,
+  useRelicHandler,
+} from '../exploration/exploration-commands.ts';
 import { progressTactical } from '../combat/tactical-flow.ts';
 import { phaseOf } from '../phases/game-phase.ts';
 import { withTechnologies } from '../technology/technology-catalog.ts';
@@ -116,7 +126,11 @@ export type GameCommand =
   | DiscardActionCards
   | CastVotes
   | Abstain
-  | BreakTie;
+  | BreakTie
+  | ExploreFrontier
+  | PurgeRelicFragments
+  | UseRelic
+  | UseLegendaryAbility;
 
 type HandlerMap = {
   readonly [K in GameCommand['type']]: CommandHandler<
@@ -157,6 +171,10 @@ const handlers: HandlerMap = {
   CastVotes: castVotesHandler,
   Abstain: abstainHandler,
   BreakTie: breakTieHandler,
+  ExploreFrontier: exploreFrontierHandler,
+  PurgeRelicFragments: purgeRelicFragmentsHandler,
+  UseRelic: useRelicHandler,
+  UseLegendaryAbility: useLegendaryAbilityHandler,
 };
 
 /** Während ein Zeitfenster offen ist, sind nur Reaktionen erlaubt (RR 3.10). */

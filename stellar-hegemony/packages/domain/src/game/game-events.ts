@@ -38,6 +38,8 @@ import { agendaReducers } from '../agenda/agenda-reducers.ts';
 import { actionCardReducers } from '../action-card/action-card-reducers.ts';
 import type { GameState } from './game-state.ts';
 import type { UndoEvent } from '../undo/undo-events.ts';
+import type { ExplorationEvent } from '../exploration/exploration-events.ts';
+import { explorationReducers } from '../exploration/exploration-reducers.ts';
 import { withoutUndone } from '../undo/step-undo.ts';
 
 /** Alle Events einer Partie. Jede Iteration erweitert diese Union um ihr Modul. */
@@ -59,6 +61,7 @@ export type GameEvent =
   | ActionCardEvent
   | AgendaEvent
   | EconomyEvent
+  | ExplorationEvent
   | UndoEvent;
 
 const gameReducers: ReducerMap<GameState, GameEvent> = {
@@ -79,6 +82,7 @@ const gameReducers: ReducerMap<GameState, GameEvent> = {
   ...statusReducers,
   ...actionCardReducers,
   ...agendaReducers,
+  ...explorationReducers,
   // Wirkt nur beim Replay: `withoutUndone` streicht dort die zurückgenommenen Events.
   StepUndone: (state) => state,
 };

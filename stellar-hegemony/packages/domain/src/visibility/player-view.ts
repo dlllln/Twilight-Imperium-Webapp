@@ -1,3 +1,4 @@
+import type { ExplorationPiles, ExplorationState } from '../exploration/exploration-state.ts';
 import type { GameState } from '../game/game-state.ts';
 import type { ObjectivesState, PublicObjectiveSlot } from '../objective/objective-state.ts';
 import type { PlayerState } from '../player/player-state.ts';
@@ -17,6 +18,20 @@ export const objectivesView = (objectives: ObjectivesState): ObjectivesState => 
   ...objectives,
   public: objectives.public.map(slotView),
   secretDeck: hidden(objectives.secretDeck),
+});
+
+/** PoK Erkundung: Reihenfolge und Inhalt der Stapel sind verdeckt, die Anzahl bleibt sichtbar. */
+export const hiddenPiles = (piles: ExplorationPiles): ExplorationPiles => ({
+  cultural: hidden(piles.cultural),
+  hazardous: hidden(piles.hazardous),
+  industrial: hidden(piles.industrial),
+  frontier: hidden(piles.frontier),
+});
+
+const explorationView = (exploration: ExplorationState): ExplorationState => ({
+  ...exploration,
+  decks: hiddenPiles(exploration.decks),
+  relicDeck: hidden(exploration.relicDeck),
 });
 
 /** RR 3.5, RR 12.17: Hand und ungewertete geheime Aufträge sieht nur ihr Besitzer. */
@@ -46,5 +61,6 @@ export function playerView(state: GameState, viewer: PlayerId | null): GameState
     objectives: objectivesView(state.objectives),
     actionDeck: { ...state.actionDeck, deck: hidden(state.actionDeck.deck) },
     agendaDeck: { ...state.agendaDeck, deck: hidden(state.agendaDeck.deck) },
+    exploration: explorationView(state.exploration),
   };
 }

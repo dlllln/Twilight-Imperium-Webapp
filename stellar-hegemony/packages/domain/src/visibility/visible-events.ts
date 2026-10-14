@@ -1,6 +1,6 @@
 import type { GameEvent } from '../game/game-events.ts';
 import type { PlayerId } from '../shared/ids.ts';
-import { HIDDEN, hidden, slotView } from './player-view.ts';
+import { HIDDEN, hidden, hiddenPiles, slotView } from './player-view.ts';
 
 type Masks = {
   readonly [K in GameEvent['type']]?: (
@@ -20,6 +20,13 @@ const MASKS: Masks = {
   ActionDeckReshuffled: deck,
   AgendaDeckPrepared: deck,
   AgendaDeckReshuffled: deck,
+  // PoK Erkundung: gemischte Stapel bleiben verdeckt; aufgedeckte Karten stehen offen im Event.
+  ExplorationPrepared: (event) => ({
+    ...event,
+    decks: hiddenPiles(event.decks),
+    relicDeck: hidden(event.relicDeck),
+  }),
+  ExplorationDeckReshuffled: (event) => ({ ...event, cards: hidden(event.cards) }),
   ObjectivesPrepared: (event) => ({
     ...event,
     public: event.public.map(slotView),

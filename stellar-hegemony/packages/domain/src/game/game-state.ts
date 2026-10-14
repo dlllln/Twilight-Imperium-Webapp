@@ -13,6 +13,7 @@ import type {
   ReactionWindow,
 } from '../action-card/action-card-state.ts';
 import type { AgendaDeckState, AgendaPhaseState, EnactedLaw } from '../agenda/agenda-state.ts';
+import type { ExplorationState } from '../exploration/exploration-state.ts';
 
 export type PhaseName = 'setup' | 'strategy' | 'action' | 'status' | 'agenda' | 'gameOver';
 
@@ -55,6 +56,8 @@ export interface GameState {
   readonly agendaPhase: AgendaPhaseState | null;
   /** Beschlossene Gesetze in der Reihenfolge ihres Inkrafttretens (RR 7.3). */
   readonly laws: readonly EnactedLaw[];
+  /** PoK Erkundung: Stapel, Grenzmarker, Depots und legendäre Marker. */
+  readonly exploration: ExplorationState;
   readonly winner: PlayerId | null;
 }
 

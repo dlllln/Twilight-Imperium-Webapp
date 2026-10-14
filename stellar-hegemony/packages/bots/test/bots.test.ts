@@ -2,23 +2,30 @@ import { describe, expect, it } from 'vitest';
 import {
   currentActor,
   decideGameCommand,
+  findPlanetDefinition,
   type GameState,
   type PlayerId,
   playerId,
+  relicId,
+  shipsOf,
+  technologyId,
   updatePlayer,
 } from '@stellar/domain';
 import {
   botView,
+  componentActions,
+  explorationFirst,
   gainSplit,
   heuristicBot,
   pickStrategyCard,
   planPayment,
   preferredOutcomes,
+  purgeFragments,
   readyPlanets,
   splitGain,
 } from '../src/index.ts';
 import { UNIT_TYPES } from '@stellar/content';
-import { apply, botGame, contextFor, playBots } from './bot-game.ts';
+import { apply, botGame, content, contextFor, playBots } from './bot-game.ts';
 
 const SEED = 3;
 const P1 = playerId('p1');
@@ -44,6 +51,9 @@ describe('KI-Bots: ganze Partien', () => {
       const withMech = orders.filter((list) => list.some((o) => o.type === UNIT_TYPES.mech));
       expect(withMech.length).toBeGreaterThan(0);
       expect(withMech.every((list) => list.at(-1)?.type === UNIT_TYPES.mech)).toBe(true);
+      // PoK Erkundung: freie Planeten werden beim Übernehmen erkundet.
+      const cards = (state: GameState) => Object.values(state.exploration.decks).flat().length;
+      expect(cards(run.state)).toBeLessThan(cards(start));
     },
     60_000,
   );
@@ -129,5 +139,78 @@ describe('KI-Bots: Planer', () => {
           .filter((unit) => unit.owner === player.id).length,
     );
     expect(ships.every((count) => count > 0)).toBe(true);
+  });
+});
+
+describe('KI-Bots: Erkundung und Relikte (PoK)', () => {
+  const inAction = () =>
+    playBots(
+      botGame(3, SEED),
+      SEED,
+      200,
+      (s) => s.phase === 'action' && s.actionPhase?.active === currentActor(s),
+    ).state;
+
+  it('PoK Relikt: drei passende Fragmente tauscht der Bot sofort gegen ein Relikt', () => {
+    const start = inAction();
+    const actor = currentActor(start) ?? P1;
+    const state = updatePlayer(start, actor, (p) => ({
+      ...p,
+      relicFragments: ['cultural', 'frontier', 'cultural'],
+    }));
+    expect(heuristicBot.nextCommand(state, actor, contextFor(state, SEED))).toEqual({
+      type: 'PurgeRelicFragments',
+      issuedBy: actor,
+      fragments: ['cultural', 'cultural', 'frontier'],
+    });
+    const empty = { ...state, exploration: { ...state.exploration, relicDeck: [] } };
+    expect(purgeFragments(viewOf(empty, actor))).toEqual([]);
+  });
+
+  it('PoK Relikt, PoK Legendäre Planeten: Reliktaktionen und legendäre Fähigkeiten vor dem Passen', () => {
+    const start = inAction();
+    const actor = currentActor(start) ?? P1;
+    const legendary = Object.values(start.planets).find(
+      (p) => findPlanetDefinition(content.tiles, p.id)?.legendary !== undefined,
+    );
+    const owned = {
+      ...start,
+      planets: { ...start.planets, [legendary?.id ?? '']: { ...legendary, controller: actor } },
+    } as GameState;
+    const state = updatePlayer(owned, actor, (p) => ({
+      ...p,
+      relics: [{ id: relicId('trade-prism'), exhausted: false }],
+    }));
+    const commands = componentActions(viewOf(state, actor)).map((command) => command.type);
+    expect(commands).toEqual(['UseRelic', 'UseLegendaryAbility']);
+  });
+
+  it('PoK Grenzmarker: mit Scanner und Schiff erkundet der Bot am Ende der Taktikaktion', () => {
+    const done = playBots(botGame(3, SEED), SEED, 2000, (s) => {
+      const tactical = s.actionPhase?.tactical;
+      const active = s.actionPhase?.active;
+      return (
+        tactical?.step === 'done' &&
+        active != null &&
+        shipsOf(s, tactical.system, active, content.units).length > 0
+      );
+    }).state;
+    const actor = done.actionPhase?.active ?? P1;
+    const system = done.actionPhase?.tactical?.system;
+    const scanning = updatePlayer(done, actor, (p) => ({
+      ...p,
+      technologies: [...p.technologies, technologyId('deep-space-scanner')],
+    }));
+    const state = {
+      ...scanning,
+      exploration: {
+        ...scanning.exploration,
+        frontierTokens: system === undefined ? [] : [system],
+      },
+    };
+    expect(explorationFirst(viewOf(done, actor))).toEqual([]);
+    expect(heuristicBot.nextCommand(state, actor, contextFor(state, SEED))?.type).toBe(
+      'ExploreFrontier',
+    );
   });
 });

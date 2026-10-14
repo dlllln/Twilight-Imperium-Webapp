@@ -13,6 +13,7 @@ import { findCapability, isStructure } from '../unit/unit-capabilities.ts';
 import type { UnitCatalog } from '../unit/unit-catalog.ts';
 import type { Unit } from '../unit/unit.ts';
 import { groundForcesOn } from './invasion-queries.ts';
+import { explorePlanetEvents } from '../exploration/explore.ts';
 
 const sides = (state: GameState, planet: PlanetId, attacker: PlayerId, catalog: UnitCatalog) => ({
   mine: groundForcesOn(state, planet, catalog, (id) => id === attacker),
@@ -121,22 +122,27 @@ const foreignStructures = (planet: PlanetState, player: PlayerId, catalog: UnitC
 /**
  * RR 25.5: Wer mit Bodentruppen auf dem Planeten steht, übernimmt die Kontrolle.
  * PoK Mech: Hatte ein anderer Spieler den Planeten, können Fähigkeiten Einheiten einsetzen.
+ * PoK Erkundung: Hatte ihn noch niemand, wird er danach erkundet.
  */
 function controlEvents(
   state: GameState,
   planet: PlanetId,
   player: PlayerId,
-  { content }: DecisionContext,
+  decision: DecisionContext,
 ): readonly GameEvent[] {
+  const { content } = decision;
   const planetState = state.planets[planet];
   const holds = sides(state, planet, player, content.units).mine.length > 0;
   if (planetState === undefined || !holds || planetState.controller === player) return [];
   const structuresDestroyed = foreignStructures(planetState, player, content.units);
-  const fires = planetCaptured(planetState.controller !== null);
-  return [
+  const captured = planetState.controller !== null;
+  const gained: readonly GameEvent[] = [
     { type: 'PlanetControlGained', player, planet, structuresDestroyed },
-    ...deployEvents({ state, player, planet, content, fires }),
+    ...deployEvents({ state, player, planet, content, fires: planetCaptured(captured) }),
   ];
+  if (captured) return gained;
+  const after = gained.reduce(evolveGame, state);
+  return [...gained, ...explorePlanetEvents(after, player, planet, decision)];
 }
 
 /** Abwehrfeuer, Bodenkampf und Kontrolle für einen Planeten mit gelandeten Truppen. */

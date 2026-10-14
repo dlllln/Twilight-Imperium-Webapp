@@ -111,7 +111,7 @@ export function NoticeStack({ game }: { readonly game: GameState }): ReactElemen
   const { shown, dismiss } = useFreshNotices();
   return (
     <div className="notice-stack" aria-live="polite">
-      <AnimatePresence initial={false} mode="popLayout">
+      <AnimatePresence initial={false}>
         {shown.map((entry) => (
           <InfoNotice key={entry.id} entry={entry} game={game} onDismiss={dismiss} />
         ))}
