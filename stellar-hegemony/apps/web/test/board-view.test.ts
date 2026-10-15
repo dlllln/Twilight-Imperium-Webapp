@@ -6,10 +6,14 @@ import {
   boardBounds,
   clampTilt,
   FLAT_VIEW,
+  headroom,
   MAX_TILT,
   MIN_TILT,
   lift,
   project,
+  projectedCorners,
+  TABLE_TILT,
+  TILT,
   turn,
   viewFrom,
 } from '../src/render/board-view.ts';
@@ -66,6 +70,26 @@ describe('Schräger Blick auf das Brett', () => {
       const point = project(view, center);
       expect(point.x).toBeGreaterThan(bounds.minX);
       expect(point.y).toBeLessThan(bounds.minY + bounds.height);
+    }
+  });
+
+  it('steile Tischneigung schneidet hinten nichts ab, bei 50° bleibt alles gleich', () => {
+    expect(headroom(TILT)).toBe(30);
+    expect(headroom(0.3)).toBe(30);
+    expect(headroom(TABLE_TILT)).toBeGreaterThan(30);
+    // Ein stehendes Teil an der hinteren Kante ragt bei steilerem Blick höher auf.
+    const back = { x: 0, y: -400 };
+    const rise = (tilt: number) => lift(back, 0, tilt).y - lift(back, 40, tilt).y;
+    expect(headroom(TABLE_TILT) / headroom(TILT)).toBeGreaterThanOrEqual(
+      rise(TABLE_TILT) / rise(TILT),
+    );
+    const centers = [{ x: 0, y: 0 }, HOME, hexToPixel({ q: 0, r: 3 })];
+    for (const tilt of [TILT, TABLE_TILT]) {
+      const view = viewFrom(HOME, tilt);
+      const top = Math.min(
+        ...centers.flatMap((center) => projectedCorners(view, center).map((point) => point.y)),
+      );
+      expect(top - boardBounds(view, centers).minY).toBeCloseTo(headroom(tilt));
     }
   });
 

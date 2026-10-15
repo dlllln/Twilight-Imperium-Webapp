@@ -10,6 +10,8 @@ import { type Bounds, HEX_SIZE, hexCorners, type Point } from '../hex-geometry.t
 
 /** Wie weit das Brett vom Draufblick weggekippt ist (0 = Vogelperspektive). */
 export const TILT = (50 * Math.PI) / 180;
+/** Tischansicht: steilerer Blick, als säße man am eigenen Platz vor dem Brett. */
+export const TABLE_TILT = (60 * Math.PI) / 180;
 /** Grenzen beim freien Neigen: von der Draufsicht bis zum flachen Blick über den Tisch. */
 export const MIN_TILT = 0;
 export const MAX_TILT = (68 * Math.PI) / 180;
@@ -19,6 +21,13 @@ const EYE = 1200;
 export const SLAB = 9;
 /** Platz über der hinteren Kante für Planeten und Schiffe, die über das Brett ragen. */
 const HEADROOM = 30;
+
+/**
+ * Platz über der hinteren Kante bei dieser Neigung: Je steiler der Blick, desto höher ragen
+ * Planeten und Schiffe im Bild auf. Bis zur üblichen Neigung bleibt es beim festen Wert.
+ */
+export const headroom = (tilt: number): number =>
+  HEADROOM * Math.max(1, Math.sin(tilt) / Math.sin(TILT));
 
 /** Wie stark flach liegende Dinge beim üblichen Blick in der Höhe gestaucht erscheinen. */
 export const FORESHORTEN = Math.cos(TILT);
@@ -101,7 +110,7 @@ export function boardBounds(view: BoardView, centers: readonly Point[]): Bounds 
   const xs = points.map((point) => point.x);
   const ys = points.map((point) => point.y);
   const minX = Math.min(...xs);
-  const minY = Math.min(...ys) - HEADROOM;
+  const minY = Math.min(...ys) - headroom(view.tilt);
   return { minX, minY, width: Math.max(...xs) - minX, height: Math.max(...ys) - minY };
 }
 

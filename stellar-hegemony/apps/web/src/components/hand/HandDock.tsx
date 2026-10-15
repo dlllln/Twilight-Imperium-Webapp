@@ -32,6 +32,10 @@ const SPRING = { type: 'spring', stiffness: 320, damping: 26 } as const;
 const DEALT = { y: 220, opacity: 0 } as const;
 const PLAYED = { y: -260, opacity: 0, scale: 1.25 } as const;
 
+/** Enge des Fächers und Kartenzahl fürs Stylesheet (die Tischansicht fasst die Hand in die Mulde). */
+const dockStyle = (cards: number): CSSProperties =>
+  ({ '--crowd': Math.max(0, cards - ROOMY), '--cards': cards }) as CSSProperties;
+
 /** Lage im Fächer: zur Mitte hin gerade und oben, nach außen gedreht und tiefer. */
 const fanned = (offset: number) => ({
   y: offset * offset * FAN_DROP,
@@ -239,7 +243,7 @@ export function HandDock({ game }: { readonly game: GameState }): ReactElement {
       className={raised ? 'hand-dock raised' : 'hand-dock tucked'}
       aria-label={t('yourHand')}
       data-tutorial="hand"
-      style={{ '--crowd': Math.max(0, entries.length - ROOMY) } as CSSProperties}
+      style={dockStyle(entries.length)}
     >
       {entries.length > 0 && <HandOwner game={game} needed={needed} />}
       <AnimatePresence initial={false}>

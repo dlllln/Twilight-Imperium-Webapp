@@ -4517,3 +4517,1004 @@ body {
     display: none;
   }
 }
+
+/* ---------- Iteration 27 – Tischansicht ---------- */
+
+/*
+ * Das eigene Kommandopult liegt wie eine Spielertafel am unteren Rand: zwei gravierte Flügel
+ * mit Goldrahmen und Schimmer in Platzfarbe, dazwischen die Mulde, in der die Hand liegt.
+ * Die Flügel sind leicht nach hinten gekippt, als lägen sie flach auf dem Tisch.
+ */
+
+.hud-shield[data-view='table'],
+.player-sheet {
+  --sheet-h: 132px;
+  --wing: clamp(250px, 27vw, 360px);
+}
+
+.player-sheet {
+  --chip: 22px;
+  position: absolute;
+  left: 72px;
+  right: 76px;
+  bottom: 0;
+  z-index: 23;
+  display: grid;
+  grid-template-columns: var(--wing) minmax(0, 1fr) var(--wing);
+  align-items: stretch;
+  height: var(--sheet-h);
+  pointer-events: none;
+}
+
+.sheet-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Flügel: Goldrahmen (::before), gravierte Fläche (::after), abgeschrägte Ecken */
+
+.sheet-wing {
+  --cut-l: 14px;
+  --cut-r: 14px;
+  --bevel: polygon(
+    var(--cut-l) 0,
+    calc(100% - var(--cut-r)) 0,
+    100% var(--cut-r),
+    100% 100%,
+    0 100%,
+    0 var(--cut-l)
+  );
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-width: 0;
+  padding: 15px 14px 10px;
+  pointer-events: auto;
+  transform: perspective(900px) rotateX(12deg);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 -2px 10px color-mix(in srgb, var(--seat) 22%, transparent))
+    drop-shadow(0 10px 16px rgba(0, 0, 0, 0.65));
+  transition: filter 0.25s var(--ease-out);
+}
+
+.sheet-wing:hover {
+  filter: drop-shadow(0 -3px 14px color-mix(in srgb, var(--seat) 36%, transparent))
+    drop-shadow(0 10px 16px rgba(0, 0, 0, 0.65));
+}
+
+.sheet-wing::before,
+.sheet-wing::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  clip-path: var(--bevel);
+  pointer-events: none;
+}
+
+.sheet-wing::before {
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 224, 138, 0.9) 0%,
+    rgba(217, 180, 90, 0.55) 30%,
+    rgba(92, 72, 30, 0.7) 100%
+  );
+}
+
+.sheet-wing::after {
+  inset: 1.5px 1.5px 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0, transparent 4px),
+    radial-gradient(
+      120% 80% at 50% 118%,
+      color-mix(in srgb, var(--seat) 34%, transparent),
+      transparent 62%
+    ),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 7px),
+    linear-gradient(180deg, var(--panel-strong) 0%, #070b1c 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    inset 0 -2px 0 color-mix(in srgb, var(--seat) 80%, transparent),
+    inset 0 12px 26px rgba(0, 0, 0, 0.35);
+}
+
+.sheet-wing.command {
+  --cut-r: 34px;
+  grid-template-columns: 70px minmax(0, 1fr) 42px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'depot rails crest'
+    'onboard rails crest';
+  gap: 2px 10px;
+}
+
+.sheet-wing.treasury {
+  --cut-l: 34px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 60px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'goods comm vp'
+    'values techs vp';
+  gap: 6px 10px;
+  padding-left: 22px;
+}
+
+/* Mulde zwischen den Flügeln: hier liegt die Hand, das Pult bleibt darunter sichtbar */
+
+.sheet-well {
+  position: relative;
+  align-self: end;
+  height: 58%;
+  margin: 0 -4px;
+  border-radius: 46px 46px 0 0 / 28px 28px 0 0;
+  background:
+    radial-gradient(ellipse 70% 120% at 50% 100%, rgba(0, 0, 0, 0.5), transparent 70%),
+    linear-gradient(180deg, rgba(3, 5, 14, 0.88) 0%, rgba(10, 15, 34, 0.92) 100%);
+  box-shadow:
+    inset 0 7px 14px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(217, 180, 90, 0.38),
+    inset 0 -2px 0 color-mix(in srgb, var(--seat) 50%, transparent);
+  transform: perspective(900px) rotateX(12deg);
+  transform-origin: 50% 100%;
+  pointer-events: none;
+}
+
+.sheet-well-label {
+  position: absolute;
+  left: 50%;
+  bottom: 7px;
+  font-family: var(--title-font);
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(217, 180, 90, 0.26);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
+  transform: translateX(-50%);
+}
+
+/* Wappen */
+
+.sheet-crest {
+  grid-area: crest;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+}
+
+.sheet-crest .faction-emblem {
+  flex: none;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--seat) 55%, transparent));
+}
+
+.sheet-crest-line {
+  flex: 1;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--seat), transparent);
+  opacity: 0.8;
+}
+
+/* Leisten für Taktik, Flotte, Strategie */
+
+.sheet-rails {
+  grid-area: rails;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  min-width: 0;
+}
+
+.sheet-tray {
+  --pool: var(--gold);
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 6px 0 9px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(255, 255, 255, 0.025) 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.sheet-tray::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--pool);
+  box-shadow: 0 0 6px var(--pool);
+  opacity: 0.75;
+}
+
+.sheet-tray[data-pool='tactic'] {
+  --pool: #f0c96a;
+}
+
+.sheet-tray[data-pool='fleet'] {
+  --pool: #7fb8ff;
+}
+
+.sheet-tray[data-pool='strategy'] {
+  --pool: #c79bff;
+}
+
+.sheet-tray-label {
+  overflow: hidden;
+  font-family: var(--title-font);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--pool) 60%, var(--muted));
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.85),
+    0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.sheet-rack {
+  display: grid;
+  grid-template-columns: repeat(var(--slots), minmax(0, var(--chip)));
+  grid-template-rows: var(--chip);
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sheet-count {
+  font-family: var(--title-font);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.sheet-overflow {
+  display: block;
+  font-size: 9px;
+  color: var(--gold-bright);
+}
+
+/* Fassungen: eingelassene Vertiefungen */
+
+.sheet-socket {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 30%;
+  background: radial-gradient(circle at 50% 38%, #02040b 0 42%, #0b1129 72%, #18213f 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(0, 0, 0, 0.95),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Kommandomarker: Achteck in Platzfarbe */
+
+.sheet-token {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 1.5px rgba(0, 0, 0, 0.75));
+}
+
+.token-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.token-edge {
+  fill: color-mix(in srgb, var(--seat) 42%, #000);
+}
+
+.token-face {
+  fill: var(--seat);
+  stroke: color-mix(in srgb, var(--seat) 55%, #fff);
+  stroke-width: 0.8;
+}
+
+.token-inner {
+  fill: color-mix(in srgb, var(--seat) 85%, #000);
+  fill-opacity: 0.35;
+  stroke: rgba(0, 0, 0, 0.38);
+  stroke-width: 1.2;
+}
+
+.token-notch {
+  fill: none;
+  stroke: color-mix(in srgb, var(--seat) 30%, #000);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.token-glyph {
+  fill: color-mix(in srgb, var(--seat) 28%, #000);
+}
+
+.token-glyph-light {
+  fill: rgba(255, 255, 255, 0.42);
+}
+
+/* Nachschub: Schale mit losen Markern */
+
+.sheet-depot {
+  grid-area: depot;
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 3px;
+  min-height: 0;
+}
+
+.sheet-bowl {
+  position: relative;
+  width: 66px;
+  height: 100%;
+  max-height: 56px;
+  min-height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 36%, #02040b 0 38%, #0b1228 68%, #1c2645 100%);
+  box-shadow:
+    inset 0 5px 10px rgba(0, 0, 0, 0.92),
+    inset 0 -2px 3px rgba(255, 255, 255, 0.08),
+    0 0 0 1px var(--gold-line),
+    0 0 0 3px rgba(0, 0, 0, 0.35);
+}
+
+.sheet-bowl .sheet-token {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+}
+
+.sheet-bowl .token-svg {
+  transform: rotate(var(--tilt, 0deg));
+}
+
+.sheet-depot-label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  font-family: var(--title-font);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.sheet-depot-label b {
+  font-size: 13px;
+  color: var(--gold-bright);
+  letter-spacing: 0;
+}
+
+.sheet-onboard {
+  grid-area: onboard;
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+/* Schatzkammer: Münzhaufen und Rohstoffkisten */
+
+.sheet-goods {
+  grid-area: goods;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-content: start;
+  align-items: end;
+  column-gap: 6px;
+  min-width: 0;
+}
+
+.sheet-caption {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  font-family: var(--title-font);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--gold) 45%, var(--muted));
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+}
+
+.sheet-pile {
+  position: relative;
+  height: 40px;
+  min-width: 84px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 60% 26% at 50% 88%, rgba(0, 0, 0, 0.55), transparent 70%);
+}
+
+.sheet-coin {
+  position: absolute;
+  left: calc(50% - 13px + var(--x));
+  bottom: calc(5px + var(--y));
+  display: block;
+  width: 26px;
+  height: 17px;
+  filter: drop-shadow(0 1.5px 1px rgba(0, 0, 0, 0.7));
+}
+
+.sheet-coin svg,
+.sheet-crate svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.coin-edge {
+  fill: #6b4c14;
+}
+
+.coin-inner {
+  fill: none;
+  stroke: rgba(120, 80, 20, 0.6);
+  stroke-width: 0.9;
+}
+
+.coin-shine {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+}
+
+.sheet-goods .sheet-count {
+  padding-bottom: 6px;
+  color: var(--gold-bright);
+  font-size: 18px;
+}
+
+.sheet-commodities {
+  grid-area: comm;
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: end;
+  min-width: 0;
+}
+
+.sheet-crates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 4px;
+}
+
+.sheet-commodities .sheet-socket {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+.sheet-crate {
+  display: block;
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 1.5px 1px rgba(0, 0, 0, 0.7));
+}
+
+.crate-top {
+  fill: #86e6d4;
+}
+
+.crate-left {
+  fill: #2ca893;
+}
+
+.crate-right {
+  fill: #1a7466;
+}
+
+.crate-slat {
+  fill: none;
+  stroke: rgba(0, 40, 35, 0.55);
+  stroke-width: 0.8;
+}
+
+/* Planetenwerte und Technologielampen */
+
+.sheet-values {
+  grid-area: values;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sheet-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px 2px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.3) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  font-family: var(--title-font);
+  white-space: nowrap;
+}
+
+.sheet-value b {
+  font-size: 14px;
+}
+
+.sheet-value small {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.sheet-value.res svg {
+  color: var(--resources);
+  fill: color-mix(in srgb, var(--resources) 35%, transparent);
+}
+
+.sheet-value.inf svg {
+  color: var(--influence);
+  fill: color-mix(in srgb, var(--influence) 35%, transparent);
+}
+
+.sheet-techs {
+  grid-area: techs;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sheet-tech {
+  --lamp: var(--gold);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.85);
+  color: color-mix(in srgb, var(--lamp) 35%, #4a5270);
+  font-size: 11px;
+  transition:
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.sheet-tech b {
+  color: var(--muted);
+}
+
+.sheet-tech.propulsion {
+  --lamp: var(--propulsion);
+}
+
+.sheet-tech.biotic {
+  --lamp: var(--biotic);
+}
+
+.sheet-tech.cybernetic {
+  --lamp: var(--cybernetic);
+}
+
+.sheet-tech.warfare {
+  --lamp: var(--warfare);
+}
+
+.sheet-tech[data-lit] {
+  color: var(--lamp);
+  background: radial-gradient(
+    circle at 30% 50%,
+    color-mix(in srgb, var(--lamp) 28%, transparent),
+    rgba(0, 0, 0, 0.32)
+  );
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.6),
+    0 0 8px color-mix(in srgb, var(--lamp) 40%, transparent);
+}
+
+.sheet-tech[data-lit] svg {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+.sheet-tech[data-lit] b {
+  color: var(--text);
+}
+
+/* Siegpunkt-Medaillon */
+
+.sheet-vp {
+  grid-area: vp;
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #1b2443 0%, #070b1c 70%);
+  box-shadow:
+    0 0 0 1px var(--gold-line),
+    0 3px 8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.sheet-vp-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.vp-track {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 3;
+}
+
+.vp-progress {
+  fill: none;
+  stroke: var(--gold-bright);
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px rgba(255, 224, 138, 0.7));
+  transition: stroke-dasharray 0.6s var(--ease-out);
+}
+
+.sheet-vp-star {
+  position: absolute;
+  top: 9px;
+  left: calc(50% - 5.5px);
+  color: var(--gold);
+  fill: var(--gold);
+}
+
+.sheet-vp-value {
+  margin-top: 8px;
+  font-family: var(--title-font);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sheet-vp-value b {
+  font-size: 17px;
+  color: var(--gold-bright);
+}
+
+.sheet-vp-value small {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* Änderungsanzeige: steigt kurz über dem Feld auf und verblasst */
+
+.sheet-delta {
+  position: absolute;
+  top: -6px;
+  right: 2px;
+  z-index: 3;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: rgba(6, 10, 24, 0.88);
+  font-family: var(--title-font);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  opacity: 0;
+  pointer-events: none;
+  animation: sheet-delta-fade 1.2s var(--ease-out) forwards;
+}
+
+.sheet-delta.up {
+  color: #8ff0a4;
+}
+
+.sheet-delta.down {
+  color: #ff9a8a;
+}
+
+@keyframes sheet-delta-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.8);
+  }
+
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-14px) scale(1);
+  }
+}
+
+/* Kleine Symbole ersetzen auf schmalen Bildschirmen die ausgeblendeten Beschriftungen */
+
+.sheet-icon {
+  display: none;
+  flex: none;
+}
+
+/* Platz für das Pult: Meldungen und Phase rücken über den rechten Flügel */
+
+.hud-shield[data-view='table'] .hud-corner {
+  bottom: calc(var(--sheet-h) + 10px);
+  max-height: calc(100% - var(--sheet-h) - 30px);
+}
+
+/*
+ * Breite Bildschirme: Der Fächer der Hand bleibt in der Mulde zwischen den Flügeln, damit er
+ * Nachschub, Waren und Planetenwerte nicht verdeckt. Viele Karten rücken dafür enger zusammen,
+ * aber nie enger als in der klassischen Ansicht: Jede Karte bleibt bis zur Mitte sichtbar und
+ * antippbar. Die Mulde ist so breit wie die Karte (Bildschirm abzüglich Rand und Pultabständen)
+ * ohne die Flügel; etwas Luft bleibt für die gedrehten äußeren Karten. Ragt ein voller Fächer
+ * doch hinaus, liegt innen am linken Flügel nur das Wappen.
+ */
+
+@media (min-width: 761px) and (orientation: landscape), (min-width: 1101px) {
+  .hud-shield[data-view='table'] .hand-dock {
+    --fan-room: calc(100vw - 172px - 2 * var(--wing) - 56px);
+  }
+
+  .hud-shield[data-view='table'] .hand-dock .hand-card {
+    margin: 0
+      max(
+        -32px,
+        min(
+          calc(-12px - var(--crowd, 0) * 5px),
+          calc((var(--fan-room) - var(--cards, 1) * 140px) / max(2, 2 * var(--cards, 1) - 2))
+        )
+      );
+  }
+}
+
+/* Schmale Bildschirme: zwei Flügel nebeneinander, die Hand liegt über dem Pult */
+
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
+  .hud-shield[data-view='table'],
+  .player-sheet {
+    --sheet-h: 96px;
+  }
+
+  /* Ohne Mulde liegt die Hand hinter dem Pult: sichtbar bleibt, was auch ohne Pult hereinragt. */
+  .player-sheet {
+    --chip: 15px;
+    left: 8px;
+    right: 8px;
+    z-index: 26;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .sheet-well,
+  .sheet-crest,
+  .sheet-onboard,
+  .sheet-caption {
+    display: none;
+  }
+
+  .sheet-wing {
+    padding: 11px 8px 6px;
+    transform: perspective(700px) rotateX(8deg);
+  }
+
+  .sheet-wing.command {
+    --cut-r: 18px;
+    grid-template-columns: minmax(0, 1fr) 50px;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: 'rails depot';
+    gap: 6px;
+  }
+
+  .sheet-wing.treasury {
+    --cut-l: 18px;
+    grid-template-columns: auto minmax(0, 1fr) 42px;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'goods comm vp'
+      'values values vp'
+      'techs techs vp';
+    gap: 2px 6px;
+    padding-left: 12px;
+  }
+
+  .sheet-rails {
+    gap: 3px;
+  }
+
+  .sheet-tray {
+    grid-template-columns: auto minmax(0, 1fr) 14px;
+    gap: 4px;
+    padding: 0 3px 0 7px;
+  }
+
+  .sheet-tray-label {
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  /* Symbole statt der ausgeblendeten Beschriftungen; die Bedeutung bleibt so auf einen Blick klar. */
+  .sheet-icon {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+  }
+
+  .sheet-depot-label .sheet-icon {
+    color: var(--seat);
+  }
+
+  .sheet-goods .sheet-icon {
+    color: var(--gold-bright);
+  }
+
+  .sheet-crates .sheet-icon {
+    margin-right: 1px;
+    color: #86e6d4;
+  }
+
+  .sheet-count {
+    font-size: 12px;
+  }
+
+  .sheet-bowl {
+    width: 48px;
+    max-height: 44px;
+  }
+
+  .sheet-bowl .sheet-token {
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+  }
+
+  .sheet-depot-label {
+    flex-direction: row;
+    gap: 3px;
+  }
+
+  .sheet-depot-label .sheet-word {
+    display: none;
+  }
+
+  .sheet-depot-label b {
+    font-size: 12px;
+  }
+
+  .sheet-pile {
+    height: 24px;
+    min-width: 50px;
+    transform: scale(0.7);
+    transform-origin: 50% 100%;
+  }
+
+  .sheet-commodities .sheet-socket {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sheet-crate {
+    width: 13px;
+    height: 13px;
+  }
+
+  .sheet-crates {
+    gap: 2px;
+    padding-bottom: 0;
+  }
+
+  .sheet-goods .sheet-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding-bottom: 0;
+    font-size: 13px;
+  }
+
+  .sheet-value {
+    padding: 0 5px 0 3px;
+  }
+
+  .sheet-value b {
+    font-size: 11px;
+  }
+
+  .sheet-techs {
+    gap: 2px;
+  }
+
+  .sheet-tech {
+    padding: 0 3px;
+    font-size: 9px;
+  }
+
+  .sheet-vp {
+    width: 42px;
+    height: 42px;
+  }
+
+  .sheet-vp-star {
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    left: calc(50% - 5px);
+  }
+
+  .sheet-vp-value {
+    margin-top: 9px;
+  }
+
+  .sheet-vp-value b {
+    font-size: 13px;
+  }
+
+  /*
+   * Die Hand liegt hinter dem Pult; was in dessen Höhe hineinragt, wird abgeschnitten, damit
+   * zwischen den Flügeln kein Streifen Karte durchscheint. Die Unterkante der Hand liegt
+   * `--hand-bottom` unter der Pultoberkante, genau dort endet der sichtbare Teil.
+   */
+  .hud-shield[data-view='table'] .hand-dock {
+    bottom: calc(var(--hand-bottom) + var(--sheet-h));
+    clip-path: inset(-100vh -100vw calc(-1 * var(--hand-bottom)) -100vw);
+    transition:
+      bottom 0.25s ease,
+      clip-path 0.25s ease;
+  }
+
+  .hud-shield[data-view='table'] .hud-corner {
+    bottom: calc(var(--sheet-h) + 70px);
+  }
+
+  .galaxy:has(.hud-shield[data-view='table']) .map-controls {
+    bottom: calc(96px + 10px);
+  }
+}
+
+/* Sehr schmal: nur der Anfangsbuchstabe jeder Leiste (T, F, S), dafür gut lesbar. */
+@media (max-width: 560px) {
+  .sheet-tray-label > span {
+    display: none;
+  }
+
+  .sheet-tray-label::before {
+    content: attr(data-short);
+    font-size: 11px;
+  }
+}

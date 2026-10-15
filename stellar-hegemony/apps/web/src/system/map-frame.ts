@@ -5,7 +5,14 @@ import type { ScreenSize } from '../render/view-transform.ts';
  * Die Karte liegt in der Partie ganz im freien Bereich zwischen den Anzeigen (reine Funktionen):
  * Die Ränder sind Bildschirmpixel, daraus entsteht eine viewBox, die die Karte genau dort
  * zeigt. So wird die Karte auf jedem Bildschirm so groß wie möglich, ohne dass etwas sie verdeckt.
+ * In der Tischansicht liegt unten das Kommandopult statt oben die Vorratsleiste; die Karte rückt
+ * dann bis an die Unterkante des freien Bereichs, damit die eigene Heimat direkt am Pult liegt.
  */
+
+/** Klassische Anzeigen (Vorratsleiste oben) oder Tischansicht (Kommandopult unten). */
+export type HudLayout = 'classic' | 'table';
+/** Wo die Karte im freien Bereich steht, wenn sie ihn nicht ganz ausfüllt. */
+export type FrameAlign = 'center' | 'bottom';
 
 /** Freizuhaltende Bildschirmränder in Pixeln. */
 export interface Insets {
@@ -22,13 +29,34 @@ const SLIM_RIGHT = 84;
 /** Schmale Bildschirme: Spieler und Vorräte oben übereinander, Meldungen unten über der Hand. */
 const NARROW: Insets = { top: 128, right: 12, bottom: 230, left: 12 };
 const NARROW_WIDTH = 760;
+/** Tischansicht: oben nur die Spielerleiste, unten das Pult samt eingeklappter Hand. */
+const TABLE_WIDE: Insets = { top: 16, right: 432, bottom: 156, left: 226 };
+/**
+ * Tischansicht auf schmalen Bildschirmen: Spieler oben, darunter frei. Unten liegen übereinander
+ * das Pult (96), der Abstand der Ecke darüber (70) und Phase samt Hinweis und zwei bis drei
+ * Meldungen (knapp 300). Hochkant ist ohnehin Höhe übrig, die Karte wird dadurch kaum kleiner.
+ */
+const TABLE_NARROW: Insets = { top: 76, right: 12, bottom: 460, left: 12 };
+const WIDE_BY_LAYOUT: Readonly<Record<HudLayout, Insets>> = { classic: WIDE, table: TABLE_WIDE };
+const NARROW_BY_LAYOUT: Readonly<Record<HudLayout, Insets>> = {
+  classic: NARROW,
+  table: TABLE_NARROW,
+};
+
+/** Grundränder einer Anordnung, je nach Bildschirmbreite. */
+const insetsFor = (layout: HudLayout, small: boolean): Insets =>
+  (small ? NARROW_BY_LAYOUT : WIDE_BY_LAYOUT)[layout];
 /** Tablets hochkant nutzen dieselbe Anordnung wie schmale Bildschirme. */
 const PORTRAIT_WIDTH = 1100;
 
 const narrow = (screen: ScreenSize): boolean =>
   screen.width < NARROW_WIDTH || (screen.width <= PORTRAIT_WIDTH && screen.height >= screen.width);
-/** Platz für Benachrichtigungen bleibt nur frei, wenn die Karte dadurch kaum kleiner wird. */
-const KEEP_SCALE = 0.85;
+/**
+ * Platz für Benachrichtigungen bleibt nur frei, wenn die Karte dadurch kaum kleiner wird.
+ * Am Tisch ist die Karte flacher und breiter; dort bleibt die rechte Spalte auch auf üblichen
+ * Laptops frei, damit Meldungen und das Aktionsfeld keine Systeme verdecken.
+ */
+const KEEP_SCALE: Readonly<Record<HudLayout, number>> = { classic: 0.85, table: 0.6 };
 
 const freeOf = (screen: ScreenSize, insets: Insets): ScreenSize => ({
   width: screen.width - insets.left - insets.right,
@@ -41,24 +69,42 @@ export function fitScale(bounds: Bounds, screen: ScreenSize, insets: Insets): nu
   return Math.min(free.width / bounds.width, free.height / bounds.height);
 }
 
-/** Welche Ränder die Anzeigen bei dieser Bildschirmgröße belegen. */
-export function hudInsets(bounds: Bounds, screen: ScreenSize): Insets {
-  if (narrow(screen)) return NARROW;
-  const slim = { ...WIDE, right: SLIM_RIGHT };
-  const keep = fitScale(bounds, screen, WIDE) >= KEEP_SCALE * fitScale(bounds, screen, slim);
-  return keep ? WIDE : slim;
+/** Welche Ränder die Anzeigen bei dieser Bildschirmgröße und Anordnung belegen. */
+export function hudInsets(
+  bounds: Bounds,
+  screen: ScreenSize,
+  layout: HudLayout = 'classic',
+): Insets {
+  const wide = insetsFor(layout, narrow(screen));
+  if (narrow(screen)) return wide;
+  const slim = { ...wide, right: SLIM_RIGHT };
+  const keep =
+    fitScale(bounds, screen, wide) >= KEEP_SCALE[layout] * fitScale(bounds, screen, slim);
+  return keep ? wide : slim;
 }
 
+/** Abstand der Karte von der Oberkante des freien Bereichs: mittig oder ganz unten. */
+const offsetY = (free: ScreenSize, bounds: Bounds, fit: number, align: FrameAlign): number => {
+  const spare = free.height - bounds.height * fit;
+  return align === 'bottom' ? spare : spare / 2;
+};
+
 /**
- * viewBox, in der die Karte bei der Abbildung „xMidYMid meet“ mittig im freien Bereich liegt.
+ * viewBox, in der die Karte bei der Abbildung „xMidYMid meet“ waagrecht mittig im freien Bereich
+ * liegt, senkrecht mittig oder (`bottom`) auf dessen Unterkante.
  * Ohne bekannte Bildgröße (oder ohne freien Platz) bleibt es bei der Karte selbst.
  */
-export function frameBounds(bounds: Bounds, screen: ScreenSize, insets: Insets): Bounds {
+export function frameBounds(
+  bounds: Bounds,
+  screen: ScreenSize,
+  insets: Insets,
+  align: FrameAlign = 'center',
+): Bounds {
   const fit = fitScale(bounds, screen, insets);
   if (!(fit > 0) || !Number.isFinite(fit)) return bounds;
   const free = freeOf(screen, insets);
   const left = insets.left + (free.width - bounds.width * fit) / 2;
-  const top = insets.top + (free.height - bounds.height * fit) / 2;
+  const top = insets.top + offsetY(free, bounds, fit, align);
   return {
     minX: bounds.minX - left / fit,
     minY: bounds.minY - top / fit,

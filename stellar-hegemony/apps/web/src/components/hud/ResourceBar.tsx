@@ -1,28 +1,12 @@
-import type { GameState, TechnologyColor } from '@stellar/domain';
-import {
-  Coins,
-  Cpu,
-  Dna,
-  Gauge,
-  Hexagon,
-  type LucideIcon,
-  Package,
-  Star,
-  Swords,
-} from 'lucide-react';
+import type { GameState } from '@stellar/domain';
+import { Coins, Hexagon, type LucideIcon, Package, Star } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { empireSummary, type Supply, TECHNOLOGY_COLORS } from '../../hud/hud-model.ts';
 import type { MessageKey } from '../../i18n.ts';
 import { content } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
 import { useViewer } from '../../game-store.ts';
-
-const TECH_ICONS: Readonly<Record<TechnologyColor, LucideIcon>> = {
-  propulsion: Gauge,
-  biotic: Dna,
-  cybernetic: Cpu,
-  warfare: Swords,
-};
+import { TECH_ICONS } from './tech-icons.ts';
 
 interface StatProps {
   readonly icon: LucideIcon;

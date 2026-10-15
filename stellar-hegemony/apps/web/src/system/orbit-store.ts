@@ -1,12 +1,14 @@
 import { create } from 'zustand';
-import { clampTilt, MIN_TILT, TILT } from '../render/board-view.ts';
+import { useGameStore } from '../game-store.ts';
+import { clampTilt, MIN_TILT, TABLE_TILT, TILT } from '../render/board-view.ts';
 import { useSettingsStore } from '../settings-store.ts';
 import { easeInOut } from './viewport-tween.ts';
 
 /*
  * Freier Blick auf das Brett: Der Spieler dreht die Karte um ihre Mitte und neigt sie, bis hin
  * zur Draufsicht. Gespeichert wird nur die eigene Verstellung; die Grundrichtung (vom eigenen
- * Heimatsystem aus) kommt weiter vom Platz.
+ * Heimatsystem aus) kommt weiter vom Platz. In der Tischansicht ist die Grundneigung einer
+ * laufenden Partie steiler; Generator und Aufstellung behalten den gewohnten Blick.
  */
 
 /** Dauer, wenn ein Knopf die Karte dreht oder neigt. */
@@ -22,7 +24,18 @@ export interface Orbit {
   readonly tilt: number;
 }
 
+/** Grundstellung der klassischen Ansicht. */
 export const HOME_ORBIT: Orbit = { turn: 0, tilt: TILT };
+
+/** Am Tisch sitzt man nur in einer laufenden Partie mit eingeschalteter Tischansicht. */
+const atTable = (): boolean =>
+  useSettingsStore.getState().tableView && useGameStore.getState().game !== null;
+
+/** Grundneigung je nach Ansicht: am Tisch steiler, sonst wie bisher. */
+export const baseTilt = (): number => (atTable() ? TABLE_TILT : TILT);
+
+/** Grundstellung der gewählten Ansicht. */
+export const homeOrbit = (): Orbit => ({ turn: 0, tilt: baseTilt() });
 
 export interface OrbitStore extends Orbit {
   /** Sofort verstellen, z. B. beim Ziehen mit Maus oder Fingern. */
@@ -61,13 +74,32 @@ function glide(from: Orbit, to: Orbit, apply: (orbit: Orbit) => void): void {
 export const isTopView = (orbit: Orbit): boolean => orbit.tilt <= TOP_LIMIT;
 
 export const useOrbitStore = create<OrbitStore>()((set, get) => ({
-  ...HOME_ORBIT,
+  ...homeOrbit(),
   orbitBy: (turn, tilt) => {
     stopOrbit();
     set((state) => ({ turn: state.turn + turn, tilt: clampTilt(state.tilt + tilt) }));
   },
   orbitTo: (to) => glide(get(), { turn: to.turn, tilt: clampTilt(to.tilt) }, set),
   rotateStep: (direction) => get().orbitTo({ ...get(), turn: get().turn + direction * TURN_STEP }),
-  toggleTop: () => get().orbitTo({ ...get(), tilt: isTopView(get()) ? TILT : MIN_TILT }),
-  resetOrbit: () => get().orbitTo(HOME_ORBIT),
+  toggleTop: () => get().orbitTo({ ...get(), tilt: isTopView(get()) ? baseTilt() : MIN_TILT }),
+  resetOrbit: () => get().orbitTo(homeOrbit()),
 }));
+
+let seated = atTable();
+
+/** Ändert sich die Grundneigung, kommt das Brett in deren Grundstellung. */
+function followTable(move: () => void): void {
+  if (atTable() === seated) return;
+  seated = atTable();
+  move();
+}
+
+// Wer die Ansicht umschaltet, sieht das Brett weich in deren Grundstellung fahren.
+useSettingsStore.subscribe(() => followTable(() => useOrbitStore.getState().resetOrbit()));
+// Beginnt oder endet die Partie, steht das Brett sofort in der passenden Grundstellung.
+useGameStore.subscribe(() =>
+  followTable(() => {
+    stopOrbit();
+    useOrbitStore.setState(homeOrbit());
+  }),
+);

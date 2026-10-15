@@ -11,10 +11,12 @@ export interface Settings {
   readonly hintSeen: boolean;
   /** Die Hand bleibt eingeklappt, bis man sie braucht. */
   readonly handOpen: boolean;
+  /** Tischansicht: steiler Blick auf das Brett, davor das eigene Kommandopult statt der Vorratsleiste. */
+  readonly tableView: boolean;
 }
 
 export interface SettingsStore extends Settings {
-  readonly toggle: (key: 'sound' | 'animations' | 'tips') => void;
+  readonly toggle: (key: 'sound' | 'animations' | 'tips' | 'tableView') => void;
   readonly setVolume: (volume: number) => void;
   readonly markHintSeen: () => void;
   readonly setHandOpen: (open: boolean) => void;
@@ -39,6 +41,7 @@ const defaults = (): Settings => ({
   tips: false,
   hintSeen: false,
   handOpen: false,
+  tableView: true,
 });
 
 function load(): Settings {
@@ -52,8 +55,8 @@ function load(): Settings {
 
 function save(settings: Settings): void {
   try {
-    const { sound, volume, animations, tips, hintSeen, handOpen } = settings;
-    const saved = { sound, volume, animations, tips, hintSeen, handOpen };
+    const { sound, volume, animations, tips, hintSeen, handOpen, tableView } = settings;
+    const saved = { sound, volume, animations, tips, hintSeen, handOpen, tableView };
     localStorage.setItem(KEY, JSON.stringify(saved));
   } catch {
     // Ohne Speicher gelten die Einstellungen nur bis zum Neuladen.
