@@ -47,6 +47,7 @@ import { HandDock } from './hand/HandDock.tsx';
 import { PhaseDock } from './hud/PhaseDock.tsx';
 import { PlayerRail } from './hud/PlayerRail.tsx';
 import { ResourceBar } from './hud/ResourceBar.tsx';
+import { PlayerSheet } from './sheet/PlayerSheet.tsx';
 import { SystemActions } from './hud/SystemActions.tsx';
 import { NoticeStack } from './hud/NoticeStack.tsx';
 
@@ -94,9 +95,13 @@ interface MapFrame {
   readonly band: Band;
 }
 
-/** In der Partie liegt die Karte ganz im freien Bereich zwischen den Anzeigen. */
+/**
+ * In der Partie liegt die Karte ganz im freien Bereich zwischen den Anzeigen; in der
+ * Tischansicht sitzt sie unten auf dem Kommandopult auf.
+ */
 function useFrame(hexes: readonly SceneHex[], view: BoardView, size: Size): MapFrame {
   const playing = useGameStore((state) => state.game !== null);
+  const table = useSettingsStore((state) => state.tableView);
   const { width, height } = size;
   return useMemo(() => {
     const board = boardBounds(
@@ -105,10 +110,10 @@ function useFrame(hexes: readonly SceneHex[], view: BoardView, size: Size): MapF
     );
     const screen = { width, height };
     if (!playing) return { bounds: board, band: freeBand(board, screen, NO_INSETS) };
-    const insets = hudInsets(board, screen);
-    const bounds = frameBounds(board, screen, insets);
+    const insets = hudInsets(board, screen, table ? 'table' : 'classic');
+    const bounds = frameBounds(board, screen, insets, table ? 'bottom' : 'center');
     return { bounds, band: freeBand(bounds, screen, insets) };
-  }, [hexes, view, playing, width, height]);
+  }, [hexes, view, playing, table, width, height]);
 }
 
 /** Effekte des letzten Zugs, wenn Animationen eingeschaltet sind. */
@@ -286,12 +291,15 @@ function stop(event: { stopPropagation: () => void }) {
   event.stopPropagation();
 }
 
-/** Anzeigen der Partie über der Karte: Spieler, Vorräte, Phase, offene Entscheidungen, Hand. */
-function Hud({ game }: { readonly game: GameState }): ReactElement {
+/**
+ * Anzeigen der Partie über der Karte: Spieler, Vorräte, Phase, offene Entscheidungen, Hand.
+ * In der Tischansicht liegen die eigenen Vorräte als Kommandopult unten statt als Leiste oben.
+ */
+function Hud({ game, table }: { readonly game: GameState; readonly table: boolean }): ReactElement {
   return (
     <>
       <PlayerRail game={game} />
-      <ResourceBar game={game} />
+      {table ? <PlayerSheet game={game} /> : <ResourceBar game={game} />}
       <div className="hud-corner">
         <NoticeStack game={game} />
         <PhaseDock game={game} />
@@ -304,13 +312,15 @@ function Hud({ game }: { readonly game: GameState }): ReactElement {
 /**
  * Oberhalb der Karte: die Anzeigen der Partie; ihre Gesten verschieben die Karte nicht.
  * Ohne Eigenschaften und mit `memo`: Kamerafahrten und Drehungen der Karte zeichnen sie nicht neu.
+ * `data-view` wählt die Anordnung im Stylesheet (klassisch oder Tischansicht).
  */
 const Overlays = memo(function Overlays(): ReactElement | null {
   const game = useGameStore((state) => state.game);
+  const table = useSettingsStore((state) => state.tableView);
   if (game === null) return null;
   return (
-    <div className="hud-shield" {...shield}>
-      <Hud game={game} />
+    <div className="hud-shield" data-view={table ? 'table' : 'classic'} {...shield}>
+      <Hud game={game} table={table} />
     </div>
   );
 });

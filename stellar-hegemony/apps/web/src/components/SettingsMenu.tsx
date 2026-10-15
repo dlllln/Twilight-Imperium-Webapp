@@ -1,19 +1,28 @@
 import * as Popover from '@radix-ui/react-popover';
 import * as Slider from '@radix-ui/react-slider';
 import * as Switch from '@radix-ui/react-switch';
-import { Languages, Lightbulb, type LucideIcon, Settings2, Sparkles, Volume2 } from 'lucide-react';
+import {
+  Armchair,
+  Languages,
+  Lightbulb,
+  type LucideIcon,
+  Settings2,
+  Sparkles,
+  Volume2,
+} from 'lucide-react';
 import type { ReactElement } from 'react';
 import type { Language, MessageKey } from '../i18n.ts';
 import { type Settings, useSettingsStore } from '../settings-store.ts';
 import { useGalaxyStore } from '../store.ts';
 import { useT } from '../use-translation.ts';
 
-type Toggle = 'sound' | 'animations' | 'tips';
+type Toggle = 'sound' | 'animations' | 'tips' | 'tableView';
 
 const TOGGLES: readonly (readonly [Toggle, MessageKey, LucideIcon])[] = [
   ['sound', 'soundToggle', Volume2],
   ['animations', 'animationsToggle', Sparkles],
   ['tips', 'tipsToggle', Lightbulb],
+  ['tableView', 'tableViewToggle', Armchair],
 ];
 
 function SwitchRow({
@@ -91,7 +100,7 @@ function LanguageSwitch(): ReactElement {
   );
 }
 
-/** Klang, Lautstärke, Animationen, Tipps und Sprache in einem aufklappbaren Menü. */
+/** Klang, Lautstärke, Animationen, Tipps, Tischansicht und Sprache in einem aufklappbaren Menü. */
 export function SettingsMenu(): ReactElement {
   const t = useT();
   return (

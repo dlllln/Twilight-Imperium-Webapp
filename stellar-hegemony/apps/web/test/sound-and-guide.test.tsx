@@ -71,7 +71,13 @@ beforeEach(() => {
   localStorage.clear();
   useGalaxyStore.setState({ language: 'de' });
   useGameStore.getState().leave();
-  useSettingsStore.setState({ sound: true, volume: 0.6, animations: true, tips: true });
+  useSettingsStore.setState({
+    sound: true,
+    volume: 0.6,
+    animations: true,
+    tips: true,
+    tableView: true,
+  });
   useTutorialStore.setState({ open: false, step: 0 });
 });
 
@@ -138,7 +144,25 @@ describe('Einstellungen', () => {
       tips: true,
       hintSeen: false,
       handOpen: false,
+      tableView: true,
     });
+  });
+
+  it('die Tischansicht bleibt nach dem Neuladen erhalten', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Einstellungen' }));
+    const toggle = screen.getByRole('switch', { name: 'Tischansicht' });
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(toggle);
+    expect(useSettingsStore.getState().tableView).toBe(false);
+    vi.resetModules();
+    const reloaded = await import('../src/settings-store.ts');
+    expect(reloaded.useSettingsStore.getState().tableView).toBe(false);
+    // Ältere Speicherstände ohne den Schalter starten in der Tischansicht.
+    localStorage.setItem('stellar.settings', JSON.stringify({ handOpen: true }));
+    vi.resetModules();
+    const older = await import('../src/settings-store.ts');
+    expect(older.useSettingsStore.getState()).toMatchObject({ handOpen: true, tableView: true });
   });
 
   it('ohne Animationen schaltet die Oberfläche alle Bewegungen ab', () => {

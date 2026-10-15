@@ -741,7 +741,50 @@ Planet wählbar ist, wird jetzt ohne Wirkung abgelegt, statt die Agendaphase anz
 | `discardUnelectable` in `agenda-flow.ts`                 | Ein Sonderfall bekommt einen eigenen Namen statt eines Leerlaufs (Robustheit, Single Responsibility).                           |
 | `hudInsets` mit `narrow(screen)`, Media Query hochkant   | Bildschirmform entscheidet einmal in einer reinen Funktion, CSS folgt derselben Regel (Information Expert).                     |
 
-## 31. Iterationen
+## 31. Iteration 27 im Detail (Tischansicht)
+
+Die Partie sieht jetzt aus, als säße man am eigenen Platz vor dem Brett. Die Karte war schon seit
+Iteration 21 so gedreht, dass das eigene Heimatsystem vorne unten in der Mitte liegt
+(`viewFrom(home)` in `board-camera`, je Gerät vom eigenen Platz aus). Die Tischansicht neigt das
+Brett zusätzlich steiler (60° statt 50°) und setzt es auf die Unterkante des freien Bereichs, so
+dass die eigene Heimat direkt hinter dem eigenen Pult liegt. Damit hinten nichts abgeschnitten
+wird, wächst der Platz über der hinteren Kante mit der Neigung; bis 50° bleibt alles wie bisher.
+Die steilere Neigung gilt nur in einer laufenden Partie: Generator und Aufstellung behalten den
+gewohnten Blick, und beginnt oder endet eine Partie, steht das Brett sofort in der passenden
+Grundstellung. Auf üblichen Laptops (etwa 1440×900) bleibt rechts wie klassisch die Spalte für
+Meldungen und Aktionsfeld frei; hochkant reicht der untere Rand über Pult, Phase und Meldungen.
+
+Vor dem eigenen Platz liegt das Kommandopult: links die Kommandomarker auf drei Leisten (Taktik,
+Flotte, Strategie) samt Nachschub und der Zahl der Marker auf der Karte, rechts die Schatzkammer
+mit Handelswaren als Münzen, Rohstoffen in genau so vielen Fassungen wie das Rohstofflimit,
+Ressourcen und Einfluss, Technologien je Farbe und Siegpunkten. Dazwischen bleibt eine Mulde, über
+der die Hand wie bisher aufgefächert liegt. Auf breiten Bildschirmen rückt der Fächer so eng
+zusammen, dass er in der Mulde bleibt (nie enger als klassisch, jede Karte bleibt antippbar);
+innen am linken Flügel liegt nur das Wappen. Auf schmalen Bildschirmen liegen die Flügel
+nebeneinander, kleine Symbole ersetzen die Beschriftungen, und die Hand wird an der Oberkante des
+Pults abgeschnitten, damit zwischen den Flügeln nichts durchscheint. Marker behalten eine feste Nummer und wandern bei
+Aktivierung oder Statusphase sichtbar von Feld zu Feld; Änderungen zeigen kurz ein „+2“ oder „−1“,
+nur für neue Züge (nicht erneut, wenn das Pult wieder erscheint oder Animationen wieder angehen).
+Die Vorratsleiste oben entfällt in der Tischansicht, die Spielerleiste bleibt links oben.
+Alle Formen (Leisten, achteckige Marker, Münzen, Kisten) sind eigene, prozedurale Entwürfe.
+
+Ein Schalter „Tischansicht“ in den Einstellungen (Standard: an, bleibt gespeichert) holt die
+klassische Ansicht unverändert zurück: Vorratsleiste oben, alte Ränder, 50° Neigung. Beim
+Umschalten fährt der Blick in die Grundstellung der gewählten Ansicht.
+
+| Element                                                             | Prinzip                                                                                                                                                   |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TABLE_TILT`, `headroom(tilt)` in `board-view.ts`                   | Reine Funktion statt fester Konstante: der Platz über der Kante folgt der Neigung (Information Expert); bis 50° unverändert (Open/Closed).                |
+| `baseTilt()`, `homeOrbit()` in `orbit-store.ts`                     | Die Grundstellung kennt nur die Blick-Ablage; Zurücksetzen und Draufsicht fragen sie dort ab, statt `TILT` zu wiederholen (Expert, DRY).                  |
+| `useSettingsStore`/`useGameStore.subscribe` → Grundstellung         | Beobachter: Einstellung und Partie wissen nichts vom Blick, der Blick reagiert auf ihre Änderung (Low Coupling, Observer).                                |
+| `hudInsets(…, layout)`, `frameBounds(…, align)`, `insetsFor`        | Anordnung und Ausrichtung als Parameter mit klassischem Standard; Ränder als Daten je Anordnung statt Verzweigungen (Open/Closed, Protected Variations).  |
+| `sheet-model.ts`, `token-ledger.ts` (rein)                          | Pultdaten und Markerwanderung als reine Funktionen ohne React (Pure Fabrication, Single Responsibility), einzeln testbar.                                 |
+| `use-sheet.ts` (`useSheetModel`, `useTokenLedger`, `useSheetPulse`) | Dünne Hooks verbinden Ablage und reine Modelle (Controller); Änderungsmarken kommen aus `lastEvents.before`, nicht aus eigenem Zustand (DRY).             |
+| `PlayerSheet`, `CommandWing`, `TreasuryWing`, `SheetTokens`         | Kleine Komponenten je Bereich (Single Responsibility); sie zeigen nur an und enthalten keine Spielregel (Low Coupling zur Domain).                        |
+| `Hud` wählt `PlayerSheet` oder `ResourceBar`, `data-view` am Schild | Eine Stelle entscheidet die Anordnung (Controller); das Stylesheet folgt über `data-view`, ohne dass Hand, Meldungen oder Knöpfe es kennen (Indirection). |
+| `Settings.tableView` mit Standard aus `defaults()`                  | Ältere Speicherstände erhalten den neuen Schalter über das Zusammenführen mit den Standards (Robustheit, Protected Variations).                           |
+
+## 32. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -771,8 +814,9 @@ Planet wählbar ist, wird jetzt ohne Wirkung abgelegt, statt die Agendaphase anz
 | 24  | Erkundung, Relikte, legendäre Planeten (PoK)        | ✓     |
 | 25  | Anführer: Agent, Kommandant, Held (PoK)             | ✓     |
 | 26  | Acht Fraktionen, 7–8 Spieler, weitere Karten (PoK)  | ✓     |
+| 27  | Tischansicht: steiler Blick, eigenes Kommandopult   | ✓     |
 
-## 32. Befehle
+## 33. Befehle
 
 ```
 pnpm install
