@@ -15,6 +15,81 @@
   object-fit: fill;
 }
 
+/* Complete scans replace the fabricated frame, thumbnail and overprinted text. */
+.hand-dock {
+  height: 200px;
+  align-items: flex-start;
+}
+
+.hand-dock:hover,
+.hand-dock:focus-within {
+  z-index: 60;
+}
+
+.ti4-complete-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  flex: none;
+  pointer-events: none;
+}
+
+.ti4-complete-card img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  max-height: none;
+}
+
+.action-card > .ti4-complete-card {
+  max-width: 240px;
+  margin: 0 auto 10px;
+}
+
+.hand-dock button.hand-card:has(.hand-original-face),
+.hand-dock button.hand-card:has(.hand-original-face):hover,
+.hand-dock button.hand-card:has(.hand-original-face):focus-visible {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  overflow: visible;
+  outline: none;
+}
+
+.hand-original-face {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 8px 10px #000b);
+}
+
+.hand-card.playable .hand-original-face {
+  filter: drop-shadow(0 0 5px var(--look));
+}
+
+.hand-card:focus-visible .ti4-complete-card {
+  outline: 2px solid var(--look);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .hand-dock {
+    height: 156px;
+  }
+}
+
+.hand-original-status {
+  position: absolute;
+  top: 0;
+  right: 0;
+  pointer-events: none;
+}
+
 /* Only the original scan's rim remains visible. No printed rule can peek between
    local text or controls, even when their length changes with the language. */
 .ti4-print-card {

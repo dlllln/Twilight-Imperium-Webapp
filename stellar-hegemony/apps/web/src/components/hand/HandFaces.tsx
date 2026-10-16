@@ -28,7 +28,7 @@ import {
 } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from '../game/card-text.ts';
-import { CardArtwork } from '../cards/CardArtwork.tsx';
+import { CompleteCardArtwork } from '../cards/CompleteCardArtwork.tsx';
 import { CardArt } from './CardArt.tsx';
 
 /** Was auf einer Karte steht: Überschrift, Name, Text und Zeichen im Bildfenster. */
@@ -42,12 +42,7 @@ interface Face {
 type Translate = (key: MessageKey) => string;
 
 function StrategyMarks({ card }: { readonly card: StrategyCardState }): ReactElement {
-  return (
-    <>
-      <span className="hand-initiative">{card.initiative}</span>
-      {card.tradeGoods > 0 && <span className="hand-goods">+{card.tradeGoods}</span>}
-    </>
-  );
+  return <>{card.tradeGoods > 0 && <span className="hand-goods">+{card.tradeGoods}</span>}</>;
 }
 
 const strategyFace = (card: StrategyCardState, kicker: string, language: Language): Face => ({
@@ -195,10 +190,41 @@ function frameOf(entry: HandEntry): CardArtworkSource | undefined {
   if (entry.kind === 'action') return actionFrame(entry.card.definition.id);
   if (entry.kind === 'pick' || entry.kind === 'strategic')
     return strategyFrame(entry.card.mechanic);
-  return strategyFrame(entry.kind === 'tactical' ? 'warfare' : 'commandTokens');
+  return undefined;
 }
 
-/** Original scanned frame and emblem, with the app's own localized playable effects. */
+function FaceCopy({ face }: { readonly face: Face }) {
+  return (
+    <>
+      <span className="hand-kicker">{face.kicker}</span>
+      <strong className="hand-title">{face.title}</strong>
+      <span className="hand-rule" aria-hidden="true" />
+      <span className="hand-text">{face.text}</span>
+    </>
+  );
+}
+
+function OriginalFace({
+  face,
+  artwork,
+}: {
+  readonly face: Face;
+  readonly artwork: CardArtworkSource;
+}) {
+  return (
+    <>
+      <span className="hand-original-face">
+        <CompleteCardArtwork artwork={artwork} />
+      </span>
+      <span className="hand-original-status">{face.marks}</span>
+      <span className="sr-only">
+        <FaceCopy face={face} />
+      </span>
+    </>
+  );
+}
+
+/** Printed cards are shown in full; application-only actions keep their own face. */
 export function HandFace({
   game,
   entry,
@@ -210,16 +236,13 @@ export function HandFace({
   const language = useLanguage();
   const face = faceOf(game, entry, t, language);
   const frame = frameOf(entry);
+  if (frame !== undefined) return <OriginalFace face={face} artwork={frame} />;
   return (
     <>
-      {frame !== undefined && <CardArtwork artwork={frame} className="hand-print-frame" />}
       <span className="hand-print-copy">
         <CardArt entry={entry} />
         {face.marks}
-        <span className="hand-kicker">{face.kicker}</span>
-        <strong className="hand-title">{face.title}</strong>
-        <span className="hand-rule" aria-hidden="true" />
-        <span className="hand-text">{face.text}</span>
+        <FaceCopy face={face} />
       </span>
     </>
   );

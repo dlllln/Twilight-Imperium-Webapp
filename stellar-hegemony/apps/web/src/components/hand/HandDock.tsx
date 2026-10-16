@@ -30,7 +30,7 @@ const FAN_DROP = 4;
 const FLICK_PX = 90;
 /** Bis zu so vielen Karten liegt die Hand locker; darüber rücken die Karten enger. */
 const ROOMY = 5;
-const LIFT = { y: -64, scale: 1.2, rotate: 0, zIndex: 40 } as const;
+const LIFT = { y: -92, scale: 1.8, rotate: 0, zIndex: 40 } as const;
 const SPRING = { type: 'spring', stiffness: 320, damping: 26 } as const;
 /** Neue Karten kommen von unten herein, gespielte fliegen nach oben aufs Spielfeld. */
 const DEALT = { y: 220, opacity: 0 } as const;
