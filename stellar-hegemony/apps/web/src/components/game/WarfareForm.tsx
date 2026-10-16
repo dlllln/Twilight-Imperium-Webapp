@@ -29,11 +29,11 @@ export interface WarfareFormProps {
 const NO_POOLS: PoolCounts = { tactic: 0, fleet: 0, strategy: 0 };
 const sum = (pools: PoolCounts) => COMMAND_POOLS.reduce((total, pool) => total + pools[pool], 0);
 
-/** Neue Verteilung: Start bei den aktuellen Pools, der zurückgenommene Marker ist noch frei. */
-function usePools(game: GameState, player: PlayerId) {
+/** Neue Verteilung: Start bei den aktuellen Pools, ein zurückgenommener Marker ist noch frei. */
+function usePools(game: GameState, player: PlayerId, system: SystemId | null) {
   const current = findPlayer(game, player)?.commandPools ?? NO_POOLS;
   const [pools, setPools] = useState(current);
-  const free = sum(current) + 1 - sum(pools);
+  const free = sum(current) + (system !== null ? 1 : 0) - sum(pools);
   const change = (pool: CommandPool, delta: number) =>
     setPools((before) => ({ ...before, [pool]: before[pool] + delta }));
   return { pools, free, change };
@@ -61,24 +61,29 @@ function PoolSteppers({ form }: { readonly form: Pools }): ReactElement {
   );
 }
 
+/** Ohne eigenen Marker auf der Karte wird nur umverteilt (`system: null`). */
 function PrimaryWarfare(props: WarfareFormProps): ReactElement {
   const t = useT();
   const systems = systemsWithToken(props.game, props.player);
   const [system, setSystem] = useState<SystemId | null>(systems[0] ?? null);
-  const form = usePools(props.game, props.player);
+  const form = usePools(props.game, props.player, system);
+  const none = systems.length === 0;
   const submit = () =>
     props.onSubmit({ mechanic: 'warfare', system, pools: form.pools, production: null });
+  const blocked = (!none && system === null) || form.free !== 0;
   return (
     <div className="choice-form">
-      <SystemSelect
-        game={props.game}
-        label={t('takeBackToken')}
-        options={systems}
-        value={system}
-        onChange={setSystem}
-      />
+      {!none && (
+        <SystemSelect
+          game={props.game}
+          label={t('takeBackToken')}
+          options={systems}
+          value={system}
+          onChange={setSystem}
+        />
+      )}
       <PoolSteppers form={form} />
-      <Actions label={t('confirm')} disabled={system === null || form.free !== 0} onClick={submit}>
+      <Actions label={t(none ? 'withoutToken' : 'confirm')} disabled={blocked} onClick={submit}>
         {props.children}
       </Actions>
     </div>

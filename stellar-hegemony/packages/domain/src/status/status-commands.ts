@@ -124,15 +124,21 @@ function fleetCheck(after: GameState, player: PlayerId, context: DecisionContext
   );
 }
 
+/** RR 73.5: Grundmenge plus Fraktionsbonus, höchstens so viele wie im Nachschub liegen. */
+export function statusTokenGain(state: GameState, player: PlayerId): number {
+  const own = findPlayer(state, player);
+  if (own === undefined) return 0;
+  const tokens = state.config.rules.statusPhaseCommandTokens + own.factionRules.statusCommandTokens;
+  return Math.min(tokens, own.reinforcementTokens);
+}
+
 function allocation(
   state: GameState,
   command: AllocateCommandTokens,
 ): Result<GameEvent, DomainError> {
   const player = findPlayer(state, command.issuedBy);
   if (player === undefined) return err(domainError('status.unknownPlayer', 'Unbekannter Spieler'));
-  const tokens =
-    state.config.rules.statusPhaseCommandTokens + player.factionRules.statusCommandTokens;
-  const gained = Math.min(tokens, player.reinforcementTokens);
+  const gained = statusTokenGain(state, player.id);
   return andThen(CommandSheet.of(player.commandPools), (sheet) =>
     map(sheet.gain('tactic', gained).redistribute(command.pools), (next) => ({
       type: 'CommandTokensAllocated',

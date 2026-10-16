@@ -57,6 +57,8 @@ const HIGHLIGHT_STROKES: Readonly<Record<Exclude<Highlight, 'none'>, [number, nu
   active: [GOLD_BRIGHT, 2],
   selected: [0xffffff, 1.4],
   origin: [0x58e1c1, 1.4],
+  legal: [0x8fe3ff, 1.6],
+  chosen: [0xffd36b, 2],
 };
 
 const WORMHOLE_COLORS: Readonly<Record<WormholeKind, number>> = { alpha: 0xff9b4a, beta: 0x6fd3ff };

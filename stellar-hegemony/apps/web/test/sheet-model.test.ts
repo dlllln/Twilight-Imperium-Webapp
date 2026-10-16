@@ -53,6 +53,7 @@ describe('Kommandopult: Daten', () => {
     expect(model.victoryGoal).toBe(10);
     expect(zoneCounts(model)).toEqual({
       reinforcements: 8,
+      loose: 0,
       tactic: 3,
       fleet: 3,
       strategy: 2,
@@ -92,6 +93,7 @@ describe('Kommandopult: Daten', () => {
     expect(sheetModel(state, 'niemand' as PlayerId, content)).toBeNull();
     expect(zoneCounts(null)).toEqual({
       reinforcements: 0,
+      loose: 0,
       tactic: 0,
       fleet: 0,
       strategy: 0,

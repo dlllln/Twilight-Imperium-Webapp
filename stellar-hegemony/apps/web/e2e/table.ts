@@ -1,4 +1,11 @@
-import { type Browser, expect, type Locator, type Page } from '@playwright/test';
+import {
+  type Browser,
+  type BrowserContext,
+  expect,
+  type Locator,
+  type Page,
+  test,
+} from '@playwright/test';
 
 /*
  * Ein Tisch wie im echten Spiel: Jeder Mensch hat sein eigenes Gerät (hier einen eigenen
@@ -9,9 +16,31 @@ export const NAMES = ['Anna', 'Ben', 'Cleo'] as const;
 
 export const phaseOf = (page: Page) => page.locator('.phases [aria-current="step"]');
 
+/*
+ * Geräte, die ein Test selbst öffnet, schließt Playwright nicht: Ihre Seiten zeichneten nach dem
+ * Test weiter und bremsten alle folgenden Tests desselben Workers aus. Darum merkt sich jedes
+ * Gerät seinen Test, und das erste Gerät eines neuen Tests schließt die der früheren.
+ */
+const devices = new Map<BrowserContext, string>();
+
+async function closeEarlierDevices(current: string): Promise<void> {
+  const earlier = [...devices].filter(([, owner]) => owner !== current).map(([context]) => context);
+  for (const context of earlier) devices.delete(context);
+  await Promise.all(earlier.map((context) => context.close()));
+}
+
+/** Ein frisches Gerät (eigener Browserkontext) für den laufenden Test. */
+export async function newDevice(browser: Browser): Promise<Page> {
+  const current = test.info().testId;
+  await closeEarlierDevices(current);
+  const context = await browser.newContext();
+  devices.set(context, current);
+  return context.newPage();
+}
+
 /** Ein eigenes Gerät mit eigenem Namen; die Hand liegt dort ausgeklappt. */
 export async function openSeat(browser: Browser, name: string): Promise<Page> {
-  const page = await (await browser.newContext()).newPage();
+  const page = await newDevice(browser);
   await page.addInitScript(() => {
     if (localStorage.getItem('stellar.settings') === null)
       localStorage.setItem('stellar.settings', JSON.stringify({ handOpen: true }));
@@ -98,4 +127,25 @@ export async function declineSecondaries(pages: readonly Page[], count: number):
     await decline(page).click();
     await expect(decline(page)).toHaveCount(0);
   }
+}
+
+/** Mittelpunkt eines Elements auf dem Bildschirm. */
+export const center = async (locator: Locator) => {
+  const box = await locator.boundingBox();
+  if (box === null) throw new Error('nicht sichtbar');
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+};
+
+/** Sitz (1-basiert) des Geräts am Tisch. */
+export const seatOf = (pages: readonly Page[], page: Page) => String(pages.indexOf(page) + 1);
+
+/** Ein Nachbarfeld der eigenen Heimat, ohne Anomalie und ohne fremde Heimat. */
+export async function neighbourOfHome(page: Page, seat: string): Promise<Locator> {
+  const home = await center(page.locator(`[data-seat="${seat}"]`));
+  const hexes = page.locator('[data-system]:not([data-anomaly]):not([data-seat])');
+  const centers = await Promise.all((await hexes.all()).map(center));
+  const distances = centers.map((c) => Math.hypot(c.x - home.x, c.y - home.y));
+  const step = Math.min(...distances);
+  const index = distances.findIndex((distance) => distance < step * 1.1);
+  return hexes.nth(index);
 }

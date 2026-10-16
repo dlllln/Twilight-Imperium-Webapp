@@ -38,7 +38,7 @@ export interface ScenePlanet {
   readonly legendary: 'ready' | 'used' | null;
 }
 
-export type Highlight = 'none' | 'active' | 'selected' | 'origin';
+export type Highlight = 'none' | 'active' | 'selected' | 'origin' | 'legal' | 'chosen';
 
 /** Alles, was ein Hexfeld zum Zeichnen braucht (unabhängig von Pixi). */
 export interface SceneHex {

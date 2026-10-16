@@ -72,3 +72,32 @@ describe('Kriegsführung (RR 49)', () => {
     expect(fighters()).toBe(before + 1);
   });
 });
+
+describe('Strategische Aktionen ohne wählbares Ziel', () => {
+  it('Kriegsführung ohne eigenen Marker auf der Karte lässt sich ausführen', () => {
+    const { player, card } = holding('warfare');
+    const pools = findPlayer(game(), player)?.commandPools;
+    render(<Live player={player} card={card} ability="primary" />);
+    expect(screen.queryByLabelText('Marker zurücknehmen aus')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Ohne Marker ausführen' }));
+    expect(store().error).toBeNull();
+    expect(findPlayer(game(), player)?.commandPools).toEqual(pools);
+    expect(game().strategyCards[card.id]?.exhausted).toBe(true);
+  });
+
+  it('Diplomatie ohne wählbares System lässt sich ausführen', () => {
+    const { player, card } = holding('diplomacy');
+    const planets = Object.fromEntries(
+      Object.entries(game().planets).map(([id, planet]) => [
+        id,
+        planet.controller === player ? { ...planet, controller: null } : planet,
+      ]),
+    );
+    useGameStore.setState({ game: { ...game(), planets } });
+    render(<Live player={player} card={card} ability="primary" />);
+    expect(screen.queryByLabelText('System wählen')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Ohne System ausführen' }));
+    expect(store().error).toBeNull();
+    expect(game().strategyCards[card.id]?.exhausted).toBe(true);
+  });
+});

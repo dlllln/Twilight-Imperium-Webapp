@@ -1,16 +1,22 @@
 import type { GameEvent } from '../game/game-events.ts';
-import { findPlayer } from '../game/game-state.ts';
+import { findPlayer, type GameState } from '../game/game-state.ts';
 import { CommandSheet } from '../player/command-sheet.ts';
 import { productionEvents } from '../production/production.ts';
 import { type DomainError, domainError } from '../shared/domain-error.ts';
-import type { SystemId } from '../shared/ids.ts';
+import type { PlayerId, SystemId } from '../shared/ids.ts';
 import { andThen, err, map, ok, type Result } from '../shared/result.ts';
 import { choiceOf, type EffectInput, type StrategyEffect } from './strategy-effect.ts';
 
 type Events = Result<readonly GameEvent[], DomainError>;
 
+/** Kriegsführung primär (RR 49.1): Systeme, aus denen ein eigener Marker zurückkommen kann. */
+export const warfareTokenSystems = (state: GameState, player: PlayerId): readonly SystemId[] =>
+  Object.values(state.systems)
+    .filter((system) => system.commandTokens.includes(player))
+    .map((system) => system.id);
+
 const tokensOnBoard = (input: EffectInput): boolean =>
-  Object.values(input.state.systems).some((system) => system.commandTokens.includes(input.player));
+  warfareTokenSystems(input.state, input.player).length > 0;
 
 /** RR 27.11: Liegt kein eigener Marker auf dem Plan, wird nur umverteilt. */
 function returnedToken(input: EffectInput, system: SystemId | null): Result<boolean, DomainError> {

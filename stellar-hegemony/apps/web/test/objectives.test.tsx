@@ -70,6 +70,27 @@ describe('Statusphase im Browser (RR 73)', () => {
     expect(game()).toMatchObject({ phase: 'strategy', round: 2 });
   });
 
+  it('die Statusphase zählt den Fraktionsbonus bei den erhaltenen Markern mit', () => {
+    statusPhase();
+    for (let player = 0; player < 3; player += 1)
+      store().send({ type: 'EndScoring', issuedBy: actor() });
+    const disciplined = actor();
+    const players = game().players.map((player) =>
+      player.id === disciplined
+        ? { ...player, factionRules: { ...player.factionRules, statusCommandTokens: 1 } }
+        : player,
+    );
+    useGameStore.setState({ game: { ...game(), players } });
+    const tactic = findPlayer(game(), disciplined)?.commandPools.tactic ?? 0;
+    render(<LivePanel />);
+    expect(screen.getByTestId('free-tokens').textContent).toBe('3');
+    for (let token = 0; token < 3; token += 1)
+      fireEvent.click(screen.getByRole('button', { name: 'Taktik +' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ausführen' }));
+    expect(store().error).toBeNull();
+    expect(findPlayer(game(), disciplined)?.commandPools.tactic).toBe(tactic + 3);
+  });
+
   it('RR 68: die Siegpunktleiste zeigt Stand und Ziel', () => {
     const state = statusPhase();
     render(<ObjectivesPanel game={state} />);

@@ -1,6 +1,5 @@
 import {
   EXPLORATION_DECKS,
-  excessActionCards,
   findPlanetDefinition,
   findPlayer,
   type FragmentKind,
@@ -13,7 +12,6 @@ import {
   type PlanetId,
   type PlayerId,
   purgeOptions,
-  reactionActor,
   type StrategyCardState,
   strategyCardsOf,
   strategyEffectFor,
@@ -23,6 +21,10 @@ import {
   usableRelics,
 } from '@stellar/domain';
 import { content } from '../store.ts';
+import { canActivateNow } from '../table/legal-systems.ts';
+import { freeTurn, interrupted } from './turn-guards.ts';
+
+export { freeTurn, interrupted } from './turn-guards.ts';
 
 /*
  * Die Hand am unteren Bildrand als reine Daten: Welche Karten liegen gerade bereit und
@@ -88,12 +90,6 @@ export interface HandInput {
   readonly choosing: boolean;
 }
 
-/** Geheimauftrag wählen, auf eine Karte reagieren, über dem Limit ablegen gehen vor. */
-export const interrupted = (game: GameState, player: PlayerId): boolean =>
-  findPlayer(game, player)?.secretChoice != null ||
-  reactionActor(game) === player ||
-  excessActionCards(game, player) > 0;
-
 function strategyPicks(game: GameState): readonly HandEntry[] {
   if (game.players.some((player) => player.secretChoice !== null)) return [];
   return Object.values(game.strategyCards)
@@ -101,6 +97,10 @@ function strategyPicks(game: GameState): readonly HandEntry[] {
     .sort((a, b) => a.initiative - b.initiative)
     .map((card) => ({ kind: 'pick', card, playable: true }));
 }
+
+/** Die Karte „Taktische Aktion“ prüft dasselbe wie der Knopf am System (RR 89.1). */
+const tacticalPlayable = (input: HandInput, actor: PlayerId): boolean =>
+  input.selected !== null && canActivateNow(input.game, actor, input.selected, input.choosing);
 
 /** Die Möglichkeiten eines normalen Zugs (RR 3): strategisch, taktisch oder passen. */
 function turnActions(input: HandInput, actor: PlayerId): readonly HandEntry[] {
@@ -111,16 +111,10 @@ function turnActions(input: HandInput, actor: PlayerId): readonly HandEntry[] {
       card,
       playable: strategyEffectFor(card.mechanic) !== undefined,
     })),
-    { kind: 'tactical', system: input.selected, playable: input.selected !== null },
+    { kind: 'tactical', system: input.selected, playable: tacticalPlayable(input, actor) },
     { kind: 'pass', playable: unused.length === 0 },
   ];
 }
-
-/** Kein Schritt einer taktischen Aktion, keine Sekundärfähigkeit und kein Tausch offen. */
-export const freeTurn = (game: GameState): boolean => {
-  const phase = game.actionPhase;
-  return phase?.tactical == null && phase?.secondary == null && phase?.transaction == null;
-};
 
 function turnEntries(input: HandInput): readonly HandEntry[] {
   const { game, actor } = input;

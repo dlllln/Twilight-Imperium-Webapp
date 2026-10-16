@@ -6,6 +6,7 @@ import {
   type PoolCounts,
   scoringOptions,
   statusActor,
+  statusTokenGain,
 } from '@stellar/domain';
 import { type BotView, contentOf, issued, me, type Planner } from './bot-view.ts';
 import { planPayment } from './payment-planner.ts';
@@ -49,11 +50,8 @@ export function splitGain(pools: PoolCounts, gained: number): PoolCounts {
 }
 
 function allocations(view: BotView): readonly GameCommand[] {
-  const player = me(view);
-  const rules = view.state.config.rules.statusPhaseCommandTokens;
-  const tokens = rules + player.factionRules.statusCommandTokens;
-  const gained = Math.min(tokens, player.reinforcementTokens);
-  const pools = player.commandPools;
+  const gained = statusTokenGain(view.state, view.player);
+  const pools = me(view).commandPools;
   return [splitGain(pools, gained), { ...pools, tactic: pools.tactic + gained }].map((next) => ({
     type: 'AllocateCommandTokens',
     ...issued(view),

@@ -1,13 +1,15 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import {
   actorPage,
   declineSecondaries,
   freePick,
   keepSecrets,
   NAMES,
+  neighbourOfHome,
   openTable,
   phaseOf,
   pickFirstFree,
+  seatOf,
   whereVisible,
 } from './table.ts';
 
@@ -16,27 +18,8 @@ import {
  * seinem Gerät. Ein Gerät pro Mensch, wie im echten Spiel.
  */
 
-const center = async (locator: Locator) => {
-  const box = await locator.boundingBox();
-  if (box === null) throw new Error('nicht sichtbar');
-  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-};
-
 // Drei Geräte mit Software-Rendering teilen sich den Rechner; der Ablauf braucht Luft.
 test.describe.configure({ timeout: 180_000 });
-
-const seatOf = (pages: readonly Page[], page: Page) => String(pages.indexOf(page) + 1);
-
-/** Ein Nachbarfeld der eigenen Heimat, ohne Anomalie und ohne fremde Heimat. */
-async function neighbourOfHome(page: Page, seat: string): Promise<Locator> {
-  const home = await center(page.locator(`[data-seat="${seat}"]`));
-  const hexes = page.locator('[data-system]:not([data-anomaly]):not([data-seat])');
-  const centers = await Promise.all((await hexes.all()).map(center));
-  const distances = centers.map((c) => Math.hypot(c.x - home.x, c.y - home.y));
-  const step = Math.min(...distances);
-  const index = distances.findIndex((distance) => distance < step * 1.1);
-  return hexes.nth(index);
-}
 
 /** Bombardement, Landung und Produktion auslassen, falls das Zielsystem sie anbietet. */
 async function skipRemainingSteps(page: Page) {

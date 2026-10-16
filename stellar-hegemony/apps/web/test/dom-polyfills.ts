@@ -11,5 +11,6 @@ export function installDomPolyfills(): void {
   const element = Element.prototype as Partial<Element>;
   element.scrollIntoView ??= () => undefined;
   element.hasPointerCapture ??= () => false;
+  element.setPointerCapture ??= () => undefined;
   element.releasePointerCapture ??= () => undefined;
 }

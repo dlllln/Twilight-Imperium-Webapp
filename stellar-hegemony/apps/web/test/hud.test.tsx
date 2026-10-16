@@ -93,12 +93,56 @@ describe('Anzeigen über der Karte', () => {
     const actor = currentActor(state) as PlayerId;
     const home = homeOf(state, actor);
     if (home === undefined) throw new Error('kein Heimatsystem');
-    expect(systemActions(state, actor, home.id)).toEqual(['view', 'activate']);
-    expect(systemActions(state, null, home.id)).toEqual(['view']);
+    expect(systemActions(state, actor, home.id, false)).toEqual(['view', 'activate']);
+    expect(systemActions(state, null, home.id, false)).toEqual(['view']);
+    expect(systemActions(state, actor, home.id, true)).toEqual(['view']);
     useGameStore.getState().send({ type: 'ActivateSystem', issuedBy: actor, system: home.id });
     expect(endTurnOf(game(), actor)).toEqual({ kind: 'endTactical', ready: false });
     render(<PhaseDock game={game()} />);
     const end = screen.getByRole('button', { name: 'Zug beenden' });
     expect(end.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('während eines Reaktionsfensters bietet das Phasenfeld kein Passen an', () => {
+    const state = pickAll(started());
+    const active = state.actionPhase?.active as PlayerId;
+    const cards = Object.entries(state.strategyCards).map(([id, card]) => [
+      id,
+      card.holder === active ? { ...card, exhausted: true } : card,
+    ]);
+    const done = {
+      ...state,
+      strategyCards: Object.fromEntries(cards) as GameState['strategyCards'],
+    };
+    expect(endTurnOf(done, active)).toEqual({ kind: 'pass' });
+    const reactionWindow = { kind: 'afterActivation', awaiting: [active], played: [] } as const;
+    const waiting: GameState = { ...done, reactionWindow };
+    expect(endTurnOf(waiting, active)).toBeNull();
+    useGameStore.setState({ game: waiting, me: active });
+    render(<PhaseDock game={waiting} />);
+    expect(screen.queryByRole('button', { name: 'Passen' })).toBeNull();
+  });
+
+  it('der Verteidiger sieht kein Zug beenden', () => {
+    const state = pickAll(started());
+    const actor = currentActor(state) as PlayerId;
+    const home = homeOf(state, actor);
+    if (home === undefined) throw new Error('kein Heimatsystem');
+    useGameStore.getState().send({ type: 'ActivateSystem', issuedBy: actor, system: home.id });
+    const activated = game();
+    const tactical = activated.actionPhase?.tactical;
+    const defender = state.players.find((player) => player.id !== actor)?.id as PlayerId;
+    if (tactical == null || activated.actionPhase === null) throw new Error('keine Taktikaktion');
+    const pendingHits = [{ player: defender, hits: 1 }];
+    const fighting: GameState = {
+      ...activated,
+      actionPhase: { ...activated.actionPhase, tactical: { ...tactical, pendingHits } },
+    };
+    expect(currentActor(fighting)).toBe(defender);
+    expect(endTurnOf(fighting, defender)).toBeNull();
+    expect(endTurnOf(fighting, actor)).toEqual({ kind: 'endTactical', ready: false });
+    useGameStore.setState({ game: fighting, me: defender });
+    render(<PhaseDock game={fighting} />);
+    expect(screen.queryByRole('button', { name: 'Zug beenden' })).toBeNull();
   });
 });

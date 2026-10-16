@@ -1,7 +1,8 @@
 import { type Browser, expect, type Page, test } from '@playwright/test';
+import { newDevice } from './table.ts';
 
 async function openPage(browser: Browser, name: string): Promise<Page> {
-  const page = await (await browser.newContext()).newPage();
+  const page = await newDevice(browser);
   await page.goto('/');
   await page.getByLabel('Dein Name').fill(name);
   return page;

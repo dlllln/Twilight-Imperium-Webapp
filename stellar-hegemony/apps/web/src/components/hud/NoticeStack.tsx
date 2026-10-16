@@ -10,6 +10,7 @@ import { useSettingsStore } from '../../settings-store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { TurnPanel, useTurnPanelKey } from '../game/TurnPanel.tsx';
 import { HistoryText } from '../history/HistoryPanel.tsx';
+import { TablePrompt } from '../table/TablePrompt.tsx';
 
 /** Hereingleiten von rechts, wie eine Benachrichtigung; Verschwinden nach rechts. */
 const POP = {
@@ -102,27 +103,32 @@ function ErrorNotice(): ReactElement | null {
 }
 
 /**
- * Unten rechts, über der Phasenanzeige: Was man entscheiden muss, ploppt wie eine
- * Benachrichtigung auf; darüber kurze Meldungen, was die anderen gerade getan haben.
+ * Unten rechts, über der Phasenanzeige: kurze Meldungen, was die anderen gerade getan haben.
+ * In der klassischen Ansicht ploppt dort auch die offene Entscheidung wie eine Benachrichtigung
+ * auf; in der Tischansicht steht sie stattdessen als Ansage über dem Pult, außerhalb der Liste.
  */
 export function NoticeStack({ game }: { readonly game: GameState }): ReactElement {
   const decision = useTurnPanelKey(game);
+  const table = useSettingsStore((state) => state.tableView);
   const pop = usePop();
   const { shown, dismiss } = useFreshNotices();
   return (
-    <div className="notice-stack" aria-live="polite">
-      <AnimatePresence initial={false}>
-        {shown.map((entry) => (
-          <InfoNotice key={entry.id} entry={entry} game={game} onDismiss={dismiss} />
-        ))}
-        <ErrorNotice key="error" />
-      </AnimatePresence>
-      {/* Die alte Entscheidung verschwindet sofort, damit nie zwei Formulare gleichzeitig offen sind. */}
-      {decision !== null && (
-        <motion.div {...pop} key={decision} className="notice decision">
-          <TurnPanel game={game} />
-        </motion.div>
-      )}
-    </div>
+    <>
+      <div className="notice-stack" aria-live="polite">
+        <AnimatePresence initial={false}>
+          {shown.map((entry) => (
+            <InfoNotice key={entry.id} entry={entry} game={game} onDismiss={dismiss} />
+          ))}
+          <ErrorNotice key="error" />
+        </AnimatePresence>
+        {/* Die alte Entscheidung verschwindet sofort, damit nie zwei Formulare gleichzeitig offen sind. */}
+        {!table && decision !== null && (
+          <motion.div {...pop} key={decision} className="notice decision">
+            <TurnPanel game={game} />
+          </motion.div>
+        )}
+      </div>
+      {table && decision !== null && <TablePrompt key={decision} game={game} />}
+    </>
   );
 }

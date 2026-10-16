@@ -17,7 +17,7 @@ const P2 = seatPlayerId(1);
 
 beforeEach(() => {
   useGalaxyStore.setState({ language: 'de' });
-  useSettingsStore.setState({ animations: false });
+  useSettingsStore.setState({ animations: false, tableView: true });
   leaveTable();
 });
 
@@ -42,10 +42,20 @@ const picked = (player: typeof P1, card: string) =>
 
 describe('Benachrichtigungen unten rechts', () => {
   it('die offene Entscheidung ploppt als Benachrichtigung auf (hier: geheime Aufträge wählen)', () => {
+    useSettingsStore.setState({ tableView: false });
     seatTable(started(), { me: P1 });
     render(<Live />);
     const decision = document.querySelector('.notice.decision');
     expect(decision?.textContent).toContain('Geheime Aufträge');
+    expect(screen.queryByTestId('decision')).toBeNull();
+  });
+
+  it('in der Tischansicht steht die Entscheidung als Ansage über dem Pult, nicht als Benachrichtigung', () => {
+    seatTable(started(), { me: P1 });
+    render(<Live />);
+    expect(screen.getByTestId('decision').textContent).toContain('Geheime Aufträge');
+    expect(document.querySelector('.notice.decision')).toBeNull();
+    expect(document.querySelector('.notice-stack [data-testid="decision"]')).toBeNull();
   });
 
   it('was die anderen tun, erscheint kurz; eigene Züge nicht; nach einer Weile verschwindet es', () => {

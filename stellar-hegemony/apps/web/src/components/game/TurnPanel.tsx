@@ -1,18 +1,17 @@
-import {
-  excessActionCards,
-  findPlayer,
-  type GameState,
-  type PlayerId,
-  reactionActor,
-  type StrategyCardDefinition,
-  type StrategyCardId,
-  type StrategyChoice,
+import type {
+  GameState,
+  PlayerId,
+  StrategyCardDefinition,
+  StrategyCardId,
+  StrategyChoice,
 } from '@stellar/domain';
 import type { ReactElement } from 'react';
-import { useOthersTurn, useGameStore, useHumanActor } from '../../game-store.ts';
+import { useGameStore } from '../../game-store.ts';
 import { useHandStore } from '../../hand/hand-store.ts';
 import { useSettingsStore } from '../../settings-store.ts';
 import { content } from '../../store.ts';
+import type { DecisionKind, DecisionRoute } from '../../table/decision-route.ts';
+import { useDecisionRoute } from '../../table/use-decision-route.ts';
 import { PHASE_TIPS } from '../../tutorial/tutorial-steps.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { GameOverNotice, StatusTurn } from '../objectives/StatusTurn.tsx';
@@ -23,10 +22,10 @@ import { ReactionPrompt } from '../cards/ReactionPrompt.tsx';
 import { cardText } from './card-text.ts';
 import { ChoiceForm } from './ChoiceForm.tsx';
 import { PlayerTag } from './PlayerTag.tsx';
-import { TacticalTurn } from './TacticalPanel.tsx';
+import { CombatPending, TacticalTurn } from './TacticalPanel.tsx';
 import { TransactionForm, TransactionReply } from './TransactionForm.tsx';
 
-const definitionOf = (id: StrategyCardId | undefined): StrategyCardDefinition | undefined =>
+const definitionOf = (id: StrategyCardId | null | undefined): StrategyCardDefinition | undefined =>
   content.strategyCards.find((card) => card.id === id);
 
 interface TurnProps {
@@ -88,20 +87,19 @@ function PrimaryAction({ game, player, card, onBack }: PrimaryProps): ReactEleme
   );
 }
 
-/** Die aus der Hand gespielte strategische Aktion dieses Spielers, falls eine offen ist. */
-function useChosenCard(player: PlayerId): StrategyCardDefinition | undefined {
-  const chosen = useHandStore((state) => state.chosen);
-  return chosen?.player === player ? definitionOf(chosen.card) : undefined;
+/** Die aus der Hand gespielte strategische Aktion; ohne bekannte Karte gibt es nichts zu zeigen. */
+function ChosenPrimary(
+  props: TurnProps & { readonly card: StrategyCardId | null },
+): ReactElement | null {
+  const clear = useHandStore((state) => state.clear);
+  const card = definitionOf(props.card);
+  if (card === undefined) return null;
+  return <PrimaryAction game={props.game} player={props.player} card={card} onBack={clear} />;
 }
 
-/** Gezogen wird mit den Karten der Hand; hier stehen nur Formulare und der Handel. */
-function ActiveTurn({ game, player }: TurnProps): ReactElement {
+/** Gezogen wird mit den Karten der Hand; hier stehen nur der Hinweis und der Handel. */
+function IdleTurn({ game, player }: TurnProps): ReactElement {
   const t = useT();
-  const chosen = useChosenCard(player);
-  const clear = useHandStore((state) => state.clear);
-  if (game.actionPhase?.tactical != null) return <TacticalTurn game={game} player={player} />;
-  if (chosen !== undefined)
-    return <PrimaryAction game={game} player={player} card={chosen} onBack={clear} />;
   return (
     <div className="turn-block">
       <p className="hint hand-hint">{t('handHint')}</p>
@@ -110,41 +108,58 @@ function ActiveTurn({ game, player }: TurnProps): ReactElement {
   );
 }
 
-/** Offene Sekundärfähigkeit, dann ein Tauschangebot, sonst der normale Zug. */
-function TurnContent({ game, player }: TurnProps): ReactElement {
-  if (game.actionPhase?.secondary != null) return <SecondaryPrompt game={game} player={player} />;
-  if (game.actionPhase?.transaction != null)
-    return <TransactionReply game={game} player={player} />;
-  return <ActiveTurn key={player} game={game} player={player} />;
+/** Der Verteidiger entscheidet nur im Kampf: kein Tausch, kein Ende der Aktion des Angreifers. */
+function CombatTurn(): ReactElement {
+  const t = useT();
+  return (
+    <div className="turn-block">
+      <p className="hint">{t('combatWaiting')}</p>
+      <CombatPending />
+    </div>
+  );
 }
 
-/** Welche Unterbrechung ansteht, als Name (für den Schlüssel der Benachrichtigung). */
-function interruptionKind(game: GameState, player: PlayerId): string {
-  if (findPlayer(game, player)?.secretChoice != null) return 'secret';
-  if (reactionActor(game) === player) return 'reaction';
-  return excessActionCards(game, player) > 0 ? 'discard' : '';
+interface BodyProps extends TurnProps {
+  readonly route: DecisionRoute;
 }
 
-/** Was jede Phase unterbricht: Geheimauftrags-Wahl, Reaktion, Ablegen über dem Limit. */
-function interruption(game: GameState, player: PlayerId): ReactElement | null {
-  if (findPlayer(game, player)?.secretChoice != null)
-    return <SecretChoiceForm key={player} game={game} player={player} />;
-  if (reactionActor(game) === player) return <ReactionPrompt game={game} />;
-  if (excessActionCards(game, player) > 0)
-    return <DiscardForm key={player} game={game} player={player} />;
-  return null;
+type Body = (props: BodyProps) => ReactElement | null;
+
+const statusBody: Body = ({ game, player }) => <StatusTurn game={game} player={player} />;
+const agendaBody: Body = ({ game, player }) => <AgendaTurn game={game} player={player} />;
+
+/** Je Art der Entscheidung ein kleines Formular; die Schlüssel trennen die Plätze am Hot-Seat. */
+const BODIES: Readonly<Record<Exclude<DecisionKind, 'gameOver'>, Body>> = {
+  waiting: ({ game, player }) => <WaitingLine game={game} player={player} />,
+  secretChoice: ({ game, player }) => <SecretChoiceForm key={player} game={game} player={player} />,
+  reaction: ({ game }) => <ReactionPrompt game={game} />,
+  discard: ({ game, player }) => <DiscardForm key={player} game={game} player={player} />,
+  scoring: statusBody,
+  tokens: statusBody,
+  vote: agendaBody,
+  tieBreak: agendaBody,
+  secondary: ({ game, player }) => <SecondaryPrompt game={game} player={player} />,
+  transactionReply: ({ game, player }) => <TransactionReply game={game} player={player} />,
+  primary: ({ game, player, route }) => (
+    <ChosenPrimary key={player} game={game} player={player} card={route.card} />
+  ),
+  tactical: ({ game, player }) => <TacticalTurn key={player} game={game} player={player} />,
+  combat: () => <CombatTurn />,
+  idle: ({ game, player }) => <IdleTurn key={player} game={game} player={player} />,
+};
+
+/** Der Inhalt der offenen Entscheidung, ohne Rahmen: für das Panel und die Ansage am Pult. */
+export function TurnPanelBody(props: {
+  readonly game: GameState;
+  readonly route: DecisionRoute;
+}): ReactElement | null {
+  const { game, route } = props;
+  if (route.kind === 'gameOver') return <GameOverNotice game={game} />;
+  if (route.actor === null) return null;
+  return BODIES[route.kind]({ game, player: route.actor, route });
 }
 
-/** Erst die Unterbrechung, dann der Zug der jeweiligen Phase. */
-function PhaseContent({ game, player }: TurnProps): ReactElement | null {
-  const interrupting = interruption(game, player);
-  if (interrupting !== null) return interrupting;
-  if (game.phase === 'status') return <StatusTurn game={game} player={player} />;
-  if (game.phase === 'agenda') return <AgendaTurn game={game} player={player} />;
-  return game.phase === 'action' ? <TurnContent game={game} player={player} /> : null;
-}
-
-const PHASE_TITLE = {
+export const PHASE_TITLE = {
   strategy: 'phase.strategy',
   action: 'phase.action',
   status: 'phase.status',
@@ -153,19 +168,22 @@ const PHASE_TITLE = {
   gameOver: 'phase.status',
 } as const satisfies Record<GameState['phase'], string>;
 
-/** Die Strategiephase wählt in der Kartenauslage; hier erscheint sie nur bei Unterbrechungen. */
-const hasTurnPanel = (game: GameState, actor: PlayerId): boolean =>
-  game.phase !== 'strategy' || interruption(game, actor) !== null;
-
-/** Während die KI oder ein Mitspieler zieht, gibt es hier nichts zu entscheiden, nur einen Hinweis. */
-function BotNotice({ game, player }: TurnProps): ReactElement {
+/** Wer gerade zieht, während man selbst nichts zu entscheiden hat. */
+export function WaitingLine({ game, player }: TurnProps): ReactElement {
   const t = useT();
   const bot = useGameStore((state) => state.bots.includes(player));
   return (
+    <p className="waiting-line">
+      <PlayerTag game={game} id={player} /> {t(bot ? 'botThinking' : 'otherThinking')}
+    </p>
+  );
+}
+
+/** Während die KI oder ein Mitspieler zieht, gibt es hier nichts zu entscheiden, nur einen Hinweis. */
+function BotNotice({ game, player }: TurnProps): ReactElement {
+  return (
     <section className="game-section bot-turn" aria-live="polite" data-tutorial="turn">
-      <p>
-        <PlayerTag game={game} id={player} /> {t(bot ? 'botThinking' : 'otherThinking')}
-      </p>
+      <WaitingLine game={game} player={player} />
     </section>
   );
 }
@@ -175,15 +193,7 @@ function BotNotice({ game, player }: TurnProps): ReactElement {
  * `null`, wenn es nichts zu zeigen gibt.
  */
 export function useTurnPanelKey(game: GameState): string | null {
-  const actor = useHumanActor(game);
-  const bot = useOthersTurn(game);
-  const chosen = useHandStore((state) => state.chosen?.card ?? '');
-  if (game.phase === 'gameOver') return 'gameOver';
-  if (bot !== null) return `wait-${bot}`;
-  if (actor === null || !hasTurnPanel(game, actor)) return null;
-  const { secondary, tactical, transaction } = game.actionPhase ?? {};
-  const parts = [game.phase, game.round, interruptionKind(game, actor), secondary?.card];
-  return [...parts, tactical != null, transaction != null, chosen].join('|');
+  return useDecisionRoute(game)?.key ?? null;
 }
 
 /** Ein kurzer Satz zur Phase, solange Tipps eingeschaltet sind. */
@@ -197,16 +207,16 @@ function PhaseTip({ game }: { readonly game: GameState }): ReactElement | null {
 /** Was der Spieler am Bildschirm gerade tun kann; nach dem Sieg nur noch das Ergebnis. */
 export function TurnPanel({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
-  const actor = useHumanActor(game);
-  const bot = useOthersTurn(game);
-  if (game.phase === 'gameOver') return <GameOverNotice game={game} />;
-  if (bot !== null) return <BotNotice game={game} player={bot} />;
-  if (actor === null || !hasTurnPanel(game, actor)) return null;
+  const route = useDecisionRoute(game);
+  if (route === null) return null;
+  if (route.kind === 'gameOver') return <GameOverNotice game={game} />;
+  if (route.kind === 'waiting' && route.actor !== null)
+    return <BotNotice game={game} player={route.actor} />;
   return (
     <section className="game-section your-turn" data-tutorial="turn">
       <h2>{t(PHASE_TITLE[game.phase])}</h2>
       <PhaseTip game={game} />
-      <PhaseContent game={game} player={actor} />
+      <TurnPanelBody game={game} route={route} />
     </section>
   );
 }

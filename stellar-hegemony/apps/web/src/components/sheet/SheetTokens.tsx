@@ -120,21 +120,26 @@ const chipVariants = (id: number): Variants => ({
 
 interface ChipProps {
   readonly id: number;
-  readonly zone: SheetZone;
+  /** Feld des Markers; „loose“ ist die Schale „Neue Marker“ während einer Verteilung. */
+  readonly zone: SheetZone | 'loose';
   readonly faction: string;
   /** Kommt von der Karte zurück: fällt von oben ins Feld. */
   readonly arriving: boolean;
   readonly place: MotionStyle;
+  /** Wird gerade gezogen: bleibt blass an seinem Platz, bis er abgelegt ist. */
+  readonly dragging?: boolean;
 }
 
 /** Ein Marker mit fester Nummer; wechselt er das Feld, fliegt er per `layoutId` hinüber. */
-export function TokenChip({ id, zone, faction, arriving, place }: ChipProps): ReactElement {
+export function TokenChip(props: ChipProps): ReactElement {
+  const { id, zone, faction, arriving, place, dragging = false } = props;
   const transition = useSheetTransition();
   return (
     <motion.span
       className="sheet-token"
       data-zone={zone}
       data-token={id}
+      data-dragging={dragging ? 'true' : undefined}
       layoutId={`cmd-${String(id)}`}
       variants={chipVariants(id)}
       initial={arriving ? ENTER : false}

@@ -1,6 +1,5 @@
-import { type GameState, type PlayerId, systemId } from '@stellar/domain';
-import { freeTurn, interrupted } from '../hand/hand-model.ts';
-import { tryCommand } from '../rules-preview.ts';
+import type { GameState, PlayerId } from '@stellar/domain';
+import { canActivateNow } from '../table/legal-systems.ts';
 
 /*
  * Welche Knöpfe über einem gewählten System erscheinen. Ob die Aktivierung erlaubt ist,
@@ -9,18 +8,16 @@ import { tryCommand } from '../rules-preview.ts';
 
 export type SystemAction = 'view' | 'activate';
 
-function canActivate(game: GameState, actor: PlayerId, system: string): boolean {
-  if (game.phase !== 'action' || !freeTurn(game) || interrupted(game, actor)) return false;
-  const command = { type: 'ActivateSystem', issuedBy: actor, system: systemId(system) } as const;
-  return tryCommand(game, command).ok;
-}
-
-/** Ansehen geht immer; aktivieren nur, wenn der Spieler am Bildschirm es jetzt darf. */
+/**
+ * Ansehen geht immer; aktivieren nur, wenn der Spieler am Bildschirm es jetzt darf und keine
+ * strategische Aktion gewählt hat (`choosing`).
+ */
 export function systemActions(
   game: GameState,
   actor: PlayerId | null,
   system: string,
+  choosing: boolean,
 ): readonly SystemAction[] {
-  const activate = actor !== null && canActivate(game, actor, system);
+  const activate = actor !== null && canActivateNow(game, actor, system, choosing);
   return activate ? ['view', 'activate'] : ['view'];
 }

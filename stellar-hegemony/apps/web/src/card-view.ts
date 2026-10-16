@@ -8,6 +8,7 @@ import {
   type PlayerId,
   type SystemId,
   type UnitDefinition,
+  warfareTokenSystems,
 } from '@stellar/domain';
 
 /** Gebäudetypen aus den Stammdaten; mit `cannonOnly` nur solche mit Weltraumkanone. */
@@ -34,9 +35,7 @@ export const constructionSystems = (game: GameState, player: PlayerId): readonly
 
 /** Kriegsführung primär: Systeme, in denen ein eigener Marker liegt. */
 export const systemsWithToken = (game: GameState, player: PlayerId): readonly SystemId[] =>
-  Object.values(game.systems)
-    .filter((system) => system.commandTokens.includes(player))
-    .map((system) => system.id);
+  warfareTokenSystems(game, player);
 
 /** Heimatsystem laut Fraktion des Spielers. */
 export function homeSystemOf(

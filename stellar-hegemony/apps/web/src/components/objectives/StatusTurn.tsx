@@ -6,6 +6,7 @@ import {
   type PlayerId,
   type PoolCounts,
   scoringOptions,
+  statusTokenGain,
 } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
 import { useGameStore } from '../../game-store.ts';
@@ -47,12 +48,10 @@ function ScoringStep({ game, player }: TurnProps): ReactElement {
 const NO_POOLS: PoolCounts = { tactic: 0, fleet: 0, strategy: 0 };
 const total = (pools: PoolCounts) => COMMAND_POOLS.reduce((sum, pool) => sum + pools[pool], 0);
 
-/** Neue Verteilung ab den aktuellen Pools; frei sind die erhaltenen Marker. */
+/** Neue Verteilung ab den aktuellen Pools; frei sind die erhaltenen Marker samt Fraktionsbonus. */
 function useAllocation({ game, player }: TurnProps) {
-  const own = findPlayer(game, player);
-  const current = own?.commandPools ?? NO_POOLS;
-  const reinforcements = own?.reinforcementTokens ?? 0;
-  const gained = Math.min(game.config.rules.statusPhaseCommandTokens, reinforcements);
+  const current = findPlayer(game, player)?.commandPools ?? NO_POOLS;
+  const gained = statusTokenGain(game, player);
   const [pools, setPools] = useState<PoolCounts>(current);
   const change = (pool: CommandPool, delta: number) =>
     setPools((before) => ({ ...before, [pool]: before[pool] + delta }));

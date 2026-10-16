@@ -11,6 +11,8 @@ import { tryCommand } from '../src/rules-preview.ts';
 import { countUnits, gameScene, layoutScene } from '../src/render/scene-model.ts';
 import { worldTransform } from '../src/render/view-transform.ts';
 import { content, DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
+import { withTableHighlights } from '../src/table/table-highlights.ts';
+import type { TargetState } from '../src/table/target-ref.ts';
 import { cargoAtOrigin, highlightsOf, movementChoices } from '../src/tactical-view.ts';
 import { pickAll, started } from './game-helpers.ts';
 
@@ -90,6 +92,27 @@ describe('Taktische Aktion in der Ansicht (RR 79)', () => {
     expect(highlights.get(active)).toBe('active');
     expect(highlights.get('r01')).toBe('selected');
     expect(highlights.get(options[0]?.from ?? '')).toBe('origin');
+  });
+
+  it('erlaubte Ziele leuchten als legal, gewählte als chosen; das aktive System bleibt aktiv', () => {
+    const game = activatedNeighbour(pickAll(started()));
+    const active = game.actionPhase?.tactical?.system as string;
+    const base = highlightsOf(game, movementChoices(game, content), null);
+    const free = Object.keys(game.systems).filter((id) => !base.has(id));
+    const [legal, chosen, blocked] = free;
+    const targets = new Map<string, TargetState>([
+      [`system:${active}`, 'legal'],
+      [`system:${legal ?? ''}`, 'legal'],
+      [`system:${chosen ?? ''}`, 'chosen'],
+      [`system:${blocked ?? ''}`, 'blocked'],
+      ['pool:tactic', 'legal'],
+    ]);
+    const hexes = gameScene(game, content, 'de', withTableHighlights(base, targets));
+    const look = (id: string | undefined) => hexes.find((hex) => hex.systemId === id)?.highlight;
+    expect(look(active)).toBe('active');
+    expect(look(legal)).toBe('legal');
+    expect(look(chosen)).toBe('chosen');
+    expect(look(blocked)).toBe('none');
   });
 
   it('der Kommandomarker liegt in der Farbe des aktiven Sitzes im System (RR 79.2)', () => {

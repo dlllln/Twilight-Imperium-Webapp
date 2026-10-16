@@ -11,6 +11,7 @@ import {
   strategyCardsOf,
   type TechnologyColor,
 } from '@stellar/domain';
+import { interrupted } from '../hand/turn-guards.ts';
 
 /*
  * Daten für die Anzeigen über der Karte (reine Funktionen): die Leiste mit den eigenen
@@ -105,9 +106,13 @@ export function playerRail(game: GameState): readonly RailEntry[] {
 export type EndTurn =
   { readonly kind: 'endTactical'; readonly ready: boolean } | { readonly kind: 'pass' } | null;
 
+/** Nur wer selbst am Zug ist und nicht unterbrochen wird, beendet ihn (nicht der Verteidiger). */
+const ownTurn = (game: GameState, actor: PlayerId | null): actor is PlayerId =>
+  actor !== null && game.actionPhase?.active === actor && !interrupted(game, actor);
+
 export function endTurnOf(game: GameState, actor: PlayerId | null): EndTurn {
   const phase = game.actionPhase;
-  if (actor === null || game.phase !== 'action' || phase === null) return null;
+  if (game.phase !== 'action' || phase === null || !ownTurn(game, actor)) return null;
   if (phase.tactical != null) return { kind: 'endTactical', ready: phase.tactical.step === 'done' };
   const free = phase.secondary == null && phase.transaction == null;
   const unused = strategyCardsOf(game, actor).some((card) => !card.exhausted);

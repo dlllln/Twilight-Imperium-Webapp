@@ -5518,3 +5518,690 @@ body {
     font-size: 11px;
   }
 }
+
+/* ---------- Iteration 28 – Ansage und Gesten am Tisch ---------- */
+
+/*
+ * Die Ansage: ein Messingschild, das in der Tischansicht aus dem rechten Flügel aufsteigt und
+ * jede Entscheidung trägt. Kein Kartenschatten, kein Hereingleiten: Es gehört zum Pult.
+ */
+
+.table-prompt {
+  position: relative;
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(340px, var(--wing, 340px));
+  max-width: 100%;
+  min-height: 0;
+  max-height: 100%;
+  padding: 12px 14px 14px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  border: 1.5px solid transparent;
+  border-bottom-width: 0;
+  border-radius: 18px 18px 0 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0, transparent 6px) padding-box,
+    radial-gradient(
+        120% 70% at 50% 120%,
+        color-mix(in srgb, var(--seat, var(--gold)) 22%, transparent),
+        transparent 65%
+      )
+      padding-box,
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 7px)
+      padding-box,
+    linear-gradient(180deg, var(--panel-strong) 0%, #070b1c 100%) padding-box,
+    linear-gradient(
+        180deg,
+        rgba(255, 224, 138, 0.95) 0%,
+        rgba(217, 180, 90, 0.6) 40%,
+        rgba(92, 72, 30, 0.85) 100%
+      )
+      border-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 240, 200, 0.12);
+  pointer-events: auto;
+}
+
+/* Bündig auf dem Flügel: ganz unten in der Ecke, die Phasenanzeige rückt darüber. */
+.hud-shield[data-view='table'] .hud-corner > .table-prompt {
+  order: 1;
+  margin-bottom: -10px;
+}
+
+.table-prompt[data-kind='waiting'],
+.table-prompt[data-kind='gameOver'] {
+  padding-block: 10px;
+}
+
+.table-prompt-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gold-line);
+}
+
+.table-prompt-head h2 {
+  margin: 0;
+  font-family: var(--title-font);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+}
+
+.table-prompt-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.table-prompt .hint,
+.table-prompt .waiting-line {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+/* Messleiste: eingelassen wie eine Leiste des Pults */
+
+.table-prompt-meter {
+  margin: 0;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(255, 255, 255, 0.025) 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  font-family: var(--title-font);
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.table-prompt-meter strong {
+  font-size: 15px;
+  letter-spacing: 0;
+  color: var(--gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Münzen der Führung und Systemwahl der Kriegsführung */
+
+.table-prompt-coins {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.table-prompt-coins > span {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+}
+
+.table-prompt-step {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--gold-line);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #2a3150 0%, #0d1228 100%);
+  color: var(--gold-bright);
+  line-height: 1;
+}
+
+.table-prompt-count {
+  min-width: 2ch;
+  font-family: var(--title-font);
+  font-size: 15px;
+  text-align: center;
+  color: var(--gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+.table-prompt label {
+  font-size: 12.5px;
+}
+
+.table-prompt select {
+  flex: 1;
+  min-width: 0;
+}
+
+.table-prompt-body {
+  min-height: 0;
+}
+
+.table-prompt-body .turn-block h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.table-prompt .game-over {
+  margin: 0;
+}
+
+/* Unten: Ausweg als flacher Stein, rechts das Siegel */
+
+.table-prompt-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.table-prompt-alt {
+  padding: 6px 14px;
+  border: 1px solid var(--gold-line);
+  border-radius: 999px;
+  background: radial-gradient(ellipse at 50% 30%, #1b2443 0%, #070b1c 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 3px rgba(0, 0, 0, 0.55);
+  font-family: var(--title-font);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.table-prompt-alt:hover:not(:disabled) {
+  transform: none;
+  border-color: var(--gold-bright);
+  background: radial-gradient(ellipse at 50% 30%, #252f55 0%, #0b1129 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 8px rgba(255, 224, 138, 0.3);
+}
+
+/*
+ * Das Siegel: achteckiger Messingstein mit eingravierter Beschriftung. Rahmen (::before) und
+ * Fläche (::after) sind beschnitten, der Knopf selbst nicht: So folgt der Schein dem Achteck.
+ */
+
+.confirm-seal {
+  position: relative;
+  isolation: isolate;
+  min-width: 116px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--title-font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #2b1d05;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, 0.5);
+  filter: drop-shadow(0 0 7px rgba(255, 210, 120, 0.55)) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6));
+  animation: seal-glow 2.8s ease-in-out infinite;
+  transition:
+    filter 0.2s ease,
+    transform 0.15s ease;
+}
+
+.confirm-seal::before,
+.confirm-seal::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(
+    var(--cut) 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut)),
+    0 var(--cut)
+  );
+  pointer-events: none;
+}
+
+.confirm-seal::before {
+  --cut: 12px;
+  inset: 0;
+  background: linear-gradient(180deg, #fff0b8 0%, #d9b45a 45%, #6b4c14 100%);
+}
+
+.confirm-seal::after {
+  --cut: 10.5px;
+  inset: 2.5px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 4px),
+    radial-gradient(120% 90% at 50% 15%, #f6d983 0%, #cf9f43 55%, #8a6420 100%);
+}
+
+.confirm-seal:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 0 12px rgba(255, 224, 138, 0.85)) drop-shadow(0 4px 4px rgba(0, 0, 0, 0.6));
+}
+
+.confirm-seal:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.confirm-seal:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 3px;
+}
+
+.confirm-seal:disabled {
+  opacity: 0.5;
+  filter: grayscale(0.7) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+  animation: none;
+}
+
+@keyframes seal-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(255, 210, 120, 0.45)) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 224, 138, 0.8)) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6));
+  }
+}
+
+/* Stücke auf dem Pult: aufnehmen, tragen, ablegen */
+
+.sheet-socket {
+  position: relative;
+}
+
+.sheet-piece {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 30%;
+  background: transparent;
+  box-shadow: none;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  transition:
+    transform 0.18s var(--ease-out),
+    box-shadow 0.18s ease;
+}
+
+.sheet-rack > .sheet-piece {
+  grid-row: 1;
+}
+
+/* In einer Schale liegt der Knopf wie ein Marker über dem obersten (Lage per left/top). */
+.sheet-bowl > .sheet-piece,
+.sheet-loose-bowl > .sheet-piece {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+}
+
+.sheet-socket > .sheet-piece {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+}
+
+.sheet-piece:hover:not(:disabled) {
+  transform: none;
+  border: 0;
+  background: transparent;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--seat, var(--gold)) 70%, transparent),
+    0 0 8px color-mix(in srgb, var(--seat, var(--gold)) 45%, transparent);
+}
+
+.sheet-piece:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.sheet-piece[aria-pressed='true'],
+.sheet-piece[aria-pressed='true']:hover:not(:disabled) {
+  transform: translateY(-5px) scale(1.12);
+  background: transparent;
+  box-shadow:
+    0 0 0 2px var(--seat, var(--gold)),
+    0 0 14px var(--seat, var(--gold)),
+    0 7px 8px rgba(0, 0, 0, 0.6);
+  cursor: grabbing;
+}
+
+.sheet-piece[aria-pressed='true'] .sheet-token {
+  filter: drop-shadow(0 0 6px var(--seat, var(--gold))) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.7));
+}
+
+.sheet-token[data-dragging='true'] {
+  opacity: 0.3;
+  filter: grayscale(0.5);
+}
+
+/* Ziele: erlaubte Felder leuchten in Platzfarbe, gewählte golden, das unter dem Zeiger hell */
+
+.sheet-tray[data-target-state],
+.sheet-depot[data-target-state],
+.sheet-loose[data-target-state] {
+  pointer-events: auto;
+  cursor: pointer;
+  outline: 1px solid transparent;
+  outline-offset: 1px;
+  transition:
+    outline-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.sheet-tray[data-target-state='legal'],
+.sheet-depot[data-target-state='legal'],
+.sheet-loose[data-target-state='legal'] {
+  outline-color: color-mix(in srgb, var(--seat, var(--gold)) 80%, transparent);
+  animation: target-breathe 2.4s ease-in-out infinite;
+}
+
+.sheet-tray[data-target-state='legal'] {
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 0 10px color-mix(in srgb, var(--seat, var(--gold)) 22%, transparent),
+    0 0 9px color-mix(in srgb, var(--seat, var(--gold)) 35%, transparent);
+}
+
+.sheet-tray[data-target-state='chosen'],
+.sheet-depot[data-target-state='chosen'],
+.sheet-loose[data-target-state='chosen'] {
+  outline: 1.5px solid var(--gold-bright);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+    0 0 10px rgba(255, 224, 138, 0.45);
+}
+
+.sheet-tray[data-over='true'],
+.sheet-depot[data-over='true'],
+.sheet-loose[data-over='true'] {
+  outline: 2px solid var(--gold-bright);
+  background-color: color-mix(in srgb, var(--seat, var(--gold)) 16%, transparent);
+  animation: none;
+}
+
+.sheet-tray[data-target-state]:focus-visible,
+.sheet-depot[data-target-state]:focus-visible,
+.sheet-loose[data-target-state]:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+@keyframes target-breathe {
+  0%,
+  100% {
+    outline-color: color-mix(in srgb, var(--seat, var(--gold)) 85%, transparent);
+  }
+
+  50% {
+    outline-color: color-mix(in srgb, var(--seat, var(--gold)) 25%, transparent);
+  }
+}
+
+/* Schale „Neue Marker“: steht über der Innenkante des linken Flügels, solange verteilt wird */
+
+.sheet-loose {
+  position: absolute;
+  right: 12px;
+  bottom: 100%;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 6px;
+  padding: 5px 8px 4px;
+  border-radius: 14px 14px 8px 8px;
+  background: linear-gradient(180deg, var(--panel-strong) 0%, #070b1c 100%);
+  box-shadow:
+    0 0 0 1px var(--gold-line),
+    0 4px 10px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+
+.sheet-loose-bowl {
+  position: relative;
+  width: 76px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 36%, #02040b 0 38%, #0b1228 68%, #1c2645 100%);
+  box-shadow:
+    inset 0 4px 8px rgba(0, 0, 0, 0.92),
+    inset 0 -2px 3px rgba(255, 255, 255, 0.08),
+    0 0 0 1px var(--gold-line);
+}
+
+.sheet-loose-bowl .sheet-token {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+}
+
+.sheet-loose-bowl .token-svg {
+  transform: rotate(var(--tilt, 0deg));
+}
+
+.sheet-loose-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--title-font);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--gold-bright) 80%, var(--muted));
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
+}
+
+.sheet-loose-label b {
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--gold-bright);
+}
+
+/* Plus und Minus an der Leiste, nur während einer Verteilung */
+
+.sheet-tray:has(.rail-controls) {
+  grid-template-columns: 52px minmax(0, 1fr) 16px auto;
+  gap: 4px;
+}
+
+.rail-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: auto;
+}
+
+.rail-step {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--gold-line);
+  border-radius: 4px;
+  background: linear-gradient(180deg, #2a3150 0%, #0d1228 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--gold-bright);
+  pointer-events: auto;
+}
+
+.rail-step:hover:not(:disabled) {
+  transform: none;
+  border-color: var(--gold-bright);
+  background: linear-gradient(180deg, #353e66 0%, #141a36 100%);
+  box-shadow: 0 0 6px rgba(255, 224, 138, 0.4);
+}
+
+.rail-step:disabled {
+  opacity: 0.3;
+}
+
+/* Getragener Marker: folgt dem Zeiger über allem, fängt selbst keine Ereignisse */
+
+.drag-ghost {
+  position: fixed;
+  left: var(--x);
+  top: var(--y);
+  z-index: 70;
+  width: var(--chip, 22px);
+  height: var(--chip, 22px);
+  translate: -50% -50%;
+  scale: 1.25;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--seat, var(--gold)) 70%, transparent))
+    drop-shadow(0 8px 6px rgba(0, 0, 0, 0.6));
+}
+
+.drag-ghost .sheet-token {
+  width: 100%;
+  height: 100%;
+}
+
+.hud-shield[data-carrying='true'],
+.hud-shield[data-carrying='true'] *,
+.galaxy:has(.hud-shield[data-carrying='true']) .hex {
+  cursor: grabbing;
+}
+
+/* Ziele auf der Karte */
+
+polygon.hex.highlight-legal {
+  fill: color-mix(in srgb, var(--seat, var(--gold)) 6%, transparent);
+}
+
+polygon.hex.highlight-chosen {
+  fill: color-mix(in srgb, var(--gold-bright) 10%, transparent);
+}
+
+.galaxy.flat polygon.hex.highlight-legal {
+  stroke: var(--seat, var(--gold));
+  stroke-width: 3;
+}
+
+.galaxy.flat polygon.hex.highlight-chosen {
+  stroke: var(--gold-bright);
+  stroke-width: 4;
+}
+
+polygon.hex.target-legal {
+  stroke: color-mix(in srgb, var(--seat, var(--gold-bright)) 85%, #fff);
+  stroke-width: 2.5;
+  fill: color-mix(in srgb, var(--seat, var(--gold)) 7%, transparent);
+  cursor: pointer;
+  animation: hex-target-pulse 2.6s ease-in-out infinite;
+}
+
+polygon.hex.target-chosen {
+  stroke: var(--gold-bright);
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 6px var(--gold));
+  animation: none;
+}
+
+polygon.hex.target-legal.highlighted,
+polygon.hex.target-legal:focus-visible,
+polygon.hex.target-over {
+  stroke: #fff;
+  stroke-width: 4;
+  stroke-opacity: 1;
+  fill: color-mix(in srgb, var(--seat, var(--gold)) 16%, transparent);
+  filter: drop-shadow(0 0 8px var(--seat, var(--gold)));
+  animation: none;
+}
+
+@keyframes hex-target-pulse {
+  0%,
+  100% {
+    stroke-opacity: 1;
+  }
+
+  50% {
+    stroke-opacity: 0.35;
+  }
+}
+
+/* Ohne Bewegung: kein Pulsieren, kein Schein, der atmet. */
+:root.motion-off .confirm-seal,
+:root.motion-off polygon.hex.target-legal,
+:root.motion-off .sheet-tray[data-target-state],
+:root.motion-off .sheet-depot[data-target-state],
+:root.motion-off .sheet-loose[data-target-state] {
+  animation: none;
+}
+
+/* Schmale Bildschirme: Die Ansage liegt über der Hand, nicht auf dem Flügel. */
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
+  .table-prompt {
+    width: auto;
+    max-height: 46vh;
+    border-bottom-width: 1.5px;
+    border-radius: 14px;
+  }
+
+  .hud-shield[data-view='table'] .hud-corner > .table-prompt {
+    margin-bottom: 0;
+  }
+
+  .sheet-tray:has(.rail-controls) {
+    grid-template-columns: auto minmax(0, 1fr) 12px auto;
+    gap: 3px;
+  }
+
+  .sheet-loose {
+    right: 4px;
+    padding: 3px 6px;
+  }
+
+  .sheet-loose-bowl {
+    width: 56px;
+    height: 32px;
+  }
+
+  .sheet-loose-bowl .sheet-token,
+  .sheet-loose-bowl > .sheet-piece {
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+  }
+
+  .sheet-loose-label .sheet-word {
+    display: none;
+  }
+
+  .confirm-seal {
+    min-height: 38px;
+  }
+}

@@ -1,10 +1,8 @@
 import type { GameState, MapLayout } from '@stellar/domain';
 import {
-  forwardRef,
   lazy,
   memo,
   Suspense,
-  type KeyboardEvent,
   type ReactElement,
   type RefObject,
   useCallback,
@@ -15,18 +13,12 @@ import {
 } from 'react';
 import { type MapEffect, mapEffects } from '../animation/map-effects.ts';
 import { useGameStore } from '../game-store.ts';
-import { type Bounds, hexToPixel, type Point, toSvgPoints } from '../hex-geometry.ts';
-import {
-  boardBounds,
-  type BoardView,
-  foreshorten,
-  project,
-  projectedCorners,
-} from '../render/board-view.ts';
+import { type Bounds, hexToPixel, type Point } from '../hex-geometry.ts';
+import { boardBounds, type BoardView, foreshorten, project } from '../render/board-view.ts';
 import { useBoardView } from '../system/board-camera.ts';
 import type { Language } from '../i18n.ts';
 import { gameScene, layoutScene, type SceneHex } from '../render/scene-model.ts';
-import { content, useGalaxyStore, type Viewport } from '../store.ts';
+import { content, useGalaxyStore } from '../store.ts';
 import { highlightsOf, movementChoices } from '../tactical-view.ts';
 import { useSettingsStore } from '../settings-store.ts';
 import { usePanZoom } from '../use-pan-zoom.ts';
@@ -48,8 +40,13 @@ import { PhaseDock } from './hud/PhaseDock.tsx';
 import { PlayerRail } from './hud/PlayerRail.tsx';
 import { ResourceBar } from './hud/ResourceBar.tsx';
 import { PlayerSheet } from './sheet/PlayerSheet.tsx';
-import { SystemActions } from './hud/SystemActions.tsx';
 import { NoticeStack } from './hud/NoticeStack.tsx';
+import { type Band, HexTargets } from './map/HexTargets.tsx';
+import { usePicking } from './map/use-picking.ts';
+import { useCarryStore } from '../table/carry-store.ts';
+import { withTableHighlights } from '../table/table-highlights.ts';
+import type { TargetState } from '../table/target-ref.ts';
+import { useTableTargets } from '../table/use-table-decision.ts';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
 const PixiCanvas = lazy(() =>
@@ -61,33 +58,44 @@ interface SceneInput {
   readonly game: GameState | null;
   readonly selected: string | null;
   readonly language: Language;
+  readonly targets: ReadonlyMap<string, TargetState>;
 }
 
-function sceneFor({ layout, game, selected, language }: SceneInput): readonly SceneHex[] {
+function sceneFor({ layout, game, selected, language, targets }: SceneInput): readonly SceneHex[] {
   if (game === null) return layoutScene(layout, content, language);
-  const highlights = highlightsOf(game, movementChoices(game, content), selected);
-  return gameScene(game, content, language, highlights);
+  const base = highlightsOf(game, movementChoices(game, content), selected);
+  return gameScene(game, content, language, withTableHighlights(base, targets));
 }
 
-/** Szene aus Galaxie-Layout (Aufbau) oder Spielzustand (Partie). */
+const signatureOf = (targets: ReadonlyMap<string, TargetState>): string =>
+  [...targets].map(([key, state]) => `${key}=${state}`).join('|');
+
+/**
+ * Ziele der Entscheidung für die Karte. Die Abbildung entsteht bei jedem Zeichnen neu; sie
+ * bleibt dieselbe, solange sich nichts ändert, damit Kamerafahrten die Szene nicht neu bauen.
+ */
+function useMapTargets(game: GameState | null): ReadonlyMap<string, TargetState> {
+  const targets = useTableTargets(game);
+  const signature = signatureOf(targets);
+  // Bewusst nur die Signatur als Abhängigkeit: gleiche Ziele, gleiche Abbildung.
+  return useMemo(() => targets, [signature]);
+}
+
+/** Szene aus Galaxie-Layout (Aufbau) oder Spielzustand (Partie); Ziele leuchten auf der Karte. */
 function useScene(): readonly SceneHex[] {
   const layout = useGalaxyStore((state) => state.layout);
   const language = useGalaxyStore((state) => state.language);
   const game = useGameStore((state) => state.game);
   const selected = useGameStore((state) => state.selected);
+  const targets = useMapTargets(game);
   return useMemo(
-    () => sceneFor({ layout, game, selected, language }),
-    [layout, game, selected, language],
+    () => sceneFor({ layout, game, selected, language, targets }),
+    [layout, game, selected, language, targets],
   );
 }
 
 const NO_EFFECTS: readonly MapEffect[] = [];
 const NO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
-
-interface Band {
-  readonly top: number;
-  readonly bottom: number;
-}
 
 interface MapFrame {
   readonly bounds: Bounds;
@@ -126,101 +134,6 @@ function useMapEffects(): readonly MapEffect[] {
   );
 }
 
-const tileClass = (hex: SceneHex): string =>
-  hex.kind === 'homeSlot' || hex.back === 'home' ? 'tile-home' : `tile-${hex.back}`;
-
-interface TargetProps {
-  readonly hex: SceneHex;
-  readonly view: BoardView;
-  readonly hovered: boolean;
-  readonly onHover: (key: string | null) => void;
-  readonly onPick: (hex: SceneHex) => void;
-}
-
-/** Unsichtbare Trefferfläche je Feld: Maus, Tastatur, Screenreader und E2E-Tests. */
-function HexTarget({ hex, view, hovered, onHover, onPick }: TargetProps): ReactElement {
-  const pickable = hex.systemId !== null;
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') onPick(hex);
-  };
-  return (
-    <polygon
-      points={toSvgPoints(projectedCorners(view, hexToPixel(hex.position)))}
-      className={`hex ${tileClass(hex)} highlight-${hex.highlight}${hovered ? ' highlighted' : ''}`}
-      data-slot={hex.key}
-      data-system={hex.systemId ?? undefined}
-      data-anomaly={hex.anomaly}
-      data-seat={hex.seat ?? undefined}
-      role={pickable ? 'button' : undefined}
-      aria-label={hex.systemId ?? `${hex.kind} ${String(hex.seat)}`}
-      tabIndex={pickable ? 0 : undefined}
-      onPointerEnter={() => onHover(hex.key)}
-      onPointerLeave={() => onHover(null)}
-      onFocus={() => onHover(hex.key)}
-      onClick={() => onPick(hex)}
-      onKeyDown={onKeyDown}
-    />
-  );
-}
-
-interface TargetsProps {
-  readonly hexes: readonly SceneHex[];
-  readonly bounds: Bounds;
-  readonly band: Band;
-  readonly viewport: Viewport;
-  readonly view: BoardView;
-  readonly onPick: (hex: SceneHex) => void;
-  readonly onView: (hex: SceneHex) => void;
-}
-
-const viewBoxOf = (b: Bounds): string =>
-  [b.minX, b.minY, b.width, b.height].map((value) => String(value)).join(' ');
-
-/** Knöpfe über dem in der Partie gewählten System. */
-function ChosenActions({ hexes, band, viewport, view, onView }: Omit<TargetsProps, 'onPick'>) {
-  const game = useGameStore((state) => state.game);
-  const selected = useGameStore((state) => state.selected);
-  const chosen = hexes.find((hex) => hex.systemId !== null && hex.systemId === selected);
-  if (game === null || chosen === undefined) return null;
-  return (
-    <SystemActions
-      game={game}
-      hex={chosen}
-      viewport={viewport}
-      view={view}
-      top={band.top}
-      bottom={band.bottom}
-      onView={onView}
-    />
-  );
-}
-
-/** SVG-Ebene über dem Pixi-Bild, mit derselben Abbildung wie `worldTransform`. */
-const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
-  { hexes, bounds, band, viewport, view, onPick, onView },
-  svg,
-): ReactElement {
-  const { hovered, hover } = useGalaxyStore();
-  const { panX, panY, zoom } = viewport;
-  return (
-    <svg ref={svg} viewBox={viewBoxOf(bounds)} aria-label="galaxy">
-      <g transform={`translate(${String(panX)} ${String(panY)}) scale(${String(zoom)})`}>
-        {hexes.map((hex) => (
-          <HexTarget
-            key={hex.key}
-            hex={hex}
-            view={view}
-            hovered={hex.key === hovered}
-            onHover={hover}
-            onPick={onPick}
-          />
-        ))}
-      </g>
-      <ChosenActions {...{ hexes, bounds, band, viewport, view, onView }} />
-    </svg>
-  );
-});
-
 const svgSize = (svg: RefObject<SVGSVGElement | null>) => ({
   width: svg.current?.clientWidth ?? 0,
   height: svg.current?.clientHeight ?? 0,
@@ -241,20 +154,6 @@ function useFlyTo(bounds: Bounds, view: BoardView, svg: RefObject<SVGSVGElement 
   );
 }
 
-/**
- * In der Partie wählt ein Klick das System und zeigt seine Knöpfe; ein zweiter Klick fährt
- * heran. Vor der Partie fährt schon der erste Klick heran. Wer die Karte zieht, verschiebt sie nur.
- */
-function usePicking(wasDrag: () => boolean, flyTo: (hex: SceneHex) => void) {
-  return (hex: SceneHex) => {
-    if (wasDrag()) return;
-    useSettingsStore.getState().markHintSeen();
-    const { game, selected, select } = useGameStore.getState();
-    if (game === null || hex.systemId === selected) flyTo(hex);
-    else select(hex.systemId);
-  };
-}
-
 /** Bildschirmpunkt in viewBox-Koordinaten (null, wenn der Browser es nicht kann, z. B. in Tests). */
 function toViewBox(svg: SVGSVGElement | null, client: Point): Point | null {
   if (svg === null || !('getScreenCTM' in svg)) return null;
@@ -273,10 +172,11 @@ function useZoom(bounds: Bounds, svg: RefObject<SVGSVGElement | null>) {
   };
 }
 
-/** Escape fährt nach dem Heranfahren an die alte Stelle zurück. */
+/** Escape fährt nach dem Heranfahren an die alte Stelle zurück; beim Tragen legt es nur zurück. */
 function useEscapeBack(): void {
   useEffect(() => {
     const onKey = (event: globalThis.KeyboardEvent) => {
+      if (useCarryStore.getState().piece !== null) return;
       const { returnTo, back } = useCameraStore.getState();
       if (event.key === 'Escape' && returnTo !== null) back();
     };
@@ -311,15 +211,22 @@ function Hud({ game, table }: { readonly game: GameState; readonly table: boolea
 
 /**
  * Oberhalb der Karte: die Anzeigen der Partie; ihre Gesten verschieben die Karte nicht.
+ * `data-carrying` zeigt beim Tragen eines Stücks die greifende Hand.
  * Ohne Eigenschaften und mit `memo`: Kamerafahrten und Drehungen der Karte zeichnen sie nicht neu.
  * `data-view` wählt die Anordnung im Stylesheet (klassisch oder Tischansicht).
  */
 const Overlays = memo(function Overlays(): ReactElement | null {
   const game = useGameStore((state) => state.game);
   const table = useSettingsStore((state) => state.tableView);
+  const carrying = useCarryStore((state) => state.piece !== null);
   if (game === null) return null;
   return (
-    <div className="hud-shield" data-view={table ? 'table' : 'classic'} {...shield}>
+    <div
+      className="hud-shield"
+      data-view={table ? 'table' : 'classic'}
+      data-carrying={carrying ? 'true' : undefined}
+      {...shield}
+    >
       <Hud game={game} table={table} />
     </div>
   );

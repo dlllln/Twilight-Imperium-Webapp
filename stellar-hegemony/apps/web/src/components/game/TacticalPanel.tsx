@@ -125,7 +125,7 @@ function MovementForm({ game, player }: TurnProps): ReactElement {
 }
 
 /** Hinweis, solange im aktivierten System Weltraumkanonen oder Raumkampf laufen. */
-function CombatPending(): ReactElement {
+export function CombatPending(): ReactElement {
   const t = useT();
   const openCombat = useGameStore((state) => state.openCombat);
   return (

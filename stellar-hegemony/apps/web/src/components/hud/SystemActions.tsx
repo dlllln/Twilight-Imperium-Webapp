@@ -8,6 +8,7 @@ import { type SystemAction, systemActions } from '../../hud/system-actions.ts';
 import type { MessageKey } from '../../i18n.ts';
 import type { SceneHex } from '../../render/scene-model.ts';
 import type { Viewport } from '../../store.ts';
+import { useChosenCard } from '../../table/use-decision-route.ts';
 import { useT } from '../../use-translation.ts';
 
 /** Knopfgröße in Karteneinheiten; sie wächst nicht mit dem Zoom mit. */
@@ -101,9 +102,10 @@ function placement({ hex, viewport, view }: Where, count: number, band: Band) {
 export function SystemActions(props: Props): ReactElement | null {
   const { game, hex, top, bottom, onView } = props;
   const actor = useHumanActor(game);
+  const choosing = useChosenCard(actor) !== null;
   const run = useRun(game, hex, onView);
   if (hex.systemId === null) return null;
-  const actions = systemActions(game, actor, hex.systemId);
+  const actions = systemActions(game, actor, hex.systemId, choosing);
   return (
     <foreignObject
       {...placement(props, actions.length, { top, bottom })}

@@ -33,30 +33,48 @@ const exhaustedPlanets = (game: GameState, player: PlayerId): readonly PlanetId[
     .filter((planet) => planet.controller === player && planet.exhausted)
     .map((planet) => planet.id);
 
-function SystemPicker(props: DiplomacyFormProps): ReactElement {
+interface SystemListProps {
+  readonly game: GameState;
+  readonly systems: readonly string[];
+  readonly value: string;
+  readonly onChange: (system: string) => void;
+}
+
+function SystemList({ game, systems, value, onChange }: SystemListProps): ReactElement {
   const t = useT();
   const language = useLanguage();
+  return (
+    <label>
+      {t('chooseSystem')}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        {systems.map((id) => (
+          <option key={id} value={id}>
+            {systemLabel(game, id, language)}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+/** Ohne wählbares System lässt die Domain `system: null` zu; dann bleibt nur das Ausführen. */
+function SystemPicker(props: DiplomacyFormProps): ReactElement {
+  const t = useT();
   const selected = useGameStore((state) => state.selected);
   const systems = eligibleSystems(props.game, props.player);
   const [system, setSystem] = useState(
     selected !== null && systems.includes(selected) ? selected : (systems[0] ?? ''),
   );
-  const choice: DiplomacyChoice = { mechanic: 'diplomacy', system: systemId(system), planets: [] };
+  const chosen = system === '' ? null : systemId(system);
+  const choice: DiplomacyChoice = { mechanic: 'diplomacy', system: chosen, planets: [] };
   return (
     <div className="choice-form">
-      <label>
-        {t('chooseSystem')}
-        <select value={system} onChange={(event) => setSystem(event.target.value)}>
-          {systems.map((id) => (
-            <option key={id} value={id}>
-              {systemLabel(props.game, id, language)}
-            </option>
-          ))}
-        </select>
-      </label>
+      {chosen !== null && (
+        <SystemList game={props.game} systems={systems} value={system} onChange={setSystem} />
+      )}
       <div className="actions">
-        <button type="button" disabled={system === ''} onClick={() => props.onSubmit(choice)}>
-          {t('confirm')}
+        <button type="button" onClick={() => props.onSubmit(choice)}>
+          {t(chosen === null ? 'withoutSystem' : 'confirm')}
         </button>
         {props.children}
       </div>

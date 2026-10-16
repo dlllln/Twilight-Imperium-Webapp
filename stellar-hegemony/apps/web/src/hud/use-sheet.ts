@@ -3,6 +3,11 @@ import { useMemo, useRef } from 'react';
 import { useGameStore, useViewer } from '../game-store.ts';
 import { useSettingsStore } from '../settings-store.ts';
 import { content } from '../store.ts';
+import { useLegalFor } from '../table/carry-rules.ts';
+import type { PoolDraft } from '../table/pool-draft.ts';
+import type { DropHandler, TargetRef } from '../table/target-ref.ts';
+import { useDropRouter } from '../table/use-drop-router.ts';
+import { type TableDecision, useTableDecision } from '../table/use-table-decision.ts';
 import { type SheetChanges, type SheetModel, sheetChanges, sheetModel } from './sheet-model.ts';
 import {
   freshLedger,
@@ -14,7 +19,8 @@ import {
 
 /*
  * Hooks für das Kommandopult: Daten des eigenen Platzes, die Buchführung der Marker über die
- * Züge hinweg und die kurzen Änderungsanzeigen nach jedem Zug.
+ * Züge hinweg, die kurzen Änderungsanzeigen nach jedem Zug und die offene Tischentscheidung,
+ * deren Entwurf die Leisten zeigen.
  */
 
 /** Eine Änderungsanzeige; die laufende Nummer macht jede Anzeige eindeutig. */
@@ -70,3 +76,22 @@ export function useSheetPulse(model: SheetModel | null): SheetPulse {
     return before === null ? IDLE : { serial: last.serial, changes: sheetChanges(before, model) };
   }, [animations, last, model, seen]);
 }
+
+/** Was die Stücke und Ziele des Pults brauchen: Entscheidung, Ablage und erlaubte Ziele. */
+export interface SheetTable {
+  readonly decision: TableDecision | null;
+  readonly router: DropHandler;
+  readonly legalFor: (piece: TargetRef) => ReadonlySet<string>;
+}
+
+/** Die offene Entscheidung am Pult, einmal je Pult ermittelt und an alle Leisten gereicht. */
+export function useSheetTable(game: GameState): SheetTable {
+  const decision = useTableDecision(game);
+  const router = useDropRouter(game);
+  const legalFor = useLegalFor(game);
+  return { decision, router, legalFor };
+}
+
+/** Läuft eine Markerverteilung, liefert sie den Entwurf der Leisten; sonst `null`. */
+export const poolPlanOf = (table: SheetTable): PoolDraft | null =>
+  table.decision?.draft?.pools ?? null;

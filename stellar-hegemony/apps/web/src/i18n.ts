@@ -1001,6 +1001,38 @@ const DICTIONARY = {
     de: 'Baue mindestens ein Kriegsschiff.',
     en: 'Build at least one warship.',
   },
+  decisionRegion: { de: 'Entscheidung', en: 'Decision' },
+  tableHintTokens: {
+    de: 'Lege die neuen Marker aus der Schale auf Taktik, Flotte oder Strategie.',
+    en: 'Place the new tokens from the bowl on tactic, fleet or strategy.',
+  },
+  tableHintLeadership: {
+    de: 'Lege die gewonnenen Marker auf deine Leisten; Handelswaren bringen weitere.',
+    en: 'Place the gained tokens on your rails; trade goods buy more.',
+  },
+  tableHintWarfare: {
+    de: 'Nimm einen eigenen Marker von der Karte und verteile deine Marker neu.',
+    en: 'Take one of your tokens off the map and redistribute your tokens.',
+  },
+  tableHintActivate: {
+    de: 'Ziehe einen Taktikmarker auf ein System, um es zu aktivieren.',
+    en: 'Drag a tactic token onto a system to activate it.',
+  },
+  combatWaiting: {
+    de: 'Im Kampf wartet eine Entscheidung auf dich.',
+    en: 'A combat decision is waiting for you.',
+  },
+  looseTokens: { de: 'Neue Marker', en: 'New tokens' },
+  pickUpToken: { de: 'Marker aufnehmen', en: 'Pick up token' },
+  placeHere: { de: 'Hierher legen', en: 'Place here' },
+  carried: {
+    de: 'Aufgenommen: {piece}. Wähle ein Ziel, Escape legt zurück.',
+    en: 'Picked up: {piece}. Choose a target, Escape puts it back.',
+  },
+  putBack: { de: 'Zurückgelegt.', en: 'Put back.' },
+  placed: { de: 'Abgelegt: {target}.', en: 'Placed: {target}.' },
+  withoutToken: { de: 'Ohne Marker ausführen', en: 'Perform without a token' },
+  withoutSystem: { de: 'Ohne System ausführen', en: 'Perform without a system' },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof DICTIONARY;

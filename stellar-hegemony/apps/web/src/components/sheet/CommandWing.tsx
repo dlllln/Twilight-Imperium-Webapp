@@ -4,23 +4,22 @@ import { AnimatePresence, type MotionStyle } from 'motion/react';
 import { type CSSProperties, type ReactElement, useEffect, useRef } from 'react';
 import { rackOf, type SheetModel } from '../../hud/sheet-model.ts';
 import type { TokenLedger } from '../../hud/token-ledger.ts';
-import type { SheetPulse } from '../../hud/use-sheet.ts';
+import type { SheetPulse, SheetTable } from '../../hud/use-sheet.ts';
+import { poolTarget, targetKey } from '../../table/target-ref.ts';
+import { useTarget } from '../../table/use-target.ts';
 import { useT } from '../../use-translation.ts';
 import { FactionEmblem } from '../simulator/FactionEmblem.tsx';
+import { LooseBowl } from './LooseBowl.tsx';
+import { RailControls } from './RailControls.tsx';
+import { type Flow, dropFocus, SheetPiece, useDraggedZone } from './SheetPiece.tsx';
 import { SheetDelta, Socket, TokenChip } from './SheetTokens.tsx';
-
-/** Wohin Marker gehen und woher sie kommen: auf der Karte liegt, was das Pult nicht zeigt. */
-interface Flow {
-  /** Marker, die jetzt auf der Karte liegen (für den Abflug). */
-  readonly onMap: ReadonlySet<number>;
-  /** Marker, die vor diesem Stand auf der Karte lagen (für die Landung). */
-  readonly arriving: ReadonlySet<number>;
-}
 
 interface WingProps {
   readonly model: SheetModel;
+  /** Nummern der Marker je Feld; während einer Verteilung der geplante Stand. */
   readonly ledger: TokenLedger;
   readonly pulse: SheetPulse;
+  readonly table: SheetTable;
 }
 
 /** So viele Marker liegen sichtbar in der Nachschubschale; die Zahl darunter zählt alle. */
@@ -47,7 +46,11 @@ const depotPlace = (index: number): MotionStyle => {
   } as MotionStyle;
 };
 
-const rackPlace = (index: number): MotionStyle => ({ gridColumn: index + 1, gridRow: 1 });
+/** Fassung eines Markers in der Leiste; der Knopf zum Aufnehmen liegt in derselben Fassung. */
+const rackPlace = (index: number): { readonly gridColumn: number; readonly gridRow: number } => ({
+  gridColumn: index + 1,
+  gridRow: 1,
+});
 
 /** Merkt sich, welche Marker beim vorigen Stand auf der Karte lagen. */
 function usePreviousBoard(board: readonly number[]): ReadonlySet<number> {
@@ -61,41 +64,73 @@ function usePreviousBoard(board: readonly number[]): ReadonlySet<number> {
 
 interface TrayProps {
   readonly pool: CommandPool;
+  /** Nummern der Marker auf der Leiste; während einer Verteilung die geplanten. */
   readonly ids: readonly number[];
   readonly faction: string;
-  readonly count: number;
   readonly pulse: SheetPulse;
   readonly flow: Flow;
+  readonly table: SheetTable;
 }
 
-/** Eine Leiste mit Fassungen; belegte tragen Marker. Sehr schmal steht nur der Anfangsbuchstabe. */
-export function CommandTray({ pool, ids, faction, count, pulse, flow }: TrayProps): ReactElement {
-  const t = useT();
-  const rack = rackOf(count);
-  const slots = rack.filled + rack.empty;
+interface RackProps extends Omit<TrayProps, 'pulse'> {
+  readonly slots: number;
+}
+
+/** Fassungen mit den Markern; über dem obersten liegt der Knopf zum Aufnehmen. */
+function TrayRack({ pool, ids, faction, flow, table, slots }: RackProps): ReactElement {
+  const dragged = useDraggedZone() === pool;
+  const top = ids.length - 1;
   return (
-    <div className="sheet-tray" data-pool={pool} aria-label={`${t(pool)}: ${String(count)}`}>
+    <div className="sheet-rack" style={{ '--slots': slots } as CSSProperties}>
+      {Array.from({ length: slots }, (_, index) => (
+        <Socket key={index} column={index + 1} />
+      ))}
+      <AnimatePresence initial={false} custom={flow.onMap}>
+        {ids.map((id, index) => (
+          <TokenChip
+            key={id}
+            {...{ id, faction }}
+            zone={pool}
+            arriving={flow.arriving.has(id)}
+            place={rackPlace(index)}
+            dragging={dragged && index === top}
+          />
+        ))}
+      </AnimatePresence>
+      {top >= 0 && <SheetPiece zone={pool} table={table} style={rackPlace(top)} />}
+    </div>
+  );
+}
+
+/**
+ * Eine Leiste mit Fassungen; belegte tragen Marker. Sehr schmal steht nur der Anfangsbuchstabe.
+ * Die Leiste ist ein Ziel für getragene Marker; während einer Verteilung trägt sie „+“ und „−“.
+ */
+export function CommandTray({ pool, ids, faction, pulse, flow, table }: TrayProps): ReactElement {
+  const t = useT();
+  const ref = poolTarget(pool);
+  const target = useTarget(ref, table.decision?.targets.get(targetKey(ref)), table.router);
+  const rack = rackOf(ids.length);
+  return (
+    <div
+      className="sheet-tray"
+      data-pool={pool}
+      aria-label={`${t(pool)}: ${String(ids.length)}`}
+      {...target.props}
+      data-over={target.over ? 'true' : undefined}
+      tabIndex={dropFocus(target)}
+    >
       <span className="sheet-tray-label" data-short={t(pool).charAt(0)}>
         <span>{t(pool)}</span>
       </span>
-      <div className="sheet-rack" style={{ '--slots': slots } as CSSProperties}>
-        {Array.from({ length: slots }, (_, index) => (
-          <Socket key={index} column={index + 1} />
-        ))}
-        <AnimatePresence initial={false} custom={flow.onMap}>
-          {ids.slice(0, rack.filled).map((id, index) => (
-            <TokenChip
-              key={id}
-              {...{ id, faction }}
-              zone={pool}
-              arriving={flow.arriving.has(id)}
-              place={rackPlace(index)}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
-      <TrayCount count={count} overflow={rack.overflow} />
+      <TrayRack
+        {...{ pool, faction, flow, table }}
+        ids={ids.slice(0, rack.filled)}
+        slots={rack.filled + rack.empty}
+      />
+      <TrayCount count={ids.length} overflow={rack.overflow} />
       <SheetDelta zone={pool} pulse={pulse} />
+      <RailControls pool={pool} table={table} />
     </div>
   );
 }
@@ -113,16 +148,15 @@ function TrayCount({ count, overflow }: { readonly count: number; readonly overf
 interface DepotProps {
   readonly ids: readonly number[];
   readonly faction: string;
-  readonly count: number;
   readonly pulse: SheetPulse;
   readonly flow: Flow;
 }
 
 /** Schale mit dem Nachschub: Marker, die weder auf dem Pult noch auf der Karte liegen. */
-function Depot({ ids, faction, count, pulse, flow }: DepotProps): ReactElement {
+function Depot({ ids, faction, pulse, flow }: DepotProps): ReactElement {
   const t = useT();
   return (
-    <div className="sheet-depot" aria-label={`${t('reinforcements')}: ${String(count)}`}>
+    <div className="sheet-depot" aria-label={`${t('reinforcements')}: ${String(ids.length)}`}>
       <div className="sheet-bowl">
         <AnimatePresence initial={false} custom={flow.onMap}>
           {ids.slice(0, DEPOT_SHOWN).map((id, index) => (
@@ -138,7 +172,7 @@ function Depot({ ids, faction, count, pulse, flow }: DepotProps): ReactElement {
       </div>
       <span className="sheet-depot-label">
         <Octagon className="sheet-icon" size={12} aria-hidden="true" />
-        <span className="sheet-word">{t('reinforcements')}</span> <b>{count}</b>
+        <span className="sheet-word">{t('reinforcements')}</span> <b>{ids.length}</b>
       </span>
       <SheetDelta zone="reinforcements" pulse={pulse} />
     </div>
@@ -157,9 +191,10 @@ function Crest({ faction }: { readonly faction: string }): ReactElement {
 
 /**
  * Linker Flügel: außen der Nachschub, in der Mitte drei Leisten für Taktik, Flotte und Strategie,
- * innen das Wappen (dort darf ein voller Fächer der Hand hineinragen).
+ * innen das Wappen (dort darf ein voller Fächer der Hand hineinragen). Während einer Verteilung
+ * kommt die Schale „Neue Marker“ dazu; alle Zahlen zeigen dann den geplanten Stand.
  */
-export function CommandWing({ model, ledger, pulse }: WingProps): ReactElement {
+export function CommandWing({ model, ledger, pulse, table }: WingProps): ReactElement {
   const t = useT();
   const arriving = usePreviousBoard(ledger.board);
   const flow: Flow = { onMap: new Set(ledger.board), arriving };
@@ -169,18 +204,13 @@ export function CommandWing({ model, ledger, pulse }: WingProps): ReactElement {
       <Crest faction={model.faction} />
       <div className="sheet-rails">
         {COMMAND_POOLS.map((pool) => (
-          <CommandTray
-            key={pool}
-            pool={pool}
-            ids={ledger[pool]}
-            count={model.summary.pools[pool]}
-            {...shared}
-          />
+          <CommandTray key={pool} pool={pool} ids={ledger[pool]} table={table} {...shared} />
         ))}
       </div>
-      <Depot ids={ledger.reinforcements} count={model.reinforcements} {...shared} />
+      <Depot ids={ledger.reinforcements} {...shared} />
+      <LooseBowl ids={ledger.loose} faction={model.faction} flow={flow} table={table} />
       <small className="sheet-onboard">
-        {t('onBoard').replace('{count}', String(model.onBoard))}
+        {t('onBoard').replace('{count}', String(ledger.board.length))}
       </small>
     </div>
   );

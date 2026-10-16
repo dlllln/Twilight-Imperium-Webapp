@@ -1,11 +1,18 @@
 // @vitest-environment jsdom
-import { currentActor, findPlayer, type GameState, type PlayerId } from '@stellar/domain';
+import {
+  currentActor,
+  findPlayer,
+  type GameState,
+  type PlayerId,
+  strategyCardId,
+} from '@stellar/domain';
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { PlayerSheet } from '../src/components/sheet/PlayerSheet.tsx';
 import { CommandToken } from '../src/components/sheet/SheetTokens.tsx';
 import { useGameStore } from '../src/game-store.ts';
+import { useHandStore } from '../src/hand/hand-store.ts';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { content, useGalaxyStore } from '../src/store.ts';
 import { pickAll, started } from './game-helpers.ts';
@@ -19,6 +26,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   leaveTable();
+  useHandStore.getState().clear();
 });
 
 const game = () => useGameStore.getState().game as GameState;
@@ -53,7 +61,10 @@ describe('Kommandopult vor dem eigenen Platz', () => {
     render(<Live />);
     const sheet = screen.getByRole('region', { name: 'Dein Kommandopult' });
     expect(sheet.hasAttribute('data-seat')).toBe(false);
-    expect(within(sheet).queryAllByRole('button')).toHaveLength(0);
+    const buttons = within(sheet).queryAllByRole('button');
+    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Marker aufnehmen: Taktik',
+    ]);
     const wing = screen.getByRole('group', { name: 'Kommandomarker' });
     const tactic = within(wing).getByLabelText('Taktik: 3');
     expect(tokensIn(tactic, 'tactic')).toHaveLength(3);
@@ -117,6 +128,21 @@ describe('Kommandopult vor dem eigenen Platz', () => {
     act(() => useSettingsStore.setState({ animations: false }));
     act(() => useSettingsStore.setState({ animations: true }));
     expect(document.querySelector('.sheet-delta')).toBeNull();
+  });
+
+  it('die Schale Neue Marker erscheint nur während einer Verteilung', () => {
+    const { actor } = actionPhase();
+    render(<Live />);
+    expect(screen.queryByRole('group', { name: /^Neue Marker/ })).toBeNull();
+    expect(document.querySelector('.sheet-token[data-zone="loose"]')).toBeNull();
+    act(() => useHandStore.getState().choose({ player: actor, card: strategyCardId('vanguard') }));
+    const bowl = screen.getByRole('group', { name: 'Neue Marker: 3' });
+    expect(tokensIn(bowl, 'loose')).toHaveLength(3);
+    expect(screen.getByLabelText('Nachschub: 5')).toBeTruthy();
+    act(() => useHandStore.getState().clear());
+    expect(screen.queryByRole('group', { name: /^Neue Marker/ })).toBeNull();
+    expect(screen.getByLabelText('Nachschub: 8')).toBeTruthy();
+    expect(screen.getByLabelText('Taktik: 3')).toBeTruthy();
   });
 
   it('ohne eigenen Platz gibt es kein Pult', () => {
