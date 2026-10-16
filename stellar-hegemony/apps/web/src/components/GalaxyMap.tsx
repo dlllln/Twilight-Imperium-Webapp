@@ -50,6 +50,7 @@ import { ResourceBar } from './hud/ResourceBar.tsx';
 import { PlayerSheet } from './sheet/PlayerSheet.tsx';
 import { SystemActions } from './hud/SystemActions.tsx';
 import { NoticeStack } from './hud/NoticeStack.tsx';
+import { useMapPointer } from '../system/map-pointer.ts';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
 const PixiCanvas = lazy(() =>
@@ -138,7 +139,13 @@ interface TargetProps {
 }
 
 /** Unsichtbare Trefferfläche je Feld: Maus, Tastatur, Screenreader und E2E-Tests. */
-function HexTarget({ hex, view, hovered, onHover, onPick }: TargetProps): ReactElement {
+const HexTarget = memo(function HexTarget({
+  hex,
+  view,
+  hovered,
+  onHover,
+  onPick,
+}: TargetProps): ReactElement {
   const pickable = hex.systemId !== null;
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') onPick(hex);
@@ -161,7 +168,7 @@ function HexTarget({ hex, view, hovered, onHover, onPick }: TargetProps): ReactE
       onKeyDown={onKeyDown}
     />
   );
-}
+});
 
 interface TargetsProps {
   readonly hexes: readonly SceneHex[];
@@ -200,7 +207,8 @@ const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
   { hexes, bounds, band, viewport, view, onPick, onView },
   svg,
 ): ReactElement {
-  const { hovered, hover } = useGalaxyStore();
+  const hovered = useGalaxyStore((state) => state.hovered);
+  const hover = useGalaxyStore((state) => state.hover);
   const { panX, panY, zoom } = viewport;
   return (
     <svg ref={svg} viewBox={viewBoxOf(bounds)} aria-label="galaxy">
@@ -246,13 +254,16 @@ function useFlyTo(bounds: Bounds, view: BoardView, svg: RefObject<SVGSVGElement 
  * heran. Vor der Partie fährt schon der erste Klick heran. Wer die Karte zieht, verschiebt sie nur.
  */
 function usePicking(wasDrag: () => boolean, flyTo: (hex: SceneHex) => void) {
-  return (hex: SceneHex) => {
-    if (wasDrag()) return;
-    useSettingsStore.getState().markHintSeen();
-    const { game, selected, select } = useGameStore.getState();
-    if (game === null || hex.systemId === selected) flyTo(hex);
-    else select(hex.systemId);
-  };
+  return useCallback(
+    (hex: SceneHex) => {
+      if (wasDrag()) return;
+      useSettingsStore.getState().markHintSeen();
+      const { game, selected, select } = useGameStore.getState();
+      if (game === null || hex.systemId === selected) flyTo(hex);
+      else select(hex.systemId);
+    },
+    [wasDrag, flyTo],
+  );
 }
 
 /** Bildschirmpunkt in viewBox-Koordinaten (null, wenn der Browser es nicht kann, z. B. in Tests). */
@@ -340,19 +351,14 @@ function useFlatFallback(): readonly [boolean, () => void] {
 }
 
 /** Hinweis am Zeiger; beim Nahzoom übernehmen die Schilder an Planeten und Flotten, am Tablet die Knöpfe. */
-function MapTooltip({
-  hexes,
-  cursor,
-  touch,
-}: {
-  readonly hexes: readonly SceneHex[];
-  readonly cursor: Point;
-  readonly touch: boolean;
-}) {
-  const { hovered, viewport } = useGalaxyStore();
+function MapTooltip({ hexes }: { readonly hexes: readonly SceneHex[] }) {
+  const hovered = useGalaxyStore((state) => state.hovered);
+  const zoom = useGalaxyStore((state) => state.viewport.zoom);
+  const cursor = useMapPointer((state) => state.cursor);
+  const touch = useMapPointer((state) => state.touch);
   const hex = hexes.find((candidate) => candidate.key === hovered);
   // Mit dem Finger gibt es kein Zeigen ohne Tippen: dort übernehmen Knöpfe und Nahzoom.
-  if (hex === undefined || touch || viewport.zoom >= CLOSE_ZOOM) return null;
+  if (hex === undefined || touch || zoom >= CLOSE_ZOOM) return null;
   return <HexTooltip hex={hex} x={cursor.x} y={cursor.y} />;
 }
 
@@ -370,7 +376,7 @@ export function GalaxyMap(): ReactElement {
   const hexes = useScene();
   const effects = useMapEffects();
   const { view, svg, size, bounds, band, flyTo, zoom } = useMapView(hexes);
-  const { cursor, touch, wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
+  const { wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
   const [flat, onUnavailable] = useFlatFallback();
   const pick = usePicking(wasDrag, flyTo);
   return (
@@ -387,7 +393,7 @@ export function GalaxyMap(): ReactElement {
         onView={flyTo}
       />
       <CloseUpLabels {...{ hexes, bounds, viewport, view, size }} />
-      <MapTooltip hexes={hexes} cursor={cursor} touch={touch} />
+      <MapTooltip hexes={hexes} />
       <MapControls onZoom={(factor) => zoom(factor)} onReset={useCameraStore.getState().back} />
       <Overlays />
     </div>
