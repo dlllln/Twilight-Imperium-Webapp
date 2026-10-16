@@ -43,16 +43,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-arborec-agent',
         name: 'Letani Ospha',
+        sourceId: 'arborecagent',
+        faction: 'arborec',
+        window: 'ACTION:',
+        ability:
+          "Exhaust this card and choose a player's non-fighter ship: that player may replace that ship with one from their reinforcements that costs up to 2 more than the replaced ship.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/arborecagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/arborecagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-arborec-commander',
         name: 'Dirzuga Rophal',
+        sourceId: 'arboreccommander',
+        faction: 'arborec',
+        window:
+          'After another player activates a system that contains 1 or more of your units that have PRODUCTION:',
+        ability: 'You may produce 1 unit in that system.',
+        unlock: 'Have 12 ground forces on planets you control.',
+        card: 'cards/leaders/arboreccommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/arboreccommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-arborec-hero',
         name: 'Letani Miasmiala',
+        sourceId: 'arborechero',
+        faction: 'arborec',
+        window: 'ACTION:',
+        ability:
+          'Produce any number of units in any number of systems that contain 1 or more of your ground forces. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/arborechero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/arborechero.png',
       },
     ],
     source:
@@ -98,16 +125,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-ghost-agent',
         name: 'Emissary Taivra',
+        sourceId: 'ghostagent',
+        faction: 'ghost',
+        window: 'After a player activates a system that contains a non-delta wormhole:',
+        ability:
+          'You may exhaust this card: if you do, that system is adjacent to all other systems that contain a wormhole during this tactical action.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/ghostagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/ghostagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-ghost-commander',
         name: 'Sai Seravus',
+        sourceId: 'ghostcommander',
+        faction: 'ghost',
+        window: 'After your ships move:',
+        ability:
+          'For each ship that has a capacity value and moved through 1 or more wormholes, you may place 1 fighter from your reinforcements with that ship if you have unused capacity in the active system.',
+        unlock: 'Have units in 3 systems that contain alpha or beta wormholes.',
+        card: 'cards/leaders/ghostcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/ghostcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-ghost-hero',
         name: 'Riftwalker Meian',
+        sourceId: 'ghosthero',
+        faction: 'ghost',
+        window: 'ACTION:',
+        ability:
+          'Swap the positions of any 2 non-Fracture systems that contain wormholes or your units, other than the Creuss system, Ahk Creuxx system, or the Wormhole Nexus.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/ghosthero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/ghosthero.png',
       },
     ],
     source:
@@ -173,16 +227,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-hacan-agent',
         name: 'Carth of Golden Sands',
+        sourceId: 'hacanagent',
+        faction: 'hacan',
+        window: 'During the action phase:',
+        ability:
+          "You may exhaust this card to gain 2 commodities or replenish another player's commodities.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/hacanagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/hacanagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-hacan-commander',
         name: 'Gila the Silvertongue',
+        sourceId: 'hacancommander',
+        faction: 'hacan',
+        window: 'When you cast votes:',
+        ability:
+          'You may spend any number of trade goods: cast 2 additional votes for each trade good spent.',
+        unlock: 'Have 10 trade goods.',
+        card: 'cards/leaders/hacancommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/hacancommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-hacan-hero',
         name: 'Harrugh Gefhara',
+        sourceId: 'hacanhero',
+        faction: 'hacan',
+        window: 'When 1 or more of your units use PRODUCTION:',
+        ability:
+          'You may reduce the cost of each of your units to 0 during this use of PRODUCTION. If you do, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/hacanhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/hacanhero.png',
       },
     ],
     source:
@@ -246,16 +327,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-jolnar-agent',
         name: 'Doctor Sucaban',
+        sourceId: 'jolnaragent',
+        faction: 'jolnar',
+        window: 'When a player spends resources to research:',
+        ability:
+          'You may exhaust this card to allow that player to remove any number of their infantry from the game board. For each unit removed, reduce the resources spent by 1.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/jolnaragent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/jolnaragent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-jolnar-commander',
         name: 'Agnlan Oln',
+        sourceId: 'jolnarcommander',
+        faction: 'jolnar',
+        window: 'After you roll dice for a unit ability:',
+        ability: 'You may reroll any of those dice.',
+        unlock: 'Own 8 technologies.',
+        card: 'cards/leaders/jolnarcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/jolnarcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-jolnar-hero',
         name: "Rin, the Master's Legacy",
+        sourceId: 'jolnarhero',
+        faction: 'jolnar',
+        window: 'ACTION:',
+        ability:
+          'For each non-unit upgrade technology you own, you may replace that technology with any technology of the same color from the deck. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/jolnarhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/jolnarhero.png',
       },
     ],
     source:
@@ -302,16 +409,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-l1z1x-agent',
         name: 'I48S',
+        sourceId: 'l1z1xagent',
+        faction: 'l1z1x',
+        window: 'After a player activates a system:',
+        ability:
+          'You may exhaust this card to allow that player to replace 1 of their infantry in the active system with 1 mech from their reinforcements.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/l1z1xagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/l1z1xagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-l1z1x-commander',
         name: '2RAM',
+        sourceId: 'l1z1xcommander',
+        faction: 'l1z1x',
+        window: 'At any time:',
+        ability: 'Units that have PLANETARY SHIELD do not prevent you from using BOMBARDMENT.',
+        unlock: 'Have 4 dreadnoughts on the game board.',
+        card: 'cards/leaders/l1z1xcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/l1z1xcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-l1z1x-hero',
         name: 'The Helmsman',
+        sourceId: 'l1z1xhero',
+        faction: 'l1z1x',
+        window: 'ACTION:',
+        ability:
+          "Choose 1 system that does not contain other players' ships. you may move your flagship and any number of your dreadnoughts from other systems into the chosen system. Then, purge this card.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/l1z1xhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/l1z1xhero.png',
       },
     ],
     source:
@@ -365,16 +498,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-letnev-agent',
         name: 'Viscount Unlenn',
+        sourceId: 'letnevagent',
+        faction: 'letnev',
+        window: 'At the start of a space combat round:',
+        ability:
+          'You may exhaust this card to choose 1 ship in the active system: that ship rolls 1 additional die during this combat round.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/letnevagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/letnevagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-letnev-commander',
         name: 'Rear Admiral Farran',
+        sourceId: 'letnevcommander',
+        faction: 'letnev',
+        window: 'After 1 of your units uses SUSTAIN DAMAGE:',
+        ability: 'You may gain 1 trade good.',
+        unlock: 'Have 5 non-fighter ships in 1 system.',
+        card: 'cards/leaders/letnevcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/letnevcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-letnev-hero',
         name: 'Darktalon Treilla',
+        sourceId: 'letnevhero',
+        faction: 'letnev',
+        window: 'ACTION:',
+        ability:
+          'Place this card near the game board. the number of non-fighter ships you can have in systems is not limited by laws or by the number of command tokens in your fleet pool during this game round. At the end of that game round, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/letnevhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/letnevhero.png',
       },
     ],
     source:
@@ -421,16 +580,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-mentak-agent',
         name: 'Suffi An',
+        sourceId: 'mentakagent',
+        faction: 'mentak',
+        window: 'After the Pillage faction ability is used against another player:',
+        ability:
+          'You may exhaust this card: if you do, you and that player each draw 1 action card.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/mentakagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/mentakagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-mentak-commander',
         name: "S'ula Mentarion",
+        sourceId: 'mentakcommander',
+        faction: 'mentak',
+        window: 'After you win a space combat:',
+        ability: 'You may force your opponent to give you 1 promissory note from their hand.',
+        unlock: 'Have 4 cruisers on the game board.',
+        card: 'cards/leaders/mentakcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/mentakcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-mentak-hero',
         name: 'Ipswitch, Loose Cannon',
+        sourceId: 'mentakhero',
+        faction: 'mentak',
+        window: 'At the start of a space combat that you are participating in:',
+        ability:
+          "You may purge this card. if you do, for each other player's ship that is destroyed during this combat, place 1 ship of that type from your reinforcements in the active system.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/mentakhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/mentakhero.png',
       },
     ],
     source:
@@ -475,16 +660,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-muaat-agent',
         name: 'Umbat',
+        sourceId: 'muaatagent',
+        faction: 'muaat',
+        window: 'ACTION:',
+        ability:
+          'Exhaust this card to choose a player: that player may produce up to 2 units that each have a cost of 4 or less in a system that contains one of their war suns or their flagship.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/muaatagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/muaatagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-muaat-commander',
         name: 'Magmus',
+        sourceId: 'muaatcommander',
+        faction: 'muaat',
+        window: 'After you spend a token from your strategy pool:',
+        ability: 'You may gain 1 trade good.',
+        unlock: 'Produce a war sun.',
+        card: 'cards/leaders/muaatcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/muaatcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-muaat-hero',
         name: "Adjudicator Ba'al",
+        sourceId: 'muaathero',
+        faction: 'muaat',
+        window: 'After you move a war sun into a non-home system other than Mecatol Rex:',
+        ability:
+          "You may destroy all other players' units in that system and replace that system tile with the Muaat supernova tile. If you do, purge this card and each planet card that corresponds to the replaced system tile.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/muaathero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/muaathero.png',
       },
     ],
     source:
@@ -544,16 +755,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-naalu-agent',
         name: "Z'eu",
+        sourceId: 'naaluagent-te',
+        faction: 'naalu',
+        window: "After any player's command token is placed in a system:",
+        ability: "You may exhaust this card to return that token to that player's reinforcements.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/naaluagent-te.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/naaluagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-naalu-commander',
         name: "M'aban",
+        sourceId: 'naalucommander',
+        faction: 'naalu',
+        window: 'At any time:',
+        ability:
+          "You may look at your neighbors' hands of promissory notes and the top and bottom card of the agenda deck.",
+        unlock: 'Have ground forces in or adjacent to the Mecatol Rex system.',
+        card: 'cards/leaders/naalucommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/naalucommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-naalu-hero',
         name: 'The Oracle',
+        sourceId: 'naaluhero',
+        faction: 'naalu',
+        window: 'At the end of the status phase:',
+        ability:
+          'You may force each other player to give you 1 promissory note from their hand. If you do, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/naaluhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/naaluhero.png',
       },
     ],
     source:
@@ -600,16 +837,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-nekro-agent',
         name: 'Nekro Malleon',
+        sourceId: 'nekroagent',
+        faction: 'nekro',
+        window: 'During the action phase:',
+        ability:
+          'You may exhaust this card to choose a player: that player may discard 1 action card or spend 1 command token from their command sheet to gain 2 trade goods.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/nekroagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/nekroagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-nekro-commander',
         name: 'Nekro Acidos',
+        sourceId: 'nekrocommander',
+        faction: 'nekro',
+        window: 'After you gain a technology:',
+        ability: 'You may draw 1 action card.',
+        unlock:
+          'Own 3 technologies. A "Valefar Assimilator" technology counts only if its X or Y token is on a technology.',
+        card: 'cards/leaders/nekrocommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/nekrocommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-nekro-hero',
         name: 'UNIT.DSGN.FLAYESH',
+        sourceId: 'nekrohero',
+        faction: 'nekro',
+        window: 'ACTION:',
+        ability:
+          "Choose a planet that has a technology specialty in a system that contains your units. Destroy any other player's units on that planet. Gain trade goods equal to the planet's combined resource and influence values and gain 1 technology that matches the specialty of that planet. Then, purge this card.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/nekrohero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/nekrohero.png',
       },
     ],
     source:
@@ -665,16 +929,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-saar-agent',
         name: 'Captain Mendosa',
+        sourceId: 'saaragent',
+        faction: 'saar',
+        window: 'When a player activates a system:',
+        ability:
+          "You may exhaust this card to increase the move value of 1 of that player's ships to match the move value of the ship on the game board that has the highest move value.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/saaragent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/saaragent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-saar-commander',
         name: 'Rowl Sarrig',
+        sourceId: 'saarcommander',
+        faction: 'saar',
+        window: 'When you produce fighters or infantry:',
+        ability:
+          'You may place each of those units at any of your space docks that are not blockaded.',
+        unlock: 'Have 3 space docks on the game board.',
+        card: 'cards/leaders/saarcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/saarcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-saar-hero',
         name: 'Gurno Aggero',
+        sourceId: 'saarhero',
+        faction: 'saar',
+        window: 'ACTION:',
+        ability:
+          "Choose 1 system that is adjacent to 1 of your space docks. Destroy all other players' infantry and fighters in that system. Then, purge this card.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/saarhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/saarhero.png',
       },
     ],
     source:
@@ -732,16 +1023,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-sardakk-agent',
         name: "T'ro",
+        sourceId: 'sardakkagent',
+        faction: 'sardakk',
+        window: "At the end of a player's tactical action:",
+        ability:
+          'You may exhaust this card: if you do, that player may place 2 infantry from their reinforcements on a planet they control in the active system.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/sardakkagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/sardakkagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-sardakk-commander',
         name: "G'hom Sek'kus",
+        sourceId: 'sardakkcommander',
+        faction: 'sardakk',
+        window: 'During the "Commit Ground Forces" step:',
+        ability:
+          'You can commit (move) up to 1 ground force from each planet in the active system and each planet in adjacent systems that do not contain 1 of your command tokens.',
+        unlock: 'Control 5 planets in non-home systems.',
+        card: 'cards/leaders/sardakkcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/sardakkcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-sardakk-hero',
         name: "Sh'val, Harbinger",
+        sourceId: 'sardakkhero',
+        faction: 'sardakk',
+        window: 'After you move ships into the active system:',
+        ability:
+          'You may skip directly to the "Commit Ground Forces" step. If you do, after you commit ground forces to land on planets, purge this card and return each of your ships in the active system to your reinforcements.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/sardakkhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/sardakkhero.png',
       },
     ],
     source:
@@ -787,16 +1105,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-sol-agent',
         name: 'Evelyn DeLouis',
+        sourceId: 'solagent',
+        faction: 'sol',
+        window: 'At the start of a ground combat round:',
+        ability:
+          'You may exhaust this card to choose 1 ground force in the active system: that ground force rolls 1 additional die during this combat round.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/solagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/solagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-sol-commander',
         name: 'Claire Gibson',
+        sourceId: 'solcommander',
+        faction: 'sol',
+        window: 'At the start of a ground combat on a planet you control:',
+        ability: 'You may place 1 infantry from your reinforcements on that planet.',
+        unlock: 'Control planets that have a combined total of at least 12 resources.',
+        card: 'cards/leaders/solcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/solcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-sol-hero',
         name: 'Jace X, 4th Air Legion',
+        sourceId: 'solhero',
+        faction: 'sol',
+        window: 'ACTION:',
+        ability:
+          'Remove each of your command tokens from the game board and return them to your reinforcements. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/solhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/solhero.png',
       },
     ],
     source:
@@ -843,16 +1187,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-winnu-agent',
         name: 'Berekar Berekon',
+        sourceId: 'winnuagent',
+        faction: 'winnu',
+        window: "When 1 or more of a player's units use PRODUCTION:",
+        ability:
+          'You may exhaust this card to reduce the combined cost of the produced units by 2.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/winnuagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/winnuagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-winnu-commander',
         name: 'Rickar Rickani',
+        sourceId: 'winnucommander',
+        faction: 'winnu',
+        window: 'During combat:',
+        ability:
+          "Apply +2 to the result of each of your unit's combat rolls in the Mecatol Rex system, your home system, and each system that contains a legendary planet.",
+        unlock: 'Control Mecatol Rex or enter into a combat in the Mecatol Rex system.',
+        card: 'cards/leaders/winnucommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/winnucommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-winnu-hero',
         name: 'Mathis Mathinus',
+        sourceId: 'winnuhero',
+        faction: 'winnu',
+        window: 'ACTION:',
+        ability:
+          'Perform the primary ability of any strategy card. Then, choose any number of other players. Those players may perform the secondary ability of that strategy card. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/winnuhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/winnuhero.png',
       },
     ],
     source:
@@ -911,16 +1282,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-xxcha-agent',
         name: 'Ggrocuto Rinn',
+        sourceId: 'xxchaagent',
+        faction: 'xxcha',
+        window: 'ACTION:',
+        ability:
+          'Exhaust this card to ready any planet; if that planet is in a system that is adjacent to a planet you control, you may remove 1 infantry from that planet and return it to its reinforcements.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/xxchaagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/xxchaagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-xxcha-commander',
         name: 'Elder Qanoj',
+        sourceId: 'xxchacommander',
+        faction: 'xxcha',
+        window: 'When you vote:',
+        ability:
+          'Each planet you exhaust to cast votes provides 1 additional vote. Game effects cannot prevent you from voting on an agenda.',
+        unlock: 'Control planets that have a combined total of at least 12 influence.',
+        card: 'cards/leaders/xxchacommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/xxchacommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-xxcha-hero',
         name: 'Xxekir Grom',
+        sourceId: 'xxchahero',
+        faction: 'xxcha',
+        window: 'When you exhaust planets:',
+        ability:
+          'combine the values of their resources and influence. Treat the combined value as if it were both resources and influence.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/xxchahero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/xxchahero.png',
       },
     ],
     source:
@@ -966,16 +1364,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-yin-agent',
         name: 'Brother Milor',
+        sourceId: 'yinagent',
+        faction: 'yin',
+        window: "After a player's unit is destroyed during combat:",
+        ability:
+          "You may exhaust this card to allow that player to place 2 fighters in the destroyed unit's system if it was a ship, or 2 infantry on its planet if it was a ground force.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/yinagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/yinagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-yin-commander',
         name: 'Brother Omar',
+        sourceId: 'yincommander',
+        faction: 'yin',
+        window: 'At any time:',
+        ability:
+          'This card satisfies a green technology prerequisite. When you research a tech owned by another player, you may return 1 of your infantry to reinforcements to ignore its prerequisites.',
+        unlock: 'Use one of your faction abilities.',
+        card: 'cards/leaders/yincommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/yincommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-yin-hero',
         name: 'Dannel of the Tenth',
+        sourceId: 'yinhero',
+        faction: 'yin',
+        window: 'ACTION:',
+        ability:
+          'Commit up to 3 infantry from your reinforcements to any non-home planets and resolve ground combats on those planets. Players cannot use SPACE CANNON against these units. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/yinhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/yinhero.png',
       },
     ],
     source:
@@ -1034,16 +1459,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-yssaril-agent',
         name: 'Ssruu',
+        sourceId: 'yssarilagent',
+        faction: 'yssaril',
+        window: 'At any time:',
+        ability:
+          "This card has the text ability of each other player's agent, even if that agent is exhausted.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/yssarilagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/yssarilagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-yssaril-commander',
         name: 'So Ata',
+        sourceId: 'yssarilcommander',
+        faction: 'yssaril',
+        window: 'After another player activates a system that contains your units:',
+        ability:
+          "You may look at that player's action cards, promissory notes, or secret objectives.",
+        unlock: 'Have 7 action cards.',
+        card: 'cards/leaders/yssarilcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/yssarilcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-yssaril-hero',
         name: 'Kyver, Blade and Key',
+        sourceId: 'yssarilhero',
+        faction: 'yssaril',
+        window: 'ACTION:',
+        ability:
+          'Each other player shows you 1 action card from their hand. For each player, you may either take that card or force that player to discard 3 random action cards from their hand. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/yssarilhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/yssarilhero.png',
       },
     ],
     source:
@@ -1109,16 +1561,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-argent-agent',
         name: 'Trilossa Aun Mirik',
+        sourceId: 'argentagent',
+        faction: 'argent',
+        window: 'When a player produces ground forces in a system:',
+        ability:
+          'You may exhaust this card: that player may place those units on any planets they control in that system and any adjacent systems.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/argentagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/argentagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-argent-commander',
         name: 'Trrakan Aun Zulok',
+        sourceId: 'argentcommander',
+        faction: 'argent',
+        window: 'When 1 or more of your units make a roll for a unit ability:',
+        ability: 'You may choose 1 of those units to roll 1 additional die.',
+        unlock:
+          'Have 6 units that have ANTI-FIGHTER BARRAGE, SPACE CANNON, or BOMBARDMENT on the game board.',
+        card: 'cards/leaders/argentcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/argentcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-argent-hero',
         name: 'Mirik Aun Sissiri',
+        sourceId: 'argenthero',
+        faction: 'argent',
+        window: 'ACTION:',
+        ability:
+          "Move any number of your ships from any systems to any number of other systems that contain 1 of your command tokens and no other players' ships. Then, purge this card.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/argenthero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/argenthero.png',
       },
     ],
     source:
@@ -1165,16 +1644,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-cabal-agent',
         name: 'The Stillness of Stars',
+        sourceId: 'cabalagent',
+        faction: 'cabal',
+        window: 'After another player replenishes commodities:',
+        ability:
+          'You may exhaust this card to convert their commodities to trade goods and capture 1 unit from their reinforcements that has a cost equal to or lower than their commodity value.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/cabalagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/cabalagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-cabal-commander',
         name: 'That Which Molds Flesh',
+        sourceId: 'cabalcommander',
+        faction: 'cabal',
+        window: 'When you produce fighter or infantry units:',
+        ability: 'Up to 2 of those units do not count against your PRODUCTION limit.',
+        unlock: 'Have units in 3 gravity rifts.',
+        card: 'cards/leaders/cabalcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/cabalcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-cabal-hero',
         name: 'It Feeds on Carrion',
+        sourceId: 'cabalhero',
+        faction: 'cabal',
+        window: 'ACTION:',
+        ability:
+          "Each other player rolls a die for each of his non-fighter ships that are in or adjacent to a system that contains a dimensional tear. on a 1-3, capture that unit. If this causes a player's ground forces or fighter to be removed, also capture those units. Then, purge this card.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/cabalhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/cabalhero.png',
       },
     ],
     source:
@@ -1220,16 +1725,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-empyrean-agent',
         name: 'Acamar',
+        sourceId: 'empyreanagent',
+        faction: 'empyrean',
+        window: 'After a player moves ships into a system that does not contain any planets:',
+        ability: 'You may exhaust this card: that player gains 1 command token.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/empyreanagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/empyreanagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-empyrean-commander',
         name: 'Xuange',
+        sourceId: 'empyreancommander',
+        faction: 'empyrean',
+        window:
+          'After another player moves ships into a system that contains 1 of your command tokens:',
+        ability: 'You may return that token to your reinforcements.',
+        unlock: 'Be neighbors with all other players.',
+        card: 'cards/leaders/empyreancommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/empyreancommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-empyrean-hero',
         name: 'Conservator Procyon',
+        sourceId: 'empyreanhero',
+        faction: 'empyrean',
+        window: 'ACTION:',
+        ability:
+          'Place 1 frontier token in each system that does not contain any planets and does not already have a frontier token. Then, explore each frontier token that is in a system that contains 1 or more of your ships. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/empyreanhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/empyreanhero.png',
       },
     ],
     source:
@@ -1276,16 +1807,44 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-mahact-agent',
         name: 'Jae Mir Kan',
+        sourceId: 'mahactagent',
+        faction: 'mahact',
+        window:
+          'When you would spend a command token during the secondary ability of a strategic action:',
+        ability:
+          "You may exhaust this card to remove 1 of the active player's command tokens from the board and use it instead.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/mahactagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/mahactagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-mahact-commander',
         name: 'Il Na Viroset',
+        sourceId: 'mahactcommander',
+        faction: 'mahact',
+        window: 'During your tactical actions:',
+        ability:
+          'you can activate systems that contain your command tokens. If you do, return both command tokens to your reinforcements and end your turn.',
+        unlock: "Have 2 other factions' command tokens in your fleet pool.",
+        card: 'cards/leaders/mahactcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/mahactcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-mahact-hero',
         name: 'Airo Shir Aur',
+        sourceId: 'mahacthero',
+        faction: 'mahact',
+        window: 'ACTION:',
+        ability:
+          "Move all units in the space area of any system to an adjacent system that contains a different player's ships. Space combat is resolved in that system. neither player can retreat or resolve abilities that would move their ships. Then, purge this card.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/mahacthero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/mahacthero.png',
       },
     ],
     source:
@@ -1332,16 +1891,70 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-nomad-agent',
         name: 'Field Marshal Mercer',
+        sourceId: 'nomadagentmercer',
+        faction: 'nomad',
+        window: "At the end of a player's turn:",
+        ability:
+          'You may exhaust this card to allow that player to remove up to 2 of their ground forces from the game board and place them on planets they control in the active system.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/nomadagentmercer.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/nomadagentmercer.png',
+      },
+      {
+        kind: 'agent',
+        id: 'ti4-nomad-nomadagentthundarian',
+        name: 'The Thundarian',
+        sourceId: 'nomadagentthundarian',
+        faction: 'nomad',
+        window: 'After the "Roll Dice" step of combat:',
+        ability:
+          'You may exhaust this card. If you do, hits are not assigned to either player\'s units. Return to the start of this combat round\'s "Roll Dice" step.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/nomadagentthundarian.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/nomadagentthundarian.png',
+      },
+      {
+        kind: 'agent',
+        id: 'ti4-nomad-nomadagentartuno',
+        name: 'Artuno the Betrayer',
+        sourceId: 'nomadagentartuno',
+        faction: 'nomad',
+        window: 'When you gain trade goods from the supply:',
+        ability:
+          'You may exhaust this card to place an equal number of trade goods on this card. When this card readies, gain the trade goods on this card.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/nomadagentartuno.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/nomadagentartuno.png',
       },
       {
         kind: 'commander',
         id: 'ti4-nomad-commander',
         name: 'Navarch Feng',
+        sourceId: 'nomadcommander',
+        faction: 'nomad',
+        window: 'When you produce:',
+        ability: 'You can produce your flagship without spending resources.',
+        unlock: 'Have 1 scored secret objective.',
+        card: 'cards/leaders/nomadcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/nomadcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-nomad-hero',
         name: 'Ahk-Syl Siven',
+        sourceId: 'nomadhero',
+        faction: 'nomad',
+        window: 'ACTION:',
+        ability:
+          'Place this card near the game board. your flagship and units it transports can move out of systems that contain your command tokens during this game round. At the end of that game round, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/nomadhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/nomadhero.png',
       },
     ],
     source:
@@ -1397,16 +2010,41 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-naaz-agent',
         name: 'Garv and Gunn',
+        sourceId: 'naazagent',
+        faction: 'naaz',
+        window: "At the end of a player's turn:",
+        ability: 'You may exhaust this card to allow that player to explore 1 of their planets.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/naazagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/naazagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-naaz-commander',
         name: 'Dart and Tai',
+        sourceId: 'naazcommander',
+        faction: 'naaz',
+        window: 'After you gain control of a planet that was controlled by another player:',
+        ability: 'You may explore that planet.',
+        unlock: 'Have mechs in 3 systems.',
+        card: 'cards/leaders/naazcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/naazcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-naaz-hero',
         name: 'Hesh and Prit',
+        sourceId: 'naazhero',
+        faction: 'naaz',
+        window: 'ACTION:',
+        ability:
+          'Gain 1 relic and perform the secondary ability of up to 2 readied or unchosen strategy cards. during this action, spend command tokens from your reinforcements instead of your strategy pool. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/naazhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/naazhero.png',
       },
     ],
     source:
@@ -1452,16 +2090,41 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-titans-agent',
         name: 'Tellurian',
+        sourceId: 'titansagent',
+        faction: 'titans',
+        window: 'Before a hit would be assigned:',
+        ability: 'You may exhaust this card to cancel that hit.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/titansagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/titansagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-titans-commander',
         name: 'Tungstantus',
+        sourceId: 'titanscommander',
+        faction: 'titans',
+        window: 'When 1 or more of your units use PRODUCTION:',
+        ability: 'You may gain 1 trade good.',
+        unlock: 'Have 5 structures on the game board.',
+        card: 'cards/leaders/titanscommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/titanscommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-titans-hero',
         name: 'Ul the Progenitor',
+        sourceId: 'titanshero',
+        faction: 'titans',
+        window: 'ACTION:',
+        ability:
+          'Ready Elysium and attach this card to it. Its resource and influence values are each increased by 3, and it gains the SPACE CANNON 5(x3) ability as if it were a unit.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/titanshero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/titanshero.png',
       },
     ],
     source:
@@ -1507,16 +2170,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-keleresm-agent',
         name: 'Xander Alexin Victori III',
+        sourceId: 'keleresagent',
+        faction: 'keleres',
+        window: 'At any time:',
+        ability:
+          'You may exhaust this card to allow any player to spend commodities as if they were trade goods.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/keleresagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/keleresagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-keleresm-commander',
         name: 'Suffi An',
+        sourceId: 'kelerescommander',
+        faction: 'keleres',
+        window: 'After you perform a component action:',
+        ability: 'You may perform an additional action.',
+        unlock: 'Spend 1 trade good after you play an action card that has a component action',
+        card: 'cards/leaders/kelerescommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/kelerescommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-keleresm-hero',
         name: 'Harka Leeds',
+        sourceId: 'keleresheroharka',
+        faction: 'keleres',
+        window: 'ACTION:',
+        ability:
+          'Reveal cards from the action card deck until you reveal 3 action cards that have component actions. Draw those cards and shuffle the rest back into the action card deck. Then, purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/keleresheroharka.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/keleresheroharka.png',
       },
     ],
     source:
@@ -1573,16 +2262,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-bastion-agent',
         name: 'Dame Briar',
+        sourceId: 'bastionagent',
+        faction: 'bastion',
+        window: "When a player's unit is destroyed",
+        ability:
+          "You may exhaust this card to galvanize another of that player's units in the destroyed unit's system.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/bastionagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/bastionagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-bastion-commander',
         name: 'Nip and Tuck',
+        sourceId: 'bastioncommander',
+        faction: 'bastion',
+        window: 'At any time',
+        ability:
+          'Your action cards cannot be canceled by "Sabotage" action cards. The Nekro Virus cannot place assimilator tokens on your components.',
+        unlock: 'There are 3 galvanized units on the game board',
+        card: 'cards/leaders/bastioncommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/bastioncommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-bastion-hero',
         name: 'Lyra Keen',
+        sourceId: 'bastionhero',
+        faction: 'bastion',
+        window: 'When one of your galvanized units is destroyed',
+        ability:
+          "You may purge this card to roll 1 die for each unit in its system that belongs to another player; if the result is equal to or greater than the galvanized unit's combat value, destroy that unit.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/bastionhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/bastionhero.png',
       },
     ],
     source:
@@ -1628,16 +2344,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-deepwrought-agent',
         name: 'Doctor Carrina',
+        sourceId: 'deepwroughtagent',
+        faction: 'deepwrought',
+        window: 'When another player researches a technology',
+        ability:
+          'You may exhaust this card to allow that player to ignore 1 prerequisite; if they do, you may place 1 infantry from your reinforcements into coexistence on a non-home planet they control.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/deepwroughtagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/deepwroughtagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-deepwrought-commander',
         name: 'Aello',
+        sourceId: 'deepwroughtcommander',
+        faction: 'deepwrought',
+        window: 'When another player spends resources to research a technology',
+        ability:
+          'That player may reduce the cost by 1; if they do, gain 1 commodity or convert 1 of your commodities to a trade good.',
+        unlock: 'Have an ocean card in play.',
+        card: 'cards/leaders/deepwroughtcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/deepwroughtcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-deepwrought-hero',
         name: 'Ta Zern',
+        sourceId: 'deepwroughthero',
+        faction: 'deepwrought',
+        window: 'ACTION:',
+        ability:
+          "Purge this card and a non-unit upgrade technology you own or from your deck; then, purge all cards with the same name owned by other players and in other players' decks. Then, each player that purged a technology they owned researches another technology.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/deepwroughthero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/deepwroughthero.png',
       },
     ],
     source:
@@ -1694,16 +2437,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-firmament-agent',
         name: 'Myru Vos',
+        sourceId: 'firmamentagent',
+        faction: 'firmament',
+        window: 'When a player moves ships',
+        ability:
+          "You may exhaust this card; if you do, SPACE CANNON cannot be used against those ships. If they are not transporting units, they can also move through other players' ships.",
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/firmamentagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/firmamentagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-firmament-commander',
         name: 'Captain Aroz',
+        sourceId: 'firmamentcommander',
+        faction: 'firmament',
+        window: 'At any time',
+        ability:
+          'You can treat planets in systems that contain your ships as if they were controlled by you for the purpose of scoring secret objectives.',
+        unlock: 'Have a plot card in play',
+        card: 'cards/leaders/firmamentcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/firmamentcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-firmament-hero',
         name: 'Sharsiss',
+        sourceId: 'firmamenthero',
+        faction: 'firmament',
+        window: 'ACTION:',
+        ability:
+          "Place 1 of your plot cards in play with any other player's control token on it. Then, you may place any player's control token on 1 of your in-play plot cards; one plot cannot have two of the same player's tokens. Then, purge this card.",
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/firmamenthero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/firmamenthero.png',
       },
     ],
     source:
@@ -1750,16 +2520,42 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-crimson-agent',
         name: 'Ahk Ravin',
+        sourceId: 'crimsonagent',
+        faction: 'crimson',
+        window: 'ACTION:',
+        ability:
+          'Exhaust this card to choose 1 player. That player may swap the position of 2 of their ships in any systems; they may transport units when they swap.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/crimsonagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/crimsonagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-crimson-commander',
         name: 'Ahk Siever',
+        sourceId: 'crimsoncommander',
+        faction: 'crimson',
+        window: 'At the end of a combat between any players:',
+        ability: 'Gain 1 commodity or convert 1 of your commodities to a trade good.',
+        unlock: "Place a breach token in a system that contains another player's unit.",
+        card: 'cards/leaders/crimsoncommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/crimsoncommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-crimson-hero',
         name: 'Homesick Phantom',
+        sourceId: 'crimsonhero',
+        faction: 'crimson',
+        window: 'When you produce ships',
+        ability:
+          'You may place any of those ships onto this card. At the start of a space combat, you may purge this card to place all ships from this card into the active system.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/crimsonhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/crimsonhero.png',
       },
     ],
     source:
@@ -1820,16 +2616,43 @@ export const OFFICIAL_FACTION_DATA: readonly OfficialFactionSeed[] = [
         kind: 'agent',
         id: 'ti4-ralnel-agent',
         name: 'Kan Kip Rel',
+        sourceId: 'ralnelagent',
+        faction: 'ralnel',
+        window: 'ACTION:',
+        ability:
+          'Exhaust this card and draw 2 action cards; give 1 of those cards to another player.',
+        unlock: 'Always Unlocked',
+        card: 'cards/leaders/ralnelagent.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/ralnelagent.png',
       },
       {
         kind: 'commander',
         id: 'ti4-ralnel-commander',
         name: 'Watchful Ojz',
+        sourceId: 'ralnelcommander',
+        faction: 'ralnel',
+        window: 'When you declare a retreat',
+        ability:
+          "Immediately retreat up to 2 of your ships from the active system to an adjacent system that does not contain another player's ships. Place a command token from your reinforcements into that system.",
+        unlock: 'Be the last person to pass during the Action Phase',
+        card: 'cards/leaders/ralnelcommander.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/ralnelcommander.png',
       },
       {
         kind: 'hero',
         id: 'ti4-ralnel-hero',
         name: 'Director Nel',
+        sourceId: 'ralnelhero',
+        faction: 'ralnel',
+        window: 'After the last player passes',
+        ability:
+          'You may choose to no longer be passed; if you do, gain 2 command tokens, draw 1 action card, and purge this card.',
+        unlock: 'Have 3 scored objectives.',
+        card: 'cards/leaders/ralnelhero.png',
+        image:
+          'https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/ralnelhero.png',
       },
     ],
     source:

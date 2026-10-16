@@ -7,6 +7,7 @@ export * from './base-content.ts';
 export * from './strategy-cards.ts';
 export * from './factions.ts';
 export * from './official-factions.ts';
+export type { OfficialLeaderSeed } from './official-faction-model.ts';
 export * from './technologies.ts';
 export * from './objectives.ts';
 export * from './action-cards.ts';

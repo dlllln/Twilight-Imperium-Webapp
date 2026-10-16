@@ -43,6 +43,11 @@
 }
 
 @media (max-width: 760px) {
+  .faction-tabs .pill-tabs {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
   .simulator.stage-faction .sim-faction {
     grid-template-columns: minmax(0, 1fr);
   }

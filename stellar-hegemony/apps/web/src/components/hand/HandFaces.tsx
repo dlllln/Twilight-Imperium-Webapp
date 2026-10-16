@@ -8,6 +8,8 @@ import {
   strategyFrame,
   type CardArtworkSource,
 } from '../../artwork/cards.ts';
+import { leaderFrame } from '../../artwork/leaders.ts';
+import { officialLeader } from '@stellar/content';
 import { type HandEntry, isTable, type TableEntry } from '../../hand/hand-model.ts';
 import type { Language, MessageKey } from '../../i18n.ts';
 import {
@@ -106,10 +108,14 @@ function leaderFace(
   language: Language,
 ) {
   const { id, kind, status } = entry.leader;
+  const original = officialLeader(id);
   return {
     kicker: t(LEADER_KIND_KEYS[kind]),
     title: leaderLabel(id, language),
-    text: leaderEffect(id, language),
+    text:
+      original === undefined
+        ? leaderEffect(id, language)
+        : `${original.window} ${original.ability}`,
     marks: status === 'exhausted' && stamp(t('exhausted')),
   };
 }
@@ -171,10 +177,10 @@ function faceOf(game: GameState, entry: HandEntry, t: Translate, language: Langu
   }
 }
 
-function tableFrame(entry: TableEntry): CardArtworkSource {
+function tableFrame(entry: TableEntry): CardArtworkSource | undefined {
   switch (entry.kind) {
     case 'leader':
-      return relicFrame(entry.leader.id);
+      return leaderFrame(entry.leader.id);
     case 'relic':
       return relicFrame(entry.relic.id);
     case 'fragment':
@@ -184,7 +190,7 @@ function tableFrame(entry: TableEntry): CardArtworkSource {
   }
 }
 
-function frameOf(entry: HandEntry): CardArtworkSource {
+function frameOf(entry: HandEntry): CardArtworkSource | undefined {
   if (isTable(entry)) return tableFrame(entry);
   if (entry.kind === 'action') return actionFrame(entry.card.definition.id);
   if (entry.kind === 'pick' || entry.kind === 'strategic')
@@ -203,9 +209,10 @@ export function HandFace({
   const t = useT();
   const language = useLanguage();
   const face = faceOf(game, entry, t, language);
+  const frame = frameOf(entry);
   return (
     <>
-      <CardArtwork artwork={frameOf(entry)} className="hand-print-frame" />
+      {frame !== undefined && <CardArtwork artwork={frame} className="hand-print-frame" />}
       <span className="hand-print-copy">
         <CardArt entry={entry} />
         {face.marks}

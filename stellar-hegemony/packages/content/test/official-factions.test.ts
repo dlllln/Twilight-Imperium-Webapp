@@ -92,7 +92,7 @@ describe('Complete official TI4 faction selection', () => {
       const game = startWith(id);
       expect(game.phase).toBe('strategy');
       expect(game.players[0]?.faction).toBe(id);
-      expect(game.players[0]?.leaders).toHaveLength(3);
+      expect(game.players[0]?.leaders).toHaveLength(id === 'nomad' ? 5 : 3);
       expect(game.systems[faction.homeSystem.id]?.spaceUnits).toHaveLength(
         faction.startingForces.space.reduce((sum, stack) => sum + stack.count, 0),
       );

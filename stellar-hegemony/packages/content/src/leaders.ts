@@ -9,6 +9,25 @@ import {
 import type { LocalizedText } from './localized.ts';
 import { UNIT_TYPES as U } from './units.ts';
 import { OFFICIAL_FACTION_DATA } from './official-faction-data.ts';
+import type { OfficialFactionSeed, OfficialLeaderSeed } from './official-faction-model.ts';
+
+const ORIGINAL_LEADERS = new Map(
+  OFFICIAL_FACTION_DATA.flatMap((faction) =>
+    faction.leaders.map((leader) => [leader.id, leader] as const),
+  ),
+);
+
+/** Exact printed leader identity and rules, distinct from the adapted game action. */
+export const officialLeader = (id: string): OfficialLeaderSeed | undefined =>
+  ORIGINAL_LEADERS.get(id);
+
+const FIRST_AGENTS = new Set(
+  OFFICIAL_FACTION_DATA.map(
+    (faction) => faction.leaders.find((leader) => leader.kind === 'agent')?.id,
+  ),
+);
+export const leaderIsReference = (id: string): boolean =>
+  officialLeader(id)?.kind === 'agent' && !FIRST_AGENTS.has(id);
 
 /*
  * Eigene Anführer (Erweiterung Schritt 3): je Fraktion ein Agent, ein Kommandant und ein Held.
@@ -199,6 +218,7 @@ const adaptedLeader = (
   ...original,
   id: leaderId(id),
   faction: factionId(faction),
+  ...(leaderIsReference(id) ? { action: [] } : {}),
 });
 
 const OFFICIAL_LEADERS = OFFICIAL_FACTION_DATA.flatMap((seed) =>
@@ -429,17 +449,35 @@ export const LEADER_TEXTS: Readonly<Record<string, LeaderText>> = {
   ),
 };
 
+const REFERENCE_EFFECT: LocalizedText = {
+  de: 'Originalkarte: Diese Fähigkeit ist noch nicht automatisiert.',
+  en: 'Original card: this ability is not automated yet.',
+};
+
+function officialText(
+  seed: OfficialFactionSeed,
+  entry: OfficialLeaderSeed,
+): readonly (readonly [string, LeaderText])[] {
+  const original = LEGACY_LEADERS.find(
+    (candidate) => candidate.faction === seed.archetype && candidate.kind === entry.kind,
+  );
+  const previous = original === undefined ? undefined : LEADER_TEXTS[original.id];
+  if (previous === undefined) return [];
+  return [
+    [
+      entry.id,
+      {
+        ...previous,
+        name: { de: entry.name, en: entry.name },
+        effect: leaderIsReference(entry.id) ? REFERENCE_EFFECT : previous.effect,
+      },
+    ],
+  ];
+}
+
 const OFFICIAL_LEADER_TEXTS: Readonly<Record<string, LeaderText>> = Object.fromEntries(
   OFFICIAL_FACTION_DATA.flatMap((seed) =>
-    seed.leaders.flatMap((entry) => {
-      const original = LEGACY_LEADERS.find(
-        (candidate) => candidate.faction === seed.archetype && candidate.kind === entry.kind,
-      );
-      const previous = original === undefined ? undefined : LEADER_TEXTS[original.id];
-      return previous === undefined
-        ? []
-        : [[entry.id, { ...previous, name: { de: entry.name, en: entry.name } }]];
-    }),
+    seed.leaders.flatMap((entry) => officialText(seed, entry)),
   ),
 );
 

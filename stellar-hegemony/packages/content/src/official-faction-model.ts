@@ -1,6 +1,19 @@
 import type { LeaderKind } from '@stellar/domain';
 import type { LocalizedText } from './localized.ts';
 
+export interface OfficialLeaderSeed {
+  readonly kind: LeaderKind;
+  readonly id: string;
+  readonly name: string;
+  readonly sourceId: string;
+  readonly faction: string;
+  readonly window: string;
+  readonly ability: string;
+  readonly unlock: string;
+  readonly card: string;
+  readonly image: string;
+}
+
 export interface OfficialFactionSeed {
   readonly id: string;
   readonly name: LocalizedText;
@@ -22,10 +35,6 @@ export interface OfficialFactionSeed {
   readonly technologies: readonly string[];
   readonly originalTechnologies: readonly string[];
   readonly technologyChoice: number;
-  readonly leaders: readonly {
-    readonly kind: LeaderKind;
-    readonly id: string;
-    readonly name: string;
-  }[];
+  readonly leaders: readonly OfficialLeaderSeed[];
   readonly source: string;
 }

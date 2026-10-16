@@ -16,6 +16,7 @@ import { useLanguage, useT } from '../../use-translation.ts';
 import { FactionEmblem } from '../simulator/FactionEmblem.tsx';
 import { FactionOriginalSheets, FactionPortrait } from './FactionArtwork.tsx';
 import { EDITION_NAMES, FactionBrowser } from './FactionBrowser.tsx';
+import { FactionLeaders } from './FactionLeaders.tsx';
 
 const MAX_COMPLEXITY = 3;
 
@@ -152,6 +153,17 @@ function FactionDetails({ faction }: { readonly faction: FactionDefinition }): R
   );
 }
 
+function AdaptedRulesNote() {
+  const language = useLanguage();
+  return (
+    <p className="ti4-adapted-note">
+      {language === 'de'
+        ? 'Spielregeln der Webapp: Sonderregeln, Anführer und Technologien sind vereinfacht. Die vollständigen Originalregeln findest du auf den Fraktionsbögen und Anführerkarten.'
+        : 'Web app rules: special rules, leaders and technologies are simplified. The faction sheets and leader cards show the complete original rules.'}
+    </p>
+  );
+}
+
 function FactionTabs({ id }: { readonly id: string }): ReactElement {
   const t = useT();
   const language = useLanguage();
@@ -162,13 +174,10 @@ function FactionTabs({ id }: { readonly id: string }): ReactElement {
         <Tabs.Trigger value="summary">{t('summary')}</Tabs.Trigger>
         <Tabs.Trigger value="details">{t('details')}</Tabs.Trigger>
         <Tabs.Trigger value="lore">{t('lore')}</Tabs.Trigger>
+        <Tabs.Trigger value="leaders">{language === 'de' ? 'Anführer' : 'Leaders'}</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="summary">
-        <p className="ti4-adapted-note">
-          {language === 'de'
-            ? 'Spielregeln der Webapp: Sonderregeln, Anführer und Technologien sind vereinfacht. Die vollständigen Originalregeln findest du auf dem Fraktionsbogen.'
-            : 'Web app rules: special rules, leaders and technologies are simplified. The faction sheet shows the complete original rules.'}
-        </p>
+        <AdaptedRulesNote />
         <Summary id={id} />
       </Tabs.Content>
       <Tabs.Content value="details">
@@ -176,6 +185,9 @@ function FactionTabs({ id }: { readonly id: string }): ReactElement {
       </Tabs.Content>
       <Tabs.Content value="lore">
         <p className="faction-lore">{FACTION_PROFILES[id]?.lore[language]}</p>
+      </Tabs.Content>
+      <Tabs.Content value="leaders">
+        <FactionLeaders id={id} />
       </Tabs.Content>
     </Tabs.Root>
   );

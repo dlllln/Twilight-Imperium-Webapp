@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const destination = resolve(root, 'apps/web/public/ti4');
 const checkOnly = process.argv.includes('--check');
-const groups = ['factions', 'cards', 'units'];
+const groups = ['factions', 'cards', 'units', 'leaders'];
 const records = (
   await Promise.all(
     groups.map(async (group) =>

@@ -13,7 +13,8 @@ keine externen Bildanfragen während des Spiels nötig.
   Erkundungs-, Relikt- und legendäre Planetenkarten.
 - [AsyncTI4/TI4_map_generator_bot](https://github.com/AsyncTI4/TI4_map_generator_bot),
   Commit `e0de5a7db198ae4fd66cfa5270fcca893bb510a3`: Einheiten, Systemgrafiken,
-  Thunder’s-Edge-Fraktionsreferenzen und Stammdaten der 30 offiziellen Fraktionen.
+  Thunder’s-Edge-Fraktionsreferenzen, alle 92 Anführerkarten und Stammdaten der
+  30 offiziellen Fraktionen.
 
 Die Auswahl enthält 30 offizielle Standardfraktionen: 17 aus dem Grundspiel,
 7 aus Prophecy of Kings, den Rat der Keleres und 5 aus Thunder’s Edge.
@@ -37,7 +38,17 @@ die spielbaren Texte der App lesbar; fremde gedruckte Regeln werden nicht als
 Regeln dieser App ausgegeben. Die ursprünglichen Fraktionsbögen sind als
 Bildreferenz zugänglich.
 
-Die komplette Download-Zuordnung steht in `tools/ti4/{factions,cards,units}.json`.
+Anführer werden anhand der konkreten Quell-ID und der überprüften Fraktions-ID
+zugeordnet, nicht anhand eines allgemeinen Agent-/Heldenbildes. Der Nomade hat
+alle drei Originalagenten. Die beiden ergänzten Agenten werden als Referenz ohne
+automatisierte Aktion geführt; die bestehende Webapp-Aktion wird nicht verdreifacht.
+Die Hand zeigt echte Porträts und Originalregeln. Antippen öffnet die vollständige
+Karte mit einer getrennt beschrifteten, vereinfachten Webapp-Aktion. Auch Auswahl
+und Anführerübersicht zeigen die passenden Originalkarten einschließlich
+Freischaltbedingungen auf Englisch. Alte Eigenkreationen erhalten kein Ersatzbild
+aus dem Reliktstapel.
+
+Die komplette Download-Zuordnung steht in `tools/ti4/{factions,cards,units,leaders}.json`.
 `apps/web/public/ti4/sources.json` protokolliert für jede Datei die genaue
 Quelladresse, Größe und SHA-256-Prüfsumme.
 

@@ -14,6 +14,40 @@ import { useLanguage, useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { LEADER_KIND_KEYS } from '../hand/HandFaces.tsx';
 import { Panel } from '../ui/Panel.tsx';
+import { OriginalLeaderCard } from './OriginalLeaderCard.tsx';
+import { leaderArtwork } from '../../artwork/leaders.ts';
+import { CardArtwork } from '../cards/CardArtwork.tsx';
+import { officialLeader } from '@stellar/content';
+
+function LeaderPortrait({ id }: { readonly id: string }) {
+  const artwork = leaderArtwork(id);
+  return artwork === undefined ? null : (
+    <CardArtwork artwork={artwork} className="leader-portrait" />
+  );
+}
+
+function LeaderDescription({ leader }: { readonly leader: LeaderView }) {
+  const language = useLanguage();
+  const text =
+    leader.status === 'locked'
+      ? leaderUnlock(leader.id, language)
+      : leaderEffect(leader.id, language);
+  const prefix =
+    officialLeader(leader.id) === undefined
+      ? ''
+      : language === 'de'
+        ? 'Webapp (vereinfacht): '
+        : 'Web app (simplified): ';
+  return (
+    <>
+      <small className="leader-text">
+        {prefix}
+        {text}
+      </small>
+      <OriginalLeaderCard id={leader.id} />
+    </>
+  );
+}
 
 /** Zustand in Worten; ein freier Kommandant wirkt dauerhaft und heißt deshalb „aktiv“. */
 function statusKey(leader: LeaderView): MessageKey {
@@ -34,23 +68,21 @@ function LeaderRow({ game, player, leader }: LeaderProps): ReactElement {
   const t = useT();
   const language = useLanguage();
   const progress = leaderProgress(game, player, leader, content);
-  const locked = leader.status === 'locked';
   return (
     <li className={`leader-row leader-${leader.status}`} data-testid={`leader-${leader.id}`}>
+      <LeaderPortrait id={leader.id} />
       <span className="leader-kind">{t(LEADER_KIND_KEYS[leader.kind])}</span>
       <strong className="leader-name">{leaderLabel(leader.id, language)}</strong>
       <span className="leader-status">
         {t(statusKey(leader))}
         {progress !== null && ` ${String(progress.current)}/${String(progress.needed)}`}
       </span>
-      <small className="leader-text">
-        {locked ? leaderUnlock(leader.id, language) : leaderEffect(leader.id, language)}
-      </small>
+      <LeaderDescription leader={leader} />
     </li>
   );
 }
 
-/** PoK Anführer aller Spieler: je ein Agent, Kommandant und Held, alles öffentlich. */
+/** Anführer aller Spieler einschließlich der drei Nomad-Agenten; alles ist öffentlich. */
 export function LeadersPanel({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   return (

@@ -89,6 +89,73 @@
   height: 56px;
 }
 
+.hand-leader-art {
+  width: 43px;
+  height: 56px;
+  border-radius: 4px;
+}
+
+.original-leader-card {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 6px 0;
+  padding: 8px;
+  border: 1px solid #625077;
+  border-radius: 6px;
+  background: #0a0d16;
+  color: #e0e5f3;
+}
+
+.original-leader-card summary {
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.original-leader-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.original-leader-card p,
+.original-leader-card small {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.original-leader-card small {
+  display: block;
+  color: #bfc4d5;
+}
+
+.original-leader-owner {
+  color: #d8b6fb;
+}
+
+.leader-row:has(.leader-portrait) {
+  grid-template-columns: 32px auto 1fr auto;
+}
+
+.leader-portrait {
+  grid-column: 1;
+  grid-row: 1;
+  width: 32px;
+  height: 42px;
+  border-radius: 4px;
+  align-self: center;
+}
+
+.leader-row .original-leader-card {
+  margin: 2px 0;
+}
+
+.leader-card-preview {
+  width: min(520px, calc(100vw - 24px));
+  max-height: 80vh;
+  overflow: auto;
+}
+
 .hand-print-copy .hand-art img {
   filter: saturate(1.05);
 }

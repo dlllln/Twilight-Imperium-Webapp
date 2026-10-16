@@ -1,0 +1,370 @@
+[
+  {
+    "path": "cards/leaders/arborecagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/arborecagent.png"
+  },
+  {
+    "path": "cards/leaders/arboreccommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/arboreccommander.png"
+  },
+  {
+    "path": "cards/leaders/arborechero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/arborechero.png"
+  },
+  {
+    "path": "cards/leaders/ghostagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/ghostagent.png"
+  },
+  {
+    "path": "cards/leaders/ghostcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/ghostcommander.png"
+  },
+  {
+    "path": "cards/leaders/ghosthero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/ghosthero.png"
+  },
+  {
+    "path": "cards/leaders/hacanagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/hacanagent.png"
+  },
+  {
+    "path": "cards/leaders/hacancommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/hacancommander.png"
+  },
+  {
+    "path": "cards/leaders/hacanhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/hacanhero.png"
+  },
+  {
+    "path": "cards/leaders/jolnaragent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/jolnaragent.png"
+  },
+  {
+    "path": "cards/leaders/jolnarcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/jolnarcommander.png"
+  },
+  {
+    "path": "cards/leaders/jolnarhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/jolnarhero.png"
+  },
+  {
+    "path": "cards/leaders/l1z1xagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/l1z1xagent.png"
+  },
+  {
+    "path": "cards/leaders/l1z1xcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/l1z1xcommander.png"
+  },
+  {
+    "path": "cards/leaders/l1z1xhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/l1z1xhero.png"
+  },
+  {
+    "path": "cards/leaders/letnevagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/letnevagent.png"
+  },
+  {
+    "path": "cards/leaders/letnevcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/letnevcommander.png"
+  },
+  {
+    "path": "cards/leaders/letnevhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/letnevhero.png"
+  },
+  {
+    "path": "cards/leaders/mentakagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/mentakagent.png"
+  },
+  {
+    "path": "cards/leaders/mentakcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/mentakcommander.png"
+  },
+  {
+    "path": "cards/leaders/mentakhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/mentakhero.png"
+  },
+  {
+    "path": "cards/leaders/muaatagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/muaatagent.png"
+  },
+  {
+    "path": "cards/leaders/muaatcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/muaatcommander.png"
+  },
+  {
+    "path": "cards/leaders/muaathero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/muaathero.png"
+  },
+  {
+    "path": "cards/leaders/naaluagent-te.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/naaluagent.png"
+  },
+  {
+    "path": "cards/leaders/naalucommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/naalucommander.png"
+  },
+  {
+    "path": "cards/leaders/naaluhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/naaluhero.png"
+  },
+  {
+    "path": "cards/leaders/nekroagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/nekroagent.png"
+  },
+  {
+    "path": "cards/leaders/nekrocommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/nekrocommander.png"
+  },
+  {
+    "path": "cards/leaders/nekrohero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/nekrohero.png"
+  },
+  {
+    "path": "cards/leaders/saaragent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/saaragent.png"
+  },
+  {
+    "path": "cards/leaders/saarcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/saarcommander.png"
+  },
+  {
+    "path": "cards/leaders/saarhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/saarhero.png"
+  },
+  {
+    "path": "cards/leaders/sardakkagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/sardakkagent.png"
+  },
+  {
+    "path": "cards/leaders/sardakkcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/sardakkcommander.png"
+  },
+  {
+    "path": "cards/leaders/sardakkhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/sardakkhero.png"
+  },
+  {
+    "path": "cards/leaders/solagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/solagent.png"
+  },
+  {
+    "path": "cards/leaders/solcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/solcommander.png"
+  },
+  {
+    "path": "cards/leaders/solhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/solhero.png"
+  },
+  {
+    "path": "cards/leaders/winnuagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/winnuagent.png"
+  },
+  {
+    "path": "cards/leaders/winnucommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/winnucommander.png"
+  },
+  {
+    "path": "cards/leaders/winnuhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/winnuhero.png"
+  },
+  {
+    "path": "cards/leaders/xxchaagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/xxchaagent.png"
+  },
+  {
+    "path": "cards/leaders/xxchacommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/xxchacommander.png"
+  },
+  {
+    "path": "cards/leaders/xxchahero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/xxchahero.png"
+  },
+  {
+    "path": "cards/leaders/yinagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/yinagent.png"
+  },
+  {
+    "path": "cards/leaders/yincommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/yincommander.png"
+  },
+  {
+    "path": "cards/leaders/yinhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/yinhero.png"
+  },
+  {
+    "path": "cards/leaders/yssarilagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/yssarilagent.png"
+  },
+  {
+    "path": "cards/leaders/yssarilcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/yssarilcommander.png"
+  },
+  {
+    "path": "cards/leaders/yssarilhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/yssarilhero.png"
+  },
+  {
+    "path": "cards/leaders/argentagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/argentagent.png"
+  },
+  {
+    "path": "cards/leaders/argentcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/argentcommander.png"
+  },
+  {
+    "path": "cards/leaders/argenthero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/argenthero.png"
+  },
+  {
+    "path": "cards/leaders/cabalagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/cabalagent.png"
+  },
+  {
+    "path": "cards/leaders/cabalcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/cabalcommander.png"
+  },
+  {
+    "path": "cards/leaders/cabalhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/cabalhero.png"
+  },
+  {
+    "path": "cards/leaders/empyreanagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/empyreanagent.png"
+  },
+  {
+    "path": "cards/leaders/empyreancommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/empyreancommander.png"
+  },
+  {
+    "path": "cards/leaders/empyreanhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/empyreanhero.png"
+  },
+  {
+    "path": "cards/leaders/mahactagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/mahactagent.png"
+  },
+  {
+    "path": "cards/leaders/mahactcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/mahactcommander.png"
+  },
+  {
+    "path": "cards/leaders/mahacthero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/mahacthero.png"
+  },
+  {
+    "path": "cards/leaders/nomadagentmercer.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/nomadagentmercer.png"
+  },
+  {
+    "path": "cards/leaders/nomadagentthundarian.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/nomadagentthundarian.png"
+  },
+  {
+    "path": "cards/leaders/nomadagentartuno.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/nomadagentartuno.png"
+  },
+  {
+    "path": "cards/leaders/nomadcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/nomadcommander.png"
+  },
+  {
+    "path": "cards/leaders/nomadhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/nomadhero.png"
+  },
+  {
+    "path": "cards/leaders/naazagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/naazagent.png"
+  },
+  {
+    "path": "cards/leaders/naazcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/naazcommander.png"
+  },
+  {
+    "path": "cards/leaders/naazhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/naazhero.png"
+  },
+  {
+    "path": "cards/leaders/titansagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/agents/titansagent.png"
+  },
+  {
+    "path": "cards/leaders/titanscommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/commanders/titanscommander.png"
+  },
+  {
+    "path": "cards/leaders/titanshero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/pok/heroes/titanshero.png"
+  },
+  {
+    "path": "cards/leaders/keleresagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/keleresagent.png"
+  },
+  {
+    "path": "cards/leaders/kelerescommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/kelerescommander.png"
+  },
+  {
+    "path": "cards/leaders/keleresheroharka.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/codex/keleresheroharka.png"
+  },
+  {
+    "path": "cards/leaders/bastionagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/bastionagent.png"
+  },
+  {
+    "path": "cards/leaders/bastioncommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/bastioncommander.png"
+  },
+  {
+    "path": "cards/leaders/bastionhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/bastionhero.png"
+  },
+  {
+    "path": "cards/leaders/deepwroughtagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/deepwroughtagent.png"
+  },
+  {
+    "path": "cards/leaders/deepwroughtcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/deepwroughtcommander.png"
+  },
+  {
+    "path": "cards/leaders/deepwroughthero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/deepwroughthero.png"
+  },
+  {
+    "path": "cards/leaders/firmamentagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/firmamentagent.png"
+  },
+  {
+    "path": "cards/leaders/firmamentcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/firmamentcommander.png"
+  },
+  {
+    "path": "cards/leaders/firmamenthero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/firmamenthero.png"
+  },
+  {
+    "path": "cards/leaders/crimsonagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/crimsonagent.png"
+  },
+  {
+    "path": "cards/leaders/crimsoncommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/crimsoncommander.png"
+  },
+  {
+    "path": "cards/leaders/crimsonhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/crimsonhero.png"
+  },
+  {
+    "path": "cards/leaders/ralnelagent.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/ralnelagent.png"
+  },
+  {
+    "path": "cards/leaders/ralnelcommander.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/ralnelcommander.png"
+  },
+  {
+    "path": "cards/leaders/ralnelhero.png",
+    "url": "https://raw.githubusercontent.com/AsyncTI4/TI4_map_generator_bot/e0de5a7db198ae4fd66cfa5270fcca893bb510a3/src/main/resources/hover_images/leaders/te/ralnelhero.png"
+  }
+]

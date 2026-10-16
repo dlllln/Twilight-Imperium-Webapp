@@ -19,6 +19,10 @@ import { PlayControls } from '../cards/CardItem.tsx';
 import { hasTargets, initialTarget } from '../cards/TargetFields.tsx';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { HandFace, useEntryName } from './HandFaces.tsx';
+import { officialLeader } from '@stellar/content';
+import { OriginalLeaderCard } from '../exploration/OriginalLeaderCard.tsx';
+import { leaderEffect } from '../../labels.ts';
+import { useLanguage } from '../../use-translation.ts';
 
 /** Fächer: Drehung je Karte, Absenkung zum Rand hin, Zugweg zum Ausspielen. */
 const FAN_DEGREES = 4;
@@ -108,6 +112,7 @@ interface CardProps {
   readonly entry: HandEntry;
   readonly offset: number;
   readonly onPlay: () => void;
+  readonly inspect?: boolean;
 }
 
 /** Antippen oder nach oben Ziehen spielt aus; nach dem Ziehen zählt der Klick nicht doppelt. */
@@ -128,12 +133,18 @@ function useGesture(playable: boolean, onPlay: () => void) {
 }
 
 /** Eine Karte im Fächer: anheben zum Lesen, antippen oder nach oben ziehen zum Ausspielen. */
-function HandCard({ game, entry, offset, onPlay }: CardProps): ReactElement {
+const cardAvailability = (playable: boolean, inspect: boolean, present: boolean) => ({
+  active: (playable || inspect) && present,
+  disabled: !playable && !inspect,
+});
+
+function HandCard({ game, entry, offset, onPlay, inspect = false }: CardProps): ReactElement {
   const t = useT();
   const name = useEntryName();
   const motionOn = useSettingsStore((state) => state.animations);
   const present = useIsPresent();
-  const gesture = useGesture(entry.playable && present, onPlay);
+  const availability = cardAvailability(entry.playable, inspect, present);
+  const gesture = useGesture(availability.active, onPlay);
   return (
     <motion.button
       type="button"
@@ -143,8 +154,8 @@ function HandCard({ game, entry, offset, onPlay }: CardProps): ReactElement {
       data-testid={testIdOf(entry)}
       data-leaving={present ? undefined : true}
       aria-label={name(entry)}
-      aria-disabled={!entry.playable}
-      title={t(entry.playable ? 'playGesture' : 'notPlayableNow')}
+      aria-disabled={availability.disabled}
+      title={inspect ? name(entry) : t(entry.playable ? 'playGesture' : 'notPlayableNow')}
       initial={DEALT}
       animate={fanned(offset)}
       exit={PLAYED}
@@ -156,6 +167,64 @@ function HandCard({ game, entry, offset, onPlay }: CardProps): ReactElement {
       <HandFace game={game} entry={entry} />
     </motion.button>
   );
+}
+
+function LeaderCardContent({ entry, onPlay }: CardProps) {
+  const language = useLanguage();
+  if (entry.kind !== 'leader') return null;
+  const de = language === 'de';
+  return (
+    <>
+      <OriginalLeaderCard id={entry.leader.id} expanded />
+      <p>
+        {de ? 'Webapp (vereinfacht): ' : 'Web app (simplified): '}
+        {leaderEffect(entry.leader.id, language)}
+      </p>
+      <button type="button" className="hex-button" disabled={!entry.playable} onClick={onPlay}>
+        {de ? 'Vereinfachte Aktion ausführen' : 'Use simplified action'}
+      </button>
+      <Popover.Close className="hex-button">{de ? 'Schließen' : 'Close'}</Popover.Close>
+    </>
+  );
+}
+
+/** Inspect the actual leader before choosing the separately labelled adapted action. */
+function LeaderCard(props: CardProps): ReactElement {
+  const [open, setOpen] = useState(false);
+  const { entry } = props;
+  if (entry.kind !== 'leader') return <HandCard {...props} />;
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Anchor asChild>
+        <div className="hand-anchor">
+          <HandCard {...props} inspect onPlay={() => setOpen(true)} />
+        </div>
+      </Popover.Anchor>
+      <Popover.Portal>
+        <Popover.Content
+          className="ui-popover glass leader-card-preview"
+          side="top"
+          sideOffset={12}
+        >
+          <LeaderCardContent
+            {...props}
+            onPlay={() => {
+              props.onPlay();
+              setOpen(false);
+            }}
+          />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
+function DockCard(props: CardProps): ReactElement {
+  const { entry } = props;
+  if (needsTargets(entry)) return <TargetedCard {...props} />;
+  if (entry.kind === 'leader' && officialLeader(entry.leader.id) !== undefined)
+    return <LeaderCard {...props} />;
+  return <HandCard {...props} />;
 }
 
 /** Aktionskarte mit Zielen: Antippen öffnet die Zielwahl direkt über der Karte. */
@@ -249,11 +318,7 @@ export function HandDock({ game }: { readonly game: GameState }): ReactElement {
       <AnimatePresence initial={false}>
         {entries.map((entry, index) => {
           const props = { game, entry, offset: index - middle };
-          return needsTargets(entry) ? (
-            <TargetedCard key={entryKey(entry)} {...props} />
-          ) : (
-            <HandCard key={entryKey(entry)} {...props} onPlay={() => play(entry)} />
-          );
+          return <DockCard key={entryKey(entry)} {...props} onPlay={() => play(entry)} />;
         })}
       </AnimatePresence>
     </section>

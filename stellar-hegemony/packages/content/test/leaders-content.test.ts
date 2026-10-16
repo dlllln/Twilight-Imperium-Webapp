@@ -6,6 +6,7 @@ import {
   ALL_FACTIONS as FACTIONS,
   LEADERS,
   leaderText,
+  leaderIsReference,
 } from '../src/index.ts';
 
 const unitIds = new Set(BASE_UNITS.map((unit) => unit.id));
@@ -15,12 +16,14 @@ const unitsIn = (rewards: readonly RewardEffect[]) =>
   rewards.flatMap((reward) => (reward.kind === 'placeUnits' ? [reward.unit] : []));
 
 describe('Content: Anführer (PoK Anführer)', () => {
-  it('PoK Anführer: jede Fraktion hat genau einen Agenten, einen Kommandanten und einen Helden', () => {
+  it('PoK Anführer: jede Fraktion hat Agent, Kommandant und Held; Nomad hat drei Agenten', () => {
     for (const faction of FACTIONS) {
       const own = LEADERS.filter((leader) => leader.faction === faction.id);
-      expect(own.map((leader) => leader.kind)).toEqual(LEADER_KINDS);
+      expect(own.map((leader) => leader.kind)).toEqual(
+        faction.id === 'nomad' ? ['agent', 'agent', ...LEADER_KINDS] : LEADER_KINDS,
+      );
     }
-    expect(LEADERS).toHaveLength(FACTIONS.length * LEADER_KINDS.length);
+    expect(LEADERS).toHaveLength(FACTIONS.length * LEADER_KINDS.length + 2);
     expect(new Set(LEADERS.map((leader) => leader.id)).size).toBe(LEADERS.length);
   });
 
@@ -46,7 +49,8 @@ describe('Content: Anführer (PoK Anführer)', () => {
               ...(leader.unlock.kind === 'unitsOnBoard' ? [leader.unlock.unit] : []),
             ]
           : unitsIn(leader.action);
-      if (leader.kind !== 'commander') expect(leader.action.length).toBeGreaterThan(0);
+      if (leader.kind !== 'commander')
+        expect(leader.action.length > 0).toBe(!leaderIsReference(leader.id));
       for (const unit of units) expect(unitIds.has(unit)).toBe(true);
     }
   });
