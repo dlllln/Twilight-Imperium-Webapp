@@ -56,6 +56,8 @@ test('Ein Klick zeigt die Knöpfe am System, Ansehen fährt auf der Karte heran;
 }) => {
   const [page] = await openTable(browser, 1);
   if (page === undefined) throw new Error('kein Gerät');
+  // The renderer waits for fonts; take geometry snapshots after that initial layout settles.
+  await page.locator('.pixi-host canvas').waitFor();
   const home = page.locator('[data-seat="1"][data-system]');
   await home.click();
   const overview = await home.boundingBox();

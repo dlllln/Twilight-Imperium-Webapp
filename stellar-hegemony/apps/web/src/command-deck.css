@@ -1,0 +1,903 @@
+/* Command deck: one shared visual language for navigation, lobbies and game panels. */
+:root {
+  --space-deep: #030710;
+  --space-mid: #081626;
+  --text: #e7f3ff;
+  --muted: #94abc1;
+  --accent: #77d9f5;
+  --accent-2: #7d9dff;
+  --accent-soft: #66d9ed14;
+  --border: #96dcff20;
+  --border-strong: #8ce6ff80;
+  --panel: #071320ed;
+  --panel-strong: #050d19f7;
+  --panel-line: #a3dffb30;
+  --gold: #dfbd79;
+  --gold-bright: #ffe4ad;
+  --ease-space: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 8% 0%, #12364566, transparent 48%),
+    radial-gradient(ellipse at 95% 100%, #27184055, transparent 50%), #030710;
+}
+
+.app {
+  padding: 14px;
+  gap: 14px;
+  height: 100dvh;
+  min-height: 560px;
+}
+
+.app:has(.board.playing) {
+  min-height: 0;
+}
+
+.glass {
+  border-color: var(--border);
+  border-radius: 14px;
+  background: linear-gradient(145deg, #102132f2, #060d1aef 70%);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 16px 40px #0005,
+    inset 0 1px #c6edff0a;
+}
+
+.toolbar {
+  position: relative;
+  flex-shrink: 0;
+  min-height: 76px;
+  padding: 12px 20px;
+  border-radius: 14px 14px 6px 6px;
+  border-bottom-color: #8cdfff45;
+  background: linear-gradient(110deg, #102131f5, #080f1cf5 65%);
+  animation: deck-arrive 650ms var(--ease-space) both;
+}
+
+.toolbar::after {
+  position: absolute;
+  content: '';
+  bottom: -1px;
+  left: 22px;
+  width: 86px;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 16px #76dfff88;
+}
+
+.brand {
+  column-gap: 13px;
+}
+
+.brand h1 {
+  font-size: clamp(17px, 1.5vw, 23px);
+  letter-spacing: 0.13em;
+  background-image: linear-gradient(120deg, #fff3cf, #e5c181 65%, #b39259);
+}
+
+.brand > span {
+  margin-top: 3px;
+  color: #90b0c7;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  filter: drop-shadow(0 0 9px #e1bb6d35);
+}
+
+.setup-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 14px;
+}
+
+.setup-controls > label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+button,
+input,
+textarea,
+select {
+  border-radius: 7px;
+}
+
+button:not(:disabled):hover {
+  border-color: #8ce6ff88;
+  box-shadow:
+    0 0 0 1px #80e2ff0d,
+    0 4px 20px #3babc722;
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline-color: #9ae8ff;
+}
+
+button.primary:not(.hex-button) {
+  position: relative;
+  overflow: hidden;
+  min-height: 42px;
+  color: #041724;
+  border: 1px solid #b4efffb3;
+  background: linear-gradient(110deg, #b1edfa, #72c9ea 55%, #8daff5);
+  box-shadow:
+    0 4px 22px #53bcdf25,
+    inset 0 1px #fff6;
+}
+
+button.primary:not(.hex-button)::after {
+  position: absolute;
+  content: '';
+  inset: -50% auto -50% -65%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, #fff7, transparent);
+  transform: skewX(-25deg);
+  transition: transform 600ms var(--ease-space);
+  pointer-events: none;
+}
+
+button.primary:not(.hex-button):is(:hover, :focus-visible)::after {
+  transform: translateX(500%) skewX(-25deg);
+}
+
+button.primary:not(.hex-button):hover:not(:disabled) {
+  color: #041724;
+  background: linear-gradient(110deg, #d5f7ff, #96def4 55%, #b1c9ff);
+  box-shadow: 0 6px 28px #53bcdf40;
+}
+
+input,
+textarea {
+  background: #020a14a6;
+  box-shadow: inset 0 2px 6px #0003;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--border-strong);
+}
+
+.board {
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 14px;
+}
+
+.board.playing {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.galaxy {
+  min-width: 0;
+  isolation: isolate;
+  border: 1px solid #8ccfff30;
+  border-radius: 6px 6px 18px 18px;
+  background: #030914;
+}
+
+.galaxy::after {
+  position: absolute;
+  z-index: 3;
+  inset: 9px;
+  content: '';
+  pointer-events: none;
+  background:
+    linear-gradient(#9ce9ff88, #9ce9ff88) left top / 18px 1px,
+    linear-gradient(#9ce9ff88, #9ce9ff88) left top / 1px 18px,
+    linear-gradient(#9ce9ff55, #9ce9ff55) right bottom / 18px 1px,
+    linear-gradient(#9ce9ff55, #9ce9ff55) right bottom / 1px 18px;
+  background-repeat: no-repeat;
+}
+
+.galaxy > svg {
+  z-index: 2;
+}
+
+.galaxy-ambience {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  background: radial-gradient(ellipse at 50% 55%, transparent 40%, #02050f4d 100%);
+}
+
+.astral-haze {
+  position: absolute;
+  top: -15%;
+  right: -12%;
+  width: min(70%, 800px);
+  height: 55%;
+  background: radial-gradient(ellipse, #56dbff20, #8a65ce0b 45%, transparent 70%);
+  animation: nebula-awaken 3s ease-out both;
+}
+
+.astral-orbit {
+  position: absolute;
+  top: -320px;
+  right: -170px;
+  width: 650px;
+  height: 650px;
+  border: 1px solid #a4d4fc12;
+  border-radius: 50%;
+  animation: orbital-drift 120s linear infinite;
+  will-change: transform;
+}
+
+.astral-orbit::before {
+  position: absolute;
+  content: '';
+  inset: 30px;
+  border: 1px dashed #a4d4fc0c;
+  border-radius: 50%;
+}
+
+.astral-orbit::after {
+  position: absolute;
+  content: '';
+  left: 50%;
+  bottom: -3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #a6eaff;
+  box-shadow: 0 0 14px 4px #75d2ff33;
+}
+
+.astral-meteor {
+  position: absolute;
+  top: 14%;
+  left: 48%;
+  width: 100px;
+  height: 1px;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, #d8f7ffbb);
+  animation: meteor-pass 14s 3s linear infinite;
+  will-change: transform, opacity;
+}
+
+.astral-star {
+  position: absolute;
+  top: 8%;
+  left: 36%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #c3ebff;
+  box-shadow: 0 0 9px 2px #91bfff55;
+  animation: stellar-glimmer 7s ease-in-out infinite alternate;
+  will-change: opacity;
+}
+
+/* Keep the map's frame budget for navigation while the pointer or a finger is on it. */
+.galaxy:is(:hover, :active) .galaxy-ambience :is(.astral-orbit, .astral-meteor, .astral-star) {
+  animation-play-state: paused;
+}
+
+.astral-star:nth-of-type(2) {
+  top: 28%;
+  left: 80%;
+  animation-delay: -3s;
+}
+
+.astral-star:nth-of-type(3) {
+  top: 70%;
+  left: 8%;
+  animation-delay: -5s;
+}
+
+.atlas-caption {
+  position: absolute;
+  z-index: 3;
+  top: 26px;
+  left: 28px;
+  display: grid;
+  gap: 7px;
+  pointer-events: none;
+  animation: deck-arrive 850ms 100ms var(--ease-space) both;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #8fc7de;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.atlas-caption strong {
+  color: #eff8ff;
+  font-size: clamp(14px, 1.4vw, 20px);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px #000;
+}
+
+.atlas-sectors {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #a1b7cf;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+}
+
+.atlas-sectors i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #93e3cb;
+}
+
+.setup-sidebar {
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: #71c6e13b transparent;
+}
+
+.online-panel,
+.map-panel {
+  padding: 20px;
+  animation: deck-arrive 700ms 100ms var(--ease-space) both;
+}
+
+.online-panel {
+  gap: 13px;
+}
+
+.mission-briefing {
+  position: relative;
+  padding: 6px 0 1px;
+}
+
+.mission-orbit {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  color: #8bdcff55;
+  width: 58px;
+  height: 58px;
+  will-change: transform;
+  animation: orbital-drift 70s linear infinite;
+}
+
+.mission-orbit svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mission-briefing h3 {
+  position: relative;
+  max-width: 230px;
+  margin: 20px 0 12px;
+  color: #f1f8ff;
+  font-family: var(--title-font);
+  font-size: 32px;
+  line-height: 1.16;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.mission-copy {
+  max-width: 245px;
+  margin: 0;
+  color: #a8bed1;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.mission-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 23px;
+}
+
+.mission-divider span {
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, #81cde342, transparent);
+}
+
+.mission-divider span:first-child {
+  transform: rotate(180deg);
+}
+
+.mission-divider i {
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  background: #c9af7c;
+}
+
+.online-panel .setup-title {
+  color: #d3e7f5;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.online-panel label {
+  align-items: stretch;
+  gap: 7px;
+  color: #a8bed1;
+  text-align: left;
+}
+
+.online-panel input {
+  min-height: 39px;
+  width: 100%;
+}
+
+.hint {
+  color: #95aabd;
+  line-height: 1.55;
+}
+
+.map-panel {
+  gap: 12px;
+  animation-delay: 180ms;
+}
+
+.map-panel > label {
+  color: #bacddd;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.map-panel textarea {
+  height: 92px;
+  min-height: 76px;
+  color: #a6c0d7;
+  line-height: 1.5;
+  font-size: 10px;
+}
+
+.lobby-code {
+  padding: 16px 10px;
+  border: 1px dashed #87dbfa44;
+  border-radius: 8px;
+  background: #74d3f306;
+  color: #bfeeff;
+  text-shadow: 0 0 18px #72d5ff44;
+}
+
+.lobby-seat {
+  padding: 9px;
+  border-left: 2px solid #9ce8ff33;
+  background: #80dfff05;
+}
+
+.lobby-seat.human {
+  border-left-color: #88dcca;
+}
+
+.map-controls {
+  padding: 6px;
+  border-radius: 12px;
+  background: #06111ee8;
+  box-shadow:
+    0 8px 24px #0005,
+    inset 0 1px #bceaff0b;
+}
+
+.round-button {
+  border-color: #a4d6f022;
+  background: #c1e5ff08;
+}
+
+.phases li[aria-current='step'] {
+  border-color: #9bdcff70;
+  background: linear-gradient(120deg, #254956, #1a2d45);
+  box-shadow:
+    0 0 18px #68cce51a,
+    inset 0 1px #c7f7ff1a;
+  animation: none;
+}
+
+.hud-portrait button {
+  border-color: #a8dbf02e;
+  border-radius: 9px 20px 9px 9px;
+  background: linear-gradient(105deg, #0d1c2bf5, #07101ce8);
+}
+
+.hud-phase {
+  border-right-color: var(--gold);
+  background: linear-gradient(120deg, #081625f5, #0b1523f5);
+  animation: phase-arrive 450ms var(--ease-space) both;
+}
+
+.hud-phase strong {
+  color: #f8e2b9;
+  letter-spacing: 0.09em;
+}
+
+.notice {
+  border-color: #9bdbff30;
+  background: #061120f2;
+}
+
+.drawer-tabs.tab-list,
+.drawer-body,
+.ui-popover,
+.tooltip {
+  border-color: #9edaff33;
+  background: linear-gradient(140deg, #102031f7, #060e1bf7);
+}
+
+.drawer-tabs .tab-trigger[data-state='active'],
+.pill-tabs [data-state='active'] {
+  color: #c0efff;
+  background: #71d5f01c;
+  border-color: #8de7ff66;
+}
+
+.simulator:not(.stage-battle) {
+  background:
+    radial-gradient(ellipse at 10% 0%, #123c4c70, transparent 55%),
+    radial-gradient(ellipse at 90% 90%, #35213f55, transparent 55%), #030710;
+}
+
+.sim-panel {
+  --hud: #0a1725ef;
+  border-color: #83d8fa40;
+  background: linear-gradient(145deg, #102131e8, #06101cee);
+}
+
+.faction-grid button {
+  background: #9cd7ff07;
+  border-color: #a6dbff1f;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.faction-grid button[aria-checked='true'] {
+  border-color: #90e3ff;
+  background: linear-gradient(135deg, #6acfeb29, #7393cb14);
+  box-shadow: inset 0 0 22px #74d6fa0d;
+}
+
+.ti4-faction-portrait {
+  border-color: #a3e5ff33;
+}
+
+@keyframes deck-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes phase-arrive {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes nebula-awaken {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes orbital-drift {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes meteor-pass {
+  0% {
+    opacity: 0;
+    transform: translate(-80px, -24px) rotate(16deg);
+  }
+  1% {
+    opacity: 0.6;
+  }
+  6% {
+    opacity: 0;
+    transform: translate(240px, 65px) rotate(16deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(240px, 65px) rotate(16deg);
+  }
+}
+
+@keyframes stellar-glimmer {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
+
+@media (max-width: 1100px) {
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand h1 {
+    font-size: 17px;
+  }
+  .setup-controls {
+    order: 3;
+    width: 100%;
+    margin: 0;
+  }
+  .toolbar .phase-bar {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .board {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    min-width: 320px;
+  }
+  .app {
+    height: auto;
+    min-height: 100dvh;
+    padding: 8px;
+    gap: 8px;
+  }
+  .toolbar {
+    min-height: 0;
+    padding: 12px;
+    gap: 12px 8px;
+  }
+  .brand {
+    column-gap: 8px;
+  }
+  .brand h1 {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 0.07em;
+  }
+  .brand > span {
+    font-size: 8px;
+    letter-spacing: 0.06em;
+  }
+  .brand-mark {
+    width: 27px;
+    height: 27px;
+  }
+  .toolbar-end {
+    gap: 5px;
+  }
+  .toolbar-end .round-button {
+    width: 32px;
+    height: 32px;
+  }
+  .toolbar-end .round-button svg {
+    width: 15px;
+  }
+  .setup-controls {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px;
+  }
+  .setup-controls > label {
+    gap: 4px;
+    font-size: 11px;
+  }
+  .setup-controls select {
+    width: 44px;
+    padding: 7px 18px 7px 7px;
+  }
+  .setup-controls button {
+    min-width: 0;
+    justify-content: center;
+    padding: 8px 5px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .setup-controls button svg {
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+  }
+  .board {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: visible;
+  }
+  .board:not(.playing) > .galaxy {
+    flex: none;
+    height: clamp(320px, 49svh, 460px);
+  }
+  .setup-sidebar {
+    overflow: visible;
+    gap: 10px;
+  }
+  .atlas-caption {
+    top: 20px;
+    left: 20px;
+    gap: 5px;
+  }
+  .atlas-caption strong {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+  }
+  .atlas-caption .eyebrow,
+  .atlas-sectors {
+    font-size: 9px;
+  }
+  .astral-orbit {
+    width: 420px;
+    height: 420px;
+    top: -260px;
+    right: -240px;
+  }
+  .online-panel,
+  .map-panel {
+    padding: 20px;
+  }
+  .mission-briefing h3 {
+    max-width: none;
+    margin-top: 15px;
+    font-size: 29px;
+  }
+  .mission-copy {
+    max-width: 290px;
+  }
+  .mission-orbit {
+    width: 38px;
+    height: 38px;
+    top: -8px;
+    right: 2px;
+  }
+  .board:not(.playing) .map-controls {
+    flex-direction: row;
+    bottom: 12px;
+    padding: 4px;
+  }
+  .board:not(.playing) .map-controls > :nth-child(3),
+  .board:not(.playing) .map-controls > :last-child {
+    margin-top: 0;
+  }
+  .app:has(.board.playing) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .board.playing {
+    display: grid;
+    flex: 1;
+    min-height: 0;
+    overflow: clip;
+  }
+  .phases,
+  .toolbar .phase-bar .actor,
+  .toolbar .phase-bar .speaker {
+    flex-shrink: 0;
+  }
+  .toolbar .phase-bar {
+    font-size: 12px;
+    gap: 10px;
+    scrollbar-width: thin;
+  }
+  .phases {
+    gap: 2px;
+  }
+  .phases li {
+    padding: 5px 7px;
+  }
+  .hud-players {
+    top: 14px;
+    left: 12px;
+    gap: 5px;
+  }
+  .hud-portrait button {
+    min-width: 108px;
+    grid-template-columns: 32px auto;
+    padding: 4px;
+    column-gap: 4px;
+  }
+  .hud-portrait .faction-emblem {
+    width: 30px;
+    height: 30px;
+  }
+  .portrait-name {
+    padding: 2px 3px;
+    font-size: 10px;
+    max-width: 100px;
+  }
+  .portrait-vp,
+  .portrait-initiative {
+    min-width: 16px;
+    height: 17px;
+    font-size: 11px;
+  }
+  .drawer-body {
+    width: min(370px, calc(100vw - 84px));
+  }
+  .hud-phase {
+    min-width: 0;
+  }
+  .hud-phase strong {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .phases li:not([aria-current='step']),
+  .toolbar .phase-bar .speaker {
+    display: none;
+  }
+  .toolbar .phase-bar .actor {
+    margin-left: auto;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+
+/* The saved switch and the operating system preference both stop decorative motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:root.motion-off *,
+:root.motion-off *::before,
+:root.motion-off *::after {
+  animation: none !important;
+  transition: none !important;
+}

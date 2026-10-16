@@ -62,7 +62,7 @@ function SetupControls({ t }: { readonly t: Translate }): ReactElement {
   const generate = useGalaxyStore((state) => state.generate);
   const openSimulator = useSimulatorStore((state) => state.open);
   return (
-    <>
+    <div className="setup-controls">
       <PlayerCountSelect label={t('players')} />
       <button type="button" className="icon-button" onClick={() => generate()}>
         <Shuffle size={18} aria-hidden="true" /> {t('newGalaxy')}
@@ -70,7 +70,7 @@ function SetupControls({ t }: { readonly t: Translate }): ReactElement {
       <button type="button" className="icon-button" onClick={openSimulator}>
         <Swords size={18} aria-hidden="true" /> {t('openSimulator')}
       </button>
-    </>
+    </div>
   );
 }
 

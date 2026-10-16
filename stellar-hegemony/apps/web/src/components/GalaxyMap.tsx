@@ -51,6 +51,7 @@ import { PlayerSheet } from './sheet/PlayerSheet.tsx';
 import { SystemActions } from './hud/SystemActions.tsx';
 import { NoticeStack } from './hud/NoticeStack.tsx';
 import { useMapPointer } from '../system/map-pointer.ts';
+import { GalaxyAmbience } from './GalaxyAmbience.tsx';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
 const PixiCanvas = lazy(() =>
@@ -386,6 +387,7 @@ export function GalaxyMap(): ReactElement {
           <PixiCanvas {...{ hexes, bounds, viewport, view, effects, onUnavailable }} />
         </Suspense>
       )}
+      <GalaxyAmbience sectors={hexes.length} />
       <HexTargets
         {...{ hexes, bounds, band, viewport, view }}
         ref={svg}

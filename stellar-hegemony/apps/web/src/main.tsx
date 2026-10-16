@@ -7,6 +7,7 @@ import '@fontsource/exo-2/700.css';
 import { App } from './App.tsx';
 import './styles.css';
 import './artwork/units.css';
+import './command-deck.css';
 
 const root = document.getElementById('root');
 if (root !== null) {

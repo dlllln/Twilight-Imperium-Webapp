@@ -4,6 +4,7 @@ import { useOnlineStore } from '../../online/online-store.ts';
 import { currentMapString, useGalaxyStore } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
 import { OnlineError } from './OnlineError.tsx';
+import { MissionBriefing } from './MissionBriefing.tsx';
 
 function JoinForm(): ReactElement {
   const t = useT();
@@ -37,6 +38,7 @@ export function OnlinePanel(): ReactElement {
   const busy = status === 'connecting';
   return (
     <section className="online-panel glass" aria-label={t('online')} data-tutorial="online">
+      <MissionBriefing />
       <h2 className="setup-title">
         <Globe size={16} aria-hidden="true" /> {t('online')}
       </h2>

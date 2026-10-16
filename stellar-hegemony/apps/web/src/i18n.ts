@@ -5,6 +5,14 @@ export type Language = keyof LocalizedText;
 const DICTIONARY = {
   title: { de: 'Stellar Hegemony', en: 'Stellar Hegemony' },
   subtitle: { de: 'Galaxie-Aufbau', en: 'Galaxy setup' },
+  atlasNavigation: { de: 'Navigation', en: 'Navigation' },
+  atlasTitle: { de: 'Galaktischer Atlas', en: 'Galactic atlas' },
+  atlasSectors: { de: 'Sektoren', en: 'sectors' },
+  missionTitle: { de: 'Die Galaxie wartet.', en: 'The galaxy awaits.' },
+  missionCopy: {
+    de: 'Wähle deine Fraktion. Schmiede Allianzen. Erobere den galaktischen Thron.',
+    en: 'Choose your faction. Forge alliances. Claim the galactic throne.',
+  },
   players: { de: 'Spieler', en: 'Players' },
   botBadge: { de: 'KI', en: 'AI' },
   botThinking: { de: 'ist am Zug und überlegt …', en: 'is taking its turn …' },
