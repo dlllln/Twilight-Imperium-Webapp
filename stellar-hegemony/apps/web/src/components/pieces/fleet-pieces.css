@@ -1,0 +1,163 @@
+.fleet-interaction {
+  position: absolute;
+  z-index: 22;
+  inset: 0;
+  pointer-events: none;
+  overflow: clip;
+}
+
+.fleet-pickup {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 40px;
+  margin: -20px 0 0 -26px;
+  padding: 0;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  border: 1px solid color-mix(in srgb, var(--fleet-seat) 80%, #fff);
+  border-radius: 12px 12px 16px 16px;
+  background: #07111ec9;
+  box-shadow:
+    0 4px 0 #0008,
+    0 6px 12px #0008;
+}
+
+.fleet-pickup:hover:not(:disabled),
+.fleet-pickup:focus-visible {
+  transform: translateY(-4px);
+  background: #122637ef;
+  box-shadow:
+    0 8px 0 #0005,
+    0 12px 18px #0008;
+}
+
+.fleet-pickup:active {
+  cursor: grabbing;
+}
+
+.fleet-pickup[aria-pressed='true'] {
+  border-style: dashed;
+  opacity: 0.65;
+}
+
+.fleet-miniatures {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 32px;
+}
+
+.fleet-miniatures img {
+  position: absolute;
+  width: 33px;
+  height: 26px;
+  object-fit: contain;
+  left: 1px;
+  top: 1px;
+  filter: drop-shadow(1px 4px 1px #0009);
+}
+
+.fleet-miniatures img:nth-child(2) {
+  left: 5px;
+  top: 4px;
+}
+.fleet-miniatures img:nth-child(3) {
+  left: 9px;
+  top: 7px;
+}
+.fleet-miniatures b {
+  position: absolute;
+  z-index: 2;
+  right: -2px;
+  bottom: -2px;
+  min-width: 17px;
+  padding: 1px 4px;
+  border-radius: 50%;
+  background: #050a12;
+  border: 1px solid var(--fleet-seat);
+  color: #fff3d1;
+  font-size: 11px;
+}
+
+.fleet-lift-icon {
+  position: absolute;
+  top: -6px;
+  right: -5px;
+  color: #c6f2ff;
+}
+.fleet-ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: -22px 0 0 -24px;
+  padding: 5px;
+  border-radius: 14px;
+  background: #182634c9;
+  border: 1px solid #dc8b73;
+  box-shadow:
+    0 12px 5px #0005,
+    0 18px 25px #0008;
+  will-change: transform;
+}
+.fleet-ghost[data-valid='true'] {
+  border-color: #a2ecc2;
+  background: #254336d9;
+}
+.fleet-ghost .fleet-miniatures {
+  transform: translateY(-6px) rotate(-7deg) scale(1.12);
+}
+.fleet-drop-region {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.fleet-drop-region polygon {
+  fill: #86e8bf1a;
+  stroke: #9ff3c6;
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+.fleet-drop-label {
+  position: absolute;
+  padding: 3px 7px;
+  transform: translate(-50%, -160%);
+  border-radius: 8px;
+  background: #07151be6;
+  color: #a5e8bd;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.fleet-staged {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  margin: -18px 0 0 -25px;
+  border: 1px dashed #a9e5cb;
+  border-radius: 10px;
+  background: #09191ce0;
+  box-shadow: 0 6px 10px #0007;
+}
+.fleet-staged small {
+  font-size: 10px;
+  color: #b8dfd5;
+}
+.fleet-staged button {
+  pointer-events: auto;
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+@media (pointer: coarse) {
+  .fleet-pickup {
+    width: 58px;
+    height: 46px;
+    margin: -23px 0 0 -29px;
+  }
+}

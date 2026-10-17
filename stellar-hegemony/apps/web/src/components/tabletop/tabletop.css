@@ -1,0 +1,570 @@
+/* A physical border and fixed component trays; all unused table space stays transparent. */
+.tabletop-zones {
+  position: absolute;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+}
+
+.tabletop-rim {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid #c4d9e51c;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 0 0 4px #060b13aa,
+    inset 0 0 32px #0009;
+}
+
+.tabletop-supply {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 268px;
+  padding: 7px 11px 10px;
+  border: 1px solid #c9b6833d;
+  border-bottom: 3px solid #000b;
+  border-radius: 7px 7px 14px 14px;
+  background:
+    repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px),
+    linear-gradient(155deg, #192632f5, #080e17f5);
+  box-shadow:
+    0 7px 0 #02050ba6,
+    0 12px 24px #0006,
+    inset 0 1px #e4d4a51c;
+  pointer-events: auto;
+}
+
+.tabletop-supply-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 25px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #c8c6b9;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.tabletop-supply-toggle:hover {
+  background: none;
+  color: #ffdfa2;
+}
+
+.tabletop-supply-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.tabletop-supply[data-expanded='false'] {
+  width: 210px;
+  padding-bottom: 6px;
+}
+
+.tabletop-piles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tabletop-supply[data-expanded='false'] .tabletop-piles {
+  display: none;
+}
+
+.tabletop-pile {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  color: #aabac8;
+  font-size: 9px;
+}
+
+.tabletop-card-stack {
+  position: relative;
+  width: 37px;
+  border: 1px solid #c8c3b363;
+  border-radius: 4px;
+  background: #080d16;
+  box-shadow:
+    1px 2px #ddd3b077,
+    2px 4px #1c2632,
+    3px 6px #ddd3b055,
+    4px 8px 8px #0008;
+  transform: rotate(-3deg);
+}
+
+.tabletop-pile:nth-child(even) .tabletop-card-stack {
+  transform: rotate(3deg);
+}
+
+.tabletop-pile[data-pile='discard'] .tabletop-card-stack {
+  transform: rotate(9deg);
+}
+
+.tabletop-card-stack .ti4-complete-card {
+  border-radius: 3px;
+}
+
+.tabletop-card-stack > b {
+  position: absolute;
+  right: -8px;
+  bottom: -4px;
+  min-width: 20px;
+  padding: 2px 4px;
+  border: 1px solid #b4d3e14a;
+  border-radius: 4px;
+  background: #0a1524;
+  color: #edf6ff;
+  text-align: center;
+  font-size: 10px;
+  box-shadow: 0 2px 4px #0008;
+}
+
+.tabletop-pile[data-empty='true'] .tabletop-card-stack {
+  opacity: 0.35;
+  box-shadow: none;
+}
+
+.tabletop-transactions {
+  position: absolute;
+  top: 146px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 268px;
+  max-height: 172px;
+  overflow: hidden;
+  margin: 0;
+  padding: 0 0 8px;
+  list-style: none;
+  pointer-events: none;
+}
+
+.tabletop-zones:has(.tabletop-supply[data-expanded='false']) .tabletop-transactions {
+  top: 65px;
+}
+
+.tabletop-transaction {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 51px;
+  padding: 6px 11px;
+  border: 1px solid #b4d5ea32;
+  border-radius: 7px;
+  background: #07111dec;
+  color: #aec5d7;
+  font-size: 11px;
+  box-shadow: 0 6px 12px #0005;
+}
+
+.tabletop-transaction strong {
+  color: #edf4fa;
+}
+
+.tabletop-transaction b {
+  color: #f1cf88;
+}
+
+.tabletop-moving-component {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  color: #e6be6e;
+  filter: drop-shadow(0 3px 2px #000b);
+  transform-origin: center 80%;
+}
+
+.tabletop-transactions[data-motion='true'] .tabletop-transaction {
+  animation: tabletop-receipt 2.4s ease both;
+}
+
+.tabletop-transactions[data-motion='true'] [data-movement='draw'] .tabletop-moving-component {
+  animation: tabletop-draw 800ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.tabletop-transactions[data-motion='true'] [data-movement='play'] .tabletop-moving-component,
+.tabletop-transactions[data-motion='true'] [data-movement='discard'] .tabletop-moving-component {
+  animation: tabletop-place 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.tabletop-transactions[data-motion='true'] [data-movement='spend'] .tabletop-moving-component,
+.tabletop-transactions[data-motion='true'] [data-movement='gain'] .tabletop-moving-component {
+  animation: tabletop-pay 650ms ease both;
+}
+
+.tabletop-transactions[data-motion='true'] [data-movement='exhaust'] .tabletop-moving-component {
+  animation: tabletop-exhaust 650ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Held components and their player's mat stay in the same place throughout the game. */
+.hud-shield .hud-players {
+  max-height: calc(100% - var(--sheet-h, 132px) - 36px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scroll-padding-block: 8px;
+  overscroll-behavior: contain;
+}
+
+.hud-shield .hud-portrait button {
+  min-width: 222px;
+  border-radius: 7px 12px 12px 7px;
+  background:
+    repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px),
+    linear-gradient(110deg, color-mix(in srgb, var(--seat) 12%, #0c1420), #08101cea);
+  border-bottom: 3px solid #0009;
+  box-shadow:
+    0 4px #04080de6,
+    0 7px 15px #0006;
+}
+
+.hud-portrait[data-own-mat='true'] button {
+  border-left: 3px solid var(--seat);
+}
+
+.hud-shield .hud-portrait .portrait-name {
+  max-width: 84px;
+  padding-right: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.hud-shield .portrait-initiative[data-exhausted='true'] {
+  opacity: 0.5;
+  transform: rotate(12deg);
+  text-decoration: line-through;
+}
+
+.portrait-tabletop-hand {
+  position: absolute;
+  right: 8px;
+  top: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #dce8f0;
+  font-size: 10px;
+}
+
+.portrait-tabletop-backs {
+  position: relative;
+  display: block;
+  width: 13px;
+  height: 18px;
+  border: 1px solid #c6d7de99;
+  border-radius: 2px;
+  background: #091222 url('/ti4/cards/action-back.jpg') center / cover;
+  box-shadow:
+    -2px 1px #182b3e,
+    -3px 1px #b2c5d27a;
+  transform: rotate(7deg);
+}
+
+.portrait-tabletop-strategies {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  display: flex;
+  gap: 6px;
+}
+
+.portrait-tabletop-strategy {
+  display: block;
+  width: 27px;
+  filter: drop-shadow(1px 3px 2px #0009);
+  transform: rotate(-5deg);
+  transition:
+    transform 450ms ease,
+    opacity 450ms ease;
+}
+
+.portrait-tabletop-strategy[data-exhausted='true'] {
+  transform: rotate(77deg) scale(0.88);
+  opacity: 0.6;
+}
+
+.hud-shield .hand-dock .hand-card {
+  box-shadow:
+    1px 1px #eee3c577,
+    2px 3px #182332,
+    0 12px 24px #0009;
+  will-change: auto;
+}
+
+.hud-shield .hand-dock .hand-owner {
+  z-index: 70;
+}
+
+/* The toggle must stay still while approached; only a card itself lifts a tucked hand. */
+.hud-shield .hand-dock {
+  --tabletop-tuck: -160px;
+  --tabletop-raised: -54px;
+}
+
+@media (hover: hover) {
+  .hud-shield .hand-dock.tucked:is(:hover, :focus-within) {
+    --hand-bottom: var(--tabletop-tuck);
+  }
+  .hud-shield .hand-dock.tucked:has(.hand-card:is(:hover, :focus-visible)) {
+    --hand-bottom: var(--tabletop-raised);
+  }
+}
+
+@media (max-width: 760px) {
+  .hud-shield .hand-dock {
+    --tabletop-tuck: -124px;
+    --tabletop-raised: -70px;
+  }
+}
+
+.hud-shield .hand-dock .hand-card[data-exhausted='true'] {
+  filter: saturate(0.48) brightness(0.73);
+}
+
+.hud-shield .hand-card[data-exhausted='true'] .hand-original-face > .ti4-complete-card {
+  transform: rotate(90deg);
+  transform-origin: center;
+  transition: transform 450ms var(--ease-space);
+}
+
+.hud-shield .hand-card[data-exhausted='true']:hover .hand-original-face > .ti4-complete-card,
+.hud-shield
+  .hand-card[data-exhausted='true']:focus-visible
+  .hand-original-face
+  > .ti4-complete-card {
+  transform: none;
+}
+
+.hud-shield .hand-card[data-dragging='true'] .hand-original-face {
+  filter: drop-shadow(0 24px 18px #000d);
+}
+
+.hud-shield .hand-dock .hand-card[data-dragging='true'] {
+  box-shadow:
+    2px 3px #eee3c599,
+    5px 7px 4px #05090ecc,
+    0 32px 35px #0009;
+  cursor: grabbing;
+}
+
+.hud-shield .hand-dock .hand-card[data-dragging='true']::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border: 1px solid #fff5d8a0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+@keyframes tabletop-draw {
+  from {
+    opacity: 0;
+    transform: translate(24px, -24px) rotate(-16deg) scale(0.65);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-3px, 3px) rotate(4deg) scale(1.12);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tabletop-place {
+  from {
+    opacity: 0;
+    transform: translate(-18px, 28px) rotate(16deg) scale(1.3);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-2px) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tabletop-pay {
+  from {
+    opacity: 0;
+    transform: translateX(28px) rotate(70deg) scale(0.7);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-3px) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tabletop-exhaust {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+@keyframes tabletop-receipt {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  12%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
+  /* Keep the physical board reachable even while the movement checklist is open. */
+  .hud-shield .notice-stack {
+    max-height: min(182px, 30dvh);
+    justify-content: flex-start;
+    overscroll-behavior: contain;
+  }
+  .hud-shield .notice-stack:has(.your-turn) > .notice.info {
+    display: none;
+  }
+  .hud-shield .hud-phase {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 2px 8px;
+    align-items: center;
+    padding: 8px 10px;
+    text-align: left;
+  }
+  .hud-shield .hud-phase > small,
+  .hud-shield .hud-phase > strong,
+  .hud-shield .hud-phase > .hud-actor {
+    grid-column: 1;
+    margin: 0;
+    line-height: 1.25;
+  }
+  .hud-shield .hud-phase > small {
+    grid-row: 1;
+    font-size: 8px;
+  }
+  .hud-shield .hud-phase > strong {
+    grid-row: 2;
+    font-size: 14px;
+  }
+  .hud-shield .hud-phase > .hud-actor {
+    grid-row: 3;
+    font-size: 11px;
+  }
+  .hud-shield .hud-phase .hex-button {
+    grid-row: 1 / span 3;
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+    justify-content: center;
+  }
+  .hud-shield .hud-phase .hex-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  .hud-shield .hud-players {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .hud-shield .hud-portrait button {
+    min-width: 128px;
+  }
+  .hud-shield .hud-portrait .portrait-name {
+    max-width: 62px;
+    font-size: 9px;
+    overflow: hidden;
+  }
+  .tabletop-supply {
+    top: 74px;
+    right: 10px;
+    width: 230px;
+  }
+  .tabletop-supply[data-expanded='false'] {
+    width: 40px;
+    padding: 5px 7px;
+  }
+  .tabletop-supply[data-expanded='false'] .tabletop-supply-toggle > span,
+  .tabletop-supply[data-expanded='false'] .tabletop-supply-toggle > svg:last-child {
+    display: none;
+  }
+  .tabletop-supply-toggle {
+    min-height: 30px;
+  }
+  .tabletop-card-stack {
+    width: 31px;
+  }
+  .tabletop-transactions {
+    top: 200px;
+    right: 10px;
+    width: 220px;
+    max-height: 130px;
+  }
+  .tabletop-zones:has(.tabletop-supply[data-expanded='false']) .tabletop-transactions {
+    top: 125px;
+  }
+  .portrait-tabletop-hand {
+    top: auto;
+    bottom: 6px;
+    right: 5px;
+    font-size: 9px;
+    gap: 3px;
+  }
+  .portrait-tabletop-backs {
+    width: 9px;
+    height: 13px;
+  }
+  .portrait-tabletop-strategies {
+    display: none;
+    right: 5px;
+    bottom: 5px;
+    gap: 4px;
+  }
+  .portrait-tabletop-strategy {
+    width: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabletop-zones *,
+  .portrait-tabletop-strategy {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.motion-off .tabletop-zones *,
+.motion-off .portrait-tabletop-strategy {
+  animation: none !important;
+  transition: none !important;
+}

@@ -1,7 +1,13 @@
 import * as Popover from '@radix-ui/react-popover';
 import { type GameState, type PlayerId, systemId } from '@stellar/domain';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { AnimatePresence, motion, type PanInfo, useIsPresent } from 'motion/react';
+import {
+  AnimatePresence,
+  motion,
+  type PanInfo,
+  useIsPresent,
+  useReducedMotion,
+} from 'motion/react';
 import { type CSSProperties, type ReactElement, useRef, useState } from 'react';
 import { useGameStore, useHumanActor, useViewer } from '../../game-store.ts';
 import { lookOf } from '../../hand/card-look.ts';
@@ -116,13 +122,21 @@ interface CardProps {
 }
 
 /** Antippen oder nach oben Ziehen spielt aus; nach dem Ziehen zählt der Klick nicht doppelt. */
-function useGesture(playable: boolean, onPlay: () => void) {
+function useGesture(
+  playable: boolean,
+  onPlay: () => void,
+  onDragChange: (dragging: boolean) => void,
+) {
   const dragged = useRef(false);
   return {
     drag: playable ? ('y' as const) : false,
     dragSnapToOrigin: true,
-    onDragStart: () => (dragged.current = true),
+    onDragStart: () => {
+      dragged.current = true;
+      onDragChange(true);
+    },
     onDragEnd: (_: unknown, info: PanInfo) => {
+      onDragChange(false);
       if (info.offset.y < -FLICK_PX && playable) onPlay();
     },
     onClick: () => {
@@ -138,30 +152,54 @@ const cardAvailability = (playable: boolean, inspect: boolean, present: boolean)
   disabled: !playable && !inspect,
 });
 
-function HandCard({ game, entry, offset, onPlay, inspect = false }: CardProps): ReactElement {
+/** A used component stays on the mat, turned sideways until the game readies it again. */
+const exhausted = (entry: HandEntry): boolean => {
+  if (entry.kind === 'leader') return entry.leader.status === 'exhausted';
+  if (entry.kind === 'relic') return entry.relic.exhausted;
+  return entry.kind === 'legendary' && entry.used;
+};
+
+function useCardMotion(enabled: boolean) {
+  const reduced = useReducedMotion();
+  const [dragging, setDragging] = useState(false);
+  return { dragging, setDragging, transition: enabled && !reduced ? SPRING : { duration: 0 } };
+}
+
+function useCardIdentity(entry: HandEntry, inspect: boolean, present: boolean) {
   const t = useT();
   const name = useEntryName();
+  return {
+    type: 'button' as const,
+    className: classOf(entry),
+    'data-kind': entry.kind,
+    'data-look': lookOf(entry),
+    'data-testid': testIdOf(entry),
+    'data-leaving': present ? undefined : true,
+    'data-exhausted': exhausted(entry),
+    'aria-label': name(entry),
+    'aria-disabled': !entry.playable && !inspect,
+    title: inspect ? name(entry) : t(entry.playable ? 'playGesture' : 'notPlayableNow'),
+  };
+}
+
+function HandCard({ game, entry, offset, onPlay, inspect = false }: CardProps): ReactElement {
   const motionOn = useSettingsStore((state) => state.animations);
+  const cardMotion = useCardMotion(motionOn);
   const present = useIsPresent();
+  const identity = useCardIdentity(entry, inspect, present);
   const availability = cardAvailability(entry.playable, inspect, present);
-  const gesture = useGesture(availability.active, onPlay);
+  const gesture = useGesture(availability.active, onPlay, cardMotion.setDragging);
   return (
     <motion.button
-      type="button"
-      className={classOf(entry)}
-      data-kind={entry.kind}
-      data-look={lookOf(entry)}
-      data-testid={testIdOf(entry)}
-      data-leaving={present ? undefined : true}
-      aria-label={name(entry)}
-      aria-disabled={availability.disabled}
-      title={inspect ? name(entry) : t(entry.playable ? 'playGesture' : 'notPlayableNow')}
+      {...identity}
+      data-dragging={cardMotion.dragging}
       initial={DEALT}
       animate={fanned(offset)}
       exit={PLAYED}
       whileHover={LIFT}
       whileFocus={LIFT}
-      transition={motionOn ? SPRING : { duration: 0 }}
+      whileDrag={{ scale: 1.12, rotate: 0, zIndex: 55 }}
+      transition={cardMotion.transition}
       {...gesture}
     >
       <HandFace game={game} entry={entry} />

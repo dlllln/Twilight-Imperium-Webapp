@@ -76,9 +76,29 @@ const targetsIn = (battle: SimBattle) => (player: string) =>
 type Set = (partial: Partial<SimulatorState>) => void;
 type Get = () => SimulatorState & SimulatorActions;
 
+let settleTimer: ReturnType<typeof setTimeout> | null = null;
+
+function cancelSettle(): void {
+  if (settleTimer !== null) clearTimeout(settleTimer);
+  settleTimer = null;
+}
+
+function resetPlayback(set: Set, state: Partial<SimulatorState>): void {
+  cancelSettle();
+  set(state);
+}
+
+/** Ein übersprungener Kampf darf die nachfolgende Runde nicht vorzeitig aufdecken. */
+function settleLater(shots: readonly Shot[], get: Get): void {
+  cancelSettle();
+  const wait = useSettingsStore.getState().animations ? roundDuration(shots, AFTERGLOW_MS) : 0;
+  if (wait === 0) get().settle();
+  else settleTimer = setTimeout(() => get().settle(), wait);
+}
+
 function fire(set: Set, get: Get): void {
   const { battle, card, faction, rival, results, seed } = get();
-  if (battle === null || battle.outcome !== null) return;
+  if (battle === null || battle.outcome !== null || get().shown !== battle) return;
   const outcome = playRound(
     battle,
     card,
@@ -89,12 +109,11 @@ function fire(set: Set, get: Get): void {
   const shots = shotsOf(outcome.value.report, targetsIn(battle));
   set({ battle: outcome.value.battle, report: outcome.value.report, shots, card: null });
   set({ volley: get().volley + 1 });
-  const wait = useSettingsStore.getState().animations ? roundDuration(shots, AFTERGLOW_MS) : 0;
-  if (wait === 0) get().settle();
-  else setTimeout(() => get().settle(), wait);
+  settleLater(shots, get);
 }
 
 function settle(set: Set, get: Get): void {
+  cancelSettle();
   const { battle, results } = get();
   if (battle === null) return;
   const done = battle.outcome !== null && get().shown !== battle;
@@ -102,6 +121,7 @@ function settle(set: Set, get: Get): void {
 }
 
 function launch(set: Set, get: Get): void {
+  cancelSettle();
   const { order, faction, rival, seed, results } = get();
   const battle = newBattle(order, catalogFor(faction, rival), battleSeed(seed, results.length));
   set({ stage: 'battle', battle, shown: battle, report: null, shots: [], card: null });
@@ -110,8 +130,8 @@ function launch(set: Set, get: Get): void {
 /** Zustand des Kampfsimulators (Controller nach GRASP): Abläufe hier, Regeln in der Domain. */
 export const useSimulatorStore = create<SimulatorState & SimulatorActions>((set, get) => ({
   ...initial(),
-  open: () => set({ ...initial(), stage: 'faction' }),
-  close: () => set({ stage: 'closed', battle: null, shown: null }),
+  open: () => resetPlayback(set, { ...initial(), stage: 'faction' }),
+  close: () => resetPlayback(set, { stage: 'closed', battle: null, shown: null }),
   preview: (faction) => set({ faction }),
   confirmFaction: () => set({ stage: 'fleet', rival: rivalOf(get().faction, get().seed) }),
   back: () => set({ stage: get().stage === 'fleet' ? 'faction' : 'fleet' }),

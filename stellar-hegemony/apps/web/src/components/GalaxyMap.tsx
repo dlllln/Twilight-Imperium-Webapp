@@ -52,6 +52,12 @@ import { SystemActions } from './hud/SystemActions.tsx';
 import { NoticeStack } from './hud/NoticeStack.tsx';
 import { useMapPointer } from '../system/map-pointer.ts';
 import { GalaxyAmbience } from './GalaxyAmbience.tsx';
+import { FleetPieces } from './pieces/FleetPieces.tsx';
+import { TabletopMapMotion } from './pieces/TabletopMapMotion.tsx';
+import { MapPings } from './MapPings.tsx';
+import { useOnlineStore } from '../online/online-store.ts';
+import { TabletopZones } from './tabletop/TabletopZones.tsx';
+import type { FleetProjection } from '../system/fleet-placement.ts';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
 const PixiCanvas = lazy(() =>
@@ -136,7 +142,7 @@ interface TargetProps {
   readonly view: BoardView;
   readonly hovered: boolean;
   readonly onHover: (key: string | null) => void;
-  readonly onPick: (hex: SceneHex) => void;
+  readonly onPick: (hex: SceneHex, point?: boolean) => void;
 }
 
 /** Unsichtbare Trefferfläche je Feld: Maus, Tastatur, Screenreader und E2E-Tests. */
@@ -149,7 +155,7 @@ const HexTarget = memo(function HexTarget({
 }: TargetProps): ReactElement {
   const pickable = hex.systemId !== null;
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') onPick(hex);
+    if (event.key === 'Enter' || event.key === ' ') onPick(hex, event.shiftKey);
   };
   return (
     <polygon
@@ -165,7 +171,7 @@ const HexTarget = memo(function HexTarget({
       onPointerEnter={() => onHover(hex.key)}
       onPointerLeave={() => onHover(null)}
       onFocus={() => onHover(hex.key)}
-      onClick={() => onPick(hex)}
+      onClick={(event) => onPick(hex, event.shiftKey)}
       onKeyDown={onKeyDown}
     />
   );
@@ -177,7 +183,7 @@ interface TargetsProps {
   readonly band: Band;
   readonly viewport: Viewport;
   readonly view: BoardView;
-  readonly onPick: (hex: SceneHex) => void;
+  readonly onPick: (hex: SceneHex, point?: boolean) => void;
   readonly onView: (hex: SceneHex) => void;
 }
 
@@ -256,8 +262,12 @@ function useFlyTo(bounds: Bounds, view: BoardView, svg: RefObject<SVGSVGElement 
  */
 function usePicking(wasDrag: () => boolean, flyTo: (hex: SceneHex) => void) {
   return useCallback(
-    (hex: SceneHex) => {
+    (hex: SceneHex, point = false) => {
       if (wasDrag()) return;
+      if (point && hex.systemId !== null) {
+        void useOnlineStore.getState().pingSystem(hex.systemId);
+        return;
+      }
       useSettingsStore.getState().markHintSeen();
       const { game, selected, select } = useGameStore.getState();
       if (game === null || hex.systemId === selected) flyTo(hex);
@@ -310,6 +320,7 @@ function stop(event: { stopPropagation: () => void }) {
 function Hud({ game, table }: { readonly game: GameState; readonly table: boolean }): ReactElement {
   return (
     <>
+      <TabletopZones game={game} />
       <PlayerRail game={game} />
       {table ? <PlayerSheet game={game} /> : <ResourceBar game={game} />}
       <div className="hud-corner">
@@ -372,6 +383,17 @@ function useMapView(hexes: readonly SceneHex[]) {
   return { view, svg, size, bounds, band, ...useMapCamera(bounds, view, svg) };
 }
 
+function BoardObjects(props: FleetProjection) {
+  return (
+    <>
+      <CloseUpLabels {...props} />
+      <MapPings {...props} />
+      <TabletopMapMotion {...props} />
+      <FleetPieces {...props} />
+    </>
+  );
+}
+
 export function GalaxyMap(): ReactElement {
   const viewport = useGalaxyStore((state) => state.viewport);
   const hexes = useScene();
@@ -394,7 +416,7 @@ export function GalaxyMap(): ReactElement {
         onPick={pick}
         onView={flyTo}
       />
-      <CloseUpLabels {...{ hexes, bounds, viewport, view, size }} />
+      <BoardObjects {...{ hexes, bounds, viewport, view, size }} />
       <MapTooltip hexes={hexes} />
       <MapControls onZoom={(factor) => zoom(factor)} onReset={useCameraStore.getState().back} />
       <Overlays />

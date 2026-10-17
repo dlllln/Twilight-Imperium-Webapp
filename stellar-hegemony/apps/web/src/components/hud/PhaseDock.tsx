@@ -27,6 +27,7 @@ function EndTurnButton({ game }: { readonly game: GameState }): ReactElement | n
       <button
         type="button"
         className="hex-button"
+        title={t('pass')}
         onClick={() => send({ type: 'Pass', issuedBy: actor })}
       >
         <Flag size={16} aria-hidden="true" /> {t('pass')}
@@ -36,6 +37,7 @@ function EndTurnButton({ game }: { readonly game: GameState }): ReactElement | n
     <button
       type="button"
       className="hex-button primary"
+      title={t('endTurn')}
       disabled={!end.ready}
       onClick={() => send({ type: 'EndTacticalAction', issuedBy: actor })}
     >

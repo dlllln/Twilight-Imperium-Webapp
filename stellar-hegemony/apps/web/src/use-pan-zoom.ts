@@ -10,6 +10,8 @@ const WHEEL_SENSITIVITY = 0.0022;
 const LINE_PIXELS = 33;
 const PAGE_PIXELS = 400;
 const MAX_WHEEL_STEP = 2;
+const liftingFleet = (event: { readonly currentTarget: HTMLElement }): boolean =>
+  event.currentTarget.dataset['liftingFleet'] === 'true';
 /** Ab so vielen Pixeln gilt ein Klick als Ziehen und wählt kein Feld. */
 const DRAG_THRESHOLD = 5;
 /** Drehen und Neigen mit rechter Maustaste (oder Umschalt): Bogenmaß je Pixel. */
@@ -165,6 +167,15 @@ function useGestures(
   return { pan: useDragPan(scale), zoomAt, orbit };
 }
 
+function usePointerMove(moveTo: (event: PointerEvent<HTMLElement>) => void) {
+  const track = usePointerTracking();
+  return (event: PointerEvent<HTMLElement>) => {
+    if (liftingFleet(event)) return;
+    track(event);
+    moveTo(event);
+  };
+}
+
 /**
  * Ziehen verschiebt, Mausrad und zwei Finger zoomen zum Zeiger hin; rechte Maustaste, Umschalt
  * oder zwei verdrehte Finger drehen und neigen. Bildschirm-Pixel werden in SVG-Einheiten umgerechnet.
@@ -174,15 +185,17 @@ export function usePanZoom(
   viewWidth: number,
   zoomAt: (factor: number, client: Point) => void,
 ): PanZoomHandlers {
-  const track = usePointerTracking();
   const { moveTo, ...pointers } = usePointers(useGestures(svg, viewWidth, zoomAt));
+  const onPointerMove = usePointerMove(moveTo);
   return {
     ...pointers,
-    onPointerMove: (event) => {
-      track(event);
-      moveTo(event);
+    onPointerDown: (event) => {
+      if (!liftingFleet(event)) pointers.onPointerDown(event);
     },
-    onWheel: (event) => zoomAt(wheelFactor(event.deltaY, event.deltaMode), pointOf(event)),
+    onPointerMove,
+    onWheel: (event) => {
+      if (!liftingFleet(event)) zoomAt(wheelFactor(event.deltaY, event.deltaMode), pointOf(event));
+    },
     onContextMenu: (event) => event.preventDefault(),
   };
 }

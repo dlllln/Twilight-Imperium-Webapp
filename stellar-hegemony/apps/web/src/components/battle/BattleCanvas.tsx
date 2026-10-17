@@ -18,6 +18,8 @@ interface BattleCanvasProps {
   readonly volley: number;
   readonly seed: number;
   readonly frame?: BattleFrame;
+  /** Bereits aufgedeckte Runde: ausstehende dekorative Wirkungen abbrechen. */
+  readonly settled?: boolean;
 }
 
 /** Bewegte Kampfbühne; rein dekorativ, der Stand steht lesbar in der Oberfläche darüber. */
@@ -28,6 +30,7 @@ export function BattleCanvas({
   volley,
   seed,
   frame = FULL_FRAME,
+  settled = false,
 }: BattleCanvasProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const motion = useSettingsStore((state) => state.animations);
@@ -41,5 +44,8 @@ export function BattleCanvas({
   useEffect(() => {
     if (volley > 0) scene?.fire(shots);
   }, [scene, volley]); // Schüsse nur bei einer neuen Salve abspielen.
+  useEffect(() => {
+    if (settled) scene?.finish();
+  }, [scene, settled]);
   return <div ref={host} className="battle-canvas" aria-hidden="true" />;
 }

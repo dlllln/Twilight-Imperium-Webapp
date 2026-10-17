@@ -8,6 +8,15 @@ const DICTIONARY = {
   atlasNavigation: { de: 'Navigation', en: 'Navigation' },
   atlasTitle: { de: 'Galaktischer Atlas', en: 'Galactic atlas' },
   atlasSectors: { de: 'Sektoren', en: 'sectors' },
+  fleetPickup: { de: 'Flotte aus {system} aufnehmen', en: 'Pick up fleet from {system}' },
+  fleetDropHere: { de: 'Hier ablegen · danach bestätigen', en: 'Drop here · then confirm' },
+  fleetPreview: { de: 'Vorschau', en: 'Preview' },
+  fleetReset: { de: 'Flottenauswahl zurücksetzen', en: 'Reset fleet selection' },
+  fleetDragHint: {
+    de: 'Ziehe eine Flotte ins aktivierte System oder wähle Schiffe hier aus. Prüfe die Fracht und bestätige die Bewegung gemeinsam.',
+    en: 'Drag a fleet into the activated system or select ships here. Check the cargo, then confirm all moves together.',
+  },
+  pointSystem: { de: 'Mitspielern dieses System zeigen', en: 'Point this system out to the table' },
   missionTitle: { de: 'Die Galaxie wartet.', en: 'The galaxy awaits.' },
   missionCopy: {
     de: 'Wähle deine Fraktion. Schmiede Allianzen. Erobere den galaktischen Thron.',

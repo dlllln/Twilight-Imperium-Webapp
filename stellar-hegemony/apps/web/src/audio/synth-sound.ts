@@ -59,19 +59,20 @@ export class SynthSound implements SoundPort {
   constructor(private readonly createContext: () => AudioContext = () => new AudioContext()) {}
 
   play(cue: SoundCue, volume: number): void {
+    if (!Number.isFinite(volume) || volume <= 0) return;
     const context = this.ensureContext();
-    if (context === null || volume <= 0) return;
+    if (context === null) return;
     const start = context.currentTime + 0.02;
     for (const step of RECIPES[cue]) {
-      if (step.kind === 'tone') playTone(context, step, start + step.at, volume);
-      else playNoise(context, step, start + step.at, volume);
+      if (step.kind === 'tone') playTone(context, step, start + step.at, Math.min(1, volume));
+      else playNoise(context, step, start + step.at, Math.min(1, volume));
     }
   }
 
   private ensureContext(): AudioContext | null {
     try {
       this.context ??= this.createContext();
-      if (this.context.state === 'suspended') void this.context.resume();
+      if (this.context.state === 'suspended') void this.context.resume().catch(() => undefined);
       return this.context;
     } catch {
       return null;

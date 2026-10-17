@@ -5,6 +5,8 @@ import type {
   GameUpdate,
   JoinLobbyRequest,
   LobbyView,
+  MapPing,
+  MapPingRequest,
   SeatTicket,
   ServerToClient,
 } from '@stellar/application';
@@ -22,6 +24,7 @@ export interface OnlineConnection {
   faction(faction: string): Reply<LobbyView>;
   command(command: GameCommand): Reply<CommandReceipt>;
   undo(): Reply<number>;
+  ping?(request: MapPingRequest): Reply<MapPing>;
   close(): void;
 }
 
@@ -29,6 +32,7 @@ export interface OnlineConnection {
 export interface ConnectionEvents {
   lobby(view: LobbyView): void;
   game(update: GameUpdate): void;
+  ping?(ping: MapPing): void;
   connected(): void;
   disconnected(): void;
 }
@@ -57,6 +61,7 @@ export const socketConnector: Connector = (events) => {
   socket.on('disconnect', () => events.disconnected());
   socket.on('lobby:update', (view) => events.lobby(view));
   socket.on('game:update', (update) => events.game(update));
+  socket.on('map:ping', (ping) => events.ping?.(ping));
   return {
     create: (request) => ask(socket, (s) => s.emitWithAck('lobby:create', request)),
     join: (request) => ask(socket, (s) => s.emitWithAck('lobby:join', request)),
@@ -65,6 +70,7 @@ export const socketConnector: Connector = (events) => {
     faction: (faction) => ask(socket, (s) => s.emitWithAck('lobby:faction', { faction })),
     command: (command) => ask(socket, (s) => s.emitWithAck('game:command', command)),
     undo: () => ask(socket, (s) => s.emitWithAck('game:undo', {})),
+    ping: (request) => ask(socket, (s) => s.emitWithAck('map:ping', request)),
     close: () => socket.disconnect(),
   };
 };

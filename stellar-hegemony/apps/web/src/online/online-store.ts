@@ -1,4 +1,4 @@
-import { type LobbyView, type SeatTicket, seatPlayerId } from '@stellar/application';
+import { type LobbyView, type MapPing, type SeatTicket, seatPlayerId } from '@stellar/application';
 import type { DomainError, GameCommand, Result } from '@stellar/domain';
 import { create, type StoreApi } from 'zustand';
 import { type Remote, useGameStore } from '../game-store.ts';
@@ -9,6 +9,7 @@ import {
   socketConnector,
 } from './online-connection.ts';
 import { loadName, loadTicket, saveName, saveTicket } from './saved-seat.ts';
+import { clearMapPings, receiveMapPing } from './map-ping-store.ts';
 
 export type OnlineStatus = 'offline' | 'connecting' | 'online' | 'reconnecting';
 
@@ -25,6 +26,8 @@ export interface OnlineStore {
   readonly start: () => Promise<boolean>;
   /** Eigene Fraktion in der Lobby wählen; alle sehen die Wahl sofort. */
   readonly chooseFaction: (faction: string) => Promise<boolean>;
+  /** Auf ein öffentliches System zeigen; Spieler und Name stammen immer vom Server. */
+  readonly pingSystem: (system: string) => Promise<boolean>;
   /** Nach einem Neuladen: zurück auf den gespeicherten Platz. */
   readonly restore: () => void;
   readonly leave: () => void;
@@ -38,12 +41,39 @@ let connection: OnlineConnection | null = null;
 
 /** Für Tests: eine Attrappe statt Socket.IO. */
 export const setConnector = (next: Connector): void => {
+  clearMapPings();
   connection?.close();
   connection = null;
   connector = next;
 };
 
 const OFFLINE = { status: 'offline', ticket: null, lobby: null } as const;
+
+function connectionLifecycle(set: Set, get: Get) {
+  return {
+    connected: () => {
+      clearMapPings();
+      const { ticket } = get();
+      if (ticket !== null) void resume(set, get, ticket);
+    },
+    disconnected: () => {
+      clearMapPings();
+      if (get().ticket !== null) set({ status: 'reconnecting' });
+    },
+  };
+}
+
+function acceptPing(get: Get, ping: MapPing): void {
+  const game = useGameStore.getState().game;
+  const { status, ticket } = get();
+  if (
+    status === 'online' &&
+    ping.code === ticket?.code &&
+    game !== null &&
+    Object.hasOwn(game.systems, ping.system)
+  )
+    receiveMapPing(ping);
+}
 
 function events(set: Set, get: Get): ConnectionEvents {
   return {
@@ -53,13 +83,8 @@ function events(set: Set, get: Get): ConnectionEvents {
       useGameStore.getState().setBots(bots.map((seat) => seatPlayerId(seat.seat)));
     },
     game: (update) => useGameStore.getState().receive(update),
-    connected: () => {
-      const { ticket } = get();
-      if (ticket !== null) void resume(set, get, ticket);
-    },
-    disconnected: () => {
-      if (get().ticket !== null) set({ status: 'reconnecting' });
-    },
+    ping: (ping) => acceptPing(get, ping),
+    ...connectionLifecycle(set, get),
   };
 }
 
@@ -86,6 +111,7 @@ const remote: Remote = {
 };
 
 function seated(set: Set, ticket: SeatTicket): void {
+  clearMapPings();
   saveTicket(ticket);
   set({ status: 'online', ticket, error: null });
   if (useGameStore.getState().me !== ticket.player)
@@ -128,6 +154,26 @@ async function pickFaction(set: Set, get: Get, faction: string): Promise<boolean
   return result.ok;
 }
 
+function pingSeat(get: Get, system: string): SeatTicket | null {
+  const { ticket, status } = get();
+  const game = useGameStore.getState().game;
+  if (
+    ticket === null ||
+    status !== 'online' ||
+    game === null ||
+    !Object.hasOwn(game.systems, system)
+  )
+    return null;
+  return ticket;
+}
+
+async function pointToSystem(get: Get, system: string): Promise<boolean> {
+  const ticket = pingSeat(get, system);
+  const current = connection;
+  if (ticket === null || current?.ping === undefined) return false;
+  return (await current.ping({ code: ticket.code, system })).ok;
+}
+
 function restoreSeat(set: Set, get: Get): void {
   const ticket = loadTicket();
   if (ticket === null || get().ticket !== null) return;
@@ -136,6 +182,7 @@ function restoreSeat(set: Set, get: Get): void {
 }
 
 function leaveGame(set: Set): void {
+  clearMapPings();
   connection?.close();
   connection = null;
   saveTicket(null);
@@ -156,6 +203,7 @@ export const useOnlineStore = create<OnlineStore>()((set, get) => ({
     )(),
   start: () => startGame(set, get),
   chooseFaction: (faction) => pickFaction(set, get, faction),
+  pingSystem: (system) => pointToSystem(get, system),
   restore: () => restoreSeat(set, get),
   leave: () => leaveGame(set),
 }));

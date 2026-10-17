@@ -43,6 +43,23 @@ export interface GameUpdate {
   readonly events: readonly GameEvent[];
 }
 
+/** Flüchtiges Zeigen am Tisch, ohne Änderung am Spielstand oder an geheimen Informationen. */
+export interface MapPingRequest {
+  readonly code: string;
+  readonly system: string;
+}
+
+export interface MapPing {
+  readonly id: string;
+  readonly code: string;
+  readonly system: string;
+  /** Lobby-Sitz ist nullbasiert; Darstellung verwendet `seat + 1`. */
+  readonly seat: number;
+  readonly player: PlayerId;
+  readonly name: string;
+  readonly lifetimeMs: number;
+}
+
 export type Ack<T> = (result: Result<T, DomainError>) => void;
 
 /** Nachrichten vom Browser an den Server (Socket.IO). */
@@ -55,10 +72,12 @@ export interface ClientToServer {
   'game:command': (command: GameCommand, ack: Ack<CommandReceipt>) => void;
   /** Nimmt den letzten eigenen Schritt zurück, solange niemand sonst etwas getan hat. */
   'game:undo': (request: Record<string, never>, ack: Ack<number>) => void;
+  'map:ping': (request: MapPingRequest, ack: Ack<MapPing>) => void;
 }
 
 /** Nachrichten vom Server an alle Browser einer Lobby. */
 export interface ServerToClient {
   'lobby:update': (view: LobbyView) => void;
   'game:update': (update: GameUpdate) => void;
+  'map:ping': (ping: MapPing) => void;
 }
