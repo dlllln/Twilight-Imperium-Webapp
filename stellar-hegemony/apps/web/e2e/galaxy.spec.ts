@@ -58,6 +58,9 @@ test('Ein Klick zeigt die Knöpfe am System, Ansehen fährt auf der Karte heran;
   if (page === undefined) throw new Error('kein Gerät');
   // The renderer waits for fonts; take geometry snapshots after that initial layout settles.
   await page.locator('.pixi-host canvas').waitFor();
+  // The initial seating rotation is independent of the zoom camera. Save the finished board,
+  // so returning to the same viewport is compared against the same board orientation.
+  await expect(page.locator('.galaxy')).toHaveAttribute('data-board-settled', 'true');
   const home = page.locator('[data-seat="1"][data-system]');
   await home.click();
   const overview = await home.boundingBox();

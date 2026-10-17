@@ -22,6 +22,7 @@ import {
   foreshorten,
   project,
   projectedCorners,
+  sameView,
 } from '../render/board-view.ts';
 import { useBoardView } from '../system/board-camera.ts';
 import type { Language } from '../i18n.ts';
@@ -380,7 +381,11 @@ function useMapView(hexes: readonly SceneHex[]) {
   const svg = useRef<SVGSVGElement>(null);
   const size = useElementSize(svg);
   const { bounds, band } = useFrame(hexes, target, size);
-  return { view, svg, size, bounds, band, ...useMapCamera(bounds, view, svg) };
+  const attributes = {
+    'data-tutorial': 'galaxy',
+    'data-board-settled': sameView(view, target),
+  };
+  return { view, svg, size, bounds, band, attributes, ...useMapCamera(bounds, view, svg) };
 }
 
 function BoardObjects(props: FleetProjection) {
@@ -398,12 +403,12 @@ export function GalaxyMap(): ReactElement {
   const viewport = useGalaxyStore((state) => state.viewport);
   const hexes = useScene();
   const effects = useMapEffects();
-  const { view, svg, size, bounds, band, flyTo, zoom } = useMapView(hexes);
+  const { view, svg, size, bounds, band, attributes, flyTo, zoom } = useMapView(hexes);
   const { wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
   const [flat, onUnavailable] = useFlatFallback();
   const pick = usePicking(wasDrag, flyTo);
   return (
-    <div className={flat ? 'galaxy flat' : 'galaxy'} data-tutorial="galaxy" {...handlers}>
+    <div className={flat ? 'galaxy flat' : 'galaxy'} {...attributes} {...handlers}>
       {!flat && (
         <Suspense fallback={null}>
           <PixiCanvas {...{ hexes, bounds, viewport, view, effects, onUnavailable }} />
