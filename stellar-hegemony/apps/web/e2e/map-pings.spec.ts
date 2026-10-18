@@ -20,7 +20,7 @@ test('Zeigen am Spieltisch: Mitspieler sehen dieselbe Geste und Neuladen überni
     await expect(host.getByTestId('lobby-seat-1')).toContainText('verbunden');
     await host.getByRole('button', { name: 'Partie starten' }).click();
     for (const page of [host, guest]) {
-      await page.locator('.secret-choice input[type="checkbox"]').first().check();
+      await page.locator('.secret-choice input[type="radio"]').first().press('Space');
       await page.getByRole('button', { name: 'Behalten' }).click();
     }
     const system = host.locator('polygon[data-system]').first();

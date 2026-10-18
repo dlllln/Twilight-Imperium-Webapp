@@ -385,6 +385,15 @@ const DICTIONARY = {
     en: 'Keep exactly {n}. The rest go back into the deck.',
   },
   keep: { de: 'Behalten', en: 'Keep' },
+  cardTableChoice: { de: 'Deine Kartenauslage', en: 'Your card spread' },
+  cardTablePrivate: { de: 'Nur für dich', en: 'Only visible to you' },
+  cardTableRule: { de: 'Auftrag in dieser Partie', en: 'Objective in this game' },
+  cardTableRuleNote: {
+    de: 'Es gelten die Beschreibungen unter den Karten. Der Originaldruck kann abweichen.',
+    en: 'The descriptions below the cards apply. The original printed rules may differ.',
+  },
+  cardTableSelected: { de: 'gewählt', en: 'selected' },
+  cardTablePick: { de: 'Tippe eine Karte an', en: 'Select a card' },
   score: { de: 'Werten', en: 'Score' },
   scoreObjectives: { de: 'Aufträge werten', en: 'Score objectives' },
   nothingToScore: {

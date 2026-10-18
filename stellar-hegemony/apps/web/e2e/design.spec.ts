@@ -49,7 +49,7 @@ test('Auf dem Handy bleiben Zuganzeige und beide Kommandopultansichten im Bildsc
   await page.getByLabel('Spieler').selectOption('3');
   await page.getByRole('button', { name: 'Online-Partie eröffnen' }).click();
   await page.getByRole('button', { name: 'Partie starten' }).click();
-  await page.locator('.secret-choice input[type=checkbox]').first().check();
+  await page.locator('.secret-choice input[type=radio]').first().press('Space');
   await page.getByRole('button', { name: 'Behalten', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Dein Kommandopult' })).toBeVisible();
   await expectNoOverflow(page);

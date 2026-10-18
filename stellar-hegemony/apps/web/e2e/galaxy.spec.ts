@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTable } from './table.ts';
+import { keepSecrets, openTable } from './table.ts';
 
 test('Galaxie wird angezeigt, neu erzeugt und per Map-String importiert', async ({ page }) => {
   await page.goto('/');
@@ -56,6 +56,7 @@ test('Ein Klick zeigt die Knöpfe am System, Ansehen fährt auf der Karte heran;
 }) => {
   const [page] = await openTable(browser, 1);
   if (page === undefined) throw new Error('kein Gerät');
+  await keepSecrets([page]);
   // The renderer waits for fonts; take geometry snapshots after that initial layout settles.
   await page.locator('.pixi-host canvas').waitFor();
   // The initial seating rotation is independent of the zoom camera. Save the finished board,

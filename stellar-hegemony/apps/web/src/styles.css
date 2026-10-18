@@ -1155,17 +1155,6 @@ input[type='checkbox'] {
   margin-top: 2px;
 }
 
-.secret-choice .objective-option {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 8px;
-  margin-bottom: 6px;
-}
-
-.secret-choice .objective-option .hint {
-  grid-column: 2;
-}
-
 .game-over {
   padding: 14px;
   border: 1px solid var(--gold);

@@ -125,10 +125,8 @@ function interruptionKind(game: GameState, player: PlayerId): string {
   return excessActionCards(game, player) > 0 ? 'discard' : '';
 }
 
-/** Was jede Phase unterbricht: Geheimauftrags-Wahl, Reaktion, Ablegen über dem Limit. */
+/** Reaktionen und das Handlimit bleiben im Zugfeld; geheime Aufträge liegen auf dem Kartentisch. */
 function interruption(game: GameState, player: PlayerId): ReactElement | null {
-  if (findPlayer(game, player)?.secretChoice != null)
-    return <SecretChoiceForm key={player} game={game} player={player} />;
   if (reactionActor(game) === player) return <ReactionPrompt game={game} />;
   if (excessActionCards(game, player) > 0)
     return <DiscardForm key={player} game={game} player={player} />;
@@ -155,7 +153,7 @@ const PHASE_TITLE = {
 
 /** Die Strategiephase wählt in der Kartenauslage; hier erscheint sie nur bei Unterbrechungen. */
 const hasTurnPanel = (game: GameState, actor: PlayerId): boolean =>
-  game.phase !== 'strategy' || interruption(game, actor) !== null;
+  game.phase !== 'strategy' || interruptionKind(game, actor) !== '';
 
 /** Während die KI oder ein Mitspieler zieht, gibt es hier nichts zu entscheiden, nur einen Hinweis. */
 function BotNotice({ game, player }: TurnProps): ReactElement {
@@ -202,6 +200,8 @@ export function TurnPanel({ game }: { readonly game: GameState }): ReactElement 
   if (game.phase === 'gameOver') return <GameOverNotice game={game} />;
   if (bot !== null) return <BotNotice game={game} player={bot} />;
   if (actor === null || !hasTurnPanel(game, actor)) return null;
+  if (findPlayer(game, actor)?.secretChoice != null)
+    return <SecretChoiceForm game={game} player={actor} />;
   return (
     <section className="game-section your-turn" data-tutorial="turn">
       <h2>{t(PHASE_TITLE[game.phase])}</h2>

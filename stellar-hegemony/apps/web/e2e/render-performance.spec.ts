@@ -34,7 +34,7 @@ test('Ausgewählte Galaxie ruht; Zoom und Ziehen zeichnen wieder und halten die 
   await page.getByLabel('Spieler').selectOption('3');
   await page.getByRole('button', { name: 'Online-Partie eröffnen' }).click();
   await page.getByRole('button', { name: 'Partie starten' }).click();
-  await page.locator('.secret-choice input[type=checkbox]').first().check();
+  await page.locator('.secret-choice input[type=radio]').first().press('Space');
   await page.getByRole('button', { name: 'Behalten', exact: true }).click();
   const home = page.locator('[data-seat="1"][data-system]');
   await home.click();

@@ -1,8 +1,8 @@
-import type { GameState } from '@stellar/domain';
+import { findPlayer, type GameState } from '@stellar/domain';
 import { AlertTriangle, Bell, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { useGameStore } from '../../game-store.ts';
+import { useGameStore, useHumanActor } from '../../game-store.ts';
 import type { HistoryEntry } from '../../history/turn-history.ts';
 import { errorText } from '../../i18n.ts';
 import { freshEntries, NOTICE_MS, withFresh } from '../../notices/fresh-notices.ts';
@@ -102,27 +102,32 @@ function ErrorNotice(): ReactElement | null {
 }
 
 /**
- * Unten rechts, über der Phasenanzeige: Was man entscheiden muss, ploppt wie eine
- * Benachrichtigung auf; darüber kurze Meldungen, was die anderen gerade getan haben.
+ * Meldungen und Zugformulare unten rechts; private Kartenwahlen liegen separat
+ * auf dem zentralen Kartentisch und werden nicht als Benachrichtigung eingeengt.
  */
 export function NoticeStack({ game }: { readonly game: GameState }): ReactElement {
   const decision = useTurnPanelKey(game);
+  const actor = useHumanActor(game);
+  const cardTable = actor !== null && findPlayer(game, actor)?.secretChoice != null;
   const pop = usePop();
   const { shown, dismiss } = useFreshNotices();
   return (
-    <div className="notice-stack" aria-live="polite">
-      <AnimatePresence initial={false}>
-        {shown.map((entry) => (
-          <InfoNotice key={entry.id} entry={entry} game={game} onDismiss={dismiss} />
-        ))}
-        <ErrorNotice key="error" />
-      </AnimatePresence>
-      {/* Die alte Entscheidung verschwindet sofort, damit nie zwei Formulare gleichzeitig offen sind. */}
-      {decision !== null && (
-        <motion.div {...pop} key={decision} className="notice decision">
-          <TurnPanel game={game} />
-        </motion.div>
-      )}
-    </div>
+    <>
+      {cardTable && <TurnPanel game={game} />}
+      <div className="notice-stack" aria-live="polite">
+        <AnimatePresence initial={false}>
+          {shown.map((entry) => (
+            <InfoNotice key={entry.id} entry={entry} game={game} onDismiss={dismiss} />
+          ))}
+          <ErrorNotice key="error" />
+        </AnimatePresence>
+        {/* Die alte Entscheidung verschwindet sofort, damit nie zwei Formulare gleichzeitig offen sind. */}
+        {decision !== null && !cardTable && (
+          <motion.div {...pop} key={decision} className="notice decision">
+            <TurnPanel game={game} />
+          </motion.div>
+        )}
+      </div>
+    </>
   );
 }

@@ -358,39 +358,6 @@
   border-radius: 2px;
 }
 
-.secret-choice .objective-option.ti4-secret-option {
-  grid-template-columns: auto 36px minmax(0, 1fr);
-  grid-template-areas:
-    'box art name'
-    'box art rule';
-  align-items: center;
-  padding: 8px;
-  border: 1px solid #944953;
-  border-radius: 5px;
-  background: #0b101b;
-}
-
-.secret-choice .objective-option.ti4-secret-option input {
-  grid-area: box;
-  align-self: start;
-}
-
-.secret-choice .objective-option.ti4-secret-option strong {
-  grid-area: name;
-}
-
-.secret-choice .objective-option.ti4-secret-option .hint {
-  grid-area: rule;
-  grid-column: 3;
-}
-
-.ti4-secret-choice-art {
-  grid-area: art;
-  width: 36px;
-  height: 54px;
-  border-radius: 3px;
-}
-
 .objective-card.hidden:has(.ti4-hidden-objective-art) {
   display: grid;
   grid-template-columns: 26px minmax(0, 1fr);
