@@ -23,6 +23,7 @@ import {
 import type { Server, Socket } from 'socket.io';
 import type { BotDriver } from './bot-driver.ts';
 import type { Services } from './composition-root.ts';
+import { MapPings } from './map-pings.ts';
 
 export interface SeatData {
   ticket?: SeatTicket;
@@ -42,12 +43,16 @@ const isCommand = (value: unknown): value is GameCommand =>
  * merkt sich den Platz jeder Verbindung und verteilt Zustände, wie jeder Spieler sie sehen darf.
  */
 export class SocketGateway {
+  private readonly pings: MapPings;
+
   constructor(
     private readonly io: GameServer,
     private readonly services: Services,
     private readonly bots: BotDriver,
     private readonly log: (message: string, error: unknown) => void,
-  ) {}
+  ) {
+    this.pings = new MapPings(io, services);
+  }
 
   attach(): void {
     this.services.publisher.subscribe((game, events, state) => {
@@ -67,6 +72,9 @@ export class SocketGateway {
     socket.on('game:undo', (_, ack) => this.answer(ack, async () => this.undo(socket)));
     socket.on('game:command', (command, ack) =>
       this.answer(ack, async () => this.command(socket, command)),
+    );
+    socket.on('map:ping', (request, ack) =>
+      this.answer(ack, () => this.pings.send(socket, socket.data.ticket, request)),
     );
     socket.on('disconnect', () => {
       const code = socket.data.ticket?.code;
@@ -119,6 +127,11 @@ export class SocketGateway {
   }
 
   private async bind(socket: GameSocket, ticket: SeatTicket): Promise<void> {
+    const previous = socket.data.ticket?.code;
+    if (previous !== undefined && previous !== ticket.code) {
+      await socket.leave(previous);
+      await this.broadcastLobby(previous);
+    }
     socket.data.ticket = ticket;
     await socket.join(ticket.code);
     await this.broadcastLobby(ticket.code);

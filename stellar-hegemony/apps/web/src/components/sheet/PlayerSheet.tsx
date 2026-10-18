@@ -9,6 +9,7 @@ import {
   useTokenLedger,
 } from '../../hud/use-sheet.ts';
 import { seatColor } from '../../seat-colors.ts';
+import { useCarryReset } from '../../table/carry-store.ts';
 import { useT } from '../../use-translation.ts';
 import { CarryAnnouncer } from '../table/CarryAnnouncer.tsx';
 import { DragGhost } from '../table/DragGhost.tsx';
@@ -20,12 +21,14 @@ import { TreasuryWing } from './TreasuryWing.tsx';
  * Das eigene Kommandopult am unteren Rand, wie eine Spielertafel vor dem eigenen Platz:
  * links die Kommandomarker, rechts die Schatzkammer, dazwischen die Mulde für die Hand.
  * Die Marker sind Spielsteine: Während einer Verteilung zeigt das Pult den Entwurf, sonst lässt
- * sich der Taktikmarker auf ein System tragen.
+ * sich der Taktikmarker auf ein System tragen. Eine neue Entscheidung legt ein getragenes Stück
+ * zurück.
  */
 export function PlayerSheet({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
   const model = useSheetModel(game);
   const table = useSheetTable(game);
+  useCarryReset(`${table.decision?.route.key ?? ''}@${String(game.version)}`);
   const ledger = useTokenLedger(zoneCounts(model, poolPlanOf(table)));
   const pulse = useSheetPulse(model);
   if (model === null) return null;

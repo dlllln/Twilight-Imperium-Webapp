@@ -42,7 +42,7 @@ export interface HexLayers {
   readonly labels: Container;
 }
 
-/** Ein gebautes Feld: seine Stücke und der pulsierende Rahmen, falls es hervorgehoben ist. */
+/** Ein gebautes Feld: seine Stücke und der Rahmen, falls es hervorgehoben ist. */
 export interface DrawnHex {
   readonly placed: readonly Placed[];
   readonly pulse: Graphics | null;

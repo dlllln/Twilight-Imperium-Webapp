@@ -45,7 +45,9 @@ describe('Faction-specific leader cards', () => {
     );
     expect(
       Array.from(container.querySelectorAll('img')).map((img) => img.getAttribute('src')),
-    ).toEqual(['/ti4/cards/leaders/solagent.png', '/ti4/cards/leaders/solagent.png']);
+    ).toEqual(['/ti4/cards/leaders/solagent.png']);
+    expect(container.querySelector('.hand-original-face')).toBeTruthy();
+    expect(container.querySelector('.hand-art')).toBeNull();
   });
 
   it('retains all three Nomad agents without duplicating the inherited web app action', () => {

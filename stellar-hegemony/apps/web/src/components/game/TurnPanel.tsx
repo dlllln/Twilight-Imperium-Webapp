@@ -212,6 +212,9 @@ export function TurnPanel({ game }: { readonly game: GameState }): ReactElement 
   if (route.kind === 'gameOver') return <GameOverNotice game={game} />;
   if (route.kind === 'waiting' && route.actor !== null)
     return <BotNotice game={game} player={route.actor} />;
+  // Geheime Aufträge liegen privat auf dem zentralen Kartentisch, nicht im Zugfeld.
+  if (route.kind === 'secretChoice' && route.actor !== null)
+    return <SecretChoiceForm game={game} player={route.actor} />;
   return (
     <section className="game-section your-turn" data-tutorial="turn">
       <h2>{t(PHASE_TITLE[game.phase])}</h2>

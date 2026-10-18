@@ -3,18 +3,17 @@ import {
   type GameState,
   type MovementOption,
   type PlayerId,
-  type ShipMoveOrder,
   type SystemId,
   type TacticalActionState,
-  type UnitId,
 } from '@stellar/domain';
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
 import { useGameStore } from '../../game-store.ts';
 import { systemLabel, unitLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
 import { cargoAtOrigin, movementChoices } from '../../tactical-view.ts';
 import { unitsOf } from '../../unit-stats.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { moveOrders, useMovementOrders } from '../../system/movement-draft.ts';
 import { BombardForm, LandingForm } from './InvasionForms.tsx';
 import { ProductionForm } from './ProductionForm.tsx';
 import { TransactionForm } from './TransactionForm.tsx';
@@ -24,27 +23,7 @@ interface TurnProps {
   readonly player: PlayerId;
 }
 
-type Orders = Readonly<Record<string, readonly UnitId[]>>;
-
-/** Gewählte Schiffe mit ihrer Fracht; Fracht gehört immer nur einem Schiff. */
-function useOrders() {
-  const [orders, setOrders] = useState<Orders>({});
-  const toggleShip = (ship: UnitId) =>
-    setOrders(({ [ship]: removed, ...rest }) =>
-      removed === undefined ? { ...rest, [ship]: [] } : rest,
-    );
-  const toggleCargo = (ship: UnitId, unit: UnitId) =>
-    setOrders((current) => {
-      const cargo = current[ship] ?? [];
-      const next = cargo.includes(unit) ? cargo.filter((id) => id !== unit) : [...cargo, unit];
-      return { ...current, [ship]: next };
-    });
-  const loadedElsewhere = (ship: UnitId, unit: UnitId) =>
-    Object.entries(orders).some(([other, cargo]) => other !== ship && cargo.includes(unit));
-  return { orders, toggleShip, toggleCargo, loadedElsewhere };
-}
-
-type OrdersApi = ReturnType<typeof useOrders>;
+type OrdersApi = ReturnType<typeof useMovementOrders>;
 
 interface OptionProps extends TurnProps {
   readonly option: MovementOption;
@@ -96,21 +75,16 @@ function ShipChoice(props: OptionProps): ReactElement {
   );
 }
 
-const ordersFor = (options: readonly MovementOption[], orders: Orders): ShipMoveOrder[] =>
-  options.flatMap((option) => {
-    const cargo = orders[option.ship.id];
-    return cargo === undefined ? [] : [{ ship: option.ship.id, path: option.path, cargo }];
-  });
-
 function MovementForm({ game, player }: TurnProps): ReactElement {
   const t = useT();
   const send = useGameStore((state) => state.send);
   const options = movementChoices(game, content);
-  const api = useOrders();
-  const moves = ordersFor(options, api.orders);
+  const api = useMovementOrders(game);
+  const moves = moveOrders(options, api.orders);
   return (
     <div className="choice-form">
       <h3>{t('movement')}</h3>
+      {options.length > 0 && <p className="hint">{t('fleetDragHint')}</p>}
       {options.length === 0 && <p className="hint">{t('noMovableShips')}</p>}
       <ul className="ship-choices">
         {options.map((option) => (

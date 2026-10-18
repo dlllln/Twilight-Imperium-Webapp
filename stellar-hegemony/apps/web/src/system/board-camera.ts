@@ -1,5 +1,5 @@
 import type { GameState, PlayerId } from '@stellar/domain';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '../game-store.ts';
 import { hexToPixel, type Point } from '../hex-geometry.ts';
 import { blendView, type BoardView, sameView, viewFrom } from '../render/board-view.ts';
@@ -42,7 +42,7 @@ function useTargetView(hexes: readonly SceneHex[]) {
 function useTurning(playing: boolean): () => boolean {
   const now = useRef(playing);
   const before = useRef(playing);
-  useEffect(() => {
+  useLayoutEffect(() => {
     now.current = playing;
   }, [playing]);
   return useCallback(() => {
@@ -56,13 +56,20 @@ function useTurning(playing: boolean): () => boolean {
 function turnBoard(from: BoardView, to: BoardView, apply: (view: BoardView) => void) {
   const start = performance.now();
   let frame = 0;
+  let cancelled = false;
+  const running = () => !cancelled;
   const step = (now: number) => {
+    if (!running()) return;
     const t = Math.min(1, (now - start) / TURN_MS);
     apply(blendView(from, to, easeInOut(t)));
-    if (t < 1) frame = requestAnimationFrame(step);
+    // Applying a frame can synchronously replace this effect; do not queue it again afterward.
+    if (running() && t < 1) frame = requestAnimationFrame(step);
   };
   frame = requestAnimationFrame(step);
-  return () => cancelAnimationFrame(frame);
+  return () => {
+    cancelled = true;
+    cancelAnimationFrame(frame);
+  };
 }
 
 export interface BoardLook {
@@ -77,9 +84,11 @@ function useHomeView(hexes: readonly SceneHex[]): BoardLook {
   const { target, playing } = useTargetView(hexes);
   const [view, setView] = useState(target);
   const current = useRef(view);
-  current.current = view;
+  useLayoutEffect(() => {
+    current.current = view;
+  }, [view]);
   const turning = useTurning(playing);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const animate = turning();
     if (sameView(current.current, target)) return;
     if (!animate) {
@@ -88,7 +97,7 @@ function useHomeView(hexes: readonly SceneHex[]): BoardLook {
     }
     useCameraStore.getState().back();
     return turnBoard(current.current, target, setView);
-  }, [target, turning]);
+  }, [target.angle, target.tilt, turning]);
   return { view, target };
 }
 

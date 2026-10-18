@@ -11,7 +11,7 @@ async function openPage(browser: Browser, name: string): Promise<Page> {
 const phaseOf = (page: Page) => page.locator('.phases [aria-current="step"]');
 
 async function keepSecret(page: Page) {
-  await page.locator('.secret-choice input[type="checkbox"]').first().check();
+  await page.locator('.secret-choice input[type="radio"]').first().press('Space');
   await page.getByRole('button', { name: 'Behalten' }).click();
   await expect(page.locator('.secret-choice')).toHaveCount(0);
 }

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {
+  domainError,
   findPlayer,
   type GameCommand,
   type GameState,
@@ -12,7 +13,7 @@ import {
 } from '@stellar/domain';
 import { SeededRandom } from '@stellar/infrastructure';
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useGameStore } from '../src/game-store.ts';
 import { useHandStore } from '../src/hand/hand-store.ts';
 import { useDraftStore } from '../src/table/draft-store.ts';
@@ -187,6 +188,24 @@ describe('Tischentscheidungen der Kommandomarker', () => {
     expect(spec.confirm(ctx, placed)).toBe('confirm');
   });
 
+  it('Kriegsführung: dasselbe System noch einmal ändert nichts, ein anderes behält die gelegte Verteilung', () => {
+    const base = warfare(true);
+    const second = Object.keys(base.game.systems)[1] as string;
+    const system = base.game.systems[second] as GameState['systems'][string];
+    const systems = { ...base.game.systems, [second]: { ...system, commandTokens: [base.actor] } };
+    const ctx = { ...base, game: { ...base.game, systems } };
+    const spec = TABLE_SPECS.warfare;
+    const pick = (draft: TokenPlan, id: string) =>
+      spec.apply(ctx, draft, { kind: 'system', system: systemId(id) });
+    const lifted = pick(spec.initial(ctx), base.marked);
+    const placed = spec.apply(ctx, lifted, { kind: 'move', from: 'loose', to: 'fleet' });
+    expect(pick(placed, base.marked)).toBe(placed);
+    const switched = pick(placed, second);
+    expect(switched.system).toBe(second);
+    expect(switched.pools).toEqual(placed.pools);
+    expect(spec.progress(ctx, switched).ready).toBe(true);
+  });
+
   it('Kriegsführung ohne Marker auf der Karte sendet system null', () => {
     const ctx = warfare(false);
     const spec = TABLE_SPECS.warfare;
@@ -248,7 +267,39 @@ describe('Tischentscheidungen der Kommandomarker', () => {
     expect(decision().progress?.ready).toBe(true);
     act(() => decision().confirm());
     expect(useHandStore.getState().chosen).toBeNull();
-    expect(useDraftStore.getState().draft).toBeNull();
+    // Der Entwurf bleibt liegen; der neue Spielstand hat ihn über den Schlüssel abgelöst.
+    expect(useDraftStore.getState().sent).toBe(useDraftStore.getState().key);
+    expect(decision().route.kind).not.toBe('primary');
     expect(fleetOf(useGameStore.getState().game)).toBe((fleetOf(ctx.game) ?? 0) + 3);
   });
+
+  it('nach dem Siegel bleibt der Entwurf gesperrt liegen, bis der Server antwortet; eine Ablehnung gibt ihn frei', () => {
+    const ctx = leadershipPrimary();
+    const sent: GameCommand[] = [];
+    const before = useGameStore.getState().remote;
+    const remote = { command: (command: GameCommand) => void sent.push(command), undo: vi.fn() };
+    useGameStore.setState({ game: ctx.game, me: ctx.actor, error: null, remote });
+    useHandStore.getState().choose({ player: ctx.actor, card: LEADERSHIP });
+    useDraftStore.getState().clear();
+    const { result } = renderHook(() => useTableDecision(useGameStore((state) => state.game)));
+    const decision = () => {
+      if (result.current === null) throw new Error('keine Entscheidung');
+      return result.current;
+    };
+    for (const action of toFleet(3)) act(() => decision().act(action));
+    const sealed = decision();
+    act(() => {
+      sealed.confirm();
+      sealed.confirm();
+    });
+    expect(sent).toHaveLength(1);
+    act(() => useHandStore.getState().choose({ player: ctx.actor, card: LEADERSHIP }));
+    expect(decision().draft?.pools.pools.fleet).toBe((fleetOf(ctx) ?? 0) + 3);
+    expect(decision().progress?.ready).toBe(false);
+    act(() => useGameStore.getState().setError(domainError('rules.denied', 'abgelehnt')));
+    expect(decision().progress?.ready).toBe(true);
+    useGameStore.setState({ remote: before, error: null });
+  });
 });
+
+const fleetOf = (ctx: SpecContext) => findPlayer(ctx.game, ctx.actor)?.commandPools.fleet;

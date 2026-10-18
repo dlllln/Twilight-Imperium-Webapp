@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { seatPlayerId } from '@stellar/application';
 import { domainError, type GameEvent, type GameState } from '@stellar/domain';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NoticeStack } from '../src/components/hud/NoticeStack.tsx';
 import { useGameStore } from '../src/game-store.ts';
+import { errorText } from '../src/i18n.ts';
 import { freshEntries, NOTICE_LIMIT, NOTICE_MS, withFresh } from '../src/notices/fresh-notices.ts';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { useGalaxyStore } from '../src/store.ts';
@@ -41,19 +42,63 @@ const picked = (player: typeof P1, card: string) =>
   ({ type: 'StrategyCardPicked', player, card }) as unknown as GameEvent;
 
 describe('Benachrichtigungen unten rechts', () => {
-  it('die offene Entscheidung ploppt als Benachrichtigung auf (hier: geheime Aufträge wählen)', () => {
-    useSettingsStore.setState({ tableView: false });
+  it.each([
+    ['klassischen Ansicht', false],
+    ['Tischansicht', true],
+  ])(
+    'legt die geheimen Aufträge auch in der %s auf einen eigenen Kartentisch außerhalb der Benachrichtigungen',
+    (_view, tableView) => {
+      useSettingsStore.setState({ tableView });
+      seatTable(started(), { me: P1 });
+      render(<Live />);
+      const dialog = screen.getByRole('dialog', { name: 'Geheime Aufträge wählen' });
+      expect(dialog.getAttribute('aria-modal')).toBe('true');
+      expect(document.querySelector('.notice-stack')?.contains(dialog)).toBe(false);
+      expect(document.querySelector('.notice.decision')).toBeNull();
+      expect(screen.queryByTestId('decision')).toBeNull();
+      fireEvent.click(screen.getAllByRole('radio')[0] as HTMLInputElement);
+      fireEvent.click(screen.getByRole('button', { name: 'Behalten' }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    },
+  );
+
+  it('zeigt fremde geheime Karten nicht auf dem eigenen Kartentisch an', () => {
+    seatTable(started(), { me: P2 });
+    render(<Live />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+  });
+
+  it('zeigt einen abgelehnten Kartenbefehl übersetzt im geöffneten Kartentisch', () => {
     seatTable(started(), { me: P1 });
     render(<Live />);
+    const dialog = screen.getByRole('dialog', { name: 'Geheime Aufträge wählen' });
+    fireEvent.click(within(dialog).getAllByRole('radio')[0] as HTMLInputElement);
+    act(() => useGameStore.getState().setError(domainError('objective.keepCount', 'x')));
+    expect(within(dialog).getByRole('alert').textContent).toContain(
+      errorText('de', 'objective.keepCount'),
+    );
+    expect(within(dialog).getAllByRole<HTMLInputElement>('radio')[0]?.checked).toBe(true);
+    expect(
+      within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Behalten' }).disabled,
+    ).toBe(false);
+    act(() => useGameStore.getState().setError(null));
+    expect(within(dialog).queryByRole('alert')).toBeNull();
+  });
+
+  it('die offene Entscheidung ploppt in der klassischen Ansicht als Benachrichtigung auf (hier: warten)', () => {
+    useSettingsStore.setState({ tableView: false });
+    seatTable(started(), { me: P2 });
+    render(<Live />);
     const decision = document.querySelector('.notice.decision');
-    expect(decision?.textContent).toContain('Geheime Aufträge');
+    expect(decision?.textContent).toContain('ist am Zug');
     expect(screen.queryByTestId('decision')).toBeNull();
   });
 
   it('in der Tischansicht steht die Entscheidung als Ansage über dem Pult, nicht als Benachrichtigung', () => {
-    seatTable(started(), { me: P1 });
+    seatTable(started(), { me: P2 });
     render(<Live />);
-    expect(screen.getByTestId('decision').textContent).toContain('Geheime Aufträge');
+    expect(screen.getByTestId('decision').textContent).toContain('ist am Zug');
     expect(document.querySelector('.notice.decision')).toBeNull();
     expect(document.querySelector('.notice-stack [data-testid="decision"]')).toBeNull();
   });
@@ -79,7 +124,8 @@ describe('Benachrichtigungen unten rechts', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Meldung schließen' }));
     expect(screen.queryAllByRole('status')).toHaveLength(0);
     act(() => useGameStore.getState().setError(domainError('tactical.noToken', 'x')));
-    expect(screen.getByRole('alert').textContent).toContain('Nicht erlaubt');
+    const stack = document.querySelector('.notice-stack') as HTMLElement;
+    expect(within(stack).getByRole('alert').textContent).toContain('Nicht erlaubt');
     fireEvent.click(screen.getByRole('button', { name: 'Meldung schließen' }));
     expect(screen.queryByRole('alert')).toBeNull();
   });

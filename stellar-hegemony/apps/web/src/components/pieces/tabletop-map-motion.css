@@ -1,0 +1,44 @@
+.tabletop-map-motion {
+  position: absolute;
+  z-index: 24;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.tabletop-map-motion .tabletop-map-piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 37px;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.tabletop-map-piece > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.tabletop-map-piece[data-material='token'] {
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  border: 2px solid color-mix(in srgb, var(--material-seat) 75%, white);
+  clip-path: polygon(26% 0, 74% 0, 100% 26%, 100% 74%, 74% 100%, 26% 100%, 0 74%, 0 26%);
+  background: linear-gradient(145deg, var(--material-seat), #122130);
+  box-shadow:
+    inset 0 2px 1px #fff7,
+    inset 0 -3px 2px #0008;
+}
+
+.tabletop-map-piece[data-material='token'] > img,
+.tabletop-map-piece[data-material='token'] > svg {
+  width: 23px;
+  height: 23px;
+}

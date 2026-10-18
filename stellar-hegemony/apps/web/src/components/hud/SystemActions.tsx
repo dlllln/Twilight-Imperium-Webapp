@@ -1,5 +1,5 @@
 import { type GameState, systemId } from '@stellar/domain';
-import { Crosshair, type LucideIcon, ZoomIn } from 'lucide-react';
+import { Crosshair, Hand, type LucideIcon, ZoomIn } from 'lucide-react';
 import type { PointerEvent, ReactElement } from 'react';
 import { useGameStore, useHumanActor } from '../../game-store.ts';
 import { HEX_SIZE, hexToPixel } from '../../hex-geometry.ts';
@@ -10,6 +10,7 @@ import type { SceneHex } from '../../render/scene-model.ts';
 import type { Viewport } from '../../store.ts';
 import { useChosenCard } from '../../table/use-decision-route.ts';
 import { useT } from '../../use-translation.ts';
+import { useOnlineStore } from '../../online/online-store.ts';
 
 /** Knopfgröße in Karteneinheiten; sie wächst nicht mit dem Zoom mit. */
 const BUTTON = 46;
@@ -18,9 +19,12 @@ const LIFT = 10;
 /** Halbe Höhe eines gekippten Felds im Bild (vor der Perspektive). */
 const HALF_HEIGHT = (HEX_SIZE * Math.sqrt(3)) / 2;
 
-const LOOKS: Readonly<Record<SystemAction, readonly [LucideIcon, MessageKey]>> = {
+type TableAction = SystemAction | 'point';
+
+const LOOKS: Readonly<Record<TableAction, readonly [LucideIcon, MessageKey]>> = {
   view: [ZoomIn, 'viewSystem'],
   activate: [Crosshair, 'activateSystem'],
+  point: [Hand, 'pointSystem'],
 };
 
 const keepMap = (event: PointerEvent) => event.stopPropagation();
@@ -40,8 +44,10 @@ interface Props {
 function useRun(game: GameState, hex: SceneHex, onView: Props['onView']) {
   const send = useGameStore((state) => state.send);
   const actor = useHumanActor(game);
-  return (action: SystemAction) => {
+  return (action: TableAction) => {
     if (action === 'view') onView(hex);
+    else if (action === 'point' && hex.systemId !== null)
+      void useOnlineStore.getState().pingSystem(hex.systemId);
     else if (actor !== null && hex.systemId !== null)
       send({ type: 'ActivateSystem', issuedBy: actor, system: systemId(hex.systemId) });
   };
@@ -51,7 +57,7 @@ function ActionButton({
   action,
   onRun,
 }: {
-  readonly action: SystemAction;
+  readonly action: TableAction;
   readonly onRun: () => void;
 }) {
   const t = useT();
@@ -104,8 +110,12 @@ export function SystemActions(props: Props): ReactElement | null {
   const actor = useHumanActor(game);
   const choosing = useChosenCard(actor) !== null;
   const run = useRun(game, hex, onView);
+  const online = useOnlineStore((state) => state.status === 'online');
   if (hex.systemId === null) return null;
-  const actions = systemActions(game, actor, hex.systemId, choosing);
+  const actions: readonly TableAction[] = [
+    ...systemActions(game, actor, hex.systemId, choosing),
+    ...(online ? ['point' as const] : []),
+  ];
   return (
     <foreignObject
       {...placement(props, actions.length, { top, bottom })}

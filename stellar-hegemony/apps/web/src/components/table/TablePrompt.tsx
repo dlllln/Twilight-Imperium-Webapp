@@ -45,7 +45,13 @@ function PortedPrompt({ game, decision }: PartProps): ReactElement {
   const { draft, progress } = decision;
   return (
     <>
-      {draft !== null && progress !== null && <PromptMeter needed={progress.needed} plan={draft} />}
+      {draft !== null && progress !== null && (
+        <PromptMeter
+          needed={progress.needed}
+          plan={draft}
+          warfare={decision.specId === 'warfare'}
+        />
+      )}
       <PromptCoins game={game} decision={decision} />
       <PromptWarfare game={game} decision={decision} />
       <PromptActions decision={decision} />

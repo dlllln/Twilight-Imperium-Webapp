@@ -14,7 +14,13 @@ import {
 import { type MapEffect, mapEffects } from '../animation/map-effects.ts';
 import { useGameStore } from '../game-store.ts';
 import { type Bounds, hexToPixel, type Point } from '../hex-geometry.ts';
-import { boardBounds, type BoardView, foreshorten, project } from '../render/board-view.ts';
+import {
+  boardBounds,
+  type BoardView,
+  foreshorten,
+  project,
+  sameView,
+} from '../render/board-view.ts';
 import { useBoardView } from '../system/board-camera.ts';
 import type { Language } from '../i18n.ts';
 import { gameScene, layoutScene, type SceneHex } from '../render/scene-model.ts';
@@ -46,7 +52,15 @@ import { usePicking } from './map/use-picking.ts';
 import { useCarryStore } from '../table/carry-store.ts';
 import { withTableHighlights } from '../table/table-highlights.ts';
 import type { TargetState } from '../table/target-ref.ts';
-import { useTableTargets } from '../table/use-table-decision.ts';
+import { useTableDecision, useTableTargets } from '../table/use-table-decision.ts';
+import { type LiftedToken, liftedTokenOf, withoutLifted } from '../table/lifted-token.ts';
+import { useMapPointer } from '../system/map-pointer.ts';
+import { GalaxyAmbience } from './GalaxyAmbience.tsx';
+import { FleetPieces } from './pieces/FleetPieces.tsx';
+import { TabletopMapMotion } from './pieces/TabletopMapMotion.tsx';
+import { MapPings } from './MapPings.tsx';
+import { TabletopZones } from './tabletop/TabletopZones.tsx';
+import type { FleetProjection } from '../system/fleet-placement.ts';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
 const PixiCanvas = lazy(() =>
@@ -59,12 +73,26 @@ interface SceneInput {
   readonly selected: string | null;
   readonly language: Language;
   readonly targets: ReadonlyMap<string, TargetState>;
+  readonly lifted: LiftedToken | null;
 }
 
-function sceneFor({ layout, game, selected, language, targets }: SceneInput): readonly SceneHex[] {
+function sceneFor(input: SceneInput): readonly SceneHex[] {
+  const { layout, game, selected, language, targets } = input;
   if (game === null) return layoutScene(layout, content, language);
   const base = highlightsOf(game, movementChoices(game, content), selected);
-  return gameScene(game, content, language, withTableHighlights(base, targets));
+  const shown = withoutLifted(game, input.lifted);
+  return gameScene(shown, content, language, withTableHighlights(base, targets));
+}
+
+/** Der von der Kriegsführung aufgenommene Marker; dieselbe Abbildung, solange er derselbe bleibt. */
+function useLifted(game: GameState | null): LiftedToken | null {
+  const lifted = liftedTokenOf(useTableDecision(game));
+  const system = lifted?.system ?? null;
+  const player = lifted?.player ?? null;
+  return useMemo(
+    () => (system === null || player === null ? null : { system, player }),
+    [system, player],
+  );
 }
 
 const signatureOf = (targets: ReadonlyMap<string, TargetState>): string =>
@@ -88,9 +116,10 @@ function useScene(): readonly SceneHex[] {
   const game = useGameStore((state) => state.game);
   const selected = useGameStore((state) => state.selected);
   const targets = useMapTargets(game);
+  const lifted = useLifted(game);
   return useMemo(
-    () => sceneFor({ layout, game, selected, language, targets }),
-    [layout, game, selected, language, targets],
+    () => sceneFor({ layout, game, selected, language, targets, lifted }),
+    [layout, game, selected, language, targets, lifted],
   );
 }
 
@@ -198,6 +227,7 @@ function stop(event: { stopPropagation: () => void }) {
 function Hud({ game, table }: { readonly game: GameState; readonly table: boolean }): ReactElement {
   return (
     <>
+      <TabletopZones game={game} />
       <PlayerRail game={game} />
       {table ? <PlayerSheet game={game} /> : <ResourceBar game={game} />}
       <div className="hud-corner">
@@ -246,21 +276,39 @@ function useFlatFallback(): readonly [boolean, () => void] {
   return [flat, useCallback(() => setFlat(true), [])];
 }
 
-/** Hinweis am Zeiger; beim Nahzoom übernehmen die Schilder an Planeten und Flotten, am Tablet die Knöpfe. */
-function MapTooltip({
-  hexes,
-  cursor,
-  touch,
-}: {
-  readonly hexes: readonly SceneHex[];
-  readonly cursor: Point;
-  readonly touch: boolean;
-}) {
-  const { hovered, viewport } = useGalaxyStore();
+/**
+ * Hinweis am Zeiger; beim Nahzoom übernehmen die Schilder an Planeten und Flotten, am Tablet die
+ * Knöpfe. Solange ein Stück getragen wird, schweigt er: Der Zeiger gehört dann dem Stück.
+ */
+function MapTooltip({ hexes }: { readonly hexes: readonly SceneHex[] }) {
+  const hovered = useGalaxyStore((state) => state.hovered);
+  const zoom = useGalaxyStore((state) => state.viewport.zoom);
+  const cursor = useMapPointer((state) => state.cursor);
+  const touch = useMapPointer((state) => state.touch);
+  const carrying = useCarryStore((state) => state.piece !== null);
   const hex = hexes.find((candidate) => candidate.key === hovered);
   // Mit dem Finger gibt es kein Zeigen ohne Tippen: dort übernehmen Knöpfe und Nahzoom.
-  if (hex === undefined || touch || viewport.zoom >= CLOSE_ZOOM) return null;
+  if (hex === undefined || touch || carrying || zoom >= CLOSE_ZOOM) return null;
   return <HexTooltip hex={hex} x={cursor.x} y={cursor.y} />;
+}
+
+/**
+ * Beim Ziehen hält das Stück den Zeiger fest, die Karte erfährt nichts von seinen Bewegungen.
+ * Nach dem Loslassen bekommt sie den letzten Punkt, damit ein Hinweis dort erscheint und nicht
+ * an einer veralteten Stelle (etwa oben links).
+ */
+function useDropPointer(svg: RefObject<SVGSVGElement | null>): void {
+  useEffect(
+    () =>
+      useCarryStore.subscribe((state, before) => {
+        if (state.piece !== null || before.point === null) return;
+        const box = svg.current?.closest('.galaxy')?.getBoundingClientRect();
+        if (box === undefined) return;
+        const cursor = { x: before.point.x - box.left, y: before.point.y - box.top };
+        useMapPointer.setState({ cursor });
+      }),
+    [svg],
+  );
 }
 
 /** Blick, Bildausschnitt und Kamera der Karte. */
@@ -269,32 +317,49 @@ function useMapView(hexes: readonly SceneHex[]) {
   const svg = useRef<SVGSVGElement>(null);
   const size = useElementSize(svg);
   const { bounds, band } = useFrame(hexes, target, size);
-  return { view, svg, size, bounds, band, ...useMapCamera(bounds, view, svg) };
+  useDropPointer(svg);
+  const attributes = {
+    'data-tutorial': 'galaxy',
+    'data-board-settled': sameView(view, target),
+  };
+  return { view, svg, size, bounds, band, attributes, ...useMapCamera(bounds, view, svg) };
+}
+
+function BoardObjects(props: FleetProjection) {
+  return (
+    <>
+      <CloseUpLabels {...props} />
+      <MapPings {...props} />
+      <TabletopMapMotion {...props} />
+      <FleetPieces {...props} />
+    </>
+  );
 }
 
 export function GalaxyMap(): ReactElement {
   const viewport = useGalaxyStore((state) => state.viewport);
   const hexes = useScene();
   const effects = useMapEffects();
-  const { view, svg, size, bounds, band, flyTo, zoom } = useMapView(hexes);
-  const { cursor, touch, wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
+  const { view, svg, size, bounds, band, attributes, flyTo, zoom } = useMapView(hexes);
+  const { wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
   const [flat, onUnavailable] = useFlatFallback();
   const pick = usePicking(wasDrag, flyTo);
   return (
-    <div className={flat ? 'galaxy flat' : 'galaxy'} data-tutorial="galaxy" {...handlers}>
+    <div className={flat ? 'galaxy flat' : 'galaxy'} {...attributes} {...handlers}>
       {!flat && (
         <Suspense fallback={null}>
           <PixiCanvas {...{ hexes, bounds, viewport, view, effects, onUnavailable }} />
         </Suspense>
       )}
+      <GalaxyAmbience sectors={hexes.length} />
       <HexTargets
         {...{ hexes, bounds, band, viewport, view }}
         ref={svg}
         onPick={pick}
         onView={flyTo}
       />
-      <CloseUpLabels {...{ hexes, bounds, viewport, view, size }} />
-      <MapTooltip hexes={hexes} cursor={cursor} touch={touch} />
+      <BoardObjects {...{ hexes, bounds, viewport, view, size }} />
+      <MapTooltip hexes={hexes} />
       <MapControls onZoom={(factor) => zoom(factor)} onReset={useCameraStore.getState().back} />
       <Overlays />
     </div>

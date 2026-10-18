@@ -6,7 +6,7 @@ import {
   type PlayerId,
   systemId,
 } from '@stellar/domain';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { NoticeStack } from '../src/components/hud/NoticeStack.tsx';
@@ -89,10 +89,10 @@ function defending(): PlayerId {
 
 describe('Ansage am Pult (Tischansicht)', () => {
   it('Tischansicht: die Entscheidung erscheint als Ansage am Pult, nicht als Benachrichtigung', () => {
-    seatTable(started(), { me: started().players[0]?.id as PlayerId });
+    const state = pickAll(started());
+    seatTable(state, { me: state.actionPhase?.active as PlayerId });
     render(<Live />);
-    expect(prompt().querySelector('.secret-choice')).not.toBeNull();
-    expect(prompt().textContent).toContain('Geheime Aufträge');
+    expect(prompt().dataset['kind']).toBe('idle');
     expect(document.querySelector('.notice.decision')).toBeNull();
     expect(prompt().closest('[aria-live]')).toBeNull();
     expect(within(prompt()).queryAllByRole('status')).toHaveLength(0);
@@ -100,10 +100,20 @@ describe('Ansage am Pult (Tischansicht)', () => {
 
   it('klassische Ansicht behält die Entscheidungskarte', () => {
     useSettingsStore.setState({ tableView: false });
+    const state = pickAll(started());
+    seatTable(state, { me: state.actionPhase?.active as PlayerId });
+    render(<Live />);
+    expect(document.querySelector('.notice.decision .hand-hint')).not.toBeNull();
+    expect(screen.queryByTestId('decision')).toBeNull();
+  });
+
+  it('geheime Aufträge liegen auch in der Tischansicht auf dem Kartentisch, nicht in der Ansage', () => {
     seatTable(started(), { me: started().players[0]?.id as PlayerId });
     render(<Live />);
-    expect(document.querySelector('.notice.decision .secret-choice')).not.toBeNull();
+    const table = screen.getByRole('dialog', { name: 'Geheime Aufträge wählen' });
+    expect(table.classList.contains('secret-choice')).toBe(true);
     expect(screen.queryByTestId('decision')).toBeNull();
+    expect(document.querySelector('.notice.decision')).toBeNull();
   });
 
   it('Führung: die Ansage zeigt die erhaltenen Marker und Ausführen erst bei leerer Schale', () => {
@@ -181,5 +191,35 @@ describe('Ansage am Pult (Tischansicht)', () => {
     expect(region.textContent).toContain('ist am Zug');
     expect(within(region).queryAllByRole('button')).toHaveLength(0);
     expect(within(region).queryAllByRole('heading')).toHaveLength(0);
+  });
+
+  it('eine stehende Live-Zeile sagt das Warten auf andere und die eigene Entscheidung an', () => {
+    const state = pickAll(started());
+    const active = state.actionPhase?.active as PlayerId;
+    const other = state.players.find((player) => player.id !== active)?.id as PlayerId;
+    seatTable(state, { me: other });
+    render(<Live />);
+    const line = screen.getByTestId('decision-announcer');
+    expect(line.getAttribute('aria-live')).toBe('polite');
+    expect(line.closest('.table-prompt')).toBeNull();
+    const name = findPlayer(state, active)?.name ?? '';
+    expect(line.textContent).toBe(`${name} ist am Zug …`);
+    act(() => useGameStore.setState({ me: active }));
+    expect(screen.getByTestId('decision-announcer')).toBe(line);
+    expect(line.textContent).toBe(
+      'Aktion – Ziehe einen Taktikmarker auf ein System, um es zu aktivieren.',
+    );
+  });
+
+  it('Kriegsführung: die Messleiste bleibt leer, bis ein Marker von der Karte genommen ist', () => {
+    const { player, card, home } = holding('warfare', true);
+    seatTable(game(), { me: player });
+    useHandStore.getState().choose({ player, card: card.id });
+    render(<Live />);
+    const meter = () => prompt().querySelector('.table-prompt-meter');
+    expect(meter()?.getAttribute('aria-live')).toBe('polite');
+    expect(meter()?.textContent).toBe('');
+    fireEvent.change(within(prompt()).getByRole('combobox'), { target: { value: home } });
+    expect(meter()?.textContent).toBe('Von der Karte genommen: 1 · noch zu verteilen: 1');
   });
 });

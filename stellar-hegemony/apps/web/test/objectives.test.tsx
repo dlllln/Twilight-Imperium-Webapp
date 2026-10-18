@@ -1,12 +1,22 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { findPlayer, type GameState, type PlayerId } from '@stellar/domain';
+import {
+  findPlayer,
+  type GameState,
+  objectiveId,
+  type ObjectiveId,
+  type PlayerId,
+  updatePlayer,
+} from '@stellar/domain';
 import { afterEach, describe, expect, it } from 'vitest';
+import { objectiveFrame } from '../src/artwork/cards.ts';
 import { ObjectivesPanel } from '../src/components/objectives/ObjectivesPanel.tsx';
+import { SecretChoiceForm } from '../src/components/objectives/SecretChoiceForm.tsx';
 import { TurnPanel } from '../src/components/game/TurnPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
 import { currentActor } from '@stellar/domain';
 import { useGalaxyStore } from '../src/store.ts';
+import { objectiveLabel, objectiveRequirement } from '../src/labels.ts';
 import { holding, Live } from './card-form-helpers.tsx';
 import { pickAll, started } from './game-helpers.ts';
 import { seatTable } from './local-table.ts';
@@ -42,14 +52,114 @@ describe('Geheime Aufträge zu Spielbeginn (RR 12.20)', () => {
     const keep = () => screen.getByRole<HTMLButtonElement>('button', { name: 'Behalten' });
     expect(keep().disabled).toBe(true);
     for (let player = 0; player < 3; player += 1) {
-      const [first, second] = screen.getAllByRole<HTMLInputElement>('checkbox');
+      const [first, second] = screen.getAllByRole<HTMLInputElement>('radio');
       fireEvent.click(first as HTMLInputElement);
-      expect(second?.disabled).toBe(true);
+      expect(second?.disabled).toBe(false);
       fireEvent.click(keep());
     }
     expect(store().error).toBeNull();
     expect(game().players.every((player) => player.secretObjectives.length === 1)).toBe(true);
     expect(screen.queryByRole('button', { name: 'Behalten' })).toBeNull();
+  });
+
+  it('legt vollständige Originalkarten aus und lässt die Einzelwahl direkt wechseln', () => {
+    useGalaxyStore.setState({ language: 'de' });
+    const state = started();
+    seatTable(state);
+    const player = currentActor(state) as PlayerId;
+    const options = findPlayer(state, player)?.secretChoice?.options ?? [];
+    render(<SecretChoiceForm game={state} player={player} />);
+
+    const dialog = screen.getByRole('dialog', { name: 'Geheime Aufträge wählen' });
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    const cards = screen.getAllByRole<HTMLInputElement>('radio');
+    for (const [index, id] of options.entries()) {
+      const card = screen.getByRole('radio', {
+        name: (name) =>
+          name.includes(objectiveLabel(id, 'de')) && name.includes(objectiveRequirement(id, 'de')),
+      });
+      expect(card).toBe(cards[index]);
+      const image = card.closest('label')?.querySelector('.ti4-complete-card img');
+      expect(image?.getAttribute('src')).toBe(objectiveFrame(id, 'secret', null).path);
+    }
+
+    const first = cards[0] as HTMLInputElement;
+    const second = cards[1] as HTMLInputElement;
+    fireEvent.click(first);
+    expect(first.checked).toBe(true);
+    expect(second.disabled).toBe(false);
+    fireEvent.click(second);
+    expect(first.checked).toBe(false);
+    expect(second.checked).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Behalten' }));
+    expect(store().error).toBeNull();
+    expect(findPlayer(game(), player)?.secretObjectives).toEqual([options[1]]);
+  });
+
+  it('behält bei mehreren Aufträgen das Kontingent und gibt abgewählte Plätze wieder frei', () => {
+    useGalaxyStore.setState({ language: 'de' });
+    const state = started();
+    const player = currentActor(state) as PlayerId;
+    const options = ['storm-riders', 'swarm-doctrine', 'iron-fist'].map(objectiveId);
+    const offered = updatePlayer(state, player, (seat) => ({
+      ...seat,
+      secretChoice: { options, keep: 2 },
+    }));
+    render(<SecretChoiceForm game={offered} player={player} />);
+    const cards = screen.getAllByRole<HTMLInputElement>('checkbox');
+    const keep = screen.getByRole<HTMLButtonElement>('button', { name: 'Behalten' });
+    fireEvent.click(cards[0] as HTMLInputElement);
+    expect(keep.disabled).toBe(true);
+    expect(cards[2]?.disabled).toBe(false);
+    fireEvent.click(cards[1] as HTMLInputElement);
+    expect(keep.disabled).toBe(false);
+    expect(cards[2]?.disabled).toBe(true);
+    expect(cards[0]?.disabled).toBe(false);
+    fireEvent.click(cards[0] as HTMLInputElement);
+    expect(cards[2]?.disabled).toBe(false);
+    expect(keep.disabled).toBe(true);
+    fireEvent.click(cards[2] as HTMLInputElement);
+    expect(keep.disabled).toBe(false);
+  });
+
+  it('behält die Wahl bei normalen Updates, verwirft sie aber bei neuen Karten oder anderem Spieler', () => {
+    useGalaxyStore.setState({ language: 'de' });
+    const state = started();
+    const player = currentActor(state) as PlayerId;
+    const options = findPlayer(state, player)?.secretChoice?.options ?? [];
+    const view = render(<SecretChoiceForm game={state} player={player} />);
+    fireEvent.click(screen.getAllByRole('radio')[0] as HTMLInputElement);
+    const updated = updatePlayer({ ...state, version: state.version + 1 }, player, (seat) => ({
+      ...seat,
+      secretChoice: { options: [...options], keep: 1 },
+    }));
+    view.rerender(<SecretChoiceForm game={updated} player={player} />);
+    expect(screen.getAllByRole<HTMLInputElement>('radio')[0]?.checked).toBe(true);
+
+    const replacement = ['storm-riders', 'swarm-doctrine', 'iron-fist']
+      .map(objectiveId)
+      .find((id) => !options.includes(id)) as ObjectiveId;
+    const next = updatePlayer(updated, player, (seat) => ({
+      ...seat,
+      secretChoice: { options: [options[0] as ObjectiveId, replacement], keep: 1 },
+    }));
+    view.rerender(<SecretChoiceForm game={next} player={player} />);
+    expect(screen.getAllByRole<HTMLInputElement>('radio').every((card) => !card.checked)).toBe(
+      true,
+    );
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Behalten' }).disabled).toBe(true);
+
+    fireEvent.click(screen.getAllByRole('radio')[0] as HTMLInputElement);
+    const other = state.players.find((seat) => seat.id !== player)?.id as PlayerId;
+    const switched = updatePlayer(next, other, (seat) => ({
+      ...seat,
+      secretChoice: findPlayer(next, player)?.secretChoice ?? null,
+    }));
+    view.rerender(<SecretChoiceForm game={switched} player={other} />);
+    expect(screen.getAllByRole<HTMLInputElement>('radio').every((card) => !card.checked)).toBe(
+      true,
+    );
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Behalten' }).disabled).toBe(true);
   });
 });
 

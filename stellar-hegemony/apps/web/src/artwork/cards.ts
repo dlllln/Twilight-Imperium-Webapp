@@ -169,6 +169,10 @@ const SECRET: Readonly<Record<string, number>> = {
   'bloody-harvest': 4,
   'lightning-campaign': 11,
   'boots-on-ground': 16,
+  // The expansion's custom goals still use related original base-set fronts.
+  // Their printed conditions differ; the current game's requirement is shown separately.
+  'dread-armada': 9, // Gather a Mighty Fleet: dreadnoughts.
+  'tech-hoard': 12, // Master the Laws of Physics: accumulated technology.
 };
 
 export function objectiveFrame(

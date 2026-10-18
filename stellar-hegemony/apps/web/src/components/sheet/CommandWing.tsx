@@ -11,7 +11,7 @@ import { useT } from '../../use-translation.ts';
 import { FactionEmblem } from '../simulator/FactionEmblem.tsx';
 import { LooseBowl } from './LooseBowl.tsx';
 import { RailControls } from './RailControls.tsx';
-import { type Flow, dropFocus, SheetPiece, useDraggedZone } from './SheetPiece.tsx';
+import { dropAttributes, type Flow, SheetPiece, useDraggedZone } from './SheetPiece.tsx';
 import { SheetDelta, Socket, TokenChip } from './SheetTokens.tsx';
 
 interface WingProps {
@@ -117,8 +117,8 @@ export function CommandTray({ pool, ids, faction, pulse, flow, table }: TrayProp
       data-pool={pool}
       aria-label={`${t(pool)}: ${String(ids.length)}`}
       {...target.props}
+      {...dropAttributes(target)}
       data-over={target.over ? 'true' : undefined}
-      tabIndex={dropFocus(target)}
     >
       <span className="sheet-tray-label" data-short={t(pool).charAt(0)}>
         <span>{t(pool)}</span>

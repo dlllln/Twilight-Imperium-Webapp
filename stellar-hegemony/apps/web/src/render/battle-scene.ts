@@ -94,6 +94,14 @@ export class BattleScene {
     for (const shot of shots) this.effects.at(now + shot.delay, () => this.resolve(shot));
   }
 
+  /** Ein übersprungener Wurf hinterlässt keine Schüsse oder verspäteten Explosionen. */
+  finish(): void {
+    this.effects.clear();
+    for (const piece of this.dying) piece.display.destroy({ children: true });
+    this.dying = [];
+    this.app.render();
+  }
+
   destroy(): void {
     this.effects.clear();
     this.app.ticker.remove(this.tick);

@@ -13,11 +13,16 @@ import { systemTarget, targetKey, type TargetState } from './target-ref.ts';
 
 const tokenSystems = (ctx: SpecContext) => warfareTokenSystems(ctx.game, ctx.actor);
 
-/** Ein System mit eigenem Marker wählen: der Marker liegt lose in der Schale, alles neu. */
+/**
+ * Ein System mit eigenem Marker wählen: der erste gewählte Marker kommt lose in die Schale.
+ * Ein anderes System tauscht nur die Herkunft; die schon gelegte Verteilung bleibt liegen, und
+ * es bleibt bei genau einem Marker mehr. Dasselbe System noch einmal ändert nichts.
+ */
 function apply(ctx: SpecContext, draft: TokenPlan, action: TableAction): TokenPlan {
   if (action.kind !== 'system') return applyMove(draft, action);
-  if (!tokenSystems(ctx).includes(action.system)) return draft;
-  return tokenPlan(poolDraft(currentPools(ctx), 1, false, 'board'), action.system);
+  if (action.system === draft.system || !tokenSystems(ctx).includes(action.system)) return draft;
+  const loose = draft.pools.loose + (draft.system === null ? 1 : 0);
+  return { ...draft, pools: { ...draft.pools, loose }, system: action.system };
 }
 
 function targets(ctx: SpecContext, draft: TokenPlan): ReadonlyMap<string, TargetState> {

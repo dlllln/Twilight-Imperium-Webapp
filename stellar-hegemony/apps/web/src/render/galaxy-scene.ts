@@ -1,13 +1,13 @@
 import { AdvancedBloomFilter } from 'pixi-filters';
-import { type Application, Container, type Graphics, Sprite, type Ticker } from 'pixi.js';
+import { type Application, Container, Sprite, type Ticker } from 'pixi.js';
 import { EffectLayer } from '../animation/effect-layer.ts';
 import type { MapEffect } from '../animation/map-effects.ts';
 import type { Bounds } from '../hex-geometry.ts';
 import type { Viewport } from '../store.ts';
-import { boardGrid } from './board-grid.ts';
 import type { Placed } from './board-pieces.ts';
 import { type BoardView, FLAT_VIEW, sameView } from './board-view.ts';
-import { drawHex, type HexLayers } from './hex-view.ts';
+import { type HexLayers } from './hex-view.ts';
+import { HexSceneCache } from './hex-scene-cache.ts';
 import type { SceneHex } from './scene-model.ts';
 import { nebulaTexture } from './textures.ts';
 import { CLOSE_ZOOM } from '../system/viewport-tween.ts';
@@ -15,9 +15,6 @@ import { detailLevel, lineScale, worldTransform } from './view-transform.ts';
 
 const BACKGROUND_OVERSCAN = 1.1;
 const PARALLAX = 0.04;
-const PULSE_SPEED = 0.004;
-/** Nur für das langsame Pulsieren der Hervorhebung (12 Bilder/s genügen, schont Akku und CPU); sonst wird erst bei Änderungen gezeichnet. */
-const PULSE_FPS = 12;
 /** Effekte (Flug, Explosion) laufen flüssiger, aber nur, solange sie dauern. */
 const EFFECT_FPS = 60;
 
@@ -28,9 +25,14 @@ interface Framing {
 
 function bloomLayer(): Container {
   const layer = new Container();
-  layer.filters = [
-    new AdvancedBloomFilter({ threshold: 0.3, bloomScale: 1.2, brightness: 1, blur: 5 }),
-  ];
+  const bloom = new AdvancedBloomFilter({
+    threshold: 0.3,
+    bloomScale: 1.2,
+    brightness: 1,
+    blur: 5,
+  });
+  bloom.resolution = 0.5;
+  layer.filters = [bloom];
   return layer;
 }
 
@@ -38,8 +40,7 @@ function bloomLayer(): Container {
  * Controller der Pixi-Darstellung (GRASP Controller, Single Responsibility):
  * kennt nur Szene-Daten und Ansicht, keine Spielregeln. React steuert sie über
  * `show` und `frame`, Treffer und Tastatur übernimmt die SVG-Ebene darüber.
- * Gezeichnet wird nur bei Änderungen; die Schleife läuft nur, solange etwas pulsiert
- * oder ein Effekt abläuft.
+ * Gezeichnet wird nur bei Änderungen; die Schleife läuft nur während kurzer Spieleffekte.
  */
 export class GalaxyScene {
   private readonly background = new Sprite(nebulaTexture());
@@ -52,7 +53,7 @@ export class GalaxyScene {
     labels: new Container(),
   };
   private readonly effects = new EffectLayer();
-  private pulses: readonly Graphics[] = [];
+  private readonly cache = new HexSceneCache(this.layers);
   private framing: Framing | null = null;
   private placed: readonly Placed[] = [];
   private view: BoardView = FLAT_VIEW;
@@ -75,22 +76,21 @@ export class GalaxyScene {
       this.effects.container,
     );
     app.stage.addChild(this.background, this.world);
-    app.ticker.maxFPS = PULSE_FPS;
+    app.ticker.maxFPS = EFFECT_FPS;
     app.ticker.add(this.pulse);
     app.renderer.on('resize', this.reframe);
   }
 
-  /** Baut alle Felder neu auf; die Texturen bleiben im Cache. */
+  /** Aktualisiert nur veränderte Systeme; unveränderte Figuren und Beschriftungen bleiben bestehen. */
   show(hexes: readonly SceneHex[]): void {
-    const names = Object.keys(this.layers) as (keyof HexLayers)[];
-    const old = names.flatMap((name) => this.layers[name].removeChildren());
-    const drawn = hexes.map((hex) => drawHex(hex, this.layers));
-    this.placed = [...drawn.flatMap((hex) => hex.placed), ...boardGrid(this.layers.base, hexes)];
-    this.pulses = drawn.flatMap((hex) => (hex.pulse === null ? [] : [hex.pulse]));
-    this.arrange();
+    const update = this.cache.update(hexes);
+    if (!update.changed) return;
+    this.placed = update.placed;
+    const frame = { view: this.view, line: lineScale(this.level) };
+    for (const piece of update.fresh) piece.arrange(frame);
     this.redraw(true);
     // Erst nach dem Zeichnen freigeben, damit kein Shader mehr auf die alten Objekte zeigt.
-    for (const child of old) child.destroy({ children: true });
+    for (const child of update.retired) child.destroy({ children: true });
   }
 
   /** Dreht das Brett zu einem neuen Blick; die Stücke werden nur neu ausgerichtet. */
@@ -151,7 +151,7 @@ export class GalaxyScene {
    * und Drehung des Bretts im selben Bild beide etwas ändern. Läuft die Schleife, zeichnet sie selbst.
    */
   private redraw(now = false): void {
-    const looping = this.pulses.length > 0 || this.effects.active;
+    const looping = this.effects.active;
     if (looping) this.app.start();
     else this.app.stop();
     if (now) this.app.render();
@@ -175,10 +175,7 @@ export class GalaxyScene {
   }
 
   private readonly pulse = (ticker: Ticker): void => {
-    const alpha = 0.6 + 0.4 * Math.sin(ticker.lastTime * PULSE_SPEED);
-    for (const frame of this.pulses) frame.alpha = alpha;
     if (this.effects.active && !this.effects.update(ticker.deltaMS)) {
-      this.app.ticker.maxFPS = PULSE_FPS;
       this.redraw();
     }
   };

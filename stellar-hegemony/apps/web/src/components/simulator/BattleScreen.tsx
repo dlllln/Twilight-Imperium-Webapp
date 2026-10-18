@@ -11,6 +11,7 @@ import { useLanguage, useT } from '../../use-translation.ts';
 import { BattleCanvas } from '../battle/BattleCanvas.tsx';
 import { FactionEmblem } from './FactionEmblem.tsx';
 import { SeriesPips } from './SeriesPips.tsx';
+import { SimulatorDice } from './SimulatorDice.tsx';
 
 const toBattleSide = (side: SimSide): BattleSide => ({
   seat: seatOf(side.player),
@@ -66,18 +67,24 @@ function hitsOn(report: SimRoundReport, shooter: PlayerId): string {
   return `${String(volley?.hits ?? 0)}${blocked > 0 ? ` (${String(blocked)} ✕)` : ''}`;
 }
 
-function RoundLog({ report }: { readonly report: SimRoundReport | null }): ReactElement | null {
+function RoundLog({
+  report,
+  collapsed,
+}: {
+  readonly report: SimRoundReport | null;
+  readonly collapsed: boolean;
+}): ReactElement | null {
   const t = useT();
   const language = useLanguage();
   if (report === null) return null;
   const rivalCard = report.played.find((entry) => entry.player === RIVAL)?.card;
   return (
-    <p className="round-log" role="status">
+    <SimulatorDice report={report} collapsed={collapsed}>
       {t('yourVolley')}: <strong>{hitsOn(report, YOU)}</strong> {t('hits')} · {t('rivalVolley')}:{' '}
       <strong>{hitsOn(report, RIVAL)}</strong> {t('hits')}
       {rivalCard !== undefined &&
         ` · ${t('rivalPlays')}: ${TACTIC_CARD_TEXTS[rivalCard]?.name[language] ?? rivalCard}`}
-    </p>
+    </SimulatorDice>
   );
 }
 
@@ -204,11 +211,18 @@ export function BattleScreen(): ReactElement | null {
   const over = !busy && shown.outcome !== null;
   return (
     <div className="sim-battle">
-      <BattleCanvas left={left} right={right} shots={shots} volley={volley} seed={seed} />
+      <BattleCanvas
+        left={left}
+        right={right}
+        shots={shots}
+        volley={volley}
+        seed={seed}
+        settled={!busy}
+      />
       <Banner battle={shown} />
       <SideCard side={shown.defender} role="defender" faction={rival} />
       <SideCard side={shown.attacker} role="attacker" faction={faction} />
-      {busy || over ? null : <RoundLog report={report} />}
+      <RoundLog key={report?.round ?? 0} report={report} collapsed={over} />
       {over ? <Result battle={shown} /> : <Controls battle={shown} busy={busy} />}
     </div>
   );

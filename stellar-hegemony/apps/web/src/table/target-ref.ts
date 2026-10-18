@@ -26,8 +26,8 @@ export type TargetRef =
 /** Wie ein Ziel in der laufenden Entscheidung dasteht. */
 export type TargetState = 'legal' | 'chosen' | 'blocked';
 
-/** Ein Stück wurde auf einem Ziel abgelegt. */
-export type DropHandler = (piece: TargetRef, target: TargetRef) => void;
+/** Ein Stück wurde auf einem Ziel abgelegt; `true`, wenn das Ablegen etwas bewirkt hat. */
+export type DropHandler = (piece: TargetRef, target: TargetRef) => boolean;
 
 export const systemTarget = (id: SystemId | string): TargetRef => ({
   kind: 'system',

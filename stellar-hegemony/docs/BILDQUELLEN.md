@@ -42,7 +42,11 @@ Anführer werden anhand der konkreten Quell-ID und der überprüften Fraktions-I
 zugeordnet, nicht anhand eines allgemeinen Agent-/Heldenbildes. Der Nomade hat
 alle drei Originalagenten. Die beiden ergänzten Agenten werden als Referenz ohne
 automatisierte Aktion geführt; die bestehende Webapp-Aktion wird nicht verdreifacht.
-Die Hand zeigt echte Porträts und Originalregeln. Antippen öffnet die vollständige
+Die Hand zeigt vollständige Originalkarten in ihrem natürlichen Seitenverhältnis,
+ohne zusätzlich gezeichnete Kartenfront, Ausschnitt oder darübergelegte Webapp-Texte.
+Beim Anheben werden sie zum Lesen vergrößert. Taktische Aktion und Passen sind
+eigene Bedienelemente und verwenden keine fremde Strategie-Karte als Bild.
+Antippen eines Anführers öffnet die vollständige
 Karte mit einer getrennt beschrifteten, vereinfachten Webapp-Aktion. Auch Auswahl
 und Anführerübersicht zeigen die passenden Originalkarten einschließlich
 Freischaltbedingungen auf Englisch. Alte Eigenkreationen erhalten kein Ersatzbild

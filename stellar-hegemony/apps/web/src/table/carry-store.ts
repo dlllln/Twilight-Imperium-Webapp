@@ -3,8 +3,9 @@ import { create } from 'zustand';
 import type { TargetRef } from './target-ref.ts';
 
 /*
- * Das Stück in der Hand: aufgenommen per Ziehen ('drag') oder per Klick bzw. Taste ('sticky').
- * `news` meldet jedes Aufnehmen, Ablegen und Zurücklegen einmal (für die Live-Ansage).
+ * Das Stück in der Hand: aufgenommen per Ziehen ('drag'), per Klick ('sticky') oder per Taste
+ * ('keyboard'; dann wandert der Fokus mit). `news` meldet jedes Aufnehmen, Ablegen und
+ * Zurücklegen einmal (für die Live-Ansage und den Fokus).
  */
 
 export interface Point {
@@ -12,12 +13,16 @@ export interface Point {
   readonly y: number;
 }
 
-export type CarryMode = 'drag' | 'sticky';
+export type CarryMode = 'drag' | 'sticky' | 'keyboard';
 
 export interface CarryNews {
   readonly serial: number;
   readonly kind: 'carried' | 'placed' | 'putBack';
+  /** Das Ziel beim Ablegen, sonst das Stück selbst. */
   readonly ref: TargetRef;
+  /** Das getragene Stück. */
+  readonly piece: TargetRef;
+  readonly mode: CarryMode;
 }
 
 export interface CarryStore {
@@ -39,32 +44,55 @@ const EMPTY_HAND = { piece: null, legal: new Set<string>(), over: null, point: n
 
 type Set = (update: (state: CarryStore) => Partial<CarryStore>) => void;
 
-const report = (state: CarryStore, kind: CarryNews['kind'], ref: TargetRef): CarryNews => ({
+interface Report {
+  readonly kind: CarryNews['kind'];
+  readonly ref: TargetRef;
+  readonly piece: TargetRef;
+  readonly mode: CarryMode;
+}
+
+const report = (state: CarryStore, news: Report): CarryNews => ({
   serial: (state.news?.serial ?? 0) + 1,
-  kind,
-  ref,
+  ...news,
 });
 
-const putDownWith = (set: Set) => () => {
-  set((state) =>
-    state.piece === null ? {} : { ...EMPTY_HAND, news: report(state, 'putBack', state.piece) },
-  );
-};
+/** Ablegen oder Zurücklegen des getragenen Stücks; ohne Stück ändert sich nichts. */
+function settle(set: Set, kind: 'placed' | 'putBack', target: TargetRef | null): void {
+  set((state) => {
+    const { piece, mode } = state;
+    if (piece === null || mode === null) return {};
+    const news = report(state, { kind, ref: target ?? piece, piece, mode });
+    return { ...EMPTY_HAND, news };
+  });
+}
 
 export const useCarryStore = create<CarryStore>()((set) => ({
   ...EMPTY_HAND,
   news: null,
   pickUp: (piece, legal, mode) => {
-    set((state) => ({ ...EMPTY_HAND, piece, legal, mode, news: report(state, 'carried', piece) }));
+    const news = (state: CarryStore) => report(state, { kind: 'carried', ref: piece, piece, mode });
+    set((state) => ({ ...EMPTY_HAND, piece, legal, mode, news: news(state) }));
   },
   track: (point, over) => {
     set({ point, over });
   },
   place: (target) => {
-    set((state) => ({ ...EMPTY_HAND, news: report(state, 'placed', target) }));
+    settle(set, 'placed', target);
   },
-  putDown: putDownWith(set),
+  putDown: () => {
+    settle(set, 'putBack', null);
+  },
 }));
+
+/**
+ * Eine neue Entscheidung oder ein neuer Spielstand legt das getragene Stück zurück: Seine
+ * erlaubten Ziele gehören zur alten Entscheidung.
+ */
+export function useCarryReset(key: string): void {
+  useEffect(() => {
+    useCarryStore.getState().putDown();
+  }, [key]);
+}
 
 /** Escape legt das getragene Stück zurück, bevor andere Tastenhörer (z. B. die Kamera) es sehen. */
 function escapeWhileCarrying(event: KeyboardEvent): void {

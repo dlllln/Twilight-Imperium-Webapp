@@ -73,7 +73,7 @@ export async function openTable(browser: Browser, humans = 3, players = 3): Prom
 /** RR 12.20: jeder behält auf seinem Gerät einen der gezogenen geheimen Aufträge. */
 export async function keepSecrets(pages: readonly Page[]): Promise<void> {
   for (const page of pages) {
-    await page.locator('.secret-choice input[type="checkbox"]').first().check();
+    await page.locator('.secret-choice input[type="radio"]').first().press('Space');
     await page.getByRole('button', { name: 'Behalten' }).click();
   }
   for (const page of pages) await expect(page.locator('.secret-choice')).toHaveCount(0);

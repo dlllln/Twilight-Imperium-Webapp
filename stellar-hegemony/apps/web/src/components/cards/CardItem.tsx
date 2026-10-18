@@ -1,11 +1,11 @@
 import { type ActionTarget, type GameState, type HandCard, type PlayerId } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
-import { ACTION_BACK, actionFrame } from '../../artwork/cards.ts';
+import { actionFrame } from '../../artwork/cards.ts';
 import { useGameStore } from '../../game-store.ts';
 import { actionCardEffect, actionCardLabel, actionCardTiming } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { Actions } from '../game/FormParts.tsx';
-import { CardArtwork } from './CardArtwork.tsx';
+import { CompleteCardArtwork } from './CompleteCardArtwork.tsx';
 import { hasTargets, initialTarget, targetComplete, TargetFields } from './TargetFields.tsx';
 
 interface CardProps {
@@ -19,9 +19,8 @@ export function CardFace({ id, count }: { readonly id: string; readonly count: n
   const language = useLanguage();
   return (
     <>
-      <CardArtwork artwork={actionFrame(id)} className="ti4-print-frame" />
+      <CompleteCardArtwork artwork={actionFrame(id)} />
       <header>
-        <CardArtwork artwork={ACTION_BACK} className="ti4-card-mark" />
         <strong>{actionCardLabel(id, language)}</strong>
         {count > 1 && <span className="badge">×{count}</span>}
       </header>
@@ -53,7 +52,7 @@ export function CardItem(props: CardProps): ReactElement {
   const { card } = props;
   return (
     <li
-      className={`action-card ti4-print-card ${card.playable ? 'playable' : 'idle'}`}
+      className={`action-card ${card.playable ? 'playable' : 'idle'}`}
       data-testid={`card-${card.definition.id}`}
     >
       <CardFace id={card.definition.id} count={card.count} />

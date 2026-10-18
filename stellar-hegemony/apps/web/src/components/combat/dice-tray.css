@@ -1,0 +1,292 @@
+.tabletop-volley {
+  align-items: flex-start;
+}
+
+.tabletop-volley > .player-tag {
+  padding-top: 15px;
+}
+
+.dice-tray {
+  display: flex;
+  flex: 1 1 180px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+  padding: 13px 15px;
+  border: 1px solid #627e8b55;
+  border-radius: 11px;
+  background: radial-gradient(ellipse at 50% 0%, #405d682d, transparent 75%), #060d14;
+  box-shadow:
+    inset 0 2px 8px #000b,
+    0 1px 0 #bfd8e21a;
+}
+
+.tabletop-dice {
+  gap: 10px;
+  align-items: center;
+  padding: 3px;
+}
+
+.dice-tray .tabletop-die {
+  position: relative;
+  width: 37px;
+  height: 43px;
+  flex: 0 0 37px;
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 97% 26%, 90% 77%, 50% 100%, 10% 77%, 3% 26%);
+  background:
+    linear-gradient(149deg, #91aabb80 0 25%, transparent 26%),
+    linear-gradient(210deg, #0008 0 26%, transparent 27%),
+    linear-gradient(45deg, #04080d 0 26%, transparent 27%),
+    linear-gradient(155deg, #536675, #1b2c3c 63%, #0d1721);
+  color: #e1eaf2;
+  box-shadow: inset 0 0 14px #0008;
+  filter: drop-shadow(1px 4px 2px #0008);
+  font-size: 17px;
+  line-height: 1;
+  animation: none;
+  transform-origin: center 70%;
+}
+
+.dice-tray .tabletop-die.hit {
+  background:
+    linear-gradient(149deg, #fff8cd90 0 25%, transparent 26%),
+    linear-gradient(210deg, #65400066 0 26%, transparent 27%),
+    linear-gradient(45deg, #442407 0 26%, transparent 27%),
+    linear-gradient(155deg, #ffe9aa, #d2a346 63%, #74501d);
+  color: #201504;
+}
+
+.tabletop-die-face {
+  margin-top: -2px;
+  text-shadow: 0 1px 1px #0008;
+}
+
+.tabletop-die-mark {
+  position: absolute;
+  bottom: 5px;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.dice-tray-result {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  margin-left: auto;
+  min-width: 82px;
+}
+
+.dice-reveal {
+  padding: 3px 6px;
+  border: 1px solid #84c9df66;
+  border-radius: 5px;
+  color: #c6e7f5;
+  background: #1b303f;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.dice-reveal:focus-visible {
+  outline: 2px solid #c2edff;
+  outline-offset: 2px;
+}
+
+.dice-tray[data-rolling='true'] .tabletop-die {
+  animation: tabletop-die-roll 650ms cubic-bezier(0.16, 0.7, 0.25, 1) both;
+  animation-delay: calc(var(--die-order, 0) * 32ms);
+}
+
+.dice-tray[data-rolling='true'] .tabletop-die-face,
+.dice-tray[data-rolling='true'] .tabletop-die-mark {
+  animation: tabletop-die-reveal 650ms step-end both;
+  animation-delay: calc(var(--die-order, 0) * 32ms);
+}
+
+@keyframes tabletop-die-roll {
+  0% {
+    transform: translate(-13px, -12px) rotate(-80deg) scale(0.7);
+    opacity: 0;
+  }
+  28% {
+    transform: translate(3px, -7px) rotate(52deg) scale(1.1);
+    opacity: 1;
+  }
+  55% {
+    transform: translate(-2px, 1px) rotate(-20deg);
+  }
+  78% {
+    transform: translate(1px, -3px) rotate(8deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes tabletop-die-reveal {
+  0% {
+    opacity: 0;
+  }
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.motion-off .dice-tray .tabletop-die,
+.motion-off .dice-tray .tabletop-die-face,
+.motion-off .dice-tray .tabletop-die-mark {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-tray .tabletop-die,
+  .dice-tray .tabletop-die-face,
+  .dice-tray .tabletop-die-mark {
+    animation: none;
+  }
+}
+
+.round-log.sim-dice-report {
+  width: min(660px, calc(100% - 28px));
+  max-height: min(42vh, 360px);
+  overflow-y: auto;
+  border: 1px solid #83b3c440;
+  border-radius: 12px;
+  white-space: normal;
+  z-index: 5;
+}
+
+.sim-dice-report > summary {
+  position: sticky;
+  top: -6px;
+  z-index: 1;
+  padding: 4px 0;
+  background: #0a1324;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.sim-dice-report > summary:focus-visible {
+  outline: 2px solid #c2edff;
+  outline-offset: 2px;
+}
+
+.sim-dice-trays {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.sim-dice-side h4 {
+  margin: 0 0 6px;
+  color: #c3dde7;
+  font-size: 11px;
+}
+
+.sim-battle:has(.battle-result) .sim-dice-report {
+  bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .sim-dice-trays {
+    grid-template-columns: 1fr;
+  }
+  .round-log.sim-dice-report {
+    bottom: 150px;
+    max-height: 26vh;
+    padding: 6px 10px;
+  }
+
+  .sim-battle .battle-banner {
+    top: 8px;
+  }
+
+  .sim-battle .banner-plate {
+    padding: 7px 22px;
+  }
+
+  .sim-battle .side-card {
+    top: 112px;
+    width: calc(50% - 16px);
+    max-width: none;
+    box-sizing: border-box;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .sim-battle .side-card.rival {
+    left: 10px;
+  }
+  .sim-battle .side-card.you {
+    right: 10px;
+  }
+  .sim-battle .side-card h3 {
+    font-size: 12px;
+  }
+  .sim-battle .side-role {
+    font-size: 8px;
+    letter-spacing: 0.06em;
+  }
+  .sim-battle .side-fleet {
+    font-size: 10px;
+  }
+  .sim-battle .side-card > img,
+  .sim-battle .side-card > svg {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+  }
+
+  .sim-battle .battle-controls {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    transform: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .sim-battle .tactic-hand {
+    min-width: 0;
+    overflow-x: auto;
+    padding: 15px 2px 3px;
+  }
+
+  .sim-battle .tactic-card {
+    flex: 0 0 100px;
+    min-height: 108px;
+    padding: 9px;
+  }
+
+  .sim-battle .tactic-card strong {
+    font-size: 10px;
+  }
+  .sim-battle .tactic-card span {
+    font-size: 10px;
+  }
+  .sim-battle .fire-button {
+    padding: 12px 13px;
+    font-size: 13px;
+  }
+  .sim-battle .battle-result {
+    width: calc(100% - 54px);
+    bottom: 68px;
+    padding: 14px;
+  }
+  .sim-battle .battle-result h2 {
+    font-size: 26px;
+  }
+  .sim-battle .battle-result .sim-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

@@ -7,6 +7,8 @@ export type SoundCue =
   | 'explosion'
   | 'capture'
   | 'produce'
+  | 'token'
+  | 'resource'
   | 'card'
   | 'research'
   | 'score'
@@ -20,6 +22,7 @@ const CUES: Readonly<Partial<Record<GameEvent['type'], SoundCue>>> = {
   SystemActivated: 'activate',
   ShipsMoved: 'move',
   SpaceCannonFired: 'dice',
+  SpaceCannonDefenseFired: 'dice',
   AntiFighterBarrageFired: 'dice',
   CombatRoundRolled: 'dice',
   BombardmentRolled: 'dice',
@@ -29,6 +32,14 @@ const CUES: Readonly<Partial<Record<GameEvent['type'], SoundCue>>> = {
   UnitsProduced: 'produce',
   UnitsDeployed: 'produce',
   StrategyCardPicked: 'card',
+  ActionCardsDrawn: 'card',
+  ActionCardsDiscarded: 'card',
+  ActionDeckReshuffled: 'card',
+  SecretObjectiveDrawn: 'card',
+  SecretObjectivesDealt: 'card',
+  SecretObjectivesKept: 'card',
+  AgendaRevealed: 'card',
+  PublicObjectiveRevealed: 'card',
   ActionCardPlayed: 'card',
   PlanetExplored: 'card',
   FrontierExplored: 'card',
@@ -37,7 +48,20 @@ const CUES: Readonly<Partial<Record<GameEvent['type'], SoundCue>>> = {
   LegendaryAbilityUsed: 'card',
   LeaderUsed: 'card',
   LeaderUnlocked: 'research',
-  TradeGoodsCacheCollected: 'produce',
+  TradeGoodsCacheCollected: 'resource',
+  TradeGoodsSpent: 'resource',
+  TradeGoodsGained: 'resource',
+  CommoditiesGained: 'resource',
+  CommoditiesReplenished: 'resource',
+  PlanetsExhausted: 'card',
+  PlanetsReadied: 'card',
+  CommandTokensGained: 'token',
+  CommandTokensLost: 'token',
+  CommandTokensPlaced: 'token',
+  CommandTokenReturned: 'token',
+  CommandTokensRedistributed: 'token',
+  CommandTokensAllocated: 'token',
+  CommandTokensCleared: 'token',
   TechnologyResearched: 'research',
   ObjectiveScored: 'score',
   VictoryPointsGained: 'score',

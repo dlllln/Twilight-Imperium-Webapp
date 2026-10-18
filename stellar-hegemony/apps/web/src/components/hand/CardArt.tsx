@@ -6,7 +6,7 @@ import {
   strategyArtwork,
   type CardArtworkSource,
 } from '../../artwork/cards.ts';
-import { Medal } from 'lucide-react';
+import { Crosshair, LogOut, Medal } from 'lucide-react';
 import { leaderArtwork } from '../../artwork/leaders.ts';
 import { type HandEntry, isTable, type TableEntry } from '../../hand/hand-model.ts';
 import { CardArtwork } from '../cards/CardArtwork.tsx';
@@ -28,8 +28,7 @@ function sourceOf(entry: HandEntry): CardArtworkSource | undefined {
   if (isTable(entry)) return tableArtwork(entry);
   if (entry.kind === 'pick' || entry.kind === 'strategic')
     return strategyArtwork(entry.card.mechanic);
-  if (entry.kind === 'tactical') return strategyArtwork('warfare');
-  if (entry.kind === 'pass') return strategyArtwork('commandTokens');
+  if (entry.kind === 'tactical' || entry.kind === 'pass') return undefined;
   return ACTION_BACK;
 }
 
@@ -43,10 +42,11 @@ function shapeOf(entry: HandEntry): string {
 /** Original TI4 strategy emblems or the action deck's printed back emblem. */
 export function CardArt({ entry }: { readonly entry: HandEntry }) {
   const artwork = sourceOf(entry);
+  const Icon = entry.kind === 'tactical' ? Crosshair : entry.kind === 'pass' ? LogOut : Medal;
   return (
     <span className="hand-art" aria-hidden="true">
       {artwork === undefined ? (
-        <Medal />
+        <Icon />
       ) : (
         <CardArtwork artwork={artwork} className={shapeOf(entry)} />
       )}

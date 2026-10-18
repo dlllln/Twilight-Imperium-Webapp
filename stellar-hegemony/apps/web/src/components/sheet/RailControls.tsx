@@ -43,7 +43,7 @@ export function RailControls({ pool, table }: RailProps): ReactElement | null {
     </button>
   );
   return (
-    <span className="rail-controls" role="group">
+    <span className="rail-controls" role="group" aria-label={t(pool)}>
       {button('−', pool, 'loose')}
       {button('+', 'loose', pool)}
     </span>

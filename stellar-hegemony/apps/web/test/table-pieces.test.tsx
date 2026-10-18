@@ -91,6 +91,7 @@ describe('Kommandomarker als Spielsteine am Pult', () => {
     expect(screen.getByRole('group', { name: 'Neue Marker: 3' })).toBeTruthy();
     expect(screen.getAllByRole('button', { name: /^Flotte [+−]$/ })).toHaveLength(2);
     expect(screen.getAllByRole('button', { name: /^Strategie [+−]$/ })).toHaveLength(2);
+    expect(screen.getByRole('group', { name: 'Flotte' })).toBeTruthy();
   });
 
   it('Enter auf einem Marker nimmt ihn auf, ein Klick auf eine Leiste legt ihn ab', () => {
@@ -113,6 +114,44 @@ describe('Kommandomarker als Spielsteine am Pult', () => {
     fireEvent.keyDown(tray('Strategie: 2'), { key: 'Enter' });
     expect(tray('Strategie: 3')).toBeTruthy();
     expect(useGameStore.getState().error).toBeNull();
+    // Die Schale ist leer, ihr Stück verschwunden: der Fokus landet auf dem Stück am Ziel.
+    expect(document.activeElement?.getAttribute('data-piece')).toBe('pool:strategy');
+  });
+
+  it('per Tastatur aufgenommen springt der Fokus auf das erste Ziel, Tab kreist nur durch erlaubte Ziele', () => {
+    tokenStep();
+    render(<Live />);
+    const focused = () => document.activeElement as Element;
+    piece('Neue Marker').focus();
+    fireEvent.click(piece('Neue Marker'));
+    expect(focused()).toBe(tray('Taktik: 3'));
+    expect(tray('Taktik: 3').getAttribute('role')).toBe('button');
+    expect(tray('Taktik: 3').getAttribute('aria-describedby')).toBe('carry-place-here');
+    expect(document.getElementById('carry-place-here')?.textContent).toBe('Hierher legen');
+    fireEvent.keyDown(focused(), { key: 'Tab' });
+    expect(focused()).toBe(tray('Flotte: 3'));
+    fireEvent.keyDown(focused(), { key: 'Tab' });
+    fireEvent.keyDown(focused(), { key: 'Tab' });
+    expect(focused()).toBe(tray('Taktik: 3'));
+    fireEvent.keyDown(focused(), { key: 'Tab', shiftKey: true });
+    expect(focused()).toBe(tray('Strategie: 2'));
+    fireEvent.keyDown(focused(), { key: 'Enter' });
+    expect(focused()).toBe(piece('Neue Marker'));
+    fireEvent.click(piece('Neue Marker'));
+    fireEvent.keyDown(focused(), { key: 'Escape' });
+    expect(focused()).toBe(piece('Neue Marker'));
+    expect(tray('Taktik: 3').hasAttribute('role')).toBe(false);
+  });
+
+  it('ein neuer Spielstand legt das getragene Stück zurück; die Leisten nehmen nichts mehr an', () => {
+    tokenStep();
+    render(<Live />);
+    fireEvent.click(piece('Neue Marker'), { detail: 1 });
+    expect(tray('Flotte: 3').getAttribute('data-target-state')).toBe('legal');
+    act(() => useGameStore.setState({ game: { ...game(), version: game().version + 1 } }));
+    expect(useCarryStore.getState().piece).toBeNull();
+    expect(useCarryStore.getState().news?.kind).toBe('putBack');
+    expect(tray('Flotte: 3').hasAttribute('tabindex')).toBe(false);
   });
 
   it('Escape legt den Marker zurück, ohne die Kamera zurückzufahren', () => {

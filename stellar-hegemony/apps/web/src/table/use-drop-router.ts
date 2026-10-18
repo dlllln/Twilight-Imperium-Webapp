@@ -1,5 +1,6 @@
 import type { GameCommand, GameState, PlayerId } from '@stellar/domain';
 import { useGameStore } from '../game-store.ts';
+import { useSettingsStore } from '../settings-store.ts';
 import { canActivateNow } from './legal-systems.ts';
 import type { TableAction, TableDraft, TableSpecId } from './table-specs.ts';
 import type { DropHandler, TargetRef } from './target-ref.ts';
@@ -44,16 +45,25 @@ export function dropIntent(input: DropInput, piece: TargetRef, target: TargetRef
 const actorOf = (decision: TableDecision | null): PlayerId | null =>
   decision === null || decision.route.kind === 'waiting' ? null : decision.route.actor;
 
-/** Führt das Ablegen aus: Command senden oder den Entwurf fortschreiben. */
+/** Ein Command geht sofort hinaus; wie ein Klick auf die Karte erledigt er den Erstnutzer-Hinweis. */
+function sendNow(command: GameCommand): void {
+  useSettingsStore.getState().markHintSeen();
+  useGameStore.getState().send(command);
+}
+
+/**
+ * Führt das Ablegen aus: Command senden oder den Entwurf fortschreiben. Liefert `false`, wenn
+ * das Ablegen nichts bewirkt; dann springt das Stück zurück, statt als abgelegt zu gelten.
+ */
 export function useDropRouter(game: GameState): DropHandler {
   const decision = useTableDecision(game);
-  const send = useGameStore((state) => state.send);
   const actor = actorOf(decision);
   const choosing = useChosenCard(actor) !== null;
   const input = { game, actor, choosing, specId: decision?.specId ?? null };
   return (piece, target) => {
     const intent = dropIntent({ ...input, draft: decision?.draft ?? null }, piece, target);
-    if (intent?.kind === 'send') send(intent.command);
+    if (intent?.kind === 'send') sendNow(intent.command);
     else if (intent?.kind === 'act') decision?.act(intent.action);
+    return intent !== null;
   };
 }

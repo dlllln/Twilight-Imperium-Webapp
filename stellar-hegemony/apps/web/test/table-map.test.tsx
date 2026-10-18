@@ -37,7 +37,7 @@ const BAND = { top: 0, bottom: 2000 };
 
 beforeEach(() => {
   useGalaxyStore.setState({ language: 'de' });
-  useSettingsStore.setState({ animations: false });
+  useSettingsStore.setState({ animations: false, tableView: true });
   const empty = { piece: null, legal: new Set<string>(), over: null, point: null, mode: null };
   useCarryStore.setState({ ...empty, news: null });
   useDraftStore.getState().clear();
@@ -195,5 +195,37 @@ describe('Systeme auf der Karte als Ablageziele', () => {
     expect(flyTo).not.toHaveBeenCalled();
     fireEvent.click(hexOf(system));
     expect(flyTo).toHaveBeenCalledTimes(1);
+  });
+
+  it('klassische Ansicht: während der Kriegsführung wählt ein Klick auf ein System mit eigenem Marker das System, nichts gilt als gewählt', () => {
+    useSettingsStore.setState({ tableView: false });
+    const me = actionPhase(warfareWithToken);
+    const marked = markedOf(game());
+    render(<Table flyTo={vi.fn()} />);
+    act(() => useHandStore.getState().choose({ player: me, card: WARFARE }));
+    expect(hexOf(marked).hasAttribute('data-target-state')).toBe(false);
+    fireEvent.click(hexOf(marked));
+    expect(useGameStore.getState().selected).toBe(marked);
+    expect(useDraftStore.getState().draft).toBeNull();
+    expect(hexOf(marked).getAttribute('class')).not.toContain('target-chosen');
+  });
+
+  it('getragen hören Bildschirmleser an erlaubten Systemen „Hierher legen“, an anderen nicht', () => {
+    const me = actionPhase((state, player) => withOwnToken(state, player, markedOf(state)));
+    const system = String(activatableSystems(game(), me)[0]);
+    render(<Table flyTo={vi.fn()} />);
+    expect(hexOf(system).hasAttribute('aria-describedby')).toBe(false);
+    fireEvent.click(piece(), { detail: 1 });
+    expect(hexOf(system).getAttribute('aria-describedby')).toBe('carry-place-here');
+    expect(hexOf(markedOf(game())).hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('Kriegsführung: das gewählte System ist für Bildschirmleser das aktuelle', () => {
+    const me = actionPhase(warfareWithToken);
+    const marked = markedOf(game());
+    render(<Table flyTo={vi.fn()} />);
+    act(() => useHandStore.getState().choose({ player: me, card: WARFARE }));
+    fireEvent.click(hexOf(marked));
+    expect(hexOf(marked).getAttribute('aria-current')).toBe('true');
   });
 });

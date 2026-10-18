@@ -1,11 +1,12 @@
-import { type KeyboardEvent, type PointerEvent, useRef } from 'react';
-import { type Point, useCarryStore } from './carry-store.ts';
+import { type KeyboardEvent, type MouseEvent, type PointerEvent, useRef } from 'react';
+import { type CarryMode, type Point, useCarryStore } from './carry-store.ts';
 import { dropTargetAt } from './drop-target.ts';
 import { type DropHandler, type TargetRef, targetKey } from './target-ref.ts';
 
 /*
  * Ein Stück, das sich aufnehmen lässt: Ziehen ab fünf Pixeln trägt es mit dem Zeiger, ein Klick
- * (oder Enter/Leertaste) nimmt es auf und legt es zurück, Escape legt es zurück.
+ * (oder Enter/Leertaste) nimmt es auf und legt es zurück, Escape legt es zurück. Wer es per Taste
+ * aufnimmt, dessen Fokus wandert zu den Zielen (siehe `carry-focus.ts`).
  */
 
 /** Ab dieser Strecke wird aus einem Druck ein Ziehen. */
@@ -33,7 +34,7 @@ export interface DragSourceProps {
   readonly onPointerMove: (event: PointerEvent<HTMLElement>) => void;
   readonly onPointerUp: (event: PointerEvent<HTMLElement>) => void;
   readonly onPointerCancel: () => void;
-  readonly onClick: () => void;
+  readonly onClick: (event: MouseEvent<HTMLElement>) => void;
   readonly onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
 }
 
@@ -64,6 +65,12 @@ function moved(source: Source, event: PointerEvent<HTMLElement>): void {
   useCarryStore.getState().track(point, over === null ? null : targetKey(over));
 }
 
+/** Ablegen nur auf einem erlaubten Ziel, und nur wenn es dort etwas bewirkt. */
+function dropOn(source: Source, target: TargetRef): boolean {
+  const { legal } = useCarryStore.getState();
+  return legal.has(targetKey(target)) && source.onDrop(source.piece, target);
+}
+
 /** Loslassen über einem erlaubten Ziel legt ab, sonst springt das Stück zurück. */
 function released(source: Source, event: PointerEvent<HTMLElement>): void {
   const { gesture } = source;
@@ -74,12 +81,8 @@ function released(source: Source, event: PointerEvent<HTMLElement>): void {
   gesture.swallowClick = true;
   const carry = useCarryStore.getState();
   const target = dropTargetAt(pointOf(event));
-  if (target === null || !carry.legal.has(targetKey(target))) {
-    carry.putDown();
-    return;
-  }
-  source.onDrop(source.piece, target);
-  carry.place(target);
+  if (target !== null && dropOn(source, target)) carry.place(target);
+  else carry.putDown();
 }
 
 function cancelled(gesture: Gesture): void {
@@ -89,7 +92,7 @@ function cancelled(gesture: Gesture): void {
 }
 
 /** Klick: aufnehmen, oder zurücklegen, wenn genau dieses Stück getragen wird. */
-function clicked(source: Source): void {
+function clicked(source: Source, mode: CarryMode): void {
   if (source.gesture.swallowClick) {
     source.gesture.swallowClick = false;
     return;
@@ -97,8 +100,12 @@ function clicked(source: Source): void {
   const carry = useCarryStore.getState();
   const mine = carry.piece !== null && targetKey(carry.piece) === targetKey(source.piece);
   if (mine) carry.putDown();
-  else carry.pickUp(source.piece, source.legal(), 'sticky');
+  else carry.pickUp(source.piece, source.legal(), mode);
 }
+
+/** Ein Klick ohne Zeiger (`detail` 0) kommt von Enter oder Leertaste: der Fokus soll mitwandern. */
+const clickMode = (event: MouseEvent<HTMLElement>): CarryMode =>
+  event.detail === 0 ? 'keyboard' : 'sticky';
 
 /** Knöpfe lösen Enter und Leertaste selbst als Klick aus; andere Elemente brauchen Hilfe. */
 function keyed(source: Source, event: KeyboardEvent<HTMLElement>): void {
@@ -109,7 +116,7 @@ function keyed(source: Source, event: KeyboardEvent<HTMLElement>): void {
   const activates = event.key === 'Enter' || event.key === ' ';
   if (!activates || event.currentTarget instanceof HTMLButtonElement) return;
   event.preventDefault();
-  clicked(source);
+  clicked(source, 'keyboard');
 }
 
 function sourceProps(source: Source, carried: boolean): DragSourceProps {
@@ -122,7 +129,7 @@ function sourceProps(source: Source, carried: boolean): DragSourceProps {
     onPointerMove: (event) => moved(source, event),
     onPointerUp: (event) => released(source, event),
     onPointerCancel: () => cancelled(gesture),
-    onClick: () => clicked(source),
+    onClick: (event) => clicked(source, clickMode(event)),
     onKeyDown: (event) => keyed(source, event),
   };
 }

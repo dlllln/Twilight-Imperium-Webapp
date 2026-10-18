@@ -1,8 +1,8 @@
-import type { GameState } from '@stellar/domain';
+import { findPlayer, type GameState } from '@stellar/domain';
 import { AlertTriangle, Bell, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { useGameStore } from '../../game-store.ts';
+import { useGameStore, useHumanActor } from '../../game-store.ts';
 import type { HistoryEntry } from '../../history/turn-history.ts';
 import { errorText } from '../../i18n.ts';
 import { freshEntries, NOTICE_MS, withFresh } from '../../notices/fresh-notices.ts';
@@ -10,6 +10,7 @@ import { useSettingsStore } from '../../settings-store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { TurnPanel, useTurnPanelKey } from '../game/TurnPanel.tsx';
 import { HistoryText } from '../history/HistoryPanel.tsx';
+import { PromptAnnouncer } from '../table/PromptAnnouncer.tsx';
 import { TablePrompt } from '../table/TablePrompt.tsx';
 
 /** Hereingleiten von rechts, wie eine Benachrichtigung; Verschwinden nach rechts. */
@@ -102,18 +103,30 @@ function ErrorNotice(): ReactElement | null {
   );
 }
 
+/** Ob die eigene private Kartenwahl (geheime Aufträge) gerade auf dem Kartentisch liegt. */
+function useCardTable(game: GameState): boolean {
+  const actor = useHumanActor(game);
+  return actor !== null && findPlayer(game, actor)?.secretChoice != null;
+}
+
 /**
  * Unten rechts, über der Phasenanzeige: kurze Meldungen, was die anderen gerade getan haben.
  * In der klassischen Ansicht ploppt dort auch die offene Entscheidung wie eine Benachrichtigung
- * auf; in der Tischansicht steht sie stattdessen als Ansage über dem Pult, außerhalb der Liste.
+ * auf; in der Tischansicht steht sie stattdessen als Ansage über dem Pult, außerhalb der Liste,
+ * und eine stehende Live-Zeile sagt jeden Wechsel für Bildschirmleser an.
+ * Private Kartenwahlen liegen in beiden Ansichten separat auf dem zentralen Kartentisch und
+ * werden weder als Benachrichtigung noch als Ansage eingeengt.
  */
 export function NoticeStack({ game }: { readonly game: GameState }): ReactElement {
   const decision = useTurnPanelKey(game);
   const table = useSettingsStore((state) => state.tableView);
+  const cardTable = useCardTable(game);
+  const open = decision !== null && !cardTable;
   const pop = usePop();
   const { shown, dismiss } = useFreshNotices();
   return (
     <>
+      {cardTable && <TurnPanel game={game} />}
       <div className="notice-stack" aria-live="polite">
         <AnimatePresence initial={false}>
           {shown.map((entry) => (
@@ -122,13 +135,14 @@ export function NoticeStack({ game }: { readonly game: GameState }): ReactElemen
           <ErrorNotice key="error" />
         </AnimatePresence>
         {/* Die alte Entscheidung verschwindet sofort, damit nie zwei Formulare gleichzeitig offen sind. */}
-        {!table && decision !== null && (
+        {!table && open && (
           <motion.div {...pop} key={decision} className="notice decision">
             <TurnPanel game={game} />
           </motion.div>
         )}
       </div>
-      {table && decision !== null && <TablePrompt key={decision} game={game} />}
+      {table && open && <TablePrompt key={decision} game={game} />}
+      {table && <PromptAnnouncer game={game} open={open} />}
     </>
   );
 }

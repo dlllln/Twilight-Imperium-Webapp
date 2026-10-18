@@ -22,8 +22,9 @@ test('Kommandopult vor dem eigenen Platz; der Schalter wechselt zur klassischen 
 }) => {
   const [page] = await openTable(browser, 1);
   if (page === undefined) throw new Error('kein Gerät');
-  // Die Entscheidung steht als Ansage über dem Pult, nicht als schwebende Benachrichtigung.
-  await expect(page.getByTestId('decision').locator('.secret-choice')).toHaveCount(1);
+  // Die geheimen Aufträge liegen auf dem privaten Kartentisch: weder Ansage noch Benachrichtigung.
+  await expect(page.getByRole('dialog', { name: 'Geheime Aufträge wählen' })).toBeVisible();
+  await expect(page.getByTestId('decision').locator('.secret-choice')).toHaveCount(0);
   await expect(page.locator('.notice.decision')).toHaveCount(0);
   await keepSecrets([page]);
   const sheet = page.getByRole('region', { name: 'Dein Kommandopult' });

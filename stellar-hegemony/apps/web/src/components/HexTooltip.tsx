@@ -1,6 +1,6 @@
 import { unitName } from '@stellar/content';
 import { unitTypeId } from '@stellar/domain';
-import type { ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { useGameStore } from '../game-store.ts';
 import type { MessageKey } from '../i18n.ts';
 import type { SceneHex, ScenePlanet, UnitCount } from '../render/scene-model.ts';
@@ -143,7 +143,11 @@ function placement(x: number, y: number) {
   const height = window.innerHeight || Number.POSITIVE_INFINITY;
   const left = x + OFFSET + ESTIMATE.width > width ? x - OFFSET - ESTIMATE.width : x + OFFSET;
   const top = y + OFFSET + ESTIMATE.height > height ? y - OFFSET - ESTIMATE.height : y + OFFSET;
-  return { left: Math.max(0, left), top: Math.max(0, top) };
+  return {
+    left: 0,
+    top: 0,
+    transform: `translate(${String(Math.max(0, left))}px, ${String(Math.max(0, top))}px)`,
+  };
 }
 
 interface HexTooltipProps {
@@ -152,13 +156,13 @@ interface HexTooltipProps {
   readonly y: number;
 }
 
-/** Knapper Hinweis zum Feld unter dem Zeiger; die Bedienhilfe nur, bis man einmal geklickt hat. */
-export function HexTooltip({ hex, x, y }: HexTooltipProps): ReactElement {
+/** Pointer movement changes only the wrapper's transform, not the planet and unit content. */
+const TooltipContent = memo(function TooltipContent({ hex }: Pick<HexTooltipProps, 'hex'>) {
   const t = useT();
   const playing = useGameStore((state) => state.game !== null);
   const hintSeen = useSettingsStore((state) => state.hintSeen);
   return (
-    <div className="tooltip glass" role="tooltip" style={placement(x, y)}>
+    <>
       {hex.kind === 'homeSlot' ? (
         <strong>
           {t('homeSlot')} · {t('seat')} {hex.seat}
@@ -171,6 +175,15 @@ export function HexTooltip({ hex, x, y }: HexTooltipProps): ReactElement {
           )}
         </>
       )}
+    </>
+  );
+});
+
+/** Knapper Hinweis zum Feld unter dem Zeiger; die Bedienhilfe nur, bis man einmal geklickt hat. */
+export function HexTooltip({ hex, x, y }: HexTooltipProps): ReactElement {
+  return (
+    <div className="tooltip glass" role="tooltip" style={placement(x, y)}>
+      <TooltipContent hex={hex} />
     </div>
   );
 }

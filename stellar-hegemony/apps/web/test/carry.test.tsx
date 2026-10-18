@@ -63,9 +63,9 @@ afterEach(cleanup);
 
 describe('Stücke aufnehmen und ablegen', () => {
   it('ein Klick nimmt den Marker auf, ein Klick auf ein erlaubtes Ziel legt ihn ab', () => {
-    const onDrop = vi.fn<DropHandler>();
+    const onDrop = vi.fn<DropHandler>(() => true);
     render(<Table onDrop={onDrop} />);
-    fireEvent.click(piece());
+    fireEvent.click(piece(), { detail: 1 });
     expect(piece().getAttribute('aria-pressed')).toBe('true');
     expect(useCarryStore.getState().mode).toBe('sticky');
     expect(spot(ALLOWED).getAttribute('data-target-state')).toBe('legal');
@@ -78,7 +78,7 @@ describe('Stücke aufnehmen und ablegen', () => {
   });
 
   it('ein nicht erlaubtes Ziel legt den Marker zurück, nichts wird gesendet', () => {
-    const onDrop = vi.fn<DropHandler>();
+    const onDrop = vi.fn<DropHandler>(() => true);
     render(<Table onDrop={onDrop} />);
     fireEvent.click(spot(REFUSED));
     expect(useCarryStore.getState().news).toBeNull();
@@ -93,7 +93,7 @@ describe('Stücke aufnehmen und ablegen', () => {
     const listener = vi.fn();
     window.addEventListener('keydown', listener);
     document.addEventListener('keydown', listener, true);
-    render(<Table onDrop={vi.fn<DropHandler>()} />);
+    render(<Table onDrop={vi.fn<DropHandler>(() => true)} />);
     fireEvent.click(piece());
     fireEvent.keyDown(piece(), { key: 'Escape' });
     expect(carried()).toBeNull();
@@ -105,7 +105,7 @@ describe('Stücke aufnehmen und ablegen', () => {
   });
 
   it('Ziehen über fünf Pixel trägt den Marker, Loslassen über einem Ziel legt ihn ab', () => {
-    const onDrop = vi.fn<DropHandler>();
+    const onDrop = vi.fn<DropHandler>(() => true);
     render(<Table onDrop={onDrop} />);
     const under = () => [spot(ALLOWED)];
     Object.defineProperty(document, 'elementsFromPoint', { value: under, configurable: true });
@@ -119,5 +119,22 @@ describe('Stücke aufnehmen und ablegen', () => {
     expect(onDrop).toHaveBeenCalledWith(TACTIC, ALLOWED);
     expect(carried()).toBeNull();
     expect(useCarryStore.getState().news?.kind).toBe('placed');
+  });
+
+  it('Enter auf dem Stück (Klick ohne Zeiger) trägt es per Tastatur', () => {
+    render(<Table onDrop={vi.fn<DropHandler>(() => true)} />);
+    fireEvent.click(piece(), { detail: 0 });
+    expect(useCarryStore.getState().mode).toBe('keyboard');
+    expect(useCarryStore.getState().news).toMatchObject({ kind: 'carried', mode: 'keyboard' });
+  });
+
+  it('bewirkt das Ablegen nichts, springt das Stück zurück und gilt nicht als abgelegt', () => {
+    const onDrop = vi.fn<DropHandler>(() => false);
+    render(<Table onDrop={onDrop} />);
+    fireEvent.click(piece(), { detail: 1 });
+    fireEvent.click(spot(ALLOWED));
+    expect(onDrop).toHaveBeenCalledWith(TACTIC, ALLOWED);
+    expect(carried()).toBeNull();
+    expect(useCarryStore.getState().news).toMatchObject({ kind: 'putBack', ref: TACTIC });
   });
 });

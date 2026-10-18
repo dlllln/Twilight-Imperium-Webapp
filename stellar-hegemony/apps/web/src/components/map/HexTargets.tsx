@@ -1,5 +1,5 @@
 import { findPlayer, type GameState } from '@stellar/domain';
-import { type CSSProperties, forwardRef, type KeyboardEvent, type ReactElement } from 'react';
+import { type CSSProperties, forwardRef, type KeyboardEvent, memo, type ReactElement } from 'react';
 import { useGameStore, useViewer } from '../../game-store.ts';
 import { type Bounds, hexToPixel, toSvgPoints } from '../../hex-geometry.ts';
 import { type BoardView, projectedCorners } from '../../render/board-view.ts';
@@ -22,6 +22,9 @@ import { SystemActions } from '../hud/SystemActions.tsx';
  * jedes System ist zugleich Ablageziel für getragene Stücke (Taktikmarker, Kriegsführung).
  */
 
+/** Wählt ein Feld; mit `point` zeigt man es den Mitspielern (Umschalttaste). */
+export type PickHandler = (hex: SceneHex, point?: boolean) => void;
+
 export interface Band {
   readonly top: number;
   readonly bottom: number;
@@ -32,7 +35,7 @@ interface HexProps {
   readonly view: BoardView;
   readonly hovered: boolean;
   readonly onHover: (key: string | null) => void;
-  readonly onPick: (hex: SceneHex) => void;
+  readonly onPick: PickHandler;
 }
 
 interface FieldProps extends HexProps {
@@ -53,9 +56,9 @@ function classOf(hex: SceneHex, hovered: boolean, target: TargetView | null): st
   return [base, ...marks.filter((mark) => mark !== '')].join(' ');
 }
 
-/** Enter und Leertaste wählen das Feld wie ein Klick. */
-const enterToPick = (hex: SceneHex, onPick: (hex: SceneHex) => void) => (event: KeyboardEvent) => {
-  if (event.key === 'Enter' || event.key === ' ') onPick(hex);
+/** Enter und Leertaste wählen das Feld wie ein Klick; mit Umschalttaste zeigen sie es. */
+const enterToPick = (hex: SceneHex, onPick: PickHandler) => (event: KeyboardEvent) => {
+  if (event.key === 'Enter' || event.key === ' ') onPick(hex, event.shiftKey);
 };
 
 /** Kennzeichen, auf die sich E2E-Tests, Tests und Screenreader verlassen. */
@@ -85,7 +88,7 @@ function HexPolygon(props: HexProps & { readonly target: TargetView | null }): R
       onPointerEnter={() => onHover(hex.key)}
       onPointerLeave={() => onHover(null)}
       onFocus={() => onHover(hex.key)}
-      onClick={onClick ?? (() => onPick(hex))}
+      onClick={onClick ?? ((event) => onPick(hex, event.shiftKey))}
       onKeyDown={onKeyDown ?? enterToPick(hex, onPick)}
     />
   );
@@ -110,11 +113,12 @@ interface FieldsProps {
   readonly hexes: readonly SceneHex[];
   readonly view: BoardView;
   readonly router: DropHandler;
-  readonly onPick: (hex: SceneHex) => void;
+  readonly onPick: PickHandler;
 }
 
 function HexFields({ game, hexes, view, router, onPick }: FieldsProps): ReactElement {
-  const { hovered, hover } = useGalaxyStore();
+  const hovered = useGalaxyStore((state) => state.hovered);
+  const hover = useGalaxyStore((state) => state.hover);
   const targets = useTableTargets(game);
   return (
     <>
@@ -130,12 +134,19 @@ function HexFields({ game, hexes, view, router, onPick }: FieldsProps): ReactEle
   );
 }
 
-const NO_DROP: DropHandler = () => undefined;
+const NO_DROP: DropHandler = () => false;
 
-/** In der Partie legt der Router getragene Stücke ab; vor der Partie gibt es nichts zu tragen. */
-function RoutedFields(props: Omit<FieldsProps, 'router'> & { readonly game: GameState }) {
+/** Vor der Partie gibt es nichts zu tragen; `memo`: Schwenken und Zoomen zeichnen die Felder nicht neu. */
+const PlainFields = memo(function PlainFields(props: Omit<FieldsProps, 'router' | 'game'>) {
+  return <HexFields {...props} game={null} router={NO_DROP} />;
+});
+
+/** In der Partie legt der Router getragene Stücke ab; `memo` wie bei `PlainFields`. */
+const RoutedFields = memo(function RoutedFields(
+  props: Omit<FieldsProps, 'router'> & { readonly game: GameState },
+) {
   return <HexFields {...props} router={useDropRouter(props.game)} />;
-}
+});
 
 export interface TargetsProps {
   readonly hexes: readonly SceneHex[];
@@ -143,7 +154,7 @@ export interface TargetsProps {
   readonly band: Band;
   readonly viewport: Viewport;
   readonly view: BoardView;
-  readonly onPick: (hex: SceneHex) => void;
+  readonly onPick: PickHandler;
   readonly onView: (hex: SceneHex) => void;
 }
 
@@ -195,11 +206,7 @@ export const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTa
   return (
     <svg ref={svg} viewBox={viewBoxOf(bounds)} aria-label="galaxy" style={seat}>
       <g transform={`translate(${String(panX)} ${String(panY)}) scale(${String(zoom)})`}>
-        {game === null ? (
-          <HexFields {...fields} game={null} router={NO_DROP} />
-        ) : (
-          <RoutedFields {...fields} game={game} />
-        )}
+        {game === null ? <PlainFields {...fields} /> : <RoutedFields {...fields} game={game} />}
       </g>
       <ChosenActions {...{ hexes, bounds, band, viewport, view, onView }} />
     </svg>

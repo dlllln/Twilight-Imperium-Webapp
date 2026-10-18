@@ -3,12 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { handEntries } from '../src/hand/hand-model.ts';
 import { systemActions } from '../src/hud/system-actions.ts';
 import { tryCommand } from '../src/rules-preview.ts';
+import { gameScene } from '../src/render/scene-model.ts';
+import { content } from '../src/store.ts';
 import { legalFor } from '../src/table/carry-rules.ts';
+import { liftedTokenOf, withoutLifted } from '../src/table/lifted-token.ts';
 import { activatableSystems, canActivateNow } from '../src/table/legal-systems.ts';
 import { poolDraft } from '../src/table/pool-draft.ts';
 import type { TokenPlan } from '../src/table/table-specs.ts';
 import { poolTarget, systemTarget } from '../src/table/target-ref.ts';
 import { dropIntent } from '../src/table/use-drop-router.ts';
+import type { TableDecision } from '../src/table/use-table-decision.ts';
 import { pickAll, started } from './game-helpers.ts';
 
 const activeOf = (game: GameState): PlayerId => game.actionPhase?.active as PlayerId;
@@ -103,5 +107,22 @@ describe('Regeln am Tisch', () => {
     const war = { ...route, specId: 'warfare' as const };
     const pick = { kind: 'system', system: '18' };
     expect(dropIntent(war, TACTIC, systemTarget('18'))).toEqual({ kind: 'act', action: pick });
+  });
+
+  it('Kriegsführung: der aufgenommene Marker fehlt schon vor dem Absenden auf der Karte', () => {
+    const game = markedGame();
+    const actor = activeOf(game);
+    const first = Object.keys(game.systems)[0] ?? '';
+    const tokensOn = (state: GameState) =>
+      gameScene(state, content, 'de').find((hex) => hex.systemId === first)?.tokens;
+    const decision = (specId: string | null, system: string | null) =>
+      ({ specId, draft: { system }, route: { actor } }) as unknown as TableDecision;
+    const lifted = liftedTokenOf(decision('warfare', first));
+    expect(lifted).toEqual({ system: first, player: actor });
+    expect(liftedTokenOf(decision('warfare', null))).toBeNull();
+    expect(liftedTokenOf(decision('tokens', first))).toBeNull();
+    expect(tokensOn(game)).toHaveLength(1);
+    expect(tokensOn(withoutLifted(game, lifted))).toHaveLength(0);
+    expect(withoutLifted(game, null)).toBe(game);
   });
 });

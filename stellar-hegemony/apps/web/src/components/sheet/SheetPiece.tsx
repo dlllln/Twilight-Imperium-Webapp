@@ -26,9 +26,16 @@ export function useDraggedZone(): DraftZone | null {
   );
 }
 
-/** Ein Feld, auf das das getragene Stück darf, ist per Tab erreichbar (Enter legt dort ab). */
-export const dropFocus = (target: TargetView): 0 | undefined =>
-  target.state === 'legal' && target.props.onKeyDown !== undefined ? 0 : undefined;
+/**
+ * Ein Feld, auf das das getragene Stück darf, ist per Tab erreichbar (Enter legt dort ab) und
+ * gilt dann als Knopf; sonst bleibt es, was es ist.
+ */
+export const dropAttributes = (
+  target: TargetView,
+): { readonly tabIndex?: 0; readonly role?: 'button' } =>
+  target.state === 'legal' && target.props.onKeyDown !== undefined
+    ? { tabIndex: 0, role: 'button' }
+    : {};
 
 interface PieceProps {
   readonly zone: DraftZone;

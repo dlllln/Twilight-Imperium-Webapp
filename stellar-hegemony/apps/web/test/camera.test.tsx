@@ -162,7 +162,10 @@ describe('Kamera der Sternenkarte', () => {
     expect(screen.getByRole('tooltip').querySelector('.tooltip-hint')).toBeNull();
     rerender(<HexTooltip hex={home} x={window.innerWidth - 5} y={window.innerHeight - 5} />);
     const flipped = screen.getByRole('tooltip').style;
-    expect(Number.parseFloat(flipped.left)).toBeLessThan(window.innerWidth - 5);
+    const [left, top] = flipped.transform.match(/[\d.]+/g)?.map(Number) ?? [];
+    expect(left).toBeGreaterThanOrEqual(0);
+    expect(left).toBeLessThan(window.innerWidth - 5);
+    expect(top).toBeLessThan(window.innerHeight - 5);
   });
 
   it('Striche und Sterne wachsen beim Nahzoom nur gedämpft mit', () => {

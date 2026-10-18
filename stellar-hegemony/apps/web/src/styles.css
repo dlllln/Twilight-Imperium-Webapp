@@ -1155,17 +1155,6 @@ input[type='checkbox'] {
   margin-top: 2px;
 }
 
-.secret-choice .objective-option {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 8px;
-  margin-bottom: 6px;
-}
-
-.secret-choice .objective-option .hint {
-  grid-column: 2;
-}
-
 .game-over {
   padding: 14px;
   border: 1px solid var(--gold);
@@ -5625,6 +5614,33 @@ body {
   color: var(--muted);
 }
 
+/* Leer (keine Marker zu verteilen) bleibt die Leiste weg; ihre Live-Region bleibt stehen. */
+.table-prompt-meter:empty {
+  display: none;
+}
+
+/*
+ * Zwei Hälften, die nie in sich umbrechen: Wird es eng, rückt die zweite Hälfte als Ganzes
+ * darunter. Die Beschriftung steht in der Textschrift, damit beide Hälften in eine Zeile passen;
+ * nur die Zahlen tragen die Titelschrift.
+ */
+.table-prompt-meter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  font-family: inherit;
+  letter-spacing: 0;
+}
+
+.table-prompt-meter strong {
+  font-family: var(--title-font);
+}
+
+.table-prompt-meter > span {
+  white-space: nowrap;
+}
+
 .table-prompt-meter strong {
   font-size: 15px;
   letter-spacing: 0;
@@ -5851,6 +5867,14 @@ body {
   grid-row: 1;
 }
 
+/* Wie bei den Knöpfen der Leisten: Der Finger trifft auf mindestens 24px, gezeichnet bleibt der Marker. */
+.sheet-piece::before {
+  content: '';
+  position: absolute;
+  inset: min(0px, calc((100% - 24px) / 2));
+  border-radius: 50%;
+}
+
 /* In einer Schale liegt der Knopf wie ein Marker über dem obersten (Lage per left/top). */
 .sheet-bowl > .sheet-piece,
 .sheet-loose-bowl > .sheet-piece {
@@ -6029,8 +6053,9 @@ body {
 
 /* Plus und Minus an der Leiste, nur während einer Verteilung */
 
+/* Die Beschriftung behält ihre volle Breite („Strategie“); enger rücken nur Zahl und Knöpfe. */
 .sheet-tray:has(.rail-controls) {
-  grid-template-columns: 52px minmax(0, 1fr) 16px auto;
+  grid-template-columns: 64px minmax(0, 1fr) 16px auto;
   gap: 4px;
 }
 
@@ -6056,6 +6081,17 @@ body {
   line-height: 1;
   color: var(--gold-bright);
   pointer-events: auto;
+}
+
+/* Unsichtbarer Rand: gezeichnet bleibt der Knopf klein, getroffen wird er auf 24px. */
+.rail-step {
+  position: relative;
+}
+
+.rail-step::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
 }
 
 .rail-step:hover:not(:disabled) {
@@ -6116,17 +6152,31 @@ polygon.hex.highlight-chosen {
   stroke-width: 4;
 }
 
+/*
+ * Erlaubte Ziele: ein heller, gestrichelter Rand, dessen Striche wandern, dazu eine getönte
+ * Fläche. So unterscheiden sie sich auch in Platzfarbe deutlich vom durchgezogenen Ring, der das
+ * eigene Heimatsystem umgibt.
+ */
 polygon.hex.target-legal {
-  stroke: color-mix(in srgb, var(--seat, var(--gold-bright)) 85%, #fff);
-  stroke-width: 2.5;
-  fill: color-mix(in srgb, var(--seat, var(--gold)) 7%, transparent);
+  stroke: color-mix(in srgb, var(--seat, var(--gold-bright)) 45%, #fff);
+  stroke-width: 3;
+  stroke-dasharray: 9 6;
+  stroke-linecap: round;
+  fill: color-mix(in srgb, var(--seat, var(--gold)) 16%, transparent);
   cursor: pointer;
-  animation: hex-target-pulse 2.6s ease-in-out infinite;
+  animation: hex-target-march 1.4s linear infinite;
+}
+
+@keyframes hex-target-march {
+  to {
+    stroke-dashoffset: -30;
+  }
 }
 
 polygon.hex.target-chosen {
   stroke: var(--gold-bright);
   stroke-width: 3.5;
+  stroke-dasharray: none;
   filter: drop-shadow(0 0 6px var(--gold));
   animation: none;
 }
@@ -6136,37 +6186,74 @@ polygon.hex.target-legal:focus-visible,
 polygon.hex.target-over {
   stroke: #fff;
   stroke-width: 4;
+  stroke-dasharray: none;
   stroke-opacity: 1;
   fill: color-mix(in srgb, var(--seat, var(--gold)) 16%, transparent);
   filter: drop-shadow(0 0 8px var(--seat, var(--gold)));
   animation: none;
 }
 
-@keyframes hex-target-pulse {
+/*
+ * Ohne getragenes Stück und ohne Verteilung lädt der Taktikmarker zum Aufnehmen ein: ein leiser
+ * Schein in Platzfarbe zeigt, wo das Ziehen beginnt, von dem der Hinweis der Ansage spricht.
+ */
+.player-sheet:not(:has(.sheet-loose)) .sheet-piece[data-piece='pool:tactic'][aria-pressed='false'] {
+  animation: piece-invite 2.8s ease-in-out infinite;
+}
+
+@keyframes piece-invite {
   0%,
   100% {
-    stroke-opacity: 1;
+    box-shadow: 0 0 0 0 transparent;
   }
 
   50% {
-    stroke-opacity: 0.35;
+    box-shadow:
+      0 0 0 1.5px color-mix(in srgb, var(--seat, var(--gold)) 80%, transparent),
+      0 0 10px color-mix(in srgb, var(--seat, var(--gold)) 55%, transparent);
   }
 }
 
 /* Ohne Bewegung: kein Pulsieren, kein Schein, der atmet. */
 :root.motion-off .confirm-seal,
 :root.motion-off polygon.hex.target-legal,
+:root.motion-off .sheet-piece,
 :root.motion-off .sheet-tray[data-target-state],
 :root.motion-off .sheet-depot[data-target-state],
 :root.motion-off .sheet-loose[data-target-state] {
   animation: none;
 }
 
-/* Schmale Bildschirme: Die Ansage liegt über der Hand, nicht auf dem Flügel. */
+/* Die Kurzform der Schale („Neu“) erscheint nur, wo das ganze Wort keinen Platz hat. */
+.sheet-loose-label .sheet-short {
+  display: none;
+}
+
+/*
+ * Schmale Bildschirme: Die Ansage steht über der Hand, nicht auf ihr und nicht auf dem Flügel.
+ * `--hand-rise` ist, wie weit die Hand über das Pult ragt (samt Namensschild); eingeklappt ragen
+ * nur die Kartenköpfe herein. Die Ansage hält sich an dieselbe Höhe wie die Meldungen am
+ * Spieltisch, damit Brett und Flotten erreichbar bleiben.
+ */
 @media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
+  .hud-shield[data-view='table'] {
+    --hand-rise: 200px;
+  }
+
+  .hud-shield[data-view='table']:has(.hand-dock.tucked) {
+    --hand-rise: 74px;
+  }
+
+  /* Rechts bleibt Platz für die Reiter der Übersicht, die mittig am Rand stehen. */
+  .hud-shield[data-view='table'] .hud-corner {
+    right: 76px;
+    bottom: calc(var(--sheet-h) + var(--hand-rise));
+    max-height: calc(100% - var(--sheet-h) - var(--hand-rise) - 20px);
+  }
+
   .table-prompt {
     width: auto;
-    max-height: 46vh;
+    max-height: min(260px, 30dvh);
     border-bottom-width: 1.5px;
     border-radius: 14px;
   }
@@ -6175,33 +6262,82 @@ polygon.hex.target-over {
     margin-bottom: 0;
   }
 
+  /* Wie beim Zugfeld am Spieltisch: Solange man selbst entscheidet, schweigen die Meldungen. */
+  .hud-shield
+    .hud-corner:has(> .table-prompt:not([data-kind='waiting'], [data-kind='gameOver']))
+    .notice-stack
+    > .notice.info {
+    display: none;
+  }
+
   .sheet-tray:has(.rail-controls) {
     grid-template-columns: auto minmax(0, 1fr) 12px auto;
     gap: 3px;
   }
 
+  /*
+   * Die Schale „Neue Marker“ liegt hier im Flügel, an der Stelle des Nachschubs, statt über dem
+   * Flügel: Dort ragt die Hand herein. Der Nachschub tritt so lange zurück.
+   */
+  .sheet-wing.command:has(> .sheet-loose) > .sheet-depot {
+    visibility: hidden;
+  }
+
   .sheet-loose {
-    right: 4px;
-    padding: 3px 6px;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    grid-area: depot;
+    align-self: center;
+    justify-self: center;
+    margin: 0;
+    padding: 3px 4px;
   }
 
   .sheet-loose-bowl {
-    width: 56px;
-    height: 32px;
+    width: 44px;
+    height: 26px;
   }
 
-  .sheet-loose-bowl .sheet-token,
-  .sheet-loose-bowl > .sheet-piece {
+  .sheet-loose-bowl .sheet-token {
     width: 14px;
     height: 14px;
     margin: -7px 0 0 -7px;
+  }
+
+  .sheet-loose-label {
+    font-size: 8px;
+    letter-spacing: 0.06em;
   }
 
   .sheet-loose-label .sheet-word {
     display: none;
   }
 
+  .sheet-loose-label .sheet-short {
+    display: inline;
+  }
+
   .confirm-seal {
     min-height: 38px;
+  }
+}
+
+/* Telefone: Jede Breite zählt; die Ansage bleibt so niedrig wie die Meldungen am Spieltisch. */
+@media (max-width: 760px) {
+  .hud-shield[data-view='table'] {
+    --hand-rise: 118px;
+  }
+
+  .hud-shield[data-view='table'] .hud-corner {
+    right: 8px;
+  }
+
+  .table-prompt {
+    max-height: min(182px, 30dvh);
+  }
+
+  .hud-shield[data-view='table']:has(.hand-dock.tucked) {
+    --hand-rise: 64px;
   }
 }

@@ -2,6 +2,7 @@ import type { GameState } from '@stellar/domain';
 import { useGameStore } from '../game-store.ts';
 import { useHandStore } from '../hand/hand-store.ts';
 import type { MessageKey } from '../i18n.ts';
+import { useSettingsStore } from '../settings-store.ts';
 import { content } from '../store.ts';
 import { useCarryStore } from './carry-store.ts';
 import type { DecisionRoute } from './decision-route.ts';
@@ -22,6 +23,8 @@ import { useDecisionRoute } from './use-decision-route.ts';
 /*
  * Die offene Entscheidung samt Entwurf, wie Ansage, Pult und Karte sie brauchen. Der Entwurf
  * entsteht beim Zeichnen aus `spec.initial` und landet erst mit der ersten Handlung im Store.
+ * Nur die Tischansicht spielt Entscheidungen am Tisch; die klassische Ansicht behält ihre
+ * Formulare, dort bleiben Karte und Pult ohne Entwurf.
  */
 
 export interface TableAlternative {
@@ -76,13 +79,21 @@ function actOn(ported: Ported, action: TableAction): void {
   else store.begin(ported.key, next);
 }
 
-/** Schickt den fertigen Entwurf als genau einen Command; danach ist er erledigt. */
+/** Abgeschickt und weder abgelöst noch abgelehnt: das Siegel bleibt gesperrt. */
+const pendingNow = (key: string): boolean =>
+  useDraftStore.getState().sent === key && useGameStore.getState().error === null;
+
+/**
+ * Schickt den fertigen Entwurf als genau einen Command. Der Entwurf bleibt liegen, bis der neue
+ * Spielstand ihn über den Schlüssel ablöst; lehnt der Server ab, ist er noch da.
+ */
 function confirmOf(ported: Ported): void {
   const draft = currentDraft(ported);
-  if (!ported.spec.progress(ported.ctx, draft).ready) return;
-  const sent = useGameStore.getState().send(ported.spec.command(ported.ctx, draft));
-  if (!sent) return;
-  useDraftStore.getState().clear();
+  if (!ported.spec.progress(ported.ctx, draft).ready || pendingNow(ported.key)) return;
+  const store = useGameStore.getState();
+  store.setError(null);
+  if (!store.send(ported.spec.command(ported.ctx, draft))) return;
+  useDraftStore.getState().markSent(ported.key);
   if (ported.ctx.route.kind === 'primary') useHandStore.getState().clear();
 }
 
@@ -114,15 +125,38 @@ const idle = (route: DecisionRoute): TableDecision => ({
   alternative: null,
 });
 
-function decisionWith(ported: Ported, stored: TableDraft | null): TableDecision {
+/** Was der Store zum Entwurf weiß; `failed`, solange eine Ablehnung angezeigt wird. */
+interface Stored {
+  readonly key: string | null;
+  readonly draft: TableDraft | null;
+  readonly sent: string | null;
+  readonly failed: boolean;
+}
+
+function useStored(): Stored {
+  const key = useDraftStore((state) => state.key);
+  const draft = useDraftStore((state) => state.draft);
+  const sent = useDraftStore((state) => state.sent);
+  const failed = useGameStore((state) => state.error !== null);
+  return { key, draft, sent, failed };
+}
+
+/** Fortschritt des Entwurfs; ein abgeschickter Entwurf ist nicht noch einmal bereit. */
+function progressOf(ported: Ported, draft: TableDraft, stored: Stored): Progress {
+  const progress = ported.spec.progress(ported.ctx, draft);
+  const pending = stored.sent === ported.key && !stored.failed;
+  return pending ? { ...progress, ready: false } : progress;
+}
+
+function decisionWith(ported: Ported, stored: Stored): TableDecision {
   const { spec, ctx } = ported;
-  const draft = stored ?? spec.initial(ctx);
+  const draft = (stored.key === ported.key ? stored.draft : null) ?? spec.initial(ctx);
   return {
     route: ctx.route,
     specId: spec.id,
     draft,
     targets: spec.targets(ctx, draft),
-    progress: spec.progress(ctx, draft),
+    progress: progressOf(ported, draft, stored),
     hint: spec.hint,
     confirmLabel: spec.confirm(ctx, draft),
     act: (action) => {
@@ -138,12 +172,11 @@ function decisionWith(ported: Ported, stored: TableDraft | null): TableDecision 
 /** Die offene Entscheidung am Bildschirm; `null` genau dann, wenn es keine Route gibt. */
 export function useTableDecision(game: GameState | null): TableDecision | null {
   const route = useDecisionRoute(game);
-  const storeKey = useDraftStore((state) => state.key);
-  const stored = useDraftStore((state) => state.draft);
+  const table = useSettingsStore((state) => state.tableView);
+  const stored = useStored();
   if (game === null || route === null) return null;
-  const ported = portedOf(game, route);
-  if (ported === null) return idle(route);
-  return decisionWith(ported, storeKey === ported.key ? stored : null);
+  const ported = table ? portedOf(game, route) : null;
+  return ported === null ? idle(route) : decisionWith(ported, stored);
 }
 
 /** Ziele der Entscheidung, dazu alle erlaubten Ziele des getragenen Stücks. */

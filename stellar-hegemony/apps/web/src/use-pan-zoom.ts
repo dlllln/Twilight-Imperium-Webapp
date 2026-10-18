@@ -1,4 +1,5 @@
-import { type PointerEvent, type RefObject, useRef, useState, type WheelEvent } from 'react';
+import { type PointerEvent, type RefObject, useRef, useCallback, type WheelEvent } from 'react';
+import { usePointerTracking } from './system/map-pointer.ts';
 import { useGalaxyStore } from './store.ts';
 import { useOrbitStore } from './system/orbit-store.ts';
 import { stopCamera } from './system/viewport-tween.ts';
@@ -9,6 +10,8 @@ const WHEEL_SENSITIVITY = 0.0022;
 const LINE_PIXELS = 33;
 const PAGE_PIXELS = 400;
 const MAX_WHEEL_STEP = 2;
+const liftingFleet = (event: { readonly currentTarget: HTMLElement }): boolean =>
+  event.currentTarget.dataset['liftingFleet'] === 'true';
 /** Ab so vielen Pixeln gilt ein Klick als Ziehen und wählt kein Feld. */
 const DRAG_THRESHOLD = 5;
 /** Drehen und Neigen mit rechter Maustaste (oder Umschalt): Bogenmaß je Pixel. */
@@ -22,9 +25,6 @@ interface Point {
 }
 
 export interface PanZoomHandlers {
-  readonly cursor: Point;
-  /** Ob der letzte Zeiger ein Finger war; dann stört ein Hinweis am Zeiger nur. */
-  readonly touch: boolean;
   /** Ob die letzte Zeigerbewegung ein Verschieben oder Zoomen der Karte war. */
   readonly wasDrag: () => boolean;
   readonly onPointerDown: (event: PointerEvent<HTMLElement>) => void;
@@ -142,6 +142,7 @@ function moveFinger(touches: Touches, gestures: Gestures, event: PointerEvent<HT
 function usePointers(gestures: Gestures): PointerHandlers {
   const touches = useRef<Touches>({ points: new Map(), travelled: 0, orbiting: false }).current;
   const release = (event: PointerEvent<HTMLElement>) => touches.points.delete(event.pointerId);
+  const wasDrag = useCallback(() => touches.travelled > DRAG_THRESHOLD, [touches]);
   return {
     onPointerDown: (event) => {
       if (touches.points.size === 0) touches.travelled = 0;
@@ -150,7 +151,7 @@ function usePointers(gestures: Gestures): PointerHandlers {
     },
     onPointerUp: release,
     onPointerCancel: release,
-    wasDrag: () => touches.travelled > DRAG_THRESHOLD,
+    wasDrag,
     moveTo: (event) => moveFinger(touches, gestures, event),
   };
 }
@@ -166,16 +167,13 @@ function useGestures(
   return { pan: useDragPan(scale), zoomAt, orbit };
 }
 
-/** Zeigerposition relativ zur Karte, nicht zum Element darunter (z. B. einem Knopf über dem System). */
-function useCursor() {
-  const [cursor, setCursor] = useState<Point>({ x: 0, y: 0 });
-  const [touch, setTouch] = useState(false);
-  const track = (event: PointerEvent<HTMLElement>) => {
-    const box = event.currentTarget.getBoundingClientRect();
-    setCursor({ x: event.clientX - box.left, y: event.clientY - box.top });
-    setTouch(event.pointerType === 'touch');
+function usePointerMove(moveTo: (event: PointerEvent<HTMLElement>) => void) {
+  const track = usePointerTracking();
+  return (event: PointerEvent<HTMLElement>) => {
+    if (liftingFleet(event)) return;
+    track(event);
+    moveTo(event);
   };
-  return { cursor, touch, track };
 }
 
 /**
@@ -187,17 +185,17 @@ export function usePanZoom(
   viewWidth: number,
   zoomAt: (factor: number, client: Point) => void,
 ): PanZoomHandlers {
-  const { cursor, touch, track } = useCursor();
   const { moveTo, ...pointers } = usePointers(useGestures(svg, viewWidth, zoomAt));
+  const onPointerMove = usePointerMove(moveTo);
   return {
-    cursor,
-    touch,
     ...pointers,
-    onPointerMove: (event) => {
-      track(event);
-      moveTo(event);
+    onPointerDown: (event) => {
+      if (!liftingFleet(event)) pointers.onPointerDown(event);
     },
-    onWheel: (event) => zoomAt(wheelFactor(event.deltaY, event.deltaMode), pointOf(event)),
+    onPointerMove,
+    onWheel: (event) => {
+      if (!liftingFleet(event)) zoomAt(wheelFactor(event.deltaY, event.deltaMode), pointOf(event));
+    },
     onContextMenu: (event) => event.preventDefault(),
   };
 }

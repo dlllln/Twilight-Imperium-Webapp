@@ -784,7 +784,68 @@ Umschalten fährt der Blick in die Grundstellung der gewählten Ansicht.
 | `Hud` wählt `PlayerSheet` oder `ResourceBar`, `data-view` am Schild | Eine Stelle entscheidet die Anordnung (Controller); das Stylesheet folgt über `data-view`, ohne dass Hand, Meldungen oder Knöpfe es kennen (Indirection). |
 | `Settings.tableView` mit Standard aus `defaults()`                  | Ältere Speicherstände erhalten den neuen Schalter über das Zusammenführen mit den Standards (Robustheit, Protected Variations).                           |
 
-## 32. Iterationen
+## 32. Iteration 28 im Detail (Ansage am Pult, Marker auf Leisten und Karte)
+
+Entscheidungen sehen in der Tischansicht nicht mehr wie Benachrichtigungen aus. Statt des
+Popups `.notice.decision` steigt die **Ansage** (`TablePrompt`) als Messingschild aus dem rechten
+Flügel des Pults auf: Kopf (Phase, Karte), Hinweis, bei Markerverteilungen eine Messleiste
+(„Erhaltene Marker · noch zu verteilen“, bei der Kriegsführung „Von der Karte genommen“) und das
+**Siegel** (`ConfirmSeal`), das den Entwurf als genau einen Befehl abschickt. Alle übrigen
+Entscheidungen zeigt die Ansage mit ihrem bisherigen Formular (`TurnPanelBody`). Die klassische
+Ansicht behält Popup und Formulare unverändert; private Kartenwahlen (geheime Aufträge) liegen in
+beiden Ansichten auf dem zentralen Kartentisch. Hochkant und auf Telefonen steht die Ansage über
+dem sichtbaren Teil der Hand statt auf ihr, damit jede Handkarte antippbar bleibt.
+
+Welche Entscheidung ansteht, beantwortet eine Stelle: `decisionOf` (rein) liefert die Route mit
+Art, Handelndem, Karte, Schritt und einem **Schlüssel**. Ansage, Pult und Karte fragen alle über
+`useTableDecision` dieselbe Route. Der Entwurf liegt im `draft-store` unter
+`route.key@game.version`: Ein neuer Spielstand (auch Rückgängig) oder eine neue Entscheidung löst
+ihn ab, ohne dass jemand ihn löschen muss. Nach dem Siegel bleibt er liegen und ist als
+„abgeschickt“ markiert; das Siegel bleibt gesperrt, bis der neue Stand ihn ablöst. Lehnt der Server
+ab, ist er noch da und lässt sich erneut abschicken.
+
+Die Kommandomarker sind **Spielsteine**. Drei Entscheidungen werden am Tisch gespielt: die
+Markerverteilung der Statusphase, Führung (primär und sekundär) und Kriegsführung (primär). Neue
+Marker liegen zuerst in der Schale „Neue Marker“ und wandern auf die Leisten. Die Grammatik ist für
+alle Wege dieselbe: **aufnehmen, tragen, ablegen**.
+
+- Zeiger: ab fünf Pixeln wird gezogen; ein Geist folgt dem Zeiger, erlaubte Ziele leuchten.
+- Klick: der erste Klick nimmt auf, der zweite auf ein Ziel legt ab.
+- Tastatur: Enter nimmt auf, der Fokus springt auf das erste erlaubte Ziel, Tab kreist nur durch
+  die erlaubten Ziele, Enter legt ab. Danach landet der Fokus wieder auf einem Stück oder dem
+  Siegel. Plus und Minus an den Leisten sind der zweite Tastaturweg.
+- Escape legt zurück, ohne die Kamera zurückzufahren.
+
+Ein Ablegen, das nichts bewirkt, gilt als Zurücklegen. Wechselt die Entscheidung, wird ein
+getragenes Stück zurückgelegt. Bildschirmleser hören Aufnehmen, Ablegen und Zurücklegen, an
+erlaubten Zielen „Hierher legen“, jede Änderung der Messleiste und über eine stehende Live-Zeile
+jeden Wechsel der Entscheidung.
+
+Auf der Karte aktiviert ein **Taktikmarker**, der auf ein erlaubtes System gezogen oder geklickt
+wird, dieses System sofort. Welche Systeme erlaubt sind, entscheidet die Domain, die
+`ActivateSystem` an einer Kopie erprobt. Bei der Kriegsführung nimmt ein Klick auf ein System mit
+eigenem Marker diesen Marker auf. Die Karte zeigt ihn dann schon vor dem Absenden nicht mehr dort;
+ein Wechsel des Systems behält die bereits gelegte Verteilung. Erlaubte Systeme tragen einen hellen,
+wandernd gestrichelten Rand, damit sie sich vom Ring um das Heimatsystem unterscheiden.
+
+Zwei reine Domain-Abfragen ersetzen doppelte Regeln: `statusTokenGain` (mit der
+Fraktionsregel, die bisher im Web fehlte) und `warfareTokenSystems`.
+
+| Element                                                                           | Prinzip                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `decision-route.ts` (`decisionOf`, Schlüssel), `useDecisionRoute`                 | Information Expert für „was steht an“; Controller für Ansage, Pult und Karte. Der Schlüssel macht Entwürfe ohne Aufräumcode ungültig (Low Coupling).                                                                           |
+| `TABLE_SPECS` mit `spec-tokens`, `spec-leadership`, `spec-warfare` (`spec-types`) | Jede Entscheidung ist ein Satz kleiner reiner Funktionen (`initial`, `apply`, `targets`, `progress`, `command`). Eine neue Entscheidung ist ein neuer Eintrag (Open/Closed, Protected Variations, Strategy).                   |
+| `pool-draft.ts`, `spec-pools.ts`                                                  | Reine Verteilungslogik mit Boden je Leiste: Führung verteilt nur Gewonnenes, Status und Kriegsführung alles (Pure Fabrication, DRY für alle drei Entscheidungen).                                                              |
+| `draft-store.ts` (`key`, `draft`, `sent`), `use-table-decision.ts`                | Ein Entwurf, ein Schlüssel; „abgeschickt“ sperrt das Siegel bis zur Antwort (Single Responsibility). In der klassischen Ansicht liefert der Hook keine Tischentscheidung, Karte und Pult bleiben ruhig (Protected Variations). |
+| `carry-store.ts`, `carry-rules.ts` (`legalFor`), `carry-focus.ts`                 | Das Stück in der Hand als eigene Ablage (Pure Fabrication); erlaubte Ziele als reine Funktion (Expert); Fokus und Tab-Kreis getrennt vom Tragen (Single Responsibility).                                                       |
+| `use-drag-source.ts`, `use-target.ts`, `drop-target.ts`                           | Quelle und Ziel kennen nur `TargetRef`-Schlüssel und den Ablage-Handler, nicht die Spielregel (Low Coupling); Zeiger, Klick und Tastatur münden in dieselben Aufrufe (DRY).                                                    |
+| `use-drop-router.ts` (`dropIntent` rein)                                          | Indirection: Ablegen wird zu „Befehl senden“ oder „Entwurf fortschreiben“; der Handler meldet, ob es etwas bewirkt hat, sonst springt das Stück zurück.                                                                        |
+| `TablePrompt`, `PromptParts`, `ConfirmSeal`, `PromptAnnouncer`                    | Kleine Bausteine je Aufgabe (Single Responsibility). Die alten Formulare werden wiederverwendet statt nachgebaut (DRY); die Live-Zeile steht außerhalb der neu erscheinenden Ansage.                                           |
+| `LooseBowl`, `RailControls`, `SheetPiece`, `CommandWing`                          | Anzeige plus Gesten ohne eigene Regel: Sie lesen den Entwurf und rufen `act` (Controller bleibt der Hook).                                                                                                                     |
+| `HexTargets`, `use-picking.ts`, `table-highlights.ts`, `lifted-token.ts`          | Die Karte als Ablageziel; Ziele werden zu Hervorhebungen, der aufgenommene Marker fehlt in der Szene (reine Abbildungen, Protected Variations gegenüber dem Pixi-Renderer).                                                    |
+| `statusTokenGain`, `warfareTokenSystems` (Domain)                                 | Die Domain beantwortet die Frage, die sie auch prüft; Web und (bei `statusTokenGain`) KI fragen nur nach (Information Expert, DRY). Das behebt die fehlende Fraktionsregel der Statusphase im Web.                             |
+
+## 33. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -815,8 +876,9 @@ Umschalten fährt der Blick in die Grundstellung der gewählten Ansicht.
 | 25  | Anführer: Agent, Kommandant, Held (PoK)             | ✓     |
 | 26  | Acht Fraktionen, 7–8 Spieler, weitere Karten (PoK)  | ✓     |
 | 27  | Tischansicht: steiler Blick, eigenes Kommandopult   | ✓     |
+| 28  | Ansage am Pult, Marker auf Leisten und Karte        | ✓     |
 
-## 33. Befehle
+## 34. Befehle
 
 ```
 pnpm install

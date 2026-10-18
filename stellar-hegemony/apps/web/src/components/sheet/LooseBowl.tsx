@@ -4,7 +4,7 @@ import { poolPlanOf, type SheetTable } from '../../hud/use-sheet.ts';
 import { poolTarget, targetKey } from '../../table/target-ref.ts';
 import { useTarget } from '../../table/use-target.ts';
 import { useT } from '../../use-translation.ts';
-import { type Flow, dropFocus, SheetPiece, useDraggedZone } from './SheetPiece.tsx';
+import { dropAttributes, type Flow, SheetPiece, useDraggedZone } from './SheetPiece.tsx';
 import { TokenChip } from './SheetTokens.tsx';
 
 /*
@@ -69,8 +69,8 @@ function Bowl({ ids, faction, flow, table, loose }: BowlProps & { readonly loose
       role="group"
       aria-label={`${t('looseTokens')}: ${String(loose)}`}
       {...target.props}
+      {...dropAttributes(target)}
       data-over={target.over ? 'true' : undefined}
-      tabIndex={dropFocus(target)}
     >
       <div className="sheet-loose-bowl">
         <LooseTokens {...{ ids, faction, flow }} />
@@ -79,7 +79,11 @@ function Bowl({ ids, faction, flow, table, loose }: BowlProps & { readonly loose
         )}
       </div>
       <span className="sheet-loose-label">
-        <span className="sheet-word">{t('looseTokens')}</span> <b>{loose}</b>
+        <span className="sheet-word">{t('looseTokens')}</span>
+        <span className="sheet-short" aria-hidden="true">
+          {t('looseShort')}
+        </span>{' '}
+        <b>{loose}</b>
       </span>
     </div>
   );

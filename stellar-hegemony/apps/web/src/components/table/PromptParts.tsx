@@ -1,5 +1,6 @@
 import { findPlayer, type GameState, warfareTokenSystems } from '@stellar/domain';
 import type { ReactElement } from 'react';
+import type { Language } from '../../i18n.ts';
 import type { TokenPlan } from '../../table/table-specs.ts';
 import type { TableDecision } from '../../table/use-table-decision.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
@@ -18,15 +19,26 @@ export interface PartProps {
   readonly decision: TableDecision;
 }
 
-/** Zweite Zeile des Kopfs: Kartenname, bei Sekundärfähigkeiten mit Vorsilbe. */
+type Translate = ReturnType<typeof useT>;
+
+/** Was die Entscheidung betrifft: Markerverteilung oder Kartenname (sekundär mit Vorsilbe). */
+export function subtitleOf(
+  decision: TableDecision,
+  t: Translate,
+  language: Language,
+): string | null {
+  const { route, specId } = decision;
+  if (specId === 'tokens') return t('allocateTokens');
+  if (route.card === null) return null;
+  const name = cardText(route.card).name[language];
+  return route.ability === 'secondary' ? `${t('secondaryPrompt')}: ${name}` : name;
+}
+
+/** Zweite Zeile des Kopfs; die alten Formulare bringen ihren Kartennamen selbst mit. */
 function useSubtitle(decision: TableDecision): string | null {
   const t = useT();
   const language = useLanguage();
-  const { route, specId } = decision;
-  if (specId === 'tokens') return t('allocateTokens');
-  if (specId === null || route.card === null) return null;
-  const name = cardText(route.card).name[language];
-  return route.ability === 'secondary' ? `${t('secondaryPrompt')}: ${name}` : name;
+  return decision.specId === null ? null : subtitleOf(decision, t, language);
 }
 
 export function PromptHead({ game, decision }: PartProps): ReactElement {
@@ -40,13 +52,33 @@ export function PromptHead({ game, decision }: PartProps): ReactElement {
   );
 }
 
-/** Erhaltene Marker und was davon noch in der Schale liegt. */
-export function PromptMeter(props: { readonly needed: number; readonly plan: TokenPlan }) {
+interface MeterProps {
+  readonly needed: number;
+  readonly plan: TokenPlan;
+  readonly warfare: boolean;
+}
+
+/**
+ * Erhaltene (bei der Kriegsführung von der Karte genommene) Marker und was davon noch in der
+ * Schale liegt. Ohne Marker bleibt sie leer und unsichtbar. Die Zeile ist eine Live-Region:
+ * Bildschirmleser hören jede Änderung, auch die von Plus und Minus an den Leisten.
+ */
+export function PromptMeter({ needed, plan, warfare }: MeterProps): ReactElement {
   const t = useT();
   return (
-    <p className="table-prompt-meter">
-      {t('tokensGained')}: <strong data-testid="tokens-gained">{props.needed}</strong> ·{' '}
-      {t('toDistribute')}: <strong data-testid="free-tokens">{props.plan.pools.loose}</strong>
+    <p className="table-prompt-meter" aria-live="polite" aria-atomic="true">
+      {needed > 0 && (
+        <>
+          <span>
+            {t(warfare ? 'tokensTaken' : 'tokensGained')}:{' '}
+            <strong data-testid="tokens-gained">{needed}</strong>
+          </span>
+          {' · '}
+          <span>
+            {t('toDistribute')}: <strong data-testid="free-tokens">{plan.pools.loose}</strong>
+          </span>
+        </>
+      )}
     </p>
   );
 }
