@@ -110,3 +110,9 @@ export function targetLabel(ref: TargetRef, game: GameState, language: Language)
       return translate(language, ref.pool === 'loose' ? 'looseTokens' : ref.pool);
   }
 }
+
+/** Name eines getragenen Stücks: Münzen heißen Handelsware, ob vom Haufen oder aus der Kasse. */
+export function pieceLabel(ref: TargetRef, game: GameState, language: Language): string {
+  if (ref.kind === 'goods' || ref.kind === 'slot') return translate(language, 'tradeGood');
+  return targetLabel(ref, game, language);
+}

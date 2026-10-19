@@ -44,6 +44,15 @@
   z-index: -1;
 }
 
+/*
+ * Erschöpfte Karten liegen quer und reichen dadurch tiefer. In Ruhe rücken sie so weit hoch, dass
+ * ihre Oberkante bündig mit den bereiten liegt: Man sieht die Querlage und den Ressourcenwert.
+ */
+.planet-row[data-mode='rest'] .planet-card[data-turn='90'] {
+  --lift: -14px;
+  filter: saturate(0.55) brightness(0.85);
+}
+
 .planet-row:not([data-mode='rest']) {
   pointer-events: auto;
 }
@@ -110,7 +119,7 @@
     inset 0 0 0 1px rgba(0, 0, 0, 0.45),
     0 3px 6px rgba(0, 0, 0, 0.6);
   color: #fff;
-  transform: rotate(var(--turn));
+  transform: translateY(var(--lift, 0px)) rotate(var(--turn));
   transform-origin: 50% 60%;
   transition:
     transform 0.28s var(--ease-out),
@@ -349,10 +358,15 @@ button.planet-card:focus-visible {
   outline-offset: 2px;
 }
 
+/* Erlaubtes Ziel für eine getragene Münze: atmet in Platzfarbe wie die Leisten. */
 .sheet-goods[data-target-state='legal'],
 .sheet-kasse[data-target-state='legal'] {
+  outline-width: 2px;
   outline-color: color-mix(in srgb, var(--seat, var(--gold)) 80%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--seat, var(--gold)) 40%, transparent);
+  box-shadow:
+    0 0 0 1px var(--gold-line),
+    0 0 14px color-mix(in srgb, var(--seat, var(--gold)) 55%, transparent);
+  animation: target-breathe 2.4s ease-in-out infinite;
 }
 
 .sheet-goods[data-over='true'],
@@ -389,7 +403,9 @@ button.planet-card:focus-visible {
 
 /* Ohne Bewegung: Karten drehen und leuchten ohne Übergang. */
 :root.motion-off .planet-row,
-:root.motion-off .planet-card {
+:root.motion-off .planet-card,
+:root.motion-off .sheet-kasse,
+:root.motion-off .sheet-goods {
   transition: none;
   animation: none;
 }
@@ -418,6 +434,12 @@ button.planet-card:focus-visible {
     grid-column: 1 / -1;
     left: 0;
     right: 0;
+  }
+
+  /* Die Beschriftungen des Pults fehlen hier; die Kasse behält ihre, sonst bliebe sie stumm. */
+  .sheet-kasse > .sheet-caption {
+    display: block;
+    font-size: 9px;
   }
 
   .hud-shield[data-view='table']:has(.planet-row) .hud-corner {

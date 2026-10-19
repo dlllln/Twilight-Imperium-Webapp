@@ -19,7 +19,7 @@ import { gameScene } from '../src/render/scene-model.ts';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { content, useGalaxyStore } from '../src/store.ts';
 import { useDraftStore } from '../src/table/draft-store.ts';
-import { usePaymentStore } from '../src/table/payment-store.ts';
+import { usePaymentStore, NO_PAYMENTS } from '../src/table/payment-store.ts';
 import { pickAll, started } from './game-helpers.ts';
 import { leaveTable } from './local-table.ts';
 
@@ -29,7 +29,7 @@ const OPEN_KEY = 'produktion';
 beforeEach(() => {
   useGalaxyStore.setState({ language: 'de' });
   useSettingsStore.setState({ tableView: true, animations: false });
-  usePaymentStore.setState({ key: null, version: null, plan: null, open: null, tables: 0 });
+  usePaymentStore.setState(NO_PAYMENTS);
   useDraftStore.getState().clear();
   useHandStore.getState().clear();
 });
@@ -133,13 +133,13 @@ describe('Planeten auf der Karte als Ziele', () => {
     act(() => {
       fireEvent.click(ringOf(first.planet));
     });
-    expect(usePaymentStore.getState()).toMatchObject({ key: OPEN_KEY, version: game().version });
-    expect(usePaymentStore.getState().plan?.planets).toEqual([first.planet]);
+    expect(usePaymentStore.getState().drafts[OPEN_KEY]?.version).toBe(game().version);
+    expect(usePaymentStore.getState().drafts[OPEN_KEY]?.plan.planets).toEqual([first.planet]);
     expect(ringOf(first.planet).getAttribute('data-target-state')).toBe('chosen');
     expect(ringOf(first.planet).getAttribute('class')).toContain('target-chosen');
     expect(ringOf(first.planet).textContent).toContain('vorgemerkt');
     fireEvent.click(ringOf(first.planet));
-    expect(usePaymentStore.getState().plan?.planets).toEqual([]);
+    expect(usePaymentStore.getState().drafts[OPEN_KEY]?.plan.planets).toEqual([]);
   });
 
   it('wer die Karte über einen Planeten zieht, wählt ihn nicht', () => {
@@ -149,7 +149,7 @@ describe('Planeten auf der Karte als Ziele', () => {
     const [first] = spendable(me);
     if (first === undefined) throw new Error('kein bezahlbarer Planet');
     fireEvent.click(ringOf(first.planet));
-    expect(usePaymentStore.getState().plan).toBeNull();
+    expect(usePaymentStore.getState().drafts[OPEN_KEY]).toBeUndefined();
     expect(ringOf(first.planet).getAttribute('data-target-state')).toBe('legal');
   });
 

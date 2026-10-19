@@ -46,10 +46,6 @@ export function addCoins(plan: PaymentPlan, delta: number, own: number): Payment
   return tradeGoods === plan.tradeGoods ? plan : { ...plan, tradeGoods };
 }
 
-/** Dieselbe Währung behält den Entwurf, eine andere beginnt neu. */
-export const inCurrency = (plan: PaymentPlan, currency: Currency): PaymentPlan =>
-  plan.currency === currency ? plan : paymentPlan(currency);
-
 export const paymentOf = (plan: PaymentPlan): Payment => ({
   planets: plan.planets,
   tradeGoods: plan.tradeGoods,
@@ -69,3 +65,9 @@ export const spendableIds = (
 
 export const ownTradeGoods = (game: GameState, player: PlayerId): number =>
   findPlayer(game, player)?.tradeGoods ?? 0;
+
+/** Was der Spieler höchstens zahlen kann: bereite Planeten laut Domain plus alle Handelswaren. */
+export function spendableValue(game: GameState, player: PlayerId, currency: Currency): number {
+  const planets = spendablePlanets(game, content.tiles, player, currency);
+  return planets.reduce((sum, entry) => sum + entry.value, ownTradeGoods(game, player));
+}

@@ -6,9 +6,9 @@ import {
   type PlayerId,
   updatePlayer,
 } from '@stellar/domain';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { objectiveArtwork } from '../src/artwork/cards.ts';
 import { ObjectiveStrip } from '../src/components/table/ObjectiveStrip.tsx';
 import { useGameStore } from '../src/game-store.ts';
@@ -30,7 +30,27 @@ beforeEach(() => {
   useDraftStore.getState().clear();
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+
+/** Eine steuerbare Bildschirmbreite: `wide` schaltet zwischen breit und schmal um. */
+function stubWidth(wide: boolean): (next: boolean) => void {
+  const listeners = new Set<() => void>();
+  const media = {
+    matches: wide,
+    addEventListener: (_: string, listener: () => void) => listeners.add(listener),
+    removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
+  };
+  vi.stubGlobal('matchMedia', () => media);
+  return (next) => {
+    act(() => {
+      media.matches = next;
+      for (const listener of listeners) listener();
+    });
+  };
+}
 
 const game = () => useGameStore.getState().game as GameState;
 const strip = () => screen.getByRole('region', { name: 'Aufträge auf dem Tisch' });
@@ -99,8 +119,9 @@ describe('Auftragsleiste auf dem Tisch', () => {
     const targets = buttons.map((button) => button.dataset['target']);
     expect(targets).toEqual(['card:merchant-reserve', 'card:war-chest']);
     expect(strip().querySelector('[data-target="card:settled-reach"]')).toBeNull();
-    const goods = within(strip()).getByRole('button', { name: 'Händlerreserve (1)' });
+    const goods = within(strip()).getByRole('button', { name: 'Händlerreserve' });
     expect(goods.dataset['targetState']).toBe('legal');
+    expect(goods.getAttribute('title')).toContain('Händlerreserve: 1 Siegpunkt.');
     fireEvent.click(goods);
     expect(goods.getAttribute('aria-pressed')).toBe('true');
     expect(goods.dataset['targetState']).toBe('chosen');
@@ -145,5 +166,58 @@ describe('Auftragsleiste auf dem Tisch', () => {
     ]);
     expect(seats[0]?.style.getPropertyValue('--seat')).toBe(seatColor(first.seat + 1));
     expect(strip().querySelectorAll('[data-scored="true"]')).toHaveLength(1);
+  });
+
+  it('eine wählbare Karte nennt Bedingung und wer schon gewertet hat', () => {
+    const me = scoringTable();
+    const other = game().players.find((player) => player.id !== me);
+    if (other === undefined) throw new Error('kein Mitspieler');
+    const scored = { [objectiveId('merchant-reserve')]: [other.id] };
+    seatTable({ ...game(), objectives: { ...game().objectives, scored } }, { me });
+    render(<Live />);
+    const goods = within(strip()).getByRole('button', { name: 'Händlerreserve' });
+    const description = document.getElementById(goods.getAttribute('aria-describedby') ?? '');
+    expect(description?.textContent).toContain('1 Siegpunkt');
+    expect(description?.textContent).toContain(`Gewertet von: ${other.name}`);
+    const plain = strip().querySelector('[data-pickable="false"] .objective-strip-card');
+    expect(plain?.getAttribute('title')).toMatch(/Siegpunkt/);
+  });
+
+  it('schmal zugeklappt, dann breit: die Karten liegen wieder offen', () => {
+    const widen = stubWidth(false);
+    const state = pickAll(started());
+    seatTable(state, { me: state.actionPhase?.active as PlayerId });
+    render(<Live />);
+    expect(strip().dataset['expanded']).toBe('false');
+    const toggle = within(strip()).getByRole('button', { name: 'Aufträge' });
+    fireEvent.click(toggle);
+    expect(strip().dataset['expanded']).toBe('true');
+    fireEvent.click(toggle);
+    expect(strip().dataset['expanded']).toBe('false');
+    widen(true);
+    expect(strip().dataset['expanded']).toBe('true');
+  });
+
+  it('wer die Leiste bei einer Wertung schließt, sieht sie bei der nächsten wieder offen', () => {
+    stubWidth(false);
+    scoringTable();
+    render(<Live />);
+    expect(strip().dataset['expanded']).toBe('true');
+    fireEvent.click(within(strip()).getByRole('button', { name: 'Aufträge' }));
+    expect(strip().dataset['expanded']).toBe('false');
+    act(() => useGameStore.setState({ game: { ...game(), round: game().round + 1 } }));
+    expect(strip().dataset['mode']).toBe('decision');
+    expect(strip().dataset['expanded']).toBe('true');
+  });
+
+  it('Zeiger über einer Karte zeigt sie groß mit ihrer Bedingung', () => {
+    scoringTable();
+    render(<Live />);
+    const item = strip().querySelector('[data-category]') as HTMLElement;
+    fireEvent.pointerEnter(item, { pointerType: 'mouse' });
+    const zoom = strip().querySelector('.objective-strip-zoom');
+    expect(zoom?.textContent).toContain('Siegpunkt');
+    fireEvent.pointerLeave(item);
+    expect(strip().querySelector('.objective-strip-zoom')).toBeNull();
   });
 });

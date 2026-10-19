@@ -1,13 +1,18 @@
 /*
- * Auftragsleiste: oben in der Mitte des Tisches, zwischen Spielerleiste (links oben) und Vorrat
- * (rechts oben). Die Fläche selbst fängt keine Gesten ab; nur Karten und Knöpfe tun es.
+ * Auftragsleiste: oben in der Mitte des Tisches, zwischen Spielerleiste (links oben) und der
+ * Spalte der Meldungen (rechts, über der Ansage); der Vorrat liegt noch weiter innen nicht im
+ * Weg. Die Fläche selbst fängt keine Gesten ab; nur Karten und Knöpfe tun es.
  */
 .objective-strip {
   --strip-card: 52px;
   position: absolute;
   top: 12px;
   left: 276px;
-  right: 298px;
+  /*
+   * Rand (76px), Spalte der Meldungen (340px) und etwas Luft. Bleiben der Leiste so keine 720px,
+   * rückt sie nur bis an den Vorrat (298px) und teilt sich den Rand mit den Meldungen.
+   */
+  right: max(298px, min(428px, calc(100% - 996px)));
   z-index: 22;
   display: flex;
   flex-direction: column;
@@ -82,11 +87,13 @@
 .objective-strip-item {
   position: relative;
   display: flex;
-  flex: 0 0 var(--strip-card);
+  /* Wird es eng, rücken die Karten bis 40px zusammen; erst dann rollt die Bahn. */
+  flex: 0 1 var(--strip-card);
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
-  min-width: 0;
+  width: var(--strip-card);
+  min-width: 40px;
 }
 
 /* Die Karte: eigener Druck, darüber Name und Punkte als echte Schrift. */
@@ -135,12 +142,14 @@
   border-radius: 3px;
   background: #050a12d9;
   color: #f0e8d6;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  hyphens: auto;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .objective-strip-points {
@@ -172,8 +181,8 @@
 }
 
 .objective-strip-disc {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   border: 1px solid #000c;
   border-radius: 50%;
   background: radial-gradient(
@@ -185,8 +194,12 @@
   box-shadow: 0 2px 2px #000b;
 }
 
-/* Bei einer Entscheidung treten die übrigen Karten zurück, die wählbaren leuchten. */
-.objective-strip[data-mode='decision'] .objective-strip-item[data-pickable='false'] {
+/*
+ * Bei einer Entscheidung treten die übrigen Karten zurück, die wählbaren leuchten. Gewertete
+ * Karten bleiben hell: Ihre Scheiben zeigen einen errungenen Punkt, keine gesperrte Karte.
+ */
+.objective-strip[data-mode='decision']
+  .objective-strip-item[data-pickable='false']:not([data-scored='true']) {
   opacity: 0.45;
 }
 
@@ -201,15 +214,38 @@ button.objective-strip-card[data-target-state='legal'] .objective-strip-face {
     0 4px 8px #0009;
 }
 
-button.objective-strip-card[data-target-state='chosen'] {
-  transform: translateY(-4px) rotate(0deg);
+/* Gewählt: angehoben, Ring in der eigenen Sitzfarbe und ein Reiter „Gewählt“. */
+button.objective-strip-card[data-target-state='chosen'],
+button.objective-strip-card[data-target-state='chosen']:hover {
+  transform: translateY(-5px) rotate(0deg) scale(1.04);
 }
 
 button.objective-strip-card[data-target-state='chosen'] .objective-strip-face {
   box-shadow:
-    0 0 0 2px var(--gold-bright),
-    0 0 16px color-mix(in srgb, var(--gold-bright) 75%, transparent),
+    0 0 0 3px var(--seat, var(--gold-bright)),
+    0 0 18px var(--seat, var(--gold-bright)),
     0 8px 12px #000b;
+}
+
+.objective-strip-tab {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  display: none;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--seat, var(--gold-bright));
+  color: #050a12;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+button.objective-strip-card[data-target-state='chosen'] .objective-strip-tab {
+  display: block;
 }
 
 button.objective-strip-card:hover,
@@ -231,6 +267,32 @@ button.objective-strip-card:focus-visible {
   color: var(--gold-bright);
   font-size: 10px;
   line-height: 1.1;
+}
+
+/* Vergrößerung unter der Leiste, mittig unter der Karte, nie über den Rand der Leiste hinaus. */
+.objective-strip-zoom {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: clamp(80px, var(--zoom-x, 50%), calc(100% - 80px));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 160px;
+  padding: 8px;
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+  background: linear-gradient(160deg, #13202bf5, #070c15f5);
+  box-shadow: 0 10px 24px #000a;
+  color: #f0e8d6;
+  font-size: 12px;
+  line-height: 1.35;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.objective-strip-zoom > strong {
+  color: var(--gold-bright);
+  font-size: 13px;
 }
 
 /* Schmal oder hochkant: unter der Spielerleiste, links vom Vorrat; zu, bis man sie öffnet. */

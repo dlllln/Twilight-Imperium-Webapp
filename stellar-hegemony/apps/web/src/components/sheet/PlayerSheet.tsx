@@ -47,7 +47,7 @@ export function PlayerSheet({ game }: { readonly game: GameState }): ReactElemen
       <div className="sheet-well" aria-hidden="true">
         <span className="sheet-well-label">{t('sheetWell')}</span>
       </div>
-      <TreasuryWing model={model} pulse={pulse} table={table} />
+      <TreasuryWing game={game} model={model} pulse={pulse} table={table} />
       <PlanetRow game={game} table={table} />
       <DragGhost faction={model.faction} seat={seat} />
       <CarryAnnouncer game={game} />

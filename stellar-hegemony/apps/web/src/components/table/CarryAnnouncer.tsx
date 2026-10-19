@@ -3,7 +3,7 @@ import { type ReactElement, useState } from 'react';
 import { type Language, translate } from '../../i18n.ts';
 import { useCarryFocus } from '../../table/carry-focus.ts';
 import { type CarryNews, useCarryEscape, useCarryStore } from '../../table/carry-store.ts';
-import { targetLabel } from '../../table/target-ref.ts';
+import { pieceLabel, targetLabel } from '../../table/target-ref.ts';
 import { PLACE_HERE_ID } from '../../table/use-target.ts';
 import { useLanguage } from '../../use-translation.ts';
 
@@ -14,8 +14,11 @@ import { useLanguage } from '../../use-translation.ts';
  */
 
 function announcement(news: CarryNews, game: GameState, language: Language): string {
+  if (news.kind === 'carried') {
+    const piece = pieceLabel(news.ref, game, language);
+    return translate(language, 'carried').replace('{piece}', piece);
+  }
   const name = targetLabel(news.ref, game, language);
-  if (news.kind === 'carried') return translate(language, 'carried').replace('{piece}', name);
   if (news.kind === 'placed') return translate(language, 'placed').replace('{target}', name);
   return translate(language, 'putBack');
 }

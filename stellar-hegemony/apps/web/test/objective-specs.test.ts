@@ -43,6 +43,18 @@ function withPublic(game: GameState, player: PlayerId): GameState {
   return updatePlayer({ ...game, objectives }, player, (p) => ({ ...p, tradeGoods: 10 }));
 }
 
+/** Nur noch zwei Handelswaren und alle eigenen Planeten erschöpft: keine Ausgabe ist bezahlbar. */
+function poor(ctx: SpecContext): SpecContext {
+  const planets = Object.fromEntries(
+    Object.values(ctx.game.planets).map((p) => [
+      p.id,
+      p.controller === ctx.actor ? { ...p, exhausted: true } : p,
+    ]),
+  );
+  const game = updatePlayer({ ...ctx.game, planets }, ctx.actor, (p) => ({ ...p, tradeGoods: 2 }));
+  return { ...ctx, game };
+}
+
 function scoring(): SpecContext {
   const game = pickAll(started());
   const order = game.players.map((player) => player.id);
@@ -169,6 +181,21 @@ describe('Aufträge und Diplomatie am Tisch', () => {
       card: CROWN,
       choice: { mechanic: 'imperial', objective: GOODS, payment: { tradeGoods: 5 } },
     });
+  });
+
+  it('unbezahlbare Ausgabe-Aufträge sind nicht wählbar und das Siegel bleibt zu', () => {
+    const ctx = poor(scoring());
+    const spec = TABLE_SPECS.scoring;
+    const start = spec.initial(ctx);
+    expect(spec.targets(ctx, start).size).toBe(0);
+    expect(spec.hint(ctx)).toBe('tableHintScoringNone');
+    expect(played(spec, ctx, [pick(GOODS)])).toEqual(start);
+    expect(played(spec, ctx, [pick(WAR_CHEST)])).toEqual(start);
+    const forced = { kind: 'objective', objective: GOODS, payment: null } as const;
+    expect(spec.progress(ctx, forced)).toEqual({ done: 2, needed: 5, ready: false });
+    const imperial = poor(imperialPrimary());
+    expect(TABLE_SPECS.imperial.hint(imperial)).toBe('tableHintImperialNone');
+    expect(TABLE_SPECS.imperial.progress(imperial, forced).ready).toBe(false);
   });
 
   it('Imperium sekundär zieht einen geheimen Auftrag', () => {

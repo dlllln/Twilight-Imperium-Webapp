@@ -20,7 +20,7 @@ import { content, DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
 import { useCarryStore } from '../src/table/carry-store.ts';
 import { useLegalFor } from '../src/table/carry-rules.ts';
 import { useDraftStore } from '../src/table/draft-store.ts';
-import { usePaymentStore } from '../src/table/payment-store.ts';
+import { usePaymentStore, NO_PAYMENTS } from '../src/table/payment-store.ts';
 import { activatableSystems } from '../src/table/legal-systems.ts';
 import { poolTarget } from '../src/table/target-ref.ts';
 import { useDragSource } from '../src/table/use-drag-source.ts';
@@ -43,7 +43,7 @@ beforeEach(() => {
   useCarryStore.setState({ ...empty, news: null });
   useDraftStore.getState().clear();
   useHandStore.getState().clear();
-  usePaymentStore.setState({ key: null, version: null, plan: null, open: null, tables: 0 });
+  usePaymentStore.setState(NO_PAYMENTS);
 });
 
 afterEach(() => {
@@ -245,7 +245,9 @@ describe('Systeme auf der Karte als Ablageziele', () => {
     const ring = document.querySelector('svg .planet-target');
     if (ring === null) throw new Error('kein Planetenziel');
     fireEvent.click(ring);
-    expect(usePaymentStore.getState().plan?.planets).toEqual([ring.getAttribute('data-planet')]);
+    expect(usePaymentStore.getState().drafts['produktion']?.plan.planets).toEqual([
+      ring.getAttribute('data-planet'),
+    ]);
     expect(useGameStore.getState().selected).toBeNull();
     expect(flyTo).not.toHaveBeenCalled();
   });

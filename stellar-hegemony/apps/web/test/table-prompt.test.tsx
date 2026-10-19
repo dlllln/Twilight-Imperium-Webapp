@@ -324,7 +324,7 @@ describe('Ansage am Pult (Tischansicht)', () => {
     const me = scoringTable();
     render(<Live actions={{ Münze: { kind: 'tradeGoods', delta: 1 } }} />);
     const strip = screen.getByRole('region', { name: 'Aufträge auf dem Tisch' });
-    fireEvent.click(within(strip).getByRole('button', { name: 'Kriegskasse (1)' }));
+    fireEvent.click(within(strip).getByRole('button', { name: 'Kriegskasse' }));
     const meter = () => prompt().querySelector('.table-prompt-meter')?.textContent;
     expect(meter()).toContain('Gewählt: Kriegskasse');
     expect(meter()).toContain('Ressourcen: 0 / 8');

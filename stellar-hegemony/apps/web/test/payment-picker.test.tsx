@@ -6,13 +6,18 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { PaymentPicker, usePayment } from '../src/components/game/PaymentPicker.tsx';
 import { useGameStore } from '../src/game-store.ts';
 import { content, useGalaxyStore } from '../src/store.ts';
-import { usePaymentStore, useRegisterPlanetRow } from '../src/table/payment-store.ts';
+import {
+  usePaymentStore,
+  useRegisterPlanetRow,
+  NO_PAYMENTS,
+  openOf,
+} from '../src/table/payment-store.ts';
 import { pickAll, started } from './game-helpers.ts';
 import { leaveTable } from './local-table.ts';
 
 beforeEach(() => {
   useGalaxyStore.setState({ language: 'de' });
-  usePaymentStore.setState({ key: null, version: null, plan: null, open: null, tables: 0 });
+  usePaymentStore.setState(NO_PAYMENTS);
 });
 
 afterEach(() => {
@@ -56,7 +61,7 @@ describe('Bezahlung im Formular und am Tisch', () => {
     expect(meter?.getAttribute('aria-live')).toBe('polite');
     expect(meter?.textContent).toBe('Ressourcen: 0 / 3');
     expect(screen.getByText(/Tippe Planetenkarten oder Planeten auf der Karte an/)).toBeTruthy();
-    expect(usePaymentStore.getState().open).toMatchObject({ player: me, required: 3 });
+    expect(openOf(usePaymentStore.getState())).toMatchObject({ player: me, required: 3 });
   });
 
   it('ohne Planetenreihe bleibt das Formular mit Kontrollkästchen', () => {

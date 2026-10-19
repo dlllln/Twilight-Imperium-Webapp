@@ -15,7 +15,7 @@ import type { SheetTable } from '../../hud/use-sheet.ts';
 import type { PlanetLook } from '../../render/planet-texture.ts';
 import { content } from '../../store.ts';
 import { useRegisterPlanetRow } from '../../table/payment-store.ts';
-import { type PlanetTable, planetStates } from '../../table/planet-table.ts';
+import { kasseUseful, type PlanetTable, planetStates } from '../../table/planet-table.ts';
 import { planetTarget, targetKey, type TargetState } from '../../table/target-ref.ts';
 import { usePlanetTable } from '../../table/use-planet-table.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
@@ -159,7 +159,7 @@ interface RowProps extends ListProps {
 function Row({ cards, mode, planets, table }: RowProps): ReactElement {
   const t = useT();
   useRegisterPlanetRow();
-  const kasse = planets !== null && planets.mode === 'pay' && planets.tradeGoods !== null;
+  const kasse = planets !== null && kasseUseful(planets);
   return (
     <section className="planet-row" aria-label={t('planetRow')} data-mode={mode}>
       {kasse && <KassePlate table={table} planets={planets} />}

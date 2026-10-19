@@ -856,9 +856,15 @@ lassen sich auf der Karte antippen (`PlanetTargets`). Handelswaren wandern als M
 zweite Weg. Die Diplomatie (sekundär) nutzt dieselbe Reihe zum Bereitmachen: Erschöpfte Planeten
 leuchten, angetippte richten sich als Vorschau auf, höchstens so viele, wie die Karte erlaubt.
 
-Es gibt **eine** offene Bezahlung. Formular (`PaymentPicker`) und Tisch schreiben denselben
-Entwurf im `payment-store`; Schlüssel des Formulars, Spielstand und Währung entscheiden, ob er noch
-gilt. Ein neuer Stand oder eine andere Währung beginnt eine frische Bezahlung, ohne Aufräumcode.
+Formular (`PaymentPicker`) und Tisch schreiben denselben Entwurf im `payment-store`. Jedes
+Formular hat seinen eigenen Entwurf unter seinem Schlüssel; Spielstand und Währung entscheiden, ob
+er noch gilt. Ein neuer Stand oder eine andere Währung beginnt eine frische Bezahlung, ohne
+Aufräumcode; schließt ein Formular, verschwindet sein Entwurf. Stehen zwei Formulare offen (zwei
+Ausgabe-Aufträge in der klassischen Wertung), bedient der Tisch das zuletzt gezeigte; schließt es,
+übernimmt das davor gezeigte. Münzen in der Kasse fehlen auf dem Münzhaufen; dessen Beschriftung
+nennt weiter den ganzen Vorrat („4 (3 in der Kasse)“). Ohne eigene Handelswaren bleibt die Kasse
+weg und der Hinweis nennt nur Planeten. Hebt sich die Planetenreihe, rollt die Ansage zu
+Messleiste und Knöpfen des Formulars (`useRevealInPrompt`).
 Steht eine Planetenreihe, zeigt der `PaymentPicker` nur noch die Messleiste „bezahlt / benötigt“
 und den Hinweis, wo bezahlt wird; die klassische Ansicht behält Kontrollkästchen und Zahlenfeld.
 Produzieren, Landen auf der Thronwelt und Erforschen bleiben gesperrt, solange zu wenig bezahlt
@@ -875,7 +881,13 @@ Steht eine Wertung an, werden erfüllte Karten zu Knöpfen; Antippen wählt, ein
 zurück. Ausgabe-Aufträge öffnen die Bezahlung, die Ansage zeigt „Gewählt“ und „bezahlt /
 benötigt“, „Zurück“ gibt die Wahl frei. In der Aktionsphase tragen erfüllte geheime Aufträge, die
 ohne Bezahlung wertbar sind, einen eigenen Knopf „Werten“. Auf schmalen Schirmen ist die Leiste
-hinter einem Schalter eingeklappt und öffnet sich bei einer Entscheidung von selbst.
+hinter einem Schalter eingeklappt und öffnet sich bei einer Entscheidung von selbst; ein Druck auf
+den Schalter gilt nur für die Breite und die eine Entscheidung, in der er fiel. Wählbar sind nur
+erfüllte Aufträge, deren Ausgabe der Spieler auch aufbringen kann (bereite Planeten plus
+Handelswaren); ist keiner wählbar, sagt die Ansage das. Jede Karte trägt Punkte und Bedingung als
+Tooltip und für Bildschirmleser; Zeiger oder Fokus zeigen sie groß unter der Leiste. Die gewählte
+Karte trägt einen Ring in der eigenen Sitzfarbe und den Reiter „Gewählt“; gewertete Karten treten
+nicht zurück. Auf breiten Schirmen lässt die Leiste die Spalte der Meldungen frei.
 
 Die Ansage bekommt eine Messleiste je Art des Entwurfs: Marker (bei der Führung mit dem bezahlten
 Einfluss), Auftrag samt Bezahlung, bereitzumachende Planeten. Die Münzknöpfe der Führung sind
@@ -886,17 +898,17 @@ Drei reine Domain-Abfragen ersetzen Regeln im Web: `spendablePlanets` (eigene be
 dem Wert, den `evaluatePayment` zählt), `readyablePlanets` (eigene erschöpfte Planeten) und, schon
 vorhanden, `scoringOptions` für die Leiste.
 
-| Element                                                                        | Prinzip                                                                                                                                                                                                 |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `payment-draft.ts` (`PaymentPlan`, `togglePlanet`, `addCoins`, `inCurrency`)   | Reine Funktionen über dem Entwurf einer Bezahlung; den Wert rechnet allein die Domain (Pure Fabrication, Information Expert bleibt `evaluatePayment`).                                                  |
-| `payment-store.ts` (`usePaymentDraft`, `useClaimPayment`, `usePlanetRowShown`) | Eine Bezahlung, zwei Bedienwege: Formular und Tisch teilen den Entwurf (DRY); Schlüssel und Spielstand machen alte Entwürfe ungültig (Low Coupling, Protected Variations).                              |
-| `planet-table.ts`, `use-planet-table.ts`                                       | Was die Planeten gerade anbieten (`PlanetSide`): aus der Tischentscheidung oder aus dem offenen Formular. Reihe, Karte und Kasse fragen nur diese eine Stelle (Indirection, Controller).                |
-| `spec-objectives.ts`, `spec-diplomacy.ts`, `TableSpec.planets`/`alternative`   | Neue Entscheidungen sind neue Einträge in `TABLE_SPECS` mit eigenem Entwurf (`objective`, `ready`); der Ausweg („Zurück“, „Keinen werten“) gehört zur Entscheidung (Open/Closed, Strategy).             |
-| `PlanetRow`, `KassePlate`, `PlanetTargets`                                     | Anzeige plus Gesten ohne eigene Regel: Sie lesen die `PlanetTable` und rufen `toggle` bzw. `addCoins` (Single Responsibility); Münzen nutzen dieselbe Trage-Grammatik wie die Marker (DRY).             |
-| `hud/objective-strip.ts` (`objectiveStrip`, `scorableNow`)                     | Reine Abbildung der Aufträge auf Karten der Leiste; verdeckte Karten tragen keine Kennung (Information Hiding). Ob sofort gewertet werden darf, erprobt die Domain an einer Kopie (Information Expert). |
-| `ObjectiveStrip`, `objective-strip.css`                                        | Karten als Ziele der Entscheidung, gelesen aus `useTableDecision` (Controller bleibt der Hook); kleine Bausteine für Bild, Scheiben, Wahl und Sofortwertung (Single Responsibility).                    |
-| `PromptProgress`, `PromptPayHint` (Ansage), `PaymentPicker` mit Messleiste     | Je Art des Entwurfs eine Messleiste (Polymorphie über `kind`); das Formular tritt zurück, sobald der Tisch die Bedienung hat (Protected Variations, keine doppelten Bedienelemente).                    |
-| `spendablePlanets`, `readyablePlanets` (Domain)                                | Die Domain nennt die Planeten, die sie beim Bezahlen bzw. Bereitmachen auch annimmt; Web und Formulare fragen nur nach (Information Expert, DRY).                                                       |
+| Element                                                                          | Prinzip                                                                                                                                                                                                                         |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payment-draft.ts` (`PaymentPlan`, `togglePlanet`, `addCoins`, `spendableValue`) | Reine Funktionen über dem Entwurf einer Bezahlung; den Wert rechnet allein die Domain (Pure Fabrication, Information Expert bleibt `evaluatePayment`).                                                                          |
+| `payment-store.ts` (`usePaymentDraft`, `useClaimPayment`, `usePlanetRowShown`)   | Eine Bezahlung, zwei Bedienwege: Formular und Tisch teilen den Entwurf je Schlüssel (DRY); Spielstand und Währung machen alte Entwürfe ungültig, angezeigte Bezahlungen liegen als Stapel (Low Coupling, Protected Variations). |
+| `planet-table.ts`, `use-planet-table.ts`                                         | Was die Planeten gerade anbieten (`PlanetSide`): aus der Tischentscheidung oder aus dem offenen Formular. Reihe, Karte und Kasse fragen nur diese eine Stelle (Indirection, Controller).                                        |
+| `spec-objectives.ts`, `spec-diplomacy.ts`, `TableSpec.planets`/`alternative`     | Neue Entscheidungen sind neue Einträge in `TABLE_SPECS` mit eigenem Entwurf (`objective`, `ready`); der Ausweg („Zurück“, „Keinen werten“) gehört zur Entscheidung (Open/Closed, Strategy).                                     |
+| `PlanetRow`, `KassePlate`, `PlanetTargets`                                       | Anzeige plus Gesten ohne eigene Regel: Sie lesen die `PlanetTable` und rufen `toggle` bzw. `addCoins` (Single Responsibility); Münzen nutzen dieselbe Trage-Grammatik wie die Marker (DRY).                                     |
+| `hud/objective-strip.ts` (`objectiveStrip`, `scorableNow`)                       | Reine Abbildung der Aufträge auf Karten der Leiste; verdeckte Karten tragen keine Kennung (Information Hiding). Ob sofort gewertet werden darf, erprobt die Domain an einer Kopie (Information Expert).                         |
+| `ObjectiveStrip`, `objective-strip.css`                                          | Karten als Ziele der Entscheidung, gelesen aus `useTableDecision` (Controller bleibt der Hook); kleine Bausteine für Bild, Scheiben, Wahl und Sofortwertung (Single Responsibility).                                            |
+| `PromptProgress`, `PromptPayHint` (Ansage), `PaymentPicker` mit Messleiste       | Je Art des Entwurfs eine Messleiste (Polymorphie über `kind`); das Formular tritt zurück, sobald der Tisch die Bedienung hat (Protected Variations, keine doppelten Bedienelemente).                                            |
+| `spendablePlanets`, `readyablePlanets` (Domain)                                  | Die Domain nennt die Planeten, die sie beim Bezahlen bzw. Bereitmachen auch annimmt; Web und Formulare fragen nur nach (Information Expert, DRY).                                                                               |
 
 ## 34. Iterationen
 

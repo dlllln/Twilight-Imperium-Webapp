@@ -5639,9 +5639,18 @@ body {
   color: var(--muted);
 }
 
-/* Leer (keine Marker zu verteilen) bleibt die Leiste weg; ihre Live-Region bleibt stehen. */
+/*
+ * Leer (keine Marker zu verteilen, noch kein Auftrag gewählt) ist die Leiste unsichtbar, bleibt
+ * aber als Live-Region im Baum: So hören Bildschirmleser schon die erste Änderung.
+ */
 .table-prompt-meter:empty {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  box-shadow: none;
 }
 
 /*

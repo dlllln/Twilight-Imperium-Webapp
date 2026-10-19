@@ -8,11 +8,12 @@ import {
   togglePlanet,
 } from './payment-draft.ts';
 import {
+  type Draft,
   type OpenPayment,
   planFor,
-  type Stamp,
+  useDraft,
+  useOpenPayment,
   usePaymentStore,
-  useStamp,
 } from './payment-store.ts';
 import { type PlanetSide, type PlanetTable, planetTableOf } from './planet-table.ts';
 import { useTableDecision } from './use-table-decision.ts';
@@ -35,8 +36,8 @@ function openSide(game: GameState, open: OpenPayment, plan: PaymentPlan): Planet
 }
 
 /** Die Planetenreihe zur offenen Bezahlung eines Formulars; sie schreibt in den Store. */
-function openTableOf(game: GameState, open: OpenPayment, stamp: Stamp): PlanetTable {
-  const side = openSide(game, open, planFor(stamp, open.key, game.version, open.currency));
+function openTableOf(game: GameState, open: OpenPayment, draft: Draft | undefined): PlanetTable {
+  const side = openSide(game, open, planFor(draft, game.version, open.currency));
   const edit = (change: (plan: PaymentPlan) => PaymentPlan) => {
     usePaymentStore.getState().edit(open.key, game.version, open.currency, change);
   };
@@ -53,10 +54,10 @@ function openTableOf(game: GameState, open: OpenPayment, stamp: Stamp): PlanetTa
 /** Die Planeten, die der Tisch gerade anbietet; `null`, wenn keine Entscheidung sie braucht. */
 export function usePlanetTable(game: GameState | null): PlanetTable | null {
   const decision = useTableDecision(game);
-  const open = usePaymentStore((state) => state.open);
+  const open = useOpenPayment();
   const me = useGameStore((state) => state.me);
-  const stamp = useStamp();
+  const draft = useDraft(open?.key ?? null);
   if (decision?.planets != null) return decision.planets;
   if (game === null || open === null || open.player !== me) return null;
-  return openTableOf(game, open, stamp);
+  return openTableOf(game, open, draft);
 }

@@ -20,7 +20,7 @@ import { useSettingsStore } from '../src/settings-store.ts';
 import { content, useGalaxyStore } from '../src/store.ts';
 import { useCarryStore } from '../src/table/carry-store.ts';
 import { useDraftStore } from '../src/table/draft-store.ts';
-import { usePaymentStore } from '../src/table/payment-store.ts';
+import { usePaymentStore, NO_PAYMENTS } from '../src/table/payment-store.ts';
 import { installDomPolyfills } from './dom-polyfills.ts';
 import { pickAll, started } from './game-helpers.ts';
 import { leaveTable, seatTable } from './local-table.ts';
@@ -30,7 +30,7 @@ installDomPolyfills();
 beforeEach(() => {
   useGalaxyStore.setState({ language: 'de' });
   useSettingsStore.setState({ animations: false, tableView: true });
-  usePaymentStore.setState({ key: null, version: null, plan: null, open: null, tables: 0 });
+  usePaymentStore.setState(NO_PAYMENTS);
   const empty = { piece: null, legal: new Set<string>(), over: null, point: null, mode: null };
   useCarryStore.setState({ ...empty, news: null });
   useDraftStore.getState().clear();
@@ -54,6 +54,8 @@ function Live(): ReactElement | null {
 const row = () => screen.getByRole('region', { name: 'Deine Planeten' });
 const checkboxes = () => within(row()).queryAllByRole('checkbox');
 const kasseCount = () => screen.getByTestId('kasse-count').textContent;
+const goodsCount = () => screen.getByTestId('goods-count').textContent;
+const announced = () => document.querySelector('p.sr-only[aria-live]')?.textContent;
 
 /** Ein freier Planet mit mindestens so viel Einfluss geht an den Spieler. */
 function givePlanet(game: GameState, player: PlayerId, influence = 0, exhausted = false) {
@@ -126,11 +128,13 @@ describe('Planetenreihe am Pult', () => {
     expect(card.getAttribute('data-turn')).toBe('30');
     expect(card.getAttribute('data-target-state')).toBe('chosen');
     expect(card.getAttribute('title')).toContain('vorgemerkt');
-    expect(usePaymentStore.getState().plan?.planets).toEqual([card.getAttribute('data-planet')]);
+    expect(usePaymentStore.getState().drafts['form']?.plan.planets).toEqual([
+      card.getAttribute('data-planet'),
+    ]);
     fireEvent.click(card);
     expect(card.getAttribute('aria-checked')).toBe('false');
     expect(card.getAttribute('data-turn')).toBe('0');
-    expect(usePaymentStore.getState().plan?.planets).toEqual([]);
+    expect(usePaymentStore.getState().drafts['form']?.plan.planets).toEqual([]);
   });
 
   it('erschöpfte Planeten liegen quer und lassen sich nicht wählen', () => {
@@ -162,10 +166,10 @@ describe('Planetenreihe am Pult', () => {
     for (let coin = 0; coin < 3; coin += 1) fireEvent.click(plus);
     expect(kasseCount()).toBe('3');
     expect(plus.hasAttribute('disabled')).toBe(true);
-    expect(usePaymentStore.getState().plan?.tradeGoods).toBe(3);
+    expect(usePaymentStore.getState().drafts['form']?.plan.tradeGoods).toBe(3);
     fireEvent.click(minus);
     expect(kasseCount()).toBe('2');
-    expect(usePaymentStore.getState().plan?.tradeGoods).toBe(2);
+    expect(usePaymentStore.getState().drafts['form']?.plan.tradeGoods).toBe(2);
   });
 
   it('Handelsware per Enter aufnehmen und in der Kasse ablegen', () => {
@@ -178,11 +182,25 @@ describe('Planetenreihe am Pult', () => {
     expect(coin.getAttribute('aria-pressed')).toBe('true');
     fireEvent.keyDown(screen.getByRole('button', { name: 'Kasse: 0' }), { key: 'Enter' });
     expect(kasseCount()).toBe('1');
+    expect(goodsCount()).toBe('2');
     expect(useCarryStore.getState().piece).toBeNull();
     const back = screen.getByRole('button', { name: 'Handelsware aufnehmen: Kasse' });
     fireEvent.click(back, { detail: 0 });
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Handelswaren: 3' }), { key: 'Enter' });
+    expect(announced()).toBe('Aufgenommen: Handelsware. Wähle ein Ziel, Escape legt zurück.');
+    const pile = screen.getByRole('button', { name: 'Handelswaren: 3 (1 in der Kasse)' });
+    fireEvent.keyDown(pile, { key: 'Enter' });
     expect(kasseCount()).toBe('0');
+    expect(goodsCount()).toBe('3');
+  });
+
+  it('ohne Handelswaren bleibt die Kasse weg', () => {
+    const { me } = seated((state) =>
+      updatePlayer(state, state.actionPhase?.active as PlayerId, (p) => ({ ...p, tradeGoods: 0 })),
+    );
+    render(<Live />);
+    claim(me);
+    expect(row().getAttribute('data-mode')).toBe('pay');
+    expect(screen.queryByTestId('kasse-count')).toBeNull();
   });
 });
 

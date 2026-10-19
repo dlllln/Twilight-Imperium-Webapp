@@ -1,12 +1,6 @@
 import { planetId } from '@stellar/domain';
 import { describe, expect, it } from 'vitest';
-import {
-  addCoins,
-  inCurrency,
-  paymentOf,
-  paymentPlan,
-  togglePlanet,
-} from '../src/table/payment-draft.ts';
+import { addCoins, paymentOf, paymentPlan, togglePlanet } from '../src/table/payment-draft.ts';
 
 const ALPHA = planetId('alpha');
 const BETA = planetId('beta');
@@ -37,16 +31,5 @@ describe('Entwurf einer Bezahlung', () => {
     expect(addCoins(two, 1, 2)).toBe(two);
     expect(addCoins(two, -1, 2).tradeGoods).toBe(1);
     expect(addCoins(two, 0, 1).tradeGoods).toBe(1);
-  });
-
-  it('ein Wechsel der Währung beginnt eine neue Bezahlung', () => {
-    const plan = addCoins(togglePlanet(paymentPlan('resources'), ALPHA, SPENDABLE), 1, 3);
-    expect(inCurrency(plan, 'resources')).toBe(plan);
-    expect(inCurrency(plan, 'influence')).toEqual({
-      kind: 'payment',
-      currency: 'influence',
-      planets: [],
-      tradeGoods: 0,
-    });
   });
 });

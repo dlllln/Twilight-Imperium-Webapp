@@ -7,6 +7,7 @@ import {
   type Payment,
   scoringOptions,
 } from '@stellar/domain';
+import type { MessageKey } from '../i18n.ts';
 import { content } from '../store.ts';
 import {
   addCoins,
@@ -16,6 +17,7 @@ import {
   paymentPlan,
   paymentValueOf,
   spendableIds,
+  spendableValue,
   togglePlanet,
 } from './payment-draft.ts';
 import { planetStates, type PlanetSide } from './planet-table.ts';
@@ -40,22 +42,37 @@ const spendOf = (objective: ObjectiveId | null): Spend | null => {
   return condition?.kind === 'spend' ? condition : null;
 };
 
-/** Zu wertende Aufträge der Wertung: erfüllt und jetzt erlaubt. */
+/** Was der Spieler für eine Ausgabe höchstens aufbringen kann. */
+function reachable(ctx: SpecContext, spend: Spend): number {
+  return spend.currency === 'tradeGoods'
+    ? ownTradeGoods(ctx.game, ctx.actor)
+    : spendableValue(ctx.game, ctx.actor, spend.currency);
+}
+
+/** Ausgabe-Aufträge zählen nur, wenn der Spieler den Betrag aufbringen kann. */
+function affordable(ctx: SpecContext, objective: ObjectiveId): boolean {
+  const spend = spendOf(objective);
+  return spend === null || reachable(ctx, spend) >= spend.amount;
+}
+
+/** Zu wertende Aufträge der Wertung: erfüllt, jetzt erlaubt und bezahlbar. */
 const scorable = (ctx: SpecContext): readonly ObjectiveId[] =>
-  metIds(scoringOptions(ctx.game, ctx.actor, content));
+  metIds(ctx, scoringOptions(ctx.game, ctx.actor, content));
 
 /** Imperium primär: erfüllte öffentliche Aufträge; sekundär keine. */
 const imperialPublic = (ctx: SpecContext): readonly ObjectiveId[] =>
   ctx.route.ability === 'secondary'
     ? []
     : metIds(
+        ctx,
         availableObjectives(ctx.game, ctx.actor, content).filter(
           (option) => option.definition.category === 'public',
         ),
       );
 
-function metIds(options: readonly ObjectiveOption[]): readonly ObjectiveId[] {
-  return options.filter((option) => option.met).map((option) => option.definition.id);
+function metIds(ctx: SpecContext, options: readonly ObjectiveOption[]): readonly ObjectiveId[] {
+  const met = options.filter((option) => option.met).map((option) => option.definition.id);
+  return met.filter((id) => affordable(ctx, id));
 }
 
 /** Ausgaben in Ressourcen oder Einfluss öffnen eine Bezahlung; Handelswaren zahlt die Domain. */
@@ -116,11 +133,17 @@ const targetsWith =
     return states;
   };
 
-/** Ohne Wahl gleich bereit; bei Ausgabe-Aufträgen erst, wenn genug bezahlt ist. */
+/**
+ * Ohne Wahl gleich bereit; bei Ausgabe-Aufträgen erst, wenn genug bezahlt ist. Handelswaren-
+ * Aufträge zahlen aus dem Vorrat: bereit nur, wenn er reicht.
+ */
 function progress(ctx: SpecContext, draft: ObjectivePlan): Progress {
   const spend = spendOf(draft.objective);
-  if (draft.payment === null || spend === null) return { done: 0, needed: 0, ready: true };
-  const value = paymentValueOf(ctx.game, ctx.actor, draft.payment);
+  if (spend === null) return { done: 0, needed: 0, ready: true };
+  const value =
+    draft.payment === null
+      ? Math.min(reachable(ctx, spend), spend.amount)
+      : paymentValueOf(ctx.game, ctx.actor, draft.payment);
   return { done: value, needed: spend.amount, ready: value >= spend.amount };
 }
 
@@ -141,7 +164,7 @@ function scoringCommand(ctx: SpecContext, draft: ObjectivePlan): GameCommand {
 /** Wertung der Statusphase (RR 61): einen erfüllten Auftrag werten oder die Wertung beenden. */
 export const SCORING_SPEC: ObjectiveSpec = {
   id: 'scoring',
-  hint: () => 'tableHintScoring',
+  hint: (ctx) => (scorable(ctx).length > 0 ? 'tableHintScoring' : 'tableHintScoringNone'),
   confirm: (_ctx, draft) => (draft.objective === null ? 'doneScoring' : 'score'),
   initial: () => NONE,
   apply: applyWith(scorable),
@@ -157,10 +180,15 @@ export const SCORING_SPEC: ObjectiveSpec = {
 
 const secondary = (ctx: SpecContext): boolean => ctx.route.ability === 'secondary';
 
+function imperialHint(ctx: SpecContext): MessageKey {
+  if (secondary(ctx)) return 'tableHintDrawSecret';
+  return imperialPublic(ctx).length > 0 ? 'tableHintImperial' : 'tableHintImperialNone';
+}
+
 /** Imperium (RR 45): primär wahlweise einen öffentlichen Auftrag werten, sekundär ziehen. */
 export const IMPERIAL_SPEC: ObjectiveSpec = {
   id: 'imperial',
-  hint: (ctx) => (secondary(ctx) ? 'tableHintDrawSecret' : 'tableHintImperial'),
+  hint: imperialHint,
   confirm: (ctx) => (secondary(ctx) ? 'drawSecret' : 'confirm'),
   initial: () => NONE,
   apply: applyWith(imperialPublic),

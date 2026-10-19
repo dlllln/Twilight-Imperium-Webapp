@@ -1,5 +1,5 @@
 import { type Currency, findPlayer, type GameState, type PlayerId } from '@stellar/domain';
-import type { ReactElement } from 'react';
+import { type ReactElement, useRef } from 'react';
 import { planetLabel } from '../../labels.ts';
 import { payablePlanets } from '../../payment-view.ts';
 import { content } from '../../store.ts';
@@ -9,7 +9,9 @@ import {
   usePaymentDraft,
   usePlanetRowShown,
 } from '../../table/payment-store.ts';
+import { payHintOf } from '../../table/planet-table.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
+import { useRevealInPrompt } from '../table/use-reveal-in-prompt.ts';
 
 export type { PaymentState } from '../../table/payment-store.ts';
 
@@ -59,14 +61,17 @@ function PaidLine({ currency, required, state }: LineProps): ReactElement {
 }
 
 /** Am Tisch: nur „bezahlt / benötigt“; Planeten und Münzen legt man auf Pult und Karte. */
-function PaymentMeter({ currency, required, state }: LineProps) {
+function PaymentMeter({ game, player, currency, required, state }: PickerProps) {
   const t = useT();
+  const meter = useRef<HTMLParagraphElement>(null);
+  useRevealInPrompt(meter);
+  const own = findPlayer(game, player)?.tradeGoods ?? 0;
   return (
     <>
-      <p className="payment-meter" aria-live="polite">
+      <p ref={meter} className="payment-meter" aria-live="polite" aria-atomic="true">
         <PaidLine currency={currency} required={required} state={state} />
       </p>
-      <p className="hint payment-hint">{t('payOnTable')}</p>
+      <p className="hint payment-hint">{t(payHintOf(own))}</p>
     </>
   );
 }

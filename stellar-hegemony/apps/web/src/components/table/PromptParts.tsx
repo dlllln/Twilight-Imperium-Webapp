@@ -2,6 +2,7 @@ import { type GameState, warfareTokenSystems } from '@stellar/domain';
 import type { ReactElement, ReactNode } from 'react';
 import type { Language } from '../../i18n.ts';
 import { objectiveLabel } from '../../labels.ts';
+import { payHintOf } from '../../table/planet-table.ts';
 import type { ObjectivePlan, Progress, TokenPlan } from '../../table/table-specs.ts';
 import type { TableDecision } from '../../table/use-table-decision.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
@@ -159,7 +160,9 @@ export function PromptPayHint({ decision }: { readonly decision: TableDecision }
   const t = useT();
   const { draft } = decision;
   if (draft?.kind !== 'objective' || draft.payment === null) return null;
-  return <p className="hint table-prompt-pay">{t('payOnTable')}</p>;
+  return (
+    <p className="hint table-prompt-pay">{t(payHintOf(decision.planets?.ownTradeGoods ?? 0))}</p>
+  );
 }
 
 /** Kriegsführung: der Weg per Tastatur zum Marker auf der Karte (dort leuchten dieselben Systeme). */

@@ -13,9 +13,10 @@ import {
 } from './payment-draft.ts';
 
 /*
- * Die eine Bezahlung, die gerade offen ist: Formular (`PaymentPicker`) und Tisch (Planetenreihe,
- * Planeten auf der Karte, Kasse) schreiben denselben Entwurf. Schlüssel, Spielstand und Währung
- * bestimmen, ob der Entwurf noch gilt; sonst beginnt eine neue Bezahlung, ohne Aufräumcode.
+ * Offene Bezahlungen: Formular (`PaymentPicker`) und Tisch (Planetenreihe, Planeten auf der
+ * Karte, Kasse) schreiben denselben Entwurf. Jedes Formular hat seinen eigenen Entwurf unter
+ * seinem Schlüssel; Spielstand und Währung bestimmen, ob er noch gilt. Der Tisch bedient das
+ * zuletzt angezeigte Formular; schließt es, übernimmt das davor angezeigte.
  */
 
 /** Eine angezeigte Bezahlung, die der Tisch mitbedient. */
@@ -26,67 +27,75 @@ export interface OpenPayment {
   readonly required: number;
 }
 
-export interface PaymentStore {
-  readonly key: string | null;
-  readonly version: number | null;
-  readonly plan: PaymentPlan | null;
-  readonly open: OpenPayment | null;
+/** Der Entwurf eines Formulars zu einem Spielstand. */
+export interface Draft {
+  readonly version: number;
+  readonly plan: PaymentPlan;
+}
+
+export interface PaymentSlots {
+  readonly drafts: Readonly<Record<string, Draft>>;
+  /** Angezeigte Bezahlungen in der Reihenfolge des Erscheinens; die letzte bedient der Tisch. */
+  readonly claims: readonly OpenPayment[];
   /** Wie viele Planetenreihen gerade angezeigt werden. */
   readonly tables: number;
+}
+
+export interface PaymentStore extends PaymentSlots {
   readonly edit: (
     key: string,
     version: number,
     currency: Currency,
     change: (plan: PaymentPlan) => PaymentPlan,
   ) => void;
+  readonly drop: (key: string) => void;
   readonly claim: (open: OpenPayment) => void;
   readonly release: (key: string) => void;
   readonly addTable: () => () => void;
 }
 
-export interface Stamp {
-  readonly key: string | null;
-  readonly version: number | null;
-  readonly plan: PaymentPlan | null;
-}
+/** Leerer Stand: kein Entwurf, keine angezeigte Bezahlung, keine Planetenreihe. */
+export const NO_PAYMENTS: PaymentSlots = { drafts: {}, claims: [], tables: 0 };
 
-/** Der Entwurf zu Schlüssel, Spielstand und Währung; passt einer nicht, ein frischer. */
+/** Der Entwurf zu Spielstand und Währung; passt einer nicht, ein frischer. */
 export function planFor(
-  stamp: Stamp,
-  key: string,
+  draft: Draft | undefined,
   version: number,
   currency: Currency,
 ): PaymentPlan {
-  const { plan } = stamp;
-  const same = stamp.key === key && stamp.version === version && plan?.currency === currency;
-  return same ? plan : paymentPlan(currency);
+  const same = draft?.version === version && draft.plan.currency === currency;
+  return same ? draft.plan : paymentPlan(currency);
 }
 
-export const usePaymentStore = create<PaymentStore>()((set, get) => ({
-  key: null,
-  version: null,
-  plan: null,
-  open: null,
-  tables: 0,
+/** Die Bezahlung, die der Tisch gerade bedient. */
+export const openOf = (state: PaymentSlots): OpenPayment | null => state.claims.at(-1) ?? null;
+
+const without = <T>(record: Readonly<Record<string, T>>, key: string) =>
+  Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== key));
+
+export const usePaymentStore = create<PaymentStore>()((set) => ({
+  ...NO_PAYMENTS,
   edit: (key, version, currency, change) =>
-    set((state) => ({ key, version, plan: change(planFor(state, key, version, currency)) })),
-  claim: (open) => set({ open }),
-  release: (key) => {
-    if (get().open?.key === key) set({ open: null });
-  },
+    set((state) => {
+      const plan = change(planFor(state.drafts[key], version, currency));
+      return { drafts: { ...state.drafts, [key]: { version, plan } } };
+    }),
+  drop: (key) => set((state) => ({ drafts: without(state.drafts, key) })),
+  claim: (open) =>
+    set((state) => ({ claims: [...state.claims.filter((c) => c.key !== open.key), open] })),
+  release: (key) => set((state) => ({ claims: state.claims.filter((c) => c.key !== key) })),
   addTable: () => {
     set((state) => ({ tables: state.tables + 1 }));
     return () => set((state) => ({ tables: Math.max(0, state.tables - 1) }));
   },
 }));
 
-/** Der Stand des Entwurfs im Store. */
-export function useStamp(): Stamp {
-  const key = usePaymentStore((state) => state.key);
-  const version = usePaymentStore((state) => state.version);
-  const plan = usePaymentStore((state) => state.plan);
-  return { key, version, plan };
-}
+/** Der Entwurf eines Formulars im Store. */
+export const useDraft = (key: string | null): Draft | undefined =>
+  usePaymentStore((state) => (key === null ? undefined : state.drafts[key]));
+
+/** Die Bezahlung, die der Tisch gerade bedient. */
+export const useOpenPayment = (): OpenPayment | null => usePaymentStore(openOf);
 
 /** Was ein Bezahlformular braucht; der Wert kommt aus der Domain. */
 export interface PaymentState {
@@ -120,7 +129,8 @@ export function usePaymentDraft(
   currency: Currency,
 ): PaymentState {
   const key = useId();
-  const plan = planFor(useStamp(), key, game.version, currency);
+  const plan = planFor(useDraft(key), game.version, currency);
+  useEffect(() => () => usePaymentStore.getState().drop(key), [key]);
   return {
     key,
     currency,

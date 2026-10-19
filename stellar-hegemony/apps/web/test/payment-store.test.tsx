@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { type GameState, type PlanetId, type PlayerId, spendablePlanets } from '@stellar/domain';
+import {
+  type Currency,
+  type GameState,
+  type PlanetId,
+  type PlayerId,
+  spendablePlanets,
+} from '@stellar/domain';
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { useGameStore } from '../src/game-store.ts';
@@ -13,6 +19,8 @@ import {
   usePaymentStore,
   usePlanetRowShown,
   useRegisterPlanetRow,
+  NO_PAYMENTS,
+  openOf,
 } from '../src/table/payment-store.ts';
 import { usePlanetTable } from '../src/table/use-planet-table.ts';
 import { pickAll, started } from './game-helpers.ts';
@@ -20,7 +28,7 @@ import { leaveTable } from './local-table.ts';
 
 beforeEach(() => {
   useSettingsStore.setState({ tableView: true });
-  usePaymentStore.setState({ key: null, version: null, plan: null, open: null, tables: 0 });
+  usePaymentStore.setState(NO_PAYMENTS);
   useDraftStore.getState().clear();
   useHandStore.getState().clear();
 });
@@ -49,6 +57,14 @@ function useFormAndTable(me: PlayerId, claimed: boolean) {
   const form = usePaymentDraft(game, me, 'resources');
   useClaimPayment(form, claimed ? me : ('niemand' as PlayerId), 4);
   return { form, table: usePlanetTable(game) };
+}
+
+/** Ein zweites Formular in derselben Währung, das ebenfalls eine Bezahlung zeigt. */
+function useForm(me: PlayerId, required: number) {
+  const game = useGameStore((state) => state.game) as GameState;
+  const form = usePaymentDraft(game, me, 'resources');
+  useClaimPayment(form, me, required);
+  return form;
 }
 
 describe('Gemeinsame Bezahlung von Formular und Tisch', () => {
@@ -86,7 +102,41 @@ describe('Gemeinsame Bezahlung von Formular und Tisch', () => {
     shown.unmount();
     const { result } = renderHook(() => usePlanetTable(current()));
     expect(result.current).toBeNull();
-    expect(usePaymentStore.getState().open).toBeNull();
+    expect(openOf(usePaymentStore.getState())).toBeNull();
+  });
+
+  it('eine andere Währung beginnt eine frische Bezahlung', () => {
+    const { me, planet } = seated();
+    const { result, rerender } = renderHook(
+      ({ currency }: { readonly currency: Currency }) => usePaymentDraft(current(), me, currency),
+      { initialProps: { currency: 'resources' as Currency } },
+    );
+    act(() => result.current.togglePlanet(planet));
+    act(() => result.current.setTradeGoods(1));
+    expect(result.current.payment).toEqual({ planets: [planet], tradeGoods: 1 });
+    rerender({ currency: 'influence' });
+    expect(result.current.payment).toEqual({ planets: [], tradeGoods: 0 });
+  });
+
+  it('zwei offene Formulare behalten jedes seinen Entwurf', () => {
+    const { me, planet } = seated();
+    const { result } = renderHook(() => ({ a: useFormAndTable(me, true), b: useForm(me, 8) }));
+    act(() => result.current.a.form.togglePlanet(planet));
+    act(() => result.current.b.setTradeGoods(2));
+    expect(result.current.a.form.payment).toEqual({ planets: [planet], tradeGoods: 0 });
+    expect(result.current.b.payment).toEqual({ planets: [], tradeGoods: 2 });
+    expect(result.current.a.table).toMatchObject({ required: 8, tradeGoods: 2 });
+  });
+
+  it('schließt das zuletzt gezeigte Formular, bedient der Tisch das vorige', () => {
+    const { me, planet } = seated();
+    const first = renderHook(() => useFormAndTable(me, true));
+    act(() => first.result.current.form.togglePlanet(planet));
+    const second = renderHook(() => useForm(me, 8));
+    expect(first.result.current.table).toMatchObject({ required: 8, chosen: [] });
+    second.unmount();
+    expect(first.result.current.table).toMatchObject({ required: 4, chosen: [planet] });
+    expect(usePaymentStore.getState().drafts).not.toHaveProperty(second.result.current.key);
   });
 
   it('eine Planetenreihe meldet sich an und ab', () => {

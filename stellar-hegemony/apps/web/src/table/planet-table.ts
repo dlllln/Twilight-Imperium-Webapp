@@ -6,6 +6,7 @@ import {
   type PlayerId,
   spendablePlanets,
 } from '@stellar/domain';
+import type { MessageKey } from '../i18n.ts';
 import { paymentValue } from '../payment-view.ts';
 import { content } from '../store.ts';
 import { planetTarget, targetKey, type TargetState } from './target-ref.ts';
@@ -86,3 +87,13 @@ export function planetTableOf(
     ownTradeGoods: findPlayer(game, player)?.tradeGoods ?? 0,
   };
 }
+
+/** Ob die Kasse etwas zu tun hat: eigene Handelswaren oder schon Münzen darin. */
+export const kasseUseful = (table: PlanetTable): boolean =>
+  table.mode === 'pay' &&
+  table.tradeGoods !== null &&
+  (table.ownTradeGoods > 0 || table.tradeGoods > 0);
+
+/** Hinweis, wo bezahlt wird; die Kasse nur, wenn Handelswaren mitzahlen können. */
+export const payHintOf = (ownTradeGoods: number): MessageKey =>
+  ownTradeGoods > 0 ? 'payOnTable' : 'payOnTablePlanets';

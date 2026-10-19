@@ -1061,6 +1061,8 @@ const DICTIONARY = {
   withoutToken: { de: 'Ohne Marker ausführen', en: 'Perform without a token' },
   withoutSystem: { de: 'Ohne System ausführen', en: 'Perform without a system' },
   kasse: { de: 'Kasse', en: 'Payment tray' },
+  tradeGood: { de: 'Handelsware', en: 'Trade good' },
+  inKasse: { de: '{count} in der Kasse', en: '{count} in the tray' },
   pickUpCoin: { de: 'Handelsware aufnehmen', en: 'Pick up a trade good' },
   planetRow: { de: 'Deine Planeten', en: 'Your planets' },
   planetCardLabel: {
@@ -1072,13 +1074,25 @@ const DICTIONARY = {
     de: 'Tippe Planetenkarten oder Planeten auf der Karte an; Handelswaren legst du in die Kasse.',
     en: 'Tap planet cards or planets on the map; put trade goods in the tray.',
   },
+  payOnTablePlanets: {
+    de: 'Tippe Planetenkarten oder Planeten auf der Karte an.',
+    en: 'Tap planet cards or planets on the map.',
+  },
   tableHintScoring: {
     de: 'Tippe einen erfüllten Auftrag an, um ihn zu werten. Das Siegel beendet die Wertung.',
     en: 'Tap a fulfilled objective to score it. The seal ends scoring.',
   },
+  tableHintScoringNone: {
+    de: 'Kein Auftrag ist erfüllt und bezahlbar. Das Siegel beendet die Wertung.',
+    en: 'No objective is fulfilled and affordable. The seal ends scoring.',
+  },
   tableHintImperial: {
     de: 'Tippe einen erfüllten öffentlichen Auftrag an oder führe die Karte ohne Wertung aus.',
     en: 'Tap a fulfilled public objective or perform the card without scoring.',
+  },
+  tableHintImperialNone: {
+    de: 'Kein öffentlicher Auftrag ist erfüllt und bezahlbar. Führe die Karte ohne Wertung aus.',
+    en: 'No public objective is fulfilled and affordable. Perform the card without scoring.',
   },
   tableHintDrawSecret: {
     de: 'Ziehe einen geheimen Auftrag oder lehne ab.',
@@ -1091,6 +1105,9 @@ const DICTIONARY = {
   objectiveStrip: { de: 'Aufträge auf dem Tisch', en: 'Objectives on the table' },
   objectiveStripToggle: { de: 'Aufträge', en: 'Objectives' },
   scoreNow: { de: 'Werten: {objective}', en: 'Score: {objective}' },
+  pointsOne: { de: '1 Siegpunkt', en: '1 victory point' },
+  pointsMany: { de: '{count} Siegpunkte', en: '{count} victory points' },
+  chosenTab: { de: 'Gewählt', en: 'Chosen' },
   scoredByLabel: { de: 'Gewertet von', en: 'Scored by' },
   planetsToReady: { de: 'Bereitzumachen', en: 'To ready' },
   chosenObjective: { de: 'Gewählt', en: 'Chosen' },

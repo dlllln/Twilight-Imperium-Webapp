@@ -1,11 +1,14 @@
+import type { GameState } from '@stellar/domain';
 import { Coins, Hexagon, Package, Star } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import type { ReactElement } from 'react';
+import { useViewer } from '../../game-store.ts';
 import { type EmpireSummary, type Supply, TECHNOLOGY_COLORS } from '../../hud/hud-model.ts';
 import { PILE_MAX, type SheetModel, supplyText } from '../../hud/sheet-model.ts';
 import type { SheetPulse, SheetTable } from '../../hud/use-sheet.ts';
 import type { MessageKey } from '../../i18n.ts';
 import { GOODS_PIECE } from '../../table/target-ref.ts';
+import { usePlanetTable } from '../../table/use-planet-table.ts';
 import { useTarget } from '../../table/use-target.ts';
 import { useT } from '../../use-translation.ts';
 import { TECH_ICONS } from '../hud/tech-icons.ts';
@@ -18,12 +21,14 @@ const RING = 2 * Math.PI * 17;
 
 interface GoodsProps {
   readonly count: number;
+  /** Münzen, die gerade in der Kasse liegen; sie fehlen auf dem Haufen. */
+  readonly inKasse: number;
   readonly pulse: SheetPulse;
   readonly table: SheetTable;
 }
 
 /** Der Münzhaufen; während einer Bezahlung liegt obenauf eine Münze zum Aufnehmen. */
-function Pile({ count, table }: Omit<GoodsProps, 'pulse'>): ReactElement {
+function Pile({ count, table }: Omit<GoodsProps, 'pulse' | 'inKasse'>): ReactElement {
   const t = useT();
   return (
     <div className="sheet-pile">
@@ -37,26 +42,35 @@ function Pile({ count, table }: Omit<GoodsProps, 'pulse'>): ReactElement {
   );
 }
 
+/** „Handelswaren: 4“, während einer Bezahlung „Handelswaren: 4 (3 in der Kasse)“. */
+function goodsText(t: (key: MessageKey) => string, count: number, inKasse: number): string {
+  const total = `${t('tradeGoods')}: ${String(count)}`;
+  return inKasse > 0 ? `${total} (${t('inKasse').replace('{count}', String(inKasse))})` : total;
+}
+
 /**
  * Haufen goldener Münzen für die Handelswaren; ab zehn wächst nur noch die Zahl. Der Haufen ist
- * auch ein Ziel: Münzen aus der Kasse kommen hierher zurück.
+ * auch ein Ziel: Münzen aus der Kasse kommen hierher zurück. Münzen in der Kasse liegen nicht
+ * mehr auf dem Haufen; die Beschriftung nennt weiter den ganzen Vorrat.
  */
-function Goods({ count, pulse, table }: GoodsProps): ReactElement {
+function Goods({ count, inKasse, pulse, table }: GoodsProps): ReactElement {
   const t = useT();
   const target = useTarget(GOODS_PIECE, undefined, table.router);
+  const left = Math.max(0, count - inKasse);
+  const text = goodsText(t, count, inKasse);
   return (
     <div
       className="sheet-goods"
-      aria-label={`${t('tradeGoods')}: ${String(count)}`}
-      title={t('tradeGoods')}
+      aria-label={text}
+      title={text}
       {...target.props}
       {...dropAttributes(target)}
       data-over={target.over ? 'true' : undefined}
     >
-      <Pile count={count} table={table} />
-      <span className="sheet-count">
+      <Pile count={left} table={table} />
+      <span className="sheet-count" data-testid="goods-count">
         <Coins className="sheet-icon" size={12} aria-hidden="true" />
-        {count}
+        {left}
       </span>
       <span className="sheet-caption" aria-hidden="true">
         {t('tradeGoods')}
@@ -174,18 +188,28 @@ function VictoryPlate({ points, goal, pulse }: VictoryProps): ReactElement {
 }
 
 interface WingProps {
+  readonly game: GameState;
   readonly model: SheetModel;
   readonly pulse: SheetPulse;
   readonly table: SheetTable;
 }
 
+/** Münzen in der Kasse der eigenen offenen Bezahlung; sonst keine. */
+function useCoinsInKasse(game: GameState): number {
+  const viewer = useViewer();
+  const planets = usePlanetTable(game);
+  if (planets === null || planets.mode !== 'pay' || planets.player !== viewer) return 0;
+  return planets.tradeGoods ?? 0;
+}
+
 /** Rechter Flügel: Münzen, Rohstoffkisten, Planetenwerte, Technologielampen, Siegpunkte. */
-export function TreasuryWing({ model, pulse, table }: WingProps): ReactElement {
+export function TreasuryWing({ game, model, pulse, table }: WingProps): ReactElement {
   const t = useT();
   const { summary } = model;
+  const inKasse = useCoinsInKasse(game);
   return (
     <div className="sheet-wing treasury" role="group" aria-label={t('sheetTreasury')}>
-      <Goods count={summary.tradeGoods} pulse={pulse} table={table} />
+      <Goods count={summary.tradeGoods} inKasse={inKasse} pulse={pulse} table={table} />
       <Commodities supply={summary.commodities} pulse={pulse} />
       <div className="sheet-values">
         <ValuePlate kind="res" label="resources" supply={summary.resources} />
