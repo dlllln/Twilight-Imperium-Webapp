@@ -13,6 +13,8 @@ import {
   PromptProgress,
   PromptWarfare,
 } from './PromptParts.tsx';
+import { DiplomacyPick, DoneLine, PlacementList, TradeCorner } from './PromptTactical.tsx';
+import { StructureTray } from './StructureTray.tsx';
 
 /*
  * Die Ansage: ein Messingschild über dem rechten Flügel des Pults. Es trägt jede Entscheidung der
@@ -32,25 +34,34 @@ const STILL = { initial: false } as const;
 /** Diese Arten zeigen nur ihre eine Zeile, ohne Kopf. */
 const COMPACT = new Set(['waiting', 'gameOver']);
 
-/** Hinweis über dem Formular; den Kampfhinweis bringt das Formular selbst mit. */
+/**
+ * Hinweis über dem Formular; den Kampfhinweis bringt das Formular selbst mit, am Ende der
+ * taktischen Aktion steht an seiner Stelle der Abschlusssatz (`DoneLine`).
+ */
 function PromptHint({ decision }: { readonly decision: TableDecision }): ReactElement | null {
   const t = useT();
-  const { hint, route } = decision;
-  if (hint === null || route.kind === 'combat') return null;
+  const { hint, route, specId } = decision;
+  if (hint === null || route.kind === 'combat' || specId === 'tacticalDone') return null;
   return <p className="hint table-prompt-hint">{t(hint)}</p>;
 }
 
 /**
  * Eine am Tisch gespielte Entscheidung: Marker und Planeten auf dem Pult, Aufträge auf der
- * Auftragsleiste; hier Messleiste und Siegel.
+ * Auftragsleiste, Figuren und Bauplätze auf der Karte. Hier stehen von oben nach unten
+ * Messleiste, Tastaturweg bzw. Bauvorrat, gesetzte Gebäude, Ausweg und Siegel, zuletzt der Handel.
  */
 function PortedPrompt({ game, decision }: PartProps): ReactElement {
   return (
     <>
       <PromptProgress decision={decision} />
+      <DoneLine game={game} decision={decision} />
       <PromptPayHint decision={decision} />
       <PromptWarfare game={game} decision={decision} />
+      <DiplomacyPick game={game} decision={decision} />
+      <StructureTray game={game} decision={decision} />
+      <PlacementList game={game} decision={decision} />
       <PromptActions decision={decision} />
+      <TradeCorner game={game} decision={decision} />
     </>
   );
 }

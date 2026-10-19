@@ -1,5 +1,5 @@
-import { type GameState, systemId } from '@stellar/domain';
-import { Crosshair, Hand, type LucideIcon, ZoomIn } from 'lucide-react';
+import { type GameCommand, type GameState, type PlayerId, systemId } from '@stellar/domain';
+import { Compass, Crosshair, Hand, type LucideIcon, ZoomIn } from 'lucide-react';
 import type { PointerEvent, ReactElement } from 'react';
 import { useGameStore, useHumanActor } from '../../game-store.ts';
 import { HEX_SIZE, hexToPixel } from '../../hex-geometry.ts';
@@ -7,6 +7,7 @@ import { type BoardView, foreshorten, project } from '../../render/board-view.ts
 import { type SystemAction, systemActions } from '../../hud/system-actions.ts';
 import type { MessageKey } from '../../i18n.ts';
 import type { SceneHex } from '../../render/scene-model.ts';
+import { useSettingsStore } from '../../settings-store.ts';
 import type { Viewport } from '../../store.ts';
 import { useChosenCard } from '../../table/use-decision-route.ts';
 import { useT } from '../../use-translation.ts';
@@ -25,6 +26,7 @@ const LOOKS: Readonly<Record<TableAction, readonly [LucideIcon, MessageKey]>> = 
   view: [ZoomIn, 'viewSystem'],
   activate: [Crosshair, 'activateSystem'],
   point: [Hand, 'pointSystem'],
+  explore: [Compass, 'exploreFrontier'],
 };
 
 const keepMap = (event: PointerEvent) => event.stopPropagation();
@@ -41,15 +43,23 @@ interface Props {
   readonly onView: (hex: SceneHex) => void;
 }
 
+/** Befehl eines Knopfs am System; Ansehen und Zeigen senden keinen. */
+function commandOf(action: TableAction, actor: PlayerId, system: string): GameCommand | null {
+  if (action === 'activate')
+    return { type: 'ActivateSystem', issuedBy: actor, system: systemId(system) };
+  return action === 'explore' ? { type: 'ExploreFrontier', issuedBy: actor } : null;
+}
+
 function useRun(game: GameState, hex: SceneHex, onView: Props['onView']) {
   const send = useGameStore((state) => state.send);
   const actor = useHumanActor(game);
   return (action: TableAction) => {
+    const system = hex.systemId;
     if (action === 'view') onView(hex);
-    else if (action === 'point' && hex.systemId !== null)
-      void useOnlineStore.getState().pingSystem(hex.systemId);
-    else if (actor !== null && hex.systemId !== null)
-      send({ type: 'ActivateSystem', issuedBy: actor, system: systemId(hex.systemId) });
+    if (system === null) return;
+    if (action === 'point') void useOnlineStore.getState().pingSystem(system);
+    const command = actor === null ? null : commandOf(action, actor, system);
+    if (command !== null) send(command);
   };
 }
 
@@ -111,9 +121,10 @@ export function SystemActions(props: Props): ReactElement | null {
   const choosing = useChosenCard(actor) !== null;
   const run = useRun(game, hex, onView);
   const online = useOnlineStore((state) => state.status === 'online');
+  const table = useSettingsStore((state) => state.tableView);
   if (hex.systemId === null) return null;
   const actions: readonly TableAction[] = [
-    ...systemActions(game, actor, hex.systemId, choosing),
+    ...systemActions(game, actor, hex.systemId, choosing, table),
     ...(online ? ['point' as const] : []),
   ];
   return (

@@ -1,12 +1,14 @@
 import {
+  constructionSites,
+  diplomacySystems,
   homeSystemIdOf,
   NO_PAYMENT,
   ownPlanets,
   type StrategyCardDefinition,
   type StrategyChoice,
   type StrategyMechanic,
-  isStructure,
   hasCapability,
+  type UnitTypeId,
 } from '@stellar/domain';
 import { type BotView, contentOf, me } from './bot-view.ts';
 import { planPayment } from './payment-planner.ts';
@@ -32,34 +34,42 @@ function commandTokens(view: BotView, card: StrategyCardDefinition): readonly St
   }));
 }
 
-/** Diplomatie: das Heimatsystem zuerst, sonst jedes System mit eigenem Planeten (RR 21.2). */
+/** Diplomatie: das Heimatsystem zuerst, sonst jedes System, das die Domain anbietet (RR 21.2). */
 function diplomacy(view: BotView): readonly StrategyChoice[] {
   const home = homeSystemIdOf(view.state, view.player, contentOf(view));
-  const own = Object.values(view.state.systems)
-    .filter((system) =>
-      system.planetIds.some((id) => view.state.planets[id]?.controller === view.player),
-    )
-    .map((system) => system.id)
-    .sort((a, b) => Number(b === home) - Number(a === home));
+  const own = [...diplomacySystems(view.state, view.player, contentOf(view).tiles)].sort(
+    (a, b) => Number(b === home) - Number(a === home),
+  );
   const planets = exhaustedOwn(view).slice(0, 2);
   return [...own, null].map((system) => ({ mechanic: 'diplomacy', system, planets }));
 }
 
-/** Bauen: je eigener Planet erst ein Dock, dann ein Gebäude mit Weltraumkanone. */
+/** Rangfolge beim Bauen: erst Docks, dann Gebäude mit Weltraumkanone, zuletzt die übrigen. */
+function buildRank(view: BotView, type: UnitTypeId): number {
+  const unit = contentOf(view).units.find(type);
+  if (unit === undefined) return 2;
+  if (hasCapability(unit, 'production')) return 0;
+  return hasCapability(unit, 'spaceCannon') ? 1 : 2;
+}
+
+/** Bauen: die Stellen der Domain, erst Docks, dann Weltraumkanonen, reiche Planeten vorn. */
 function construction(view: BotView): readonly StrategyChoice[] {
-  const structures = contentOf(view).units.all(view.player).filter(isStructure);
-  const docks = structures.filter((unit) => hasCapability(unit, 'production'));
-  const cannons = structures.filter((unit) => hasCapability(unit, 'spaceCannon'));
-  const planets = [...ownPlanets(view.state, view.player, contentOf(view))]
-    .sort((a, b) => b.definition.resources - a.definition.resources)
-    .map((planet) => planet.state.id);
-  const builds = [...docks, ...cannons].flatMap((unit) =>
-    planets.map((planet) => ({
-      mechanic: 'construction' as const,
-      placements: [{ type: unit.id, planet }],
-      system: null,
-    })),
+  const resources = new Map(
+    ownPlanets(view.state, view.player, contentOf(view)).map((p) => [
+      p.state.id,
+      p.definition.resources,
+    ]),
   );
+  const sites = constructionSites(view.state, view.player, contentOf(view).units, 'primary');
+  const builds = sites
+    .flatMap((site) => site.types.map((type) => ({ type, planet: site.planet })))
+    .sort((a, b) => (resources.get(b.planet) ?? 0) - (resources.get(a.planet) ?? 0))
+    .sort((a, b) => buildRank(view, a.type) - buildRank(view, b.type))
+    .map((placement) => ({
+      mechanic: 'construction' as const,
+      placements: [placement],
+      system: null,
+    }));
   return [...builds, { mechanic: 'construction', placements: [], system: null }];
 }
 

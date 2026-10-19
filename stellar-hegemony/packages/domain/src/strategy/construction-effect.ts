@@ -1,3 +1,5 @@
+import type { SystemState } from '../galaxy/system-state.ts';
+import { systemOfPlanet } from '../objective/board-queries.ts';
 import type { GameEvent } from '../game/game-events.ts';
 import { findPlayer, type GameState } from '../game/game-state.ts';
 import type { StructuresPlaced } from '../production/production-events.ts';
@@ -42,10 +44,12 @@ function countOn(
 }
 
 /** RR 9 (Gebäude): höchstens ein Gebäude mit Produktion und zwei mit Weltraumkanone je Planet. */
-function planetLimits(input: EffectInput, placements: readonly StructurePlacement[]): boolean {
-  const { state, context } = input;
+function planetLimits(
+  state: GameState,
+  catalog: UnitCatalog,
+  placements: readonly StructurePlacement[],
+): boolean {
   const { maxProductionStructuresPerPlanet, maxCannonStructuresPerPlanet } = state.config.rules;
-  const catalog = context.content.units;
   const docks = (type: UnitTypeId) => structureWith(catalog, type, 'production');
   const cannons = (type: UnitTypeId) => structureWith(catalog, type, 'spaceCannon');
   return placements.every(
@@ -55,31 +59,48 @@ function planetLimits(input: EffectInput, placements: readonly StructurePlacemen
   );
 }
 
-function supplyLeft(input: EffectInput, placements: readonly StructurePlacement[]): boolean {
+function supplyLeft(
+  state: GameState,
+  player: PlayerId,
+  catalog: UnitCatalog,
+  placements: readonly StructurePlacement[],
+): boolean {
   return placements.every(({ type }) => {
-    const limit = input.context.content.units.find(type)?.componentLimit ?? 0;
+    const limit = catalog.find(type)?.componentLimit ?? 0;
     const wanted = placements.filter((p) => p.type === type).length;
-    return limit === 'unlimited' || ownedOnBoard(input.state, input.player, type) + wanted <= limit;
+    return limit === 'unlimited' || ownedOnBoard(state, player, type) + wanted <= limit;
   });
 }
 
-function placementChecks(input: EffectInput, placements: readonly StructurePlacement[]): Check {
-  const { state, player, context } = input;
-  const catalog = context.content.units;
-  const structures = placements.every(({ type }) => {
+const allStructures = (catalog: UnitCatalog, placements: readonly StructurePlacement[]) =>
+  placements.every(({ type }) => {
     const definition = catalog.find(type);
     return definition !== undefined && isStructure(definition);
   });
-  const own = placements.every(({ planet }) => state.planets[planet]?.controller === player);
-  const room = planetLimits(input, placements);
-  const supply = supplyLeft(input, placements);
+
+const ownOnly = (state: GameState, player: PlayerId, placements: readonly StructurePlacement[]) =>
+  placements.every(({ planet }) => state.planets[planet]?.controller === player);
+
+function placementChecks(
+  state: GameState,
+  player: PlayerId,
+  catalog: UnitCatalog,
+  placements: readonly StructurePlacement[],
+): Check {
+  const own = ownOnly(state, player, placements);
+  const room = planetLimits(state, catalog, placements);
+  const supply = supplyLeft(state, player, catalog, placements);
   return firstFailure([
-    guard(structures, 'construction.notStructure', 'Nur Gebäude'),
+    guard(allStructures(catalog, placements), 'construction.notStructure', 'Nur Gebäude'),
     guard(own, 'construction.notYourPlanet', 'Nur auf eigenen Planeten'),
     guard(room, 'construction.planetFull', 'Kein Platz mehr auf dem Planeten'),
     guard(supply, 'construction.componentLimit', 'Keine Gebäude mehr im Vorrat'),
   ]);
 }
+
+/** Prüfung der Domain mit den Werten aus dem Effekt-Kontext. */
+const checksOf = (input: EffectInput, placements: readonly StructurePlacement[]): Check =>
+  placementChecks(input.state, input.player, input.context.content.units, placements);
 
 function placedEvent(
   state: GameState,
@@ -95,14 +116,71 @@ function placedEvent(
   return { type: 'StructuresPlaced', player, placements: placed };
 }
 
-/** Ob irgendein Gebäude auf irgendeinen eigenen Planeten passt. */
-function anyPlacement(input: EffectInput): boolean {
-  const types = input.context.content.units.all(input.player).filter(isStructure);
-  const planets = Object.values(input.state.planets).filter((p) => p.controller === input.player);
-  return planets.some((planet) =>
-    types.some((type) => placementChecks(input, [{ type: type.id, planet: planet.id }]).ok),
-  );
+/** Eine Stelle für ein weiteres Gebäude: Planet, sein System und die Arten, die dort noch passen. */
+export interface ConstructionSite {
+  readonly planet: PlanetId;
+  readonly system: SystemId;
+  readonly types: readonly UnitTypeId[];
 }
+
+/** Sekundär: ins System muss ein Marker aus dem Nachschub, und dort liegt noch keiner. */
+function tokenFree(state: GameState, player: PlayerId, system: SystemState): boolean {
+  const reinforcements = findPlayer(state, player)?.reinforcementTokens ?? 0;
+  return reinforcements > 0 && !system.commandTokens.includes(player);
+}
+
+/** Was beim Suchen der Stellen feststeht: Spielstand, Spieler, Katalog, vorgemerkte Gebäude. */
+interface Yard {
+  readonly state: GameState;
+  readonly player: PlayerId;
+  readonly catalog: UnitCatalog;
+  readonly planned: readonly StructurePlacement[];
+}
+
+/** Gebäudearten, von denen noch genau eines auf den Planeten passt. */
+function fittingTypes(yard: Yard, planet: PlanetId): readonly UnitTypeId[] {
+  const { state, player, catalog, planned } = yard;
+  const fits = (type: UnitTypeId) =>
+    placementChecks(state, player, catalog, [...planned, { type, planet }]).ok;
+  return catalog
+    .all(player)
+    .filter(isStructure)
+    .map((definition) => definition.id)
+    .filter(fits);
+}
+
+function siteOf(yard: Yard, planet: PlanetId, secondary: boolean): ConstructionSite | null {
+  const system = systemOfPlanet(yard.state, planet);
+  if (system === undefined) return null;
+  if (secondary && !tokenFree(yard.state, yard.player, system)) return null;
+  const types = fittingTypes(yard, planet);
+  return types.length === 0 ? null : { planet, system: system.id, types };
+}
+
+/**
+ * RR 39.2/39.4: eigene Planeten, auf die noch ein Gebäude passt, samt den passenden Arten.
+ * Vorgemerkte Gebäude (`planned`) zählen bei Platz und Vorrat mit; sekundär fallen Systeme mit
+ * eigenem Marker weg, und ohne Marker im Nachschub gibt es keine Stelle.
+ */
+export function constructionSites(
+  state: GameState,
+  player: PlayerId,
+  catalog: UnitCatalog,
+  ability: 'primary' | 'secondary',
+  planned: readonly StructurePlacement[] = [],
+): readonly ConstructionSite[] {
+  const yard: Yard = { state, player, catalog, planned };
+  return Object.values(state.planets)
+    .filter((planet) => planet.controller === player)
+    .flatMap((planet) => {
+      const site = siteOf(yard, planet.id, ability === 'secondary');
+      return site === null ? [] : [site];
+    });
+}
+
+/** Ob irgendein Gebäude auf irgendeinen eigenen Planeten passt. */
+const anyPlacement = (input: EffectInput): boolean =>
+  constructionSites(input.state, input.player, input.context.content.units, 'primary').length > 0;
 
 /** RR 27.11: Passt nirgends ein Gebäude, bleibt die Fähigkeit ohne Wirkung; die Karte ist genutzt. */
 const fewestPlacements = (input: EffectInput): number => (anyPlacement(input) ? 1 : 0);
@@ -130,7 +208,7 @@ function primaryShape(input: EffectInput, choice: ConstructionChoice): Check {
 function primary(input: EffectInput): Events {
   return andThen(choiceOf(input, 'construction'), (choice) =>
     map(
-      andThen(primaryShape(input, choice), () => placementChecks(input, choice.placements)),
+      andThen(primaryShape(input, choice), () => checksOf(input, choice.placements)),
       () => [placedEvent(input.state, input.player, choice.placements)],
     ),
   );
@@ -160,7 +238,7 @@ function secondary(input: EffectInput): Events {
     const { system } = choice;
     if (system === null) return err(domainError('construction.wrongSystem', 'System wählen'));
     const checked = andThen(secondaryChecks(input, choice, system), () =>
-      placementChecks(input, choice.placements),
+      checksOf(input, choice.placements),
     );
     const token: GameEvent = {
       type: 'CommandTokensPlaced',

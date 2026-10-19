@@ -1,10 +1,26 @@
-import { currentActor, type GameState, type PlayerId } from '@stellar/domain';
-import { memo, useMemo, type CSSProperties, type MouseEvent, type PointerEvent } from 'react';
-import { Hand, RotateCcw } from 'lucide-react';
+import {
+  currentActor,
+  type GameState,
+  type MovementOption,
+  type PlayerId,
+  type UnitTypeId,
+} from '@stellar/domain';
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react';
+import { Hand, Minus, PackagePlus, RotateCcw } from 'lucide-react';
 import { unitArtwork } from '../../artwork/units.ts';
 import { useGameStore } from '../../game-store.ts';
 import { toSvgPoints, type Point } from '../../hex-geometry.ts';
+import { unitLabel } from '../../labels.ts';
 import { seatColor } from '../../seat-colors.ts';
+import { content } from '../../store.ts';
 import {
   fleetPoint,
   movableFleets,
@@ -13,12 +29,15 @@ import {
   type FleetProjection,
 } from '../../system/fleet-placement.ts';
 import {
+  type MovementOrders,
   movementScope,
   toggleFleet,
   useMovementDraft,
   useMovementOrders,
 } from '../../system/movement-draft.ts';
-import { useT } from '../../use-translation.ts';
+import { autoLoad, moveSummary, unstageOne } from '../../table/move-draft.ts';
+import { useLanguage, useT } from '../../use-translation.ts';
+import { awayFromRoutes, MovePaths } from './MovePaths.tsx';
 import { useFleetDrag } from './use-fleet-drag.ts';
 import './fleet-pieces.css';
 
@@ -155,6 +174,7 @@ interface StagedProps {
   readonly active: string;
   readonly seat: number;
   readonly game: GameState;
+  readonly me: PlayerId;
 }
 
 function ResetFleet({ scope }: { readonly scope: string }) {
@@ -175,18 +195,190 @@ function ResetFleet({ scope }: { readonly scope: string }) {
   );
 }
 
-function StagedFleet({ origins, frame, scope, active, seat, game }: StagedProps) {
+/** Schreibt eine Änderung in den gemeinsamen Entwurf, ohne dass die Karte schwenkt. */
+const changeDraft =
+  (scope: string, update: (orders: MovementOrders) => MovementOrders) => (event: MouseEvent) => {
+    keep(event);
+    useMovementDraft.getState().change(scope, update);
+  };
+
+/** Nur die Schiffe, die gerade zulässig vorgemerkt sind, samt ihrer Fracht. */
+const stagedOrders = (options: readonly MovementOption[], orders: MovementOrders) =>
+  Object.fromEntries(options.map(({ ship }) => [ship.id, orders[ship.id] ?? []]));
+
+/** Merkt sich Ziele für den Fokus; nach dem nächsten Zeichnen bekommt ihn das erste vorhandene. */
+type Refocus = (selectors: readonly string[]) => void;
+
+function useRefocus(): Refocus {
+  const pending = useRef<readonly string[] | null>(null);
+  useEffect(() => {
+    const selectors = pending.current;
+    pending.current = null;
+    const next = selectors
+      ?.map((selector) => document.querySelector<HTMLElement>(selector))
+      .find((element) => element !== null);
+    next?.focus();
+  });
+  return (selectors) => {
+    pending.current = selectors;
+  };
+}
+
+interface StagedPart {
+  readonly all: readonly MovementOption[];
+  readonly staged: readonly MovementOption[];
+  readonly scope: string;
+  readonly seat: number;
+  readonly refocus: Refocus;
+}
+
+/**
+ * Nach dem Zurücknehmen bleibt der Fokus in der Vorschau: derselbe Knopf, sonst ein anderer
+ * Schiffstyp, sonst der Griff der Flotte, aus der das Schiff kam. Nie im Leeren.
+ */
+function unstageFocus(option: MovementOption | undefined, type: UnitTypeId): readonly string[] {
+  return [
+    `.fleet-staged [data-staged-control="unstage:${type}"]`,
+    '.fleet-staged .fleet-unstage',
+    `.fleet-pickup[data-origin="${option?.from ?? ''}"]`,
+  ];
+}
+
+function UnstageButton({
+  all,
+  staged,
+  scope,
+  seat,
+  refocus,
+  type,
+}: StagedPart & { type: UnitTypeId }) {
+  const t = useT();
+  const label = t('fleetUnstage').replace('{unit}', unitLabel(type, useLanguage()));
+  const change = changeDraft(scope, (orders) => unstageOne(all, orders, type));
+  const from = staged.find(({ ship }) => ship.type === type);
+  return (
+    <button
+      type="button"
+      className="fleet-unstage"
+      aria-label={label}
+      title={label}
+      data-staged-control={`unstage:${type}`}
+      onPointerDown={keep}
+      onClick={(event) => {
+        if (event.currentTarget === document.activeElement) refocus(unstageFocus(from, type));
+        change(event);
+      }}
+    >
+      <img src={unitArtwork(type, seat) ?? undefined} alt="" draggable={false} />
+      <Minus size={10} aria-hidden="true" />
+    </button>
+  );
+}
+
+function UnstageShips(part: StagedPart) {
+  const types = [...new Set(part.staged.map(({ ship }) => ship.type))];
+  return types.map((type) => <UnstageButton key={type} {...part} type={type} />);
+}
+
+interface LoadProps {
+  readonly game: GameState;
+  readonly me: PlayerId;
+  readonly all: readonly MovementOption[];
+  readonly orders: MovementOrders;
+  readonly scope: string;
+}
+
+/** Fracht, die „Fracht laden“ insgesamt an Bord brächte, und was davon noch fehlt. */
+function useCargoGain({ game, me, all, orders }: LoadProps) {
+  return useMemo(() => {
+    const full = moveSummary(autoLoad(game, content, all, orders, me)).cargo;
+    return { full, gain: full - moveSummary(orders).cargo };
+  }, [game, all, orders, me]);
+}
+
+/**
+ * Erscheint, sobald die vorgemerkten Träger überhaupt Fracht aufnehmen können. Ist alles an Bord,
+ * bleibt der Knopf stehen und meldet sich als gesperrt, damit der Fokus nicht ins Leere fällt.
+ */
+function CargoLoad(props: LoadProps) {
+  const t = useT();
+  const { full, gain } = useCargoGain(props);
+  const { game, me, all, scope } = props;
+  if (full <= 0) return null;
+  const load = changeDraft(scope, (current) => autoLoad(game, content, all, current, me));
+  return (
+    <button
+      type="button"
+      className="fleet-cargo-load"
+      title={t('cargoAutoLoad')}
+      aria-disabled={gain <= 0}
+      data-staged-control="cargo"
+      onPointerDown={keep}
+      onClick={(event) => {
+        if (gain > 0) load(event);
+        else keep(event);
+      }}
+    >
+      <PackagePlus size={12} aria-hidden="true" />
+      {t('cargoAutoLoad')}
+    </button>
+  );
+}
+
+/** Abstand der Vorschau vom aktivierten System, weg von den hereinkommenden Wegen (Pixel). */
+const AWAY_PX = 30;
+
+/** Lage der Vorschau: neben dem System auf der Seite, von der kein Weg hereinkommt. */
+function stagedStyle(point: Point, away: Point | null): CSSProperties {
+  if (away === null) return atStyle(point);
+  const at = { x: point.x + away.x * AWAY_PX, y: point.y + away.y * AWAY_PX };
+  return { ...atStyle(at), '--away-x': away.x, '--away-y': away.y } as CSSProperties;
+}
+
+function StagedSummary({
+  staged,
+  orders,
+}: {
+  readonly staged: readonly MovementOption[];
+  readonly orders: MovementOrders;
+}) {
+  const t = useT();
+  const { ships, cargo } = moveSummary(stagedOrders(staged, orders));
+  const summary = t('moveSummary')
+    .replace('{ships}', String(ships))
+    .replace('{cargo}', String(cargo));
+  return (
+    <span
+      className="fleet-staged-count"
+      data-testid="staged-summary"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {summary}
+    </span>
+  );
+}
+
+function StagedFleet({ origins, frame, scope, active, seat, game, me }: StagedProps) {
   const t = useT();
   const { orders } = useMovementOrders(game);
-  const options = origins
-    .flatMap((origin) => origin.options)
-    .filter(({ ship }) => orders[ship.id] !== undefined);
+  const refocus = useRefocus();
+  const all = useMemo(() => origins.flatMap((origin) => origin.options), [origins]);
+  const staged = all.filter(({ ship }) => orders[ship.id] !== undefined);
   const point = fleetPoint(frame, active);
-  if (options.length === 0 || point === null) return null;
+  if (staged.length === 0 || point === null) return null;
+  const away = awayFromRoutes(frame, staged, active);
   return (
-    <div className="fleet-staged" style={atStyle(point)}>
-      <FleetMiniatures origin={{ from: active, options }} seat={seat} />
+    <div
+      className="fleet-staged"
+      style={stagedStyle(point, away)}
+      data-away={away === null ? undefined : 'true'}
+    >
+      <FleetMiniatures origin={{ from: active, options: staged }} seat={seat} />
       <small>{t('fleetPreview')}</small>
+      <StagedSummary staged={staged} orders={orders} />
+      <UnstageShips {...{ all, staged, scope, seat, refocus }} />
+      <CargoLoad {...{ game, me, all, orders, scope }} />
       <ResetFleet scope={scope} />
     </div>
   );
@@ -208,6 +400,11 @@ function FleetHandles({ game, me, frame }: MovementProps) {
   if (origins.length === 0) return null;
   return (
     <div className="fleet-interaction" style={{ '--fleet-seat': seatColor(seat) } as CSSProperties}>
+      <MovePaths
+        frame={frame}
+        options={origins.flatMap(({ options }) => options)}
+        orders={orders}
+      />
       <DropRegion frame={frame} system={active} shown={api.lifted !== null} />
       {origins.map((origin) => {
         const point = fleetPoint(frame, origin.from);
@@ -216,7 +413,7 @@ function FleetHandles({ game, me, frame }: MovementProps) {
           <FleetHandle key={origin.from} {...{ origin, seat, point, chosen, scope, api }} />
         );
       })}
-      <StagedFleet {...{ origins, frame, scope, active, seat, game }} />
+      <StagedFleet {...{ origins, frame, scope, active, seat, game, me }} />
       <FloatingFleet api={api} seat={seat} />
     </div>
   );

@@ -1,9 +1,15 @@
 import { type GameState, warfareTokenSystems } from '@stellar/domain';
 import type { ReactElement, ReactNode } from 'react';
 import type { Language } from '../../i18n.ts';
-import { objectiveLabel } from '../../labels.ts';
+import { objectiveLabel, systemLabel } from '../../labels.ts';
 import { payHintOf } from '../../table/planet-table.ts';
-import type { ObjectivePlan, Progress, TokenPlan } from '../../table/table-specs.ts';
+import type {
+  ObjectivePlan,
+  PlacementPlan,
+  Progress,
+  TableDraft,
+  TokenPlan,
+} from '../../table/table-specs.ts';
 import type { TableDecision } from '../../table/use-table-decision.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from '../game/card-text.ts';
@@ -24,13 +30,25 @@ export interface PartProps {
 
 type Translate = ReturnType<typeof useT>;
 
-/** Was die Entscheidung betrifft: Markerverteilung oder Kartenname (sekundär mit Vorsilbe). */
+/** Taktische Schritte: „Aktiviertes System: …“; ohne Spielstand (Live-Zeile) keiner. */
+function activeSystemOf(game: GameState | null, t: Translate, language: Language): string | null {
+  const system = game?.actionPhase?.tactical?.system;
+  if (game === null || system == null) return null;
+  return `${t('activeSystem')}: ${systemLabel(game, system, language)}`;
+}
+
+/**
+ * Was die Entscheidung betrifft: Markerverteilung, aktiviertes System oder Kartenname
+ * (sekundär mit Vorsilbe).
+ */
 export function subtitleOf(
   decision: TableDecision,
   t: Translate,
   language: Language,
+  game: GameState | null = null,
 ): string | null {
   const { route, specId } = decision;
+  if (route.kind === 'tactical') return activeSystemOf(game, t, language);
   if (specId === 'tokens') return t('allocateTokens');
   if (specId === 'scoring') return t('scoreObjectives');
   if (route.card === null) return null;
@@ -38,16 +56,19 @@ export function subtitleOf(
   return route.ability === 'secondary' ? `${t('secondaryPrompt')}: ${name}` : name;
 }
 
-/** Zweite Zeile des Kopfs; die alten Formulare bringen ihren Kartennamen selbst mit. */
-function useSubtitle(decision: TableDecision): string | null {
+/**
+ * Zweite Zeile des Kopfs; die alten Formulare bringen ihren Kartennamen (und das aktivierte
+ * System) selbst mit.
+ */
+function useSubtitle(game: GameState, decision: TableDecision): string | null {
   const t = useT();
   const language = useLanguage();
-  return decision.specId === null ? null : subtitleOf(decision, t, language);
+  return decision.specId === null ? null : subtitleOf(decision, t, language, game);
 }
 
 export function PromptHead({ game, decision }: PartProps): ReactElement {
   const t = useT();
-  const subtitle = useSubtitle(decision);
+  const subtitle = useSubtitle(game, decision);
   return (
     <header className="table-prompt-head">
       <h2>{t(PHASE_TITLE[game.phase])}</h2>
@@ -143,23 +164,86 @@ function ReadyMeter({ progress }: { readonly progress: Progress }): ReactElement
   );
 }
 
-/** Die Messleiste passend zur Art des Entwurfs. */
-export function PromptProgress({ decision }: { readonly decision: TableDecision }) {
-  const { draft, progress, specId } = decision;
-  if (draft === null || progress === null) return null;
-  if (draft.kind === 'objective') return <ObjectiveMeter plan={draft} progress={progress} />;
-  if (draft.kind === 'ready') return <ReadyMeter progress={progress} />;
-  const paid = specId === 'leadership' ? (decision.planets?.paid ?? null) : null;
+/** Bombardement und Landung: zugewiesene Figuren, bei der Thronwelt dazu „bezahlt / benötigt“. */
+function PlacementMeter(props: {
+  readonly plan: PlacementPlan;
+  readonly progress: Progress;
+  readonly units: number;
+}): ReactElement {
+  const t = useT();
+  const { plan, progress, units } = props;
   return (
-    <PromptMeter needed={progress.needed} plan={draft} warfare={specId === 'warfare'} paid={paid} />
+    <MeterLine>
+      <span>
+        {t('assignedUnits')}:{' '}
+        <strong data-testid="assigned-count">{Object.keys(plan.assignments).length}</strong> /{' '}
+        {units}
+      </span>
+      {plan.payment !== null && (
+        <span>
+          {t('influence')}: <strong data-testid="paid">{progress.done}</strong> / {progress.needed}
+        </span>
+      )}
+    </MeterLine>
   );
 }
+
+/** Infrastruktur: gesetzte Gebäude / erlaubte Anzahl; ohne Bauplatz bleibt die Leiste leer. */
+function BuildMeter({ progress }: { readonly progress: Progress }): ReactElement {
+  const t = useT();
+  return (
+    <MeterLine>
+      {progress.needed > 0 && (
+        <span>
+          {t('placedStructures')}: <strong data-testid="placed-count">{progress.done}</strong> /{' '}
+          {progress.needed}
+        </span>
+      )}
+    </MeterLine>
+  );
+}
+
+/** Führung: der bezahlte Einfluss für die Messleiste; sonst keiner. */
+const leadershipPaid = (decision: TableDecision): number | null =>
+  decision.specId === 'leadership' ? (decision.planets?.paid ?? null) : null;
+
+interface DraftMeterProps {
+  readonly decision: TableDecision;
+  readonly draft: TableDraft;
+  readonly progress: Progress;
+}
+
+/** Figuren der Entscheidung (ohne Gebäude): so viele lassen sich zuweisen. */
+const unitCount = (decision: TableDecision): number =>
+  decision.pieces.filter((piece) => piece.ref.kind === 'unit').length;
+
+function DraftMeter({ decision, draft, progress }: DraftMeterProps): ReactElement | null {
+  if (draft.kind === 'objective') return <ObjectiveMeter plan={draft} progress={progress} />;
+  if (draft.kind === 'ready') return <ReadyMeter progress={progress} />;
+  if (draft.kind === 'construction') return <BuildMeter progress={progress} />;
+  if (draft.kind === 'placement')
+    return <PlacementMeter plan={draft} progress={progress} units={unitCount(decision)} />;
+  if (draft.kind !== 'tokens') return null;
+  const warfare = decision.specId === 'warfare';
+  const paid = leadershipPaid(decision);
+  return <PromptMeter needed={progress.needed} plan={draft} warfare={warfare} paid={paid} />;
+}
+
+/** Die Messleiste passend zur Art des Entwurfs. */
+export function PromptProgress({ decision }: { readonly decision: TableDecision }) {
+  const { draft, progress } = decision;
+  if (draft === null || progress === null) return null;
+  return <DraftMeter decision={decision} draft={draft} progress={progress} />;
+}
+
+/** Eine Bezahlung ist offen: Ausgabe-Auftrag oder Landung auf der Thronwelt. */
+const paying = (draft: TableDraft | null): boolean =>
+  (draft?.kind === 'objective' || draft?.kind === 'placement') && draft.payment !== null;
 
 /** Solange eine Bezahlung offen ist: wo bezahlt wird (Planetenreihe, Karte, Kasse). */
 export function PromptPayHint({ decision }: { readonly decision: TableDecision }) {
   const t = useT();
-  const { draft } = decision;
-  if (draft?.kind !== 'objective' || draft.payment === null) return null;
+  if (!paying(decision.draft)) return null;
   return (
     <p className="hint table-prompt-pay">{t(payHintOf(decision.planets?.ownTradeGoods ?? 0))}</p>
   );

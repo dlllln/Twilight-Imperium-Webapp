@@ -35,8 +35,33 @@ const TABLE_WIDE: Insets = { top: 16, right: 432, bottom: 156, left: 226 };
  * Tischansicht auf schmalen Bildschirmen: Spieler oben, darunter frei. Unten liegen übereinander
  * das Pult (96), der Abstand der Ecke darüber (70) und Phase samt Hinweis und zwei bis drei
  * Meldungen (knapp 300). Hochkant ist ohnehin Höhe übrig, die Karte wird dadurch kaum kleiner.
+ * Das ist der Mindestwert; mit der Ansage wächst der untere Rand (`tableNarrowBottom`).
  */
 const TABLE_NARROW: Insets = { top: 76, right: 12, bottom: 460, left: 12 };
+
+/**
+ * Über Pult, angehobener Hand und Phase liegt am schmalen Tisch die Ansage (Pixel, wie in
+ * styles.css): höchstens `prompt` hoch bzw. 30 % der Bildhöhe. Die Karte rückt darüber, damit
+ * Ziele bei der eigenen Heimat nicht unter der Ansage liegen.
+ */
+interface PromptStack {
+  readonly below: number;
+  readonly prompt: number;
+}
+/** Tablet hochkant: Pult 96, Hand 200, Phase gut 80. */
+const TABLET_STACK: PromptStack = { below: 96 + 200 + 84, prompt: 260 };
+/** Telefon: Pult 96, Hand 118, Phase gut 70. */
+const PHONE_STACK: PromptStack = { below: 96 + 118 + 74, prompt: 182 };
+const PROMPT_SHARE = 0.3;
+/** So viel der Kartenhöhe darf unten höchstens frei bleiben; der Rest gehört der Karte. */
+const BOTTOM_SHARE_MAX = 0.64;
+
+/** Unterer Rand am schmalen Tisch: Ansage samt allem darunter, aber nie mehr als knapp zwei Drittel. */
+function tableNarrowBottom(screen: ScreenSize): number {
+  const stack = screen.width < NARROW_WIDTH ? PHONE_STACK : TABLET_STACK;
+  const wanted = stack.below + Math.min(stack.prompt, screen.height * PROMPT_SHARE);
+  return Math.max(TABLE_NARROW.bottom, Math.min(wanted, screen.height * BOTTOM_SHARE_MAX));
+}
 const WIDE_BY_LAYOUT: Readonly<Record<HudLayout, Insets>> = { classic: WIDE, table: TABLE_WIDE };
 const NARROW_BY_LAYOUT: Readonly<Record<HudLayout, Insets>> = {
   classic: NARROW,
@@ -76,6 +101,7 @@ export function hudInsets(
   layout: HudLayout = 'classic',
 ): Insets {
   const wide = insetsFor(layout, narrow(screen));
+  if (narrow(screen) && layout === 'table') return { ...wide, bottom: tableNarrowBottom(screen) };
   if (narrow(screen)) return wide;
   const slim = { ...wide, right: SLIM_RIGHT };
   const keep =
@@ -120,5 +146,21 @@ export function freeBand(frame: Bounds, screen: ScreenSize, insets: Insets) {
   return {
     top: frame.minY + insets.top * unit,
     bottom: frame.minY + (screen.height - insets.bottom) * unit,
+  };
+}
+
+/**
+ * Freier Bereich zwischen den Anzeigen als Rechteck in viewBox-Koordinaten, z. B. um Systeme
+ * dort ins Bild zu rücken. Ohne bekannte Bildgröße (oder ohne freien Platz) der ganze Ausschnitt.
+ */
+export function freeArea(frame: Bounds, screen: ScreenSize, insets: Insets): Bounds {
+  const free = freeOf(screen, insets);
+  if (screen.height <= 0 || free.width <= 0 || free.height <= 0) return frame;
+  const unit = frame.height / screen.height;
+  return {
+    minX: frame.minX + insets.left * unit,
+    minY: frame.minY + insets.top * unit,
+    width: free.width * unit,
+    height: free.height * unit,
   };
 }

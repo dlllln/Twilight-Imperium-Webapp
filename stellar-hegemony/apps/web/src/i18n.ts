@@ -1111,6 +1111,56 @@ const DICTIONARY = {
   scoredByLabel: { de: 'Gewertet von', en: 'Scored by' },
   planetsToReady: { de: 'Bereitzumachen', en: 'To ready' },
   chosenObjective: { de: 'Gewählt', en: 'Chosen' },
+  tableHintBombard: {
+    de: 'Ziehe Schiffe mit Bombardement auf einen Planeten oder tippe einen Planeten an.',
+    en: 'Drag bombarding ships onto a planet or tap a planet.',
+  },
+  tableHintLanding: {
+    de: 'Ziehe Bodentruppen auf einen Planeten oder tippe einen Planeten an; wer im Weltraum bleibt, bleibt an Bord.',
+    en: 'Drag ground forces onto a planet or tap a planet; whoever stays in space stays aboard.',
+  },
+  tableHintDiplomacyPrimary: {
+    de: 'Tippe ein System mit eigenem Planeten an; die anderen legen dort einen Marker ab.',
+    en: 'Tap a system with one of your planets; the others place a token there.',
+  },
+  tableHintDiplomacyNone: {
+    de: 'Kein System mit eigenem Planeten außerhalb des Zentrums. Führe die Karte ohne System aus.',
+    en: 'No system with one of your planets outside the centre. Perform the card without a system.',
+  },
+  tableHintConstruction: {
+    de: 'Ziehe Gebäude aus dem Bauvorrat auf eigene Planeten; ein zweites braucht eine Weltraumkanone.',
+    en: 'Drag structures from the supply onto your planets; a second one needs space cannon.',
+  },
+  tableHintConstructionSecondary: {
+    de: 'Ziehe ein Gebäude auf einen eigenen Planeten; ein Marker aus dem Nachschub kommt in sein System.',
+    en: 'Drag a structure onto one of your planets; a token from reinforcements goes to its system.',
+  },
+  tableHintTacticalDone: {
+    de: 'Beende die taktische Aktion mit dem Siegel.',
+    en: 'End the tactical action with the seal.',
+  },
+  tableHintExplore: {
+    de: 'Ein Schiff im aktivierten System kann den Grenzmarker erkunden.',
+    en: 'A ship in the active system can explore the frontier token.',
+  },
+  assignedUnits: { de: 'Zugewiesen', en: 'Assigned' },
+  placedStructures: { de: 'Gesetzte Gebäude', en: 'Placed structures' },
+  structureSupply: { de: 'Bauvorrat', en: 'Structure supply' },
+  spaceSlot: { de: 'Im Weltraum', en: 'In space' },
+  pickUpUnit: { de: 'Einheit aufnehmen', en: 'Pick up unit' },
+  pickUpStructure: { de: 'Gebäude aufnehmen', en: 'Pick up structure' },
+  removePlacement: {
+    de: '{structure} auf {planet} zurücknehmen',
+    en: 'Take back {structure} on {planet}',
+  },
+  siteBombard: { de: 'Ziel für Bombardement: {planet}', en: 'Bombardment target: {planet}' },
+  siteLand: { de: 'Landeplatz: {planet}', en: 'Landing site: {planet}' },
+  siteBuild: { de: 'Bauplatz: {planet}', en: 'Building site: {planet}' },
+  tokenGhost: { de: 'Marker von {player}', en: 'Token of {player}' },
+  frameAction: { de: 'Aktion ins Bild', en: 'Frame the action' },
+  cargoAutoLoad: { de: 'Fracht laden', en: 'Load cargo' },
+  fleetUnstage: { de: '{unit} zurücknehmen', en: 'Take back {unit}' },
+  moveSummary: { de: 'Schiffe {ships} · Fracht {cargo}', en: 'Ships {ships} · Cargo {cargo}' },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof DICTIONARY;

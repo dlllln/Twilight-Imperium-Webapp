@@ -143,20 +143,29 @@ describe('Tischansicht mit der echten Karte', () => {
     }
   });
 
-  it('Tablet hochkant: die Karte endet über Pult, Phase und Meldungen', () => {
+  it('Tablet hochkant: die Karte endet über Pult, Phase und Ansage', () => {
     const board = tableBoard();
     const tablet = { width: 820, height: 1180 };
     const insets = hudInsets(board, tablet, 'table');
     const frame = frameBounds(board, tablet, insets, 'bottom');
     const camera = worldTransform(frame, tablet, NO_PAN);
     const bottom = camera.y + (board.minY + board.height) * camera.scale;
-    // Pult 96, Abstand der Ecke 70, Phase mit Hinweis und drei Meldungen knapp 290.
-    expect(bottom).toBeLessThanOrEqual(tablet.height - (96 + 70 + 290));
-    // Die Karte füllt trotzdem die ganze Breite: hochkant ist genug Höhe übrig.
-    expect(fitScale(board, tablet, insets)).toBeCloseTo(
-      fitScale(board, tablet, { ...insets, bottom: 230 }),
+    // Pult 96, angehobene Hand 200, Phase gut 80 und darüber die Ansage (höchstens 260).
+    expect(bottom).toBeLessThanOrEqual(tablet.height - (96 + 200 + 80 + 260));
+    // Die Karte füllt trotzdem fast die ganze Breite: hochkant ist genug Höhe übrig.
+    expect(fitScale(board, tablet, insets)).toBeGreaterThan(
+      0.9 * fitScale(board, tablet, { ...insets, bottom: 230 }),
     );
     expect(camera.y + board.minY * camera.scale).toBeGreaterThanOrEqual(insets.top - 0.01);
+  });
+
+  it('am Telefon rückt die Karte über die niedrigere Ansage, behält aber mehr als ein Drittel des Bildes', () => {
+    const board = tableBoard();
+    const phone = { width: 390, height: 844 };
+    const insets = hudInsets(board, phone, 'table');
+    expect(insets.bottom).toBeGreaterThanOrEqual(96 + 118 + 70 + 182 - 20);
+    expect(insets.bottom).toBeLessThanOrEqual(0.64 * phone.height + 0.01);
+    expect(hudInsets(board, { width: 1440, height: 900 }, 'table').bottom).toBe(156);
   });
 });
 

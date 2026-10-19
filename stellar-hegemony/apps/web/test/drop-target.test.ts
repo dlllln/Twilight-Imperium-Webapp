@@ -41,7 +41,7 @@ describe('Ziel unter dem Zeiger', () => {
   });
 
   it('unbekannte Zielschlüssel ergeben null', () => {
-    const odd = element('unit:x');
+    const odd = element('nebel:x');
     const broken = element('pool:bank');
     const empty = element('system:');
     expect(dropTargetAt({ x: 0, y: 0 }, stack(odd, broken, empty))).toBeNull();

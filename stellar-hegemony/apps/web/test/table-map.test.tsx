@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import {
   currentActor,
+  diplomacySystems,
   type GameState,
+  type PlanetId,
   type PlayerId,
   type StrategyCardState,
   strategyCardId,
@@ -33,6 +35,7 @@ installDomPolyfills();
 
 const TACTIC = poolTarget('tactic');
 const WARFARE = strategyCardId('armament');
+const EMBASSY = strategyCardId('embassy');
 const BOUNDS = { minX: -1000, minY: -1000, width: 2000, height: 2000 };
 const BAND = { top: 0, bottom: 2000 };
 
@@ -127,6 +130,27 @@ function warfareWithToken(state: GameState, me: PlayerId): GameState {
   return {
     ...marked,
     strategyCards: { ...state.strategyCards, [WARFARE]: { ...card, holder: me } },
+  };
+}
+
+/** Ob ein Planet außerhalb des Zentrums liegt. */
+const outsideCenter = (state: GameState, planet: PlanetId): boolean =>
+  Object.values(state.systems).some(
+    (system) =>
+      system.planetIds.includes(planet) && content.tiles.find(system.id)?.back !== 'center',
+  );
+
+/** Der Aktive hält die Diplomatie und besitzt außer der Heimat noch einen freien Planeten. */
+function diplomacyWithColony(state: GameState, me: PlayerId): GameState {
+  const card = state.strategyCards[EMBASSY] as StrategyCardState;
+  const free = Object.values(state.planets).find(
+    (planet) => planet.controller === null && outsideCenter(state, planet.id),
+  );
+  if (free === undefined) throw new Error('kein freier Planet');
+  return {
+    ...state,
+    planets: { ...state.planets, [free.id]: { ...free, controller: me } },
+    strategyCards: { ...state.strategyCards, [EMBASSY]: { ...card, holder: me } },
   };
 }
 
@@ -248,6 +272,23 @@ describe('Systeme auf der Karte als Ablageziele', () => {
     expect(usePaymentStore.getState().drafts['produktion']?.plan.planets).toEqual([
       ring.getAttribute('data-planet'),
     ]);
+    expect(useGameStore.getState().selected).toBeNull();
+    expect(flyTo).not.toHaveBeenCalled();
+  });
+  it('Diplomatie primär: ein Klick auf ein leuchtendes System nimmt es in den Entwurf, statt es nur auszuwählen', () => {
+    const me = actionPhase(diplomacyWithColony);
+    const flyTo = vi.fn();
+    render(<Table flyTo={flyTo} />);
+    act(() => useHandStore.getState().choose({ player: me, card: EMBASSY }));
+    const systems = diplomacySystems(game(), me, content.tiles).map(String);
+    expect(systems.length).toBeGreaterThan(1);
+    const [first, second] = systems as [string, string];
+    expect(hexOf(first).getAttribute('data-target-state')).toBe('chosen');
+    expect(hexOf(second).getAttribute('class')).toContain('target-legal');
+    fireEvent.click(hexOf(second));
+    expect(useDraftStore.getState().draft).toEqual({ kind: 'system', system: second });
+    expect(hexOf(second).getAttribute('data-target-state')).toBe('chosen');
+    expect(hexOf(first).getAttribute('data-target-state')).toBe('legal');
     expect(useGameStore.getState().selected).toBeNull();
     expect(flyTo).not.toHaveBeenCalled();
   });

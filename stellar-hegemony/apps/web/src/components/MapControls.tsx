@@ -1,4 +1,4 @@
-import { Box, LocateFixed, RotateCcw, RotateCw, Square, ZoomIn, ZoomOut } from 'lucide-react';
+import { Box, LocateFixed, RotateCcw, RotateCw, Scan, Square, ZoomIn, ZoomOut } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { isTopView, useOrbitStore } from '../system/orbit-store.ts';
 import { useT } from '../use-translation.ts';
@@ -22,14 +22,18 @@ function OrbitButtons(): ReactElement {
   );
 }
 
-/** Schwebende Kartensteuerung: zoomen, drehen, neigen und zurücksetzen. */
-export function MapControls({
-  onZoom,
-  onReset,
-}: {
+interface ControlsProps {
   readonly onZoom: (factor: number) => void;
   readonly onReset: () => void;
-}): ReactElement {
+  /** Nimmt die laufende Aktion ins Bild; fehlt, wenn es nichts zu rahmen gibt. */
+  readonly onFrame?: (() => void) | undefined;
+}
+
+/**
+ * Schwebende Kartensteuerung: zoomen, drehen, neigen und zurücksetzen; während einer Aktion
+ * auf der Karte auch „Aktion ins Bild“.
+ */
+export function MapControls({ onZoom, onReset, onFrame }: ControlsProps): ReactElement {
   const t = useT();
   const reset = () => {
     onReset();
@@ -40,6 +44,9 @@ export function MapControls({
       <IconButton icon={ZoomIn} label={t('zoomIn')} onClick={() => onZoom(ZOOM_STEP)} />
       <IconButton icon={ZoomOut} label={t('zoomOut')} onClick={() => onZoom(1 / ZOOM_STEP)} />
       <OrbitButtons />
+      {onFrame !== undefined && (
+        <IconButton icon={Scan} label={t('frameAction')} onClick={onFrame} />
+      )}
       <IconButton icon={LocateFixed} label={t('resetView')} onClick={reset} />
     </div>
   );

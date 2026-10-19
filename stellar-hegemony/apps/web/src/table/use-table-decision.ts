@@ -10,16 +10,18 @@ import { useDraftStore } from './draft-store.ts';
 import { type PlanetTable, planetTableOf } from './planet-table.ts';
 import {
   type AnySpec,
+  type GhostToken,
   type Progress,
   type SpecContext,
   TABLE_SPECS,
   type TableAction,
   type TableDraft,
+  type TablePiece,
   type TableSpecId,
   type SpecAlternative,
   tableSpecOf,
 } from './table-specs.ts';
-import type { TargetState } from './target-ref.ts';
+import type { TargetRef, TargetState } from './target-ref.ts';
 import { useDecisionRoute } from './use-decision-route.ts';
 
 /*
@@ -47,9 +49,17 @@ export interface TableDecision {
   readonly alternative: TableAlternative | null;
   /** Planeten, die die Entscheidung gerade anbietet (Bezahlung oder Bereitmachen). */
   readonly planets: PlanetTable | null;
+  /** Figuren und Gebäude der Entscheidung (Bombardement, Landung, Bauvorrat). */
+  readonly pieces: readonly TablePiece[];
+  /** Marker, die das Siegel in Systeme legen würde (Vorschau). */
+  readonly ghosts: readonly GhostToken[];
+  /** Erlaubte Zielschlüssel eines aufgenommenen Stücks dieser Entscheidung. */
+  readonly legalFor: (piece: TargetRef) => ReadonlySet<string>;
 }
 
 const NO_TARGETS: ReadonlyMap<string, TargetState> = new Map();
+
+const NOWHERE: ReadonlySet<string> = new Set();
 
 /** Hinweise für Entscheidungen ohne Tischentwurf. */
 const ROUTE_HINTS: Partial<Record<DecisionRoute['kind'], MessageKey>> = {
@@ -158,6 +168,9 @@ const idle = (route: DecisionRoute): TableDecision => ({
   confirm: () => undefined,
   alternative: null,
   planets: null,
+  pieces: [],
+  ghosts: [],
+  legalFor: () => NOWHERE,
 });
 
 /** Was der Store zum Entwurf weiß; `failed`, solange eine Ablehnung angezeigt wird. */
@@ -183,6 +196,16 @@ function progressOf(ported: Ported, draft: TableDraft, stored: Stored): Progress
   return pending ? { ...progress, ready: false } : progress;
 }
 
+/** Stücke, Geister und erlaubte Ziele, soweit die Entscheidung sie kennt. */
+function piecesOf(ported: Ported, draft: TableDraft) {
+  const { spec, ctx } = ported;
+  return {
+    pieces: spec.pieces?.(ctx, draft) ?? [],
+    ghosts: spec.ghosts?.(ctx, draft) ?? [],
+    legalFor: (piece: TargetRef) => spec.legal?.(ctx, draft, piece) ?? NOWHERE,
+  };
+}
+
 function decisionWith(ported: Ported, stored: Stored): TableDecision {
   const { spec, ctx } = ported;
   const draft = (stored.key === ported.key ? stored.draft : null) ?? spec.initial(ctx);
@@ -198,6 +221,7 @@ function decisionWith(ported: Ported, stored: Stored): TableDecision {
     confirm: () => confirmOf(ported),
     alternative: alternativeOf(ported, draft),
     planets: planetsOf(ported, draft),
+    ...piecesOf(ported, draft),
   };
 }
 

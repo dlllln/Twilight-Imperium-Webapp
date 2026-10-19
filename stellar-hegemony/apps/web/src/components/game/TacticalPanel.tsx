@@ -3,6 +3,7 @@ import {
   type GameState,
   type MovementOption,
   type PlayerId,
+  type ShipMoveOrder,
   type SystemId,
   type TacticalActionState,
 } from '@stellar/domain';
@@ -14,6 +15,7 @@ import { cargoAtOrigin, movementChoices } from '../../tactical-view.ts';
 import { unitsOf } from '../../unit-stats.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { moveOrders, useMovementOrders } from '../../system/movement-draft.ts';
+import { moveSummary } from '../../table/move-draft.ts';
 import { BombardForm, LandingForm } from './InvasionForms.tsx';
 import { ProductionForm } from './ProductionForm.tsx';
 import { TransactionForm } from './TransactionForm.tsx';
@@ -75,6 +77,18 @@ function ShipChoice(props: OptionProps): ReactElement {
   );
 }
 
+/** Messleiste „Schiffe n · Fracht m“ über den Befehlen, die „Schiffe bewegen“ abschicken würde. */
+function MovementMeter({ moves }: { readonly moves: readonly ShipMoveOrder[] }) {
+  const t = useT();
+  if (moves.length === 0) return null;
+  const { ships, cargo } = moveSummary(Object.fromEntries(moves.map((m) => [m.ship, m.cargo])));
+  return (
+    <p className="movement-meter" data-testid="move-summary" aria-live="polite">
+      {t('moveSummary').replace('{ships}', String(ships)).replace('{cargo}', String(cargo))}
+    </p>
+  );
+}
+
 function MovementForm({ game, player }: TurnProps): ReactElement {
   const t = useT();
   const send = useGameStore((state) => state.send);
@@ -91,6 +105,7 @@ function MovementForm({ game, player }: TurnProps): ReactElement {
           <ShipChoice key={option.ship.id} game={game} player={player} option={option} api={api} />
         ))}
       </ul>
+      <MovementMeter moves={moves} />
       <button type="button" onClick={() => send({ type: 'MoveShips', issuedBy: player, moves })}>
         {moves.length === 0 ? t('skipMovement') : t('moveShips')}
       </button>

@@ -1,10 +1,11 @@
 import type { TokenPlacement } from '../economy/economy-events.ts';
 import type { SystemState } from '../galaxy/system-state.ts';
+import type { TileCatalog } from '../galaxy/tile-catalog.ts';
 import type { GameEvent } from '../game/game-events.ts';
 import type { GameState } from '../game/game-state.ts';
 import { tokenSourceOf } from '../economy/token-source.ts';
 import { type DomainError, domainError, firstFailure, guard } from '../shared/domain-error.ts';
-import type { PlanetId, PlayerId } from '../shared/ids.ts';
+import type { PlanetId, PlayerId, SystemId } from '../shared/ids.ts';
 import { andThen, err, map, ok, type Result } from '../shared/result.ts';
 import {
   choiceOf,
@@ -41,6 +42,19 @@ function placements(
     });
 }
 
+/**
+ * RR 21.2: die Marker, die die Diplomatie im System ablegt: jeder andere Spieler ohne eigenen
+ * Marker dort, sofern er noch einen aufbringen kann. Tisch und Effekt fragen hier nach.
+ */
+export function diplomacyPlacements(
+  state: GameState,
+  system: SystemId,
+  active: PlayerId,
+): readonly TokenPlacement[] {
+  const found = state.systems[system];
+  return found === undefined ? [] : placements(state, found, active);
+}
+
 function chosenSystem(
   input: EffectInput,
   choice: DiplomacyChoice,
@@ -57,13 +71,21 @@ function chosenSystem(
   return map(checked, () => system);
 }
 
+/** RR 21.2: die Systeme, die die Diplomatie wählen darf: außerhalb des Zentrums mit eigenem Planeten. */
+export function diplomacySystems(
+  state: GameState,
+  player: PlayerId,
+  tiles: TileCatalog,
+): readonly SystemId[] {
+  return Object.values(state.systems)
+    .filter((system) => tiles.find(system.id)?.back !== 'center')
+    .filter((system) => system.planetIds.some((id) => controls(state, player, id)))
+    .map((system) => system.id);
+}
+
 /** RR 27.11: Ohne eigenen Planeten außerhalb des Zentrums bleibt die Fähigkeit ohne Wirkung. */
 const hasEligibleSystem = ({ state, player, context }: EffectInput): boolean =>
-  Object.values(state.systems).some(
-    (system) =>
-      context.content.tiles.find(system.id)?.back !== 'center' &&
-      system.planetIds.some((id) => controls(state, player, id)),
-  );
+  diplomacySystems(state, player, context.content.tiles).length > 0;
 
 /** RR 21.2: eigene Planeten im System bereitmachen, die anderen legen dort einen Marker ab. */
 function primary(input: EffectInput): Events {

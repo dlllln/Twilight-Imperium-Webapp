@@ -31,7 +31,7 @@ import { usePanZoom } from '../use-pan-zoom.ts';
 import { HexTooltip } from './HexTooltip.tsx';
 import { MapControls } from './MapControls.tsx';
 import { glideCamera, useCameraStore } from '../system/camera-store.ts';
-import { frameBounds, freeBand, hudInsets, type Insets } from '../system/map-frame.ts';
+import { freeArea, frameBounds, freeBand, hudInsets, type Insets } from '../system/map-frame.ts';
 import { type Size, useElementSize } from '../system/use-element-size.ts';
 import {
   boundsCenter,
@@ -48,7 +48,11 @@ import { ResourceBar } from './hud/ResourceBar.tsx';
 import { PlayerSheet } from './sheet/PlayerSheet.tsx';
 import { NoticeStack } from './hud/NoticeStack.tsx';
 import { type Band, HexTargets } from './map/HexTargets.tsx';
-import { usePicking, usePlanetPicking } from './map/use-picking.ts';
+import { usePicking, usePlanetPicking, useSitePicking } from './map/use-picking.ts';
+import { TokenGhosts } from './map/TokenGhosts.tsx';
+import { UnitChips } from './map/UnitChips.tsx';
+import { framingOf } from '../table/camera-intent.ts';
+import { type FramingArea, framingViewport } from '../system/framing.ts';
 import { useCarryStore } from '../table/carry-store.ts';
 import { withTableHighlights } from '../table/table-highlights.ts';
 import type { TargetState } from '../table/target-ref.ts';
@@ -131,6 +135,8 @@ interface MapFrame {
   readonly bounds: Bounds;
   /** Freies Band zwischen Vorräten und Hand (viewBox), für die Knöpfe am System. */
   readonly band: Band;
+  /** Freier Bereich zwischen allen Anzeigen (viewBox), für „Aktion ins Bild“. */
+  readonly free: Bounds;
 }
 
 /**
@@ -147,10 +153,14 @@ function useFrame(hexes: readonly SceneHex[], view: BoardView, size: Size): MapF
       hexes.map((hex) => hexToPixel(hex.position)),
     );
     const screen = { width, height };
-    if (!playing) return { bounds: board, band: freeBand(board, screen, NO_INSETS) };
+    if (!playing) return { bounds: board, band: freeBand(board, screen, NO_INSETS), free: board };
     const insets = hudInsets(board, screen, table ? 'table' : 'classic');
     const bounds = frameBounds(board, screen, insets, table ? 'bottom' : 'center');
-    return { bounds, band: freeBand(bounds, screen, insets) };
+    return {
+      bounds,
+      band: freeBand(bounds, screen, insets),
+      free: freeArea(bounds, screen, insets),
+    };
   }, [hexes, view, playing, table, width, height]);
 }
 
@@ -318,13 +328,14 @@ function useMapView(hexes: readonly SceneHex[]) {
   const { view, target } = useBoardView(hexes);
   const svg = useRef<SVGSVGElement>(null);
   const size = useElementSize(svg);
-  const { bounds, band } = useFrame(hexes, target, size);
+  const { bounds, band, free } = useFrame(hexes, target, size);
   useDropPointer(svg);
   const attributes = {
     'data-tutorial': 'galaxy',
     'data-board-settled': sameView(view, target),
   };
-  return { view, svg, size, bounds, band, attributes, ...useMapCamera(bounds, view, svg) };
+  const area: FramingArea = { bounds, free, size };
+  return { view, svg, size, bounds, band, area, attributes, ...useMapCamera(bounds, view, svg) };
 }
 
 function BoardObjects(props: FleetProjection) {
@@ -334,20 +345,71 @@ function BoardObjects(props: FleetProjection) {
       <MapPings {...props} />
       <TabletopMapMotion {...props} />
       <FleetPieces {...props} />
+      <TokenGhosts {...props} />
+      <UnitChips {...props} />
     </>
   );
 }
 
-/** Klicks auf Felder und auf angebotene Planeten; wer die Karte zieht, wählt nichts. */
+/** Klicks auf Felder, angebotene Planeten und Planeten als Ziel; wer die Karte zieht, wählt nichts. */
 function useMapPicking(wasDrag: () => boolean, flyTo: (hex: SceneHex) => void) {
-  return { onPick: usePicking(wasDrag, flyTo), onPlanet: usePlanetPicking(wasDrag) };
+  return {
+    onPick: usePicking(wasDrag, flyTo),
+    onPlanet: usePlanetPicking(wasDrag),
+    onSite: useSitePicking(wasDrag),
+  };
+}
+
+/** Systeme, die die laufende Entscheidung auf der Karte betrifft; dieselben, solange sie gilt. */
+function useFramedSystems() {
+  const game = useGameStore((state) => state.game);
+  const route = useTableDecision(game)?.route ?? null;
+  const targets = useMapTargets(game);
+  const key = route?.key ?? null;
+  // Die Route entsteht bei jedem Zeichnen neu; ihr Schlüssel sagt, ob sie dieselbe ist.
+  return useMemo(
+    () => (game === null ? [] : framingOf(game, route, targets)),
+    [game, key, targets],
+  );
+}
+
+/**
+ * „Aktion ins Bild“: Nur wenn die Entscheidung Systeme auf der Karte hat, gibt es den Knopf. Die
+ * Kamera fährt erst auf Knopfdruck und merkt sich, woher sie kam (Escape fährt zurück).
+ */
+function useFrameAction(view: BoardView, hexes: readonly SceneHex[], area: FramingArea) {
+  const systems = useFramedSystems();
+  if (systems.length === 0) return undefined;
+  return () => {
+    const to = framingViewport(area, view, hexes, systems);
+    if (to !== null) useCameraStore.getState().focus(to);
+  };
+}
+
+interface FramedProps {
+  readonly view: BoardView;
+  readonly hexes: readonly SceneHex[];
+  readonly area: FramingArea;
+  readonly onZoom: (factor: number) => void;
+}
+
+/** Kartensteuerung samt „Aktion ins Bild“, solange es etwas zu rahmen gibt. */
+function FramedControls({ view, hexes, area, onZoom }: FramedProps): ReactElement {
+  const onFrame = useFrameAction(view, hexes, area);
+  return (
+    <MapControls
+      onZoom={(factor) => onZoom(factor)}
+      onReset={useCameraStore.getState().back}
+      onFrame={onFrame}
+    />
+  );
 }
 
 export function GalaxyMap(): ReactElement {
   const viewport = useGalaxyStore((state) => state.viewport);
   const hexes = useScene();
   const effects = useMapEffects();
-  const { view, svg, size, bounds, band, attributes, flyTo, zoom } = useMapView(hexes);
+  const { view, svg, size, bounds, band, area, attributes, flyTo, zoom } = useMapView(hexes);
   const { wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
   const [flat, onUnavailable] = useFlatFallback();
   const picking = useMapPicking(wasDrag, flyTo);
@@ -367,7 +429,7 @@ export function GalaxyMap(): ReactElement {
       />
       <BoardObjects {...{ hexes, bounds, viewport, view, size }} />
       <MapTooltip hexes={hexes} />
-      <MapControls onZoom={(factor) => zoom(factor)} onReset={useCameraStore.getState().back} />
+      <FramedControls {...{ view, hexes, area }} onZoom={zoom} />
       <Overlays />
     </div>
   );

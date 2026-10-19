@@ -1,10 +1,12 @@
-import { findPlayer, type GameState } from '@stellar/domain';
+import { currentActor, findPlayer, type GameState, type PlayerId } from '@stellar/domain';
 import { type CSSProperties, forwardRef, type KeyboardEvent, memo, type ReactElement } from 'react';
 import { useGameStore, useViewer } from '../../game-store.ts';
 import { type Bounds, hexToPixel, toSvgPoints } from '../../hex-geometry.ts';
 import { type BoardView, projectedCorners } from '../../render/board-view.ts';
 import type { SceneHex } from '../../render/scene-model.ts';
+import { systemActions } from '../../hud/system-actions.ts';
 import { seatColor } from '../../seat-colors.ts';
+import { useSettingsStore } from '../../settings-store.ts';
 import { useGalaxyStore, type Viewport } from '../../store.ts';
 import {
   type DropHandler,
@@ -13,10 +15,12 @@ import {
   type TargetState,
 } from '../../table/target-ref.ts';
 import { useDropRouter } from '../../table/use-drop-router.ts';
-import { useTableTargets } from '../../table/use-table-decision.ts';
+import { takesSite } from '../../table/table-specs.ts';
+import { useTableDecision, useTableTargets } from '../../table/use-table-decision.ts';
 import { type TargetView, useTarget } from '../../table/use-target.ts';
 import { SystemActions } from '../hud/SystemActions.tsx';
 import { type PlanetHandler, PlanetTargets } from './PlanetTargets.tsx';
+import { type SiteHandler, SiteTargets } from './SiteTargets.tsx';
 
 /*
  * Unsichtbare Trefferflächen über dem Pixi-Bild: Klick und Tastatur wählen ein System, und
@@ -70,6 +74,7 @@ function hexAttributes(hex: SceneHex) {
     'data-system': hex.systemId ?? undefined,
     'data-anomaly': hex.anomaly,
     'data-seat': hex.seat ?? undefined,
+    'data-planets': hex.planets.length,
     role: pickable ? 'button' : undefined,
     'aria-label': hex.systemId ?? `${hex.kind} ${String(hex.seat)}`,
     tabIndex: pickable ? 0 : undefined,
@@ -159,23 +164,49 @@ export interface TargetsProps {
   readonly onView: (hex: SceneHex) => void;
   /** Klick auf einen angebotenen Planeten (Bezahlung, Bereitmachen). */
   readonly onPlanet?: PlanetHandler | undefined;
+  /** Klick auf einen Planeten als Ziel (Bombardement, Landung, Infrastruktur). */
+  readonly onSite?: SiteHandler | undefined;
 }
 
 const viewBoxOf = (b: Bounds): string =>
   [b.minX, b.minY, b.width, b.height].map((value) => String(value)).join(' ');
 
-/** Knöpfe über dem in der Partie gewählten System. */
-export function ChosenActions({
-  hexes,
-  band,
-  viewport,
-  view,
-  onView,
-}: Omit<TargetsProps, 'onPick' | 'onPlanet'>) {
+type ChosenProps = Omit<TargetsProps, 'onPick' | 'onPlanet' | 'onSite'>;
+
+/**
+ * Tischansicht: Ist nichts gewählt, stehen die Knöpfe über dem aktivierten System, solange dort
+ * am Ende der taktischen Aktion ein Grenzmarker erkundet werden kann.
+ */
+function useExploreHex(game: GameState | null, hexes: readonly SceneHex[]): SceneHex | undefined {
+  const table = useSettingsStore((state) => state.tableView);
+  const me = useViewer();
+  if (game === null || !table || currentActor(game) !== me) return undefined;
+  return exploreHexOf(game, me, hexes);
+}
+
+function exploreHexOf(
+  game: GameState,
+  me: PlayerId | null,
+  hexes: readonly SceneHex[],
+): SceneHex | undefined {
+  const active = game.actionPhase?.tactical?.system;
+  if (active === undefined || !systemActions(game, me, active, false, true).includes('explore'))
+    return undefined;
+  return hexes.find((hex) => hex.systemId === active);
+}
+
+/**
+ * Knöpfe über dem in der Partie gewählten System, sonst über dem System zum Erkunden. Solange
+ * Figuren oder Gebäude auf Planeten gelegt werden, treten sie zurück: Sie lägen auf den Ringen.
+ */
+export function ChosenActions({ hexes, band, viewport, view, onView }: ChosenProps) {
   const game = useGameStore((state) => state.game);
   const selected = useGameStore((state) => state.selected);
-  const chosen = hexes.find((hex) => hex.systemId !== null && hex.systemId === selected);
-  if (game === null || chosen === undefined) return null;
+  const explore = useExploreHex(game, hexes);
+  const placing = takesSite(useTableDecision(game)?.specId ?? null);
+  const picked = hexes.find((hex) => hex.systemId !== null && hex.systemId === selected);
+  const chosen = picked ?? explore;
+  if (game === null || chosen === undefined || placing) return null;
   return (
     <SystemActions
       game={game}
@@ -199,7 +230,7 @@ function useSeatStyle(game: GameState | null): CSSProperties | undefined {
 
 /** SVG-Ebene über dem Pixi-Bild, mit derselben Abbildung wie `worldTransform`. */
 export const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
-  { hexes, bounds, band, viewport, view, onPick, onView, onPlanet },
+  { hexes, bounds, band, viewport, view, onPick, onView, onPlanet, onSite },
   svg,
 ): ReactElement {
   const game = useGameStore((state) => state.game);
@@ -211,6 +242,7 @@ export const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTa
       <g transform={`translate(${String(panX)} ${String(panY)}) scale(${String(zoom)})`}>
         {game === null ? <PlainFields {...fields} /> : <RoutedFields {...fields} game={game} />}
         {game !== null && <PlanetTargets {...{ game, hexes, view, onPlanet }} />}
+        {game !== null && <SiteTargets {...{ game, hexes, view, onSite }} />}
       </g>
       <ChosenActions {...{ hexes, bounds, band, viewport, view, onView }} />
     </svg>

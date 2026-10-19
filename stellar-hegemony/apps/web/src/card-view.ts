@@ -1,4 +1,5 @@
 import {
+  constructionSites,
   type ContentPort,
   findPlayer,
   type GameState,
@@ -10,6 +11,7 @@ import {
   type UnitDefinition,
   warfareTokenSystems,
 } from '@stellar/domain';
+import { content as baseContent } from './store.ts';
 
 /** Gebäudetypen aus den Stammdaten; mit `cannonOnly` nur solche mit Weltraumkanone. */
 export const structureTypes = (
@@ -26,12 +28,15 @@ export const ownPlanets = (game: GameState, player: PlayerId): readonly PlanetId
     .filter((planet) => planet.controller === player)
     .map((planet) => planet.id);
 
-/** Infrastruktur sekundär: Systeme mit eigenem Planeten, in denen noch kein eigener Marker liegt. */
-export const constructionSystems = (game: GameState, player: PlayerId): readonly SystemId[] =>
-  Object.values(game.systems)
-    .filter((system) => !system.commandTokens.includes(player))
-    .filter((system) => system.planetIds.some((id) => game.planets[id]?.controller === player))
-    .map((system) => system.id);
+/**
+ * Infrastruktur sekundär: Systeme ohne eigenen Marker, in denen ein eigener Planet noch Platz für
+ * ein Gebäude hat (laut Domain; ohne Marker im Nachschub keines).
+ */
+export const constructionSystems = (game: GameState, player: PlayerId): readonly SystemId[] => [
+  ...new Set(
+    constructionSites(game, player, baseContent.units, 'secondary').map((site) => site.system),
+  ),
+];
 
 /** Kriegsführung primär: Systeme, in denen ein eigener Marker liegt. */
 export const systemsWithToken = (game: GameState, player: PlayerId): readonly SystemId[] =>

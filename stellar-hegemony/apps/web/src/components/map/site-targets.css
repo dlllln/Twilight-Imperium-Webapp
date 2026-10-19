@@ -1,0 +1,76 @@
+/*
+ * Planeten als Ziele für Figuren und Gebäude: Ringe über dem Pixi-Bild, etwas weiter als die
+ * Bezahlringe. Rot heißt Bombardement, Grün Landung, Gold Infrastruktur. Die Linie bleibt bei
+ * jedem Zoom gleich dick, die Fläche bleibt fast durchsichtig.
+ */
+.site-target {
+  --site: var(--gold-bright, #f3d27a);
+  fill: color-mix(in srgb, var(--site) 10%, transparent);
+  stroke: var(--site);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 7 5;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  outline: none;
+  animation: site-target-march 1.8s linear infinite;
+}
+
+.site-target[data-site-kind='bombard'] {
+  --site: #ff6b5b;
+}
+
+.site-target[data-site-kind='landing'] {
+  --site: #5fe08f;
+}
+
+.site-target[data-site-kind='construction'] {
+  --site: var(--gold-bright, #f3d27a);
+}
+
+.site-target:hover,
+.site-target:focus-visible {
+  stroke: #fff;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 6px var(--site));
+}
+
+/* Belegt: durchgezogen, mit Schein in der Farbe des Ziels. */
+.site-target.target-chosen {
+  stroke-width: 3;
+  stroke-dasharray: none;
+  fill: color-mix(in srgb, var(--site) 20%, transparent);
+  filter: drop-shadow(0 0 5px var(--site));
+  animation: none;
+}
+
+/* Beim Ziehen unter dem Zeiger. */
+.site-target.target-over,
+.site-target[data-target-state='legal']:is(:hover, :focus-visible) {
+  fill: color-mix(in srgb, var(--site) 28%, transparent);
+}
+
+.site-count {
+  font:
+    700 9px/1 'Exo 2',
+    system-ui,
+    sans-serif;
+  fill: #fff;
+  stroke: #050a12;
+  stroke-width: 3;
+  paint-order: stroke;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+@keyframes site-target-march {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* Ohne Bewegung wandert nichts. */
+:root.motion-off .site-target {
+  animation: none;
+}

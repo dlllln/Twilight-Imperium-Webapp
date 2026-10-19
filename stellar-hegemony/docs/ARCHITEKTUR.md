@@ -910,7 +910,74 @@ vorhanden, `scoringOptions` für die Leiste.
 | `PromptProgress`, `PromptPayHint` (Ansage), `PaymentPicker` mit Messleiste       | Je Art des Entwurfs eine Messleiste (Polymorphie über `kind`); das Formular tritt zurück, sobald der Tisch die Bedienung hat (Protected Variations, keine doppelten Bedienelemente).                                            |
 | `spendablePlanets`, `readyablePlanets` (Domain)                                  | Die Domain nennt die Planeten, die sie beim Bezahlen bzw. Bereitmachen auch annimmt; Web und Formulare fragen nur nach (Information Expert, DRY).                                                                               |
 
-## 34. Iterationen
+## 34. Iteration 30 im Detail (Taktische Aktion und Bauen am Tisch)
+
+Die taktische Aktion wird in der Tischansicht auf der Karte gespielt. Für **Bombardement** und
+**Landung** stehen die beteiligten Figuren als **Spielsteine** (`UnitChips`) im aktivierten System:
+die bombardierenden Schiffe bzw. die Bodentruppen, jede mit ihrem Bild in der Platzfarbe. Sie
+lassen sich wie Marker und Münzen aufnehmen und auf einen leuchtenden Planeten legen; die Platte
+„Im Weltraum“ nimmt eine Figur wieder zurück. Ein Planet ist dafür ein eigenes Ziel
+(`site:<planet>`, anders als `planet:` beim Bezahlen): Beim Bombardement leuchten seine Ringe rot,
+bei der Landung grün, beim Bauen golden (`SiteTargets`). Wer ohne getragenes Stück einen Planeten
+antippt, gibt ihm die nächste freie Figur. Landen auf der Thronwelt öffnet die bekannte
+Bezahlung mit Planetenreihe und Kasse; das Siegel „Landen“ bleibt gesperrt, bis genug Einfluss
+liegt. Ohne Zuweisung heißt das Siegel weiter „Ohne Bombardement weiter“ bzw. „Ohne Landung
+weiter“, mit Zuweisung wird derselbe Satz zum Ausweg daneben. Am Ende steht der bekannte Satz
+„Alle Schritte dieser taktischen Aktion sind erledigt.“ genau einmal in der Ansage, das Siegel
+heißt „Taktische Aktion beenden“; den Grenzmarker erkundet ein dritter Knopf am aktivierten
+System, die Ansage weist darauf hin. Der Kopf der Ansage nennt in jedem Schritt „Aktiviertes
+System: …“, und der Handel (`TransactionForm`) bleibt unter dem Siegel eingeklappt erreichbar.
+
+Die **Bewegung** nutzt die Flottengriffe und Würfel des Tisches weiter; dazu kommen gestrichelte
+Wege der vorgemerkten Schiffe, die Messleiste „Schiffe · Fracht“, automatisches Beladen und das
+Zurücknehmen eines einzelnen Schiffs einer Art (`move-draft.ts`). Ein Knopf „Aktion ins Bild“
+fährt die Kamera auf alle Systeme der laufenden Entscheidung (`framingOf`, `framing.ts`); von
+selbst bewegt sie sich nie. Gerahmt wird im freien Bereich zwischen den Anzeigen (`freeArea`),
+nicht hinter Ansage und Phase, und mindestens mit dem Ring der Nachbarn. Am schmalen Tisch
+(Tablet hochkant, Telefon) reicht der untere Rand der Karte über die Ansage (`hudInsets`), damit
+Ziele bei der eigenen Heimat nicht darunter liegen. Die Figuren stehen in höchstens drei Spalten
+und schrumpfen mit dem Feld; solange Figuren oder Gebäude auf Planeten gelegt werden, treten die
+Knöpfe am gewählten System zurück (`takesSite`).
+
+Zwei Strategiekarten bekommen Ziele auf der Karte. **Diplomatie** (primär): Erlaubte Systeme
+leuchten, Antippen wählt eines; die Marker der anderen stehen als durchscheinende Geister
+(`TokenGhosts`) darin. Die Auswahlliste „System wählen“ bleibt als Tastaturweg in der Ansage. Gibt
+es kein solches System, heißt das Siegel „Ohne System ausführen“. **Konstruktion** (primär und
+sekundär): Der **Bauvorrat** (`StructureTray`) liegt in der Ansage. Gebäude werden aufgenommen
+(ziehen, klicken oder Enter) und auf einen goldenen Bauplatz gelegt; per Tastatur springt der
+Fokus gleich auf den ersten Bauplatz. Gesetzte Gebäude stehen als Plaketten in der Ansage,
+Antippen nimmt sie zurück. Primär sind bis zu zwei erlaubt, das zweite nur mit Weltraumkanone;
+sekundär genau eines. Dessen System folgt aus dem Planeten, der eigene Marker aus dem Nachschub
+steht dort als Geist. Ein getragenes Gebäude oder eine getragene Figur zeigt im Geist unter dem
+Zeiger ihr Bild statt eines Markers.
+
+Die Messleiste wächst um zwei Arten: „Zugewiesen: n / m“ (bei der Thronwelt dazu „Einfluss:
+bezahlt / benötigt“) und „Gesetzte Gebäude: n / m“. Die klassische Ansicht behält alle
+Formulare unverändert.
+
+Drei reine Domain-Abfragen ersetzen Regeln im Web: `diplomacySystems` (Systeme mit eigenem
+Planeten außerhalb des Zentrums), `diplomacyPlacements` (wer dort einen Marker ablegt, nur wer
+noch einen aufbringen kann) und `constructionSites` (eigene Planeten mit den Gebäudearten, die
+dort laut Vorrat und Grenzen noch passen, auf Wunsch mit schon vorgemerkten Gebäuden).
+`DiplomacyForm`, `constructionSystems`, die Geister der Diplomatie und die KI
+(`strategy-choices.ts`) fragen jetzt dort nach.
+
+| Element                                                                                            | Prinzip                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec-placement`, `spec-tactical-done`, `spec-diplomacy-primary`, `spec-construction`              | Fünf neue Einträge in `TABLE_SPECS` mit eigenem Entwurf (`placement`, `done`, `system`, `construction`); `pieces`, `ghosts` und `legal` sind freiwillige Teile der Entscheidung (Open/Closed, Strategy).   |
+| `placement-draft.ts` (`assign`, `assignNext`, `assignmentsOf`)                                     | Reine Funktionen über der Zuweisung Figur → Planet, gemeinsam für Bombardement und Landung (Pure Fabrication, DRY).                                                                                        |
+| `target-ref.ts` (`site:`, `unit:`, `structure:`, `slot:space`), `use-drop-router`                  | Neue Ziele und Stücke sind neue Arten desselben Schlüssels; Ablegen wird weiter zu „Entwurf fortschreiben“ (Indirection, Protected Variations gegenüber Karte und Ansage).                                 |
+| `SiteTargets`, `UnitChips`, `StructureTray`                                                        | Anzeige plus Gesten ohne eigene Regel: Sie lesen `useTableDecision` (Stücke, Ziele, `legalFor`) und nutzen `useDragSource`/`useTarget` wie Marker und Münzen (Controller bleibt der Hook, DRY).            |
+| `TokenGhosts`, `DragGhost` (Bild der Figur)                                                        | Reine Vorschau dessen, was das Siegel bewirken würde bzw. was getragen wird; für Hilfsmittel unsichtbar, die Ansage nennt die Wirkung (Single Responsibility).                                             |
+| `move-draft.ts` (`moveSummary`, `autoLoad`, `unstageOne`), Wege der Flotten                        | Rechnen über dem vorhandenen Bewegungsentwurf des Tisches statt eines zweiten Entwurfs (Information Expert bleibt `movement-draft`, Low Coupling).                                                         |
+| `camera-intent.ts` (`framingOf`), `framing.ts`                                                     | Was ins Bild gehört, ist eine reine Frage an Route und Ziele; wie die Kamera dorthin fährt, eine zweite (Separation of Concerns). Nur auf Knopfdruck (Protected Variations gegenüber dem freien Blick).    |
+| `PromptTactical` (`DiplomacyPick`, `PlacementList`, `DoneLine`, `TradeCorner`), `PromptProgress`   | Kleine Bausteine je Aufgabe, eingehängt nach `specId`; die Messleiste unterscheidet nach Art des Entwurfs (Single Responsibility, Polymorphie über `kind`). Das Tauschformular wird wiederverwendet (DRY). |
+| `useSitePicking`, `HexTargets` (`onSite`, Knopf „Grenzmarker erkunden“), `systemActions(…, table)` | Die Karte übersetzt Antippen nur in Ablegen auf `site:`/`system:` bzw. in den Befehl `ExploreFrontier`; ob es erlaubt ist, sagen Entscheidung und Domain (Controller, Information Expert).                 |
+| `diplomacySystems`, `diplomacyPlacements`, `constructionSites` (Domain)                            | Die Domain nennt die Systeme, Marker und Bauplätze, die sie beim Ausführen auch annimmt; Tisch, Formulare und KI fragen nur nach (Information Expert, DRY).                                                |
+| `takesSystem`, `takesSite` (`table-specs.ts`)                                                      | Welche Entscheidungen ein System bzw. Planeten als Ziel nehmen, steht an einer Stelle; Ablegen, Antippen, Enter und die Knöpfe am System fragen dort nach (DRY, Protected Variations).                     |
+| `freeArea`, `hudInsets` (Tisch schmal), `chipLayout`                                               | Reine Rechnungen über Bildgröße und Anzeigen: wohin gerahmt wird, wie weit die Karte über der Ansage endet, wie groß die Figuren im Feld stehen (Pure Fabrication, testbar ohne Browser).                  |
+
+## 35. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -943,8 +1010,9 @@ vorhanden, `scoringOptions` für die Leiste.
 | 27  | Tischansicht: steiler Blick, eigenes Kommandopult   | ✓     |
 | 28  | Ansage am Pult, Marker auf Leisten und Karte        | ✓     |
 | 29  | Planeten und Bezahlung am Tisch, Auftragsleiste     | ✓     |
+| 30  | Taktische Aktion und Bauen am Tisch                 | ✓     |
 
-## 35. Befehle
+## 36. Befehle
 
 ```
 pnpm install

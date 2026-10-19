@@ -1,0 +1,166 @@
+/*
+ * Figuren im aktivierten System: eine Reihe kleiner Spielsteine unter den Schiffen, daneben die
+ * Platte „Im Weltraum“. Die Ebene selbst lässt Zeiger durch, nur Steine und Platte fangen sie.
+ * Hier stehen auch die Markergeister (TokenGhosts), die dieselbe Bildebene nutzen.
+ */
+.unit-chip-layer {
+  position: absolute;
+  z-index: 23;
+  inset: 0;
+  pointer-events: none;
+  overflow: clip;
+}
+
+/*
+ * Höchstens drei Steine je Reihe, darunter die Platte über die ganze Breite. Der Maßstab
+ * (`--chip-scale`) folgt der Größe des Felds; die Oberkante bleibt dicht unter den Schiffen.
+ */
+.unit-chips {
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(var(--chip-columns, 3), minmax(34px, auto));
+  justify-items: center;
+  gap: 4px;
+  padding: 5px 6px;
+  transform: translate(-50%, 8px) scale(var(--chip-scale, 1));
+  transform-origin: 50% 0;
+  pointer-events: auto;
+  border: 1px solid color-mix(in srgb, var(--chip-seat) 55%, transparent);
+  border-radius: 14px;
+  background: #050b14d9;
+  box-shadow: 0 6px 14px #0009;
+}
+
+.unit-chip {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  touch-action: none;
+  cursor: grab;
+  color: #fff;
+  font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--chip-seat) 85%, #fff);
+  border-radius: 10px 10px 13px 13px;
+  background: #0b1a2bef;
+  box-shadow: 0 3px 0 #0008;
+  transition: transform 120ms ease;
+}
+
+.unit-chip img {
+  width: 28px;
+  height: 23px;
+  object-fit: contain;
+  filter: drop-shadow(1px 3px 1px #0009);
+  pointer-events: none;
+}
+
+.unit-chip:hover,
+.unit-chip:focus-visible {
+  transform: translateY(-3px);
+  outline: 2px solid var(--chip-seat);
+  outline-offset: 1px;
+}
+
+.unit-chip:active {
+  cursor: grabbing;
+}
+
+/* In der Hand: gestrichelt und angehoben. */
+.unit-chip[aria-pressed='true'] {
+  transform: translateY(-5px);
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+/* Einem Planeten zugewiesen: ein grüner Punkt an der Ecke. */
+.unit-chip[data-assigned]::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #5fe08f;
+  box-shadow: 0 0 0 2px #050b14;
+}
+
+.unit-chips[data-spec='bombard'] .unit-chip[data-assigned]::after {
+  background: #ff6b5b;
+}
+
+.unit-chip-space {
+  display: grid;
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  place-items: center;
+  min-width: 64px;
+  height: 22px;
+  padding: 0 6px;
+  font-size: 10px;
+  color: #c9d6e6;
+  white-space: nowrap;
+  border: 1px dashed #c9d6e680;
+  border-radius: 10px;
+}
+
+.unit-chip-space.target-legal {
+  color: #fff;
+  border-color: var(--chip-seat);
+  background: color-mix(in srgb, var(--chip-seat) 18%, transparent);
+  cursor: pointer;
+}
+
+.unit-chip-space.target-over {
+  background: color-mix(in srgb, var(--chip-seat) 34%, transparent);
+}
+
+:root.motion-off .unit-chip {
+  transition: none;
+}
+
+/*
+ * Vorschau der Kommandomarker (TokenGhosts): durchscheinende Marker mit Fraktionszeichen an der
+ * Markerstelle eines Systems, gestrichelt in der Sitzfarbe.
+ */
+.token-ghost-layer {
+  position: absolute;
+  z-index: 21;
+  inset: 0;
+  pointer-events: none;
+  overflow: clip;
+}
+
+.token-ghost {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  transform: translate(-50%, -50%);
+  opacity: 0.62;
+  border: 2px dashed var(--ghost-seat);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ghost-seat) 26%, #050b14b3);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ghost-seat) 60%, transparent);
+  animation: token-ghost-breathe 2.4s ease-in-out infinite;
+}
+
+.token-ghost img,
+.token-ghost svg {
+  width: 20px;
+  height: 20px;
+}
+
+@keyframes token-ghost-breathe {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+:root.motion-off .token-ghost {
+  animation: none;
+}

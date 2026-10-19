@@ -155,3 +155,27 @@ export async function activateHome(page: Page, pages: readonly Page[]): Promise<
   await page.locator(`[data-seat="${seatOf(pages, page)}"]`).click();
   await page.getByRole('button', { name: 'System aktivieren', exact: true }).click();
 }
+
+/** Auf dem Gerät, das die Karte gerade wählen darf, genau diese Strategiekarte nehmen. */
+export async function pickCard(pages: readonly Page[], name: string): Promise<void> {
+  const page = await whereVisible(pages, freePick);
+  await page.getByRole('button', { name, exact: true }).click();
+  await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+}
+
+/** Ein Nachbarfeld der eigenen Heimat wie `neighbourOfHome`, aber mit mindestens einem Planeten. */
+export async function neighbourWithPlanet(page: Page, seat: string): Promise<Locator> {
+  const home = await center(page.locator(`[data-seat="${seat}"]`));
+  const hexes = page.locator('[data-system]:not([data-anomaly]):not([data-seat])');
+  const centers = await Promise.all((await hexes.all()).map(center));
+  const distances = centers.map((c) => Math.hypot(c.x - home.x, c.y - home.y));
+  const step = Math.min(...distances);
+  const planets = await Promise.all(
+    (await hexes.all()).map(async (hex) => Number(await hex.getAttribute('data-planets'))),
+  );
+  const index = distances.findIndex(
+    (distance, at) => distance < step * 1.1 && (planets[at] ?? 0) > 0,
+  );
+  if (index < 0) throw new Error('kein Nachbarfeld mit Planet');
+  return hexes.nth(index);
+}

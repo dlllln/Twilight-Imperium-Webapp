@@ -129,7 +129,7 @@ function exhausted(state: GameState, player: PlayerId): GameState {
 }
 
 /** Der aktive Spieler hat die Karte aus der Hand gewählt und sitzt am Bildschirm. */
-function choosing(mechanic: 'commandTokens' | 'diplomacy'): PlayerId {
+function choosing(mechanic: 'commandTokens' | 'diplomacy' | 'politics'): PlayerId {
   const { player, card } = holding(mechanic);
   seatTable(game(), { me: player });
   useHandStore.getState().choose({ player, card: card.id });
@@ -230,10 +230,10 @@ describe('Ansage am Pult (Tischansicht)', () => {
   });
 
   it('nicht umgestellte Entscheidungen zeigen ihr Formular in der Ansage', () => {
-    choosing('diplomacy');
+    choosing('politics');
     render(<Live />);
     const body = prompt().querySelector('.table-prompt-body') as HTMLElement;
-    expect(within(body).getByLabelText('System wählen')).toBeTruthy();
+    expect(within(body).getByLabelText('Neuer Sprecher')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Ausführen' })).toHaveLength(1);
     expect(screen.queryByTestId('confirm')).toBeNull();
   });

@@ -1,4 +1,5 @@
 import {
+  diplomacySystems,
   type DiplomacyChoice,
   type GameState,
   type PlanetId,
@@ -22,12 +23,9 @@ export interface DiplomacyFormProps {
   readonly children?: ReactNode;
 }
 
-/** Systeme außerhalb des Zentrums mit mindestens einem eigenen Planeten (Vorauswahl der Domain-Regel). */
+/** Systeme außerhalb des Zentrums mit mindestens einem eigenen Planeten (laut Domain). */
 const eligibleSystems = (game: GameState, player: PlayerId): readonly string[] =>
-  Object.values(game.systems)
-    .filter((system) => content.tiles.find(system.id)?.back !== 'center')
-    .filter((system) => system.planetIds.some((id) => game.planets[id]?.controller === player))
-    .map((system) => system.id);
+  diplomacySystems(game, player, content.tiles);
 
 interface SystemListProps {
   readonly game: GameState;

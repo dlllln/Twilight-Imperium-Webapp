@@ -32,7 +32,7 @@ function DecisionText({ game, decision }: LineProps): ReactElement {
   const t = useT();
   const language = useLanguage();
   const hint = decision.hint === null ? null : t(decision.hint);
-  const parts = [t(PHASE_TITLE[game.phase]), subtitleOf(decision, t, language), hint];
+  const parts = [t(PHASE_TITLE[game.phase]), subtitleOf(decision, t, language, game), hint];
   return <>{parts.filter((part) => part !== null).join(' – ')}</>;
 }
 
