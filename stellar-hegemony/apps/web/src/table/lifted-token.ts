@@ -12,11 +12,16 @@ export interface LiftedToken {
   readonly player: PlayerId;
 }
 
+/** Das System, aus dem der Entwurf der Kriegsführung einen Marker genommen hat. */
+function warfareSystem(decision: TableDecision | null): SystemId | null {
+  const draft = decision?.specId === 'warfare' ? decision.draft : null;
+  return draft?.kind === 'tokens' ? draft.system : null;
+}
+
 /** Der Marker, den der Entwurf der Kriegsführung gerade von der Karte genommen hat. */
 export function liftedTokenOf(decision: TableDecision | null): LiftedToken | null {
-  if (decision?.specId !== 'warfare') return null;
-  const system = decision.draft?.system ?? null;
-  const player = decision.route.actor;
+  const system = warfareSystem(decision);
+  const player = decision?.route.actor ?? null;
   return system === null || player === null ? null : { system, player };
 }
 

@@ -88,6 +88,7 @@ function useLanding(game: GameState, player: PlayerId) {
   const form = useTargets();
   const payment = usePayment(game, player, 'influence');
   const paying = choices.centerCost !== null && form.assignments.length > 0;
+  const unpaid = paying && payment.value < choices.centerCost;
   const land = () =>
     send({
       type: 'CommitGroundForces',
@@ -95,10 +96,10 @@ function useLanding(game: GameState, player: PlayerId) {
       landings: form.assignments,
       centerPayment: paying ? payment.payment : null,
     });
-  return { ...choices, form, payment, paying, land };
+  return { ...choices, form, payment, paying, unpaid, land };
 }
 
-/** Einmarsch (RR 25): Bodentruppen landen; auf der Thronwelt kostet das Einfluss. */
+/** Einmarsch (RR 25): Bodentruppen landen; auf der Thronwelt kostet das Einfluss, erst bezahlen. */
 export function LandingForm({ game, player }: TurnProps): ReactElement {
   const t = useT();
   const landing = useLanding(game, player);
@@ -121,7 +122,7 @@ export function LandingForm({ game, player }: TurnProps): ReactElement {
           state={landing.payment}
         />
       )}
-      <button type="button" onClick={landing.land}>
+      <button type="button" disabled={landing.unpaid} onClick={landing.land}>
         {form.assignments.length === 0 ? t('skipInvasion') : t('land')}
       </button>
     </div>

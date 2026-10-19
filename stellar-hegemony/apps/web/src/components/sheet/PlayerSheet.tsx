@@ -14,12 +14,14 @@ import { useT } from '../../use-translation.ts';
 import { CarryAnnouncer } from '../table/CarryAnnouncer.tsx';
 import { DragGhost } from '../table/DragGhost.tsx';
 import { CommandWing } from './CommandWing.tsx';
+import { PlanetRow } from './PlanetRow.tsx';
 import { SheetDefs } from './SheetTokens.tsx';
 import { TreasuryWing } from './TreasuryWing.tsx';
 
 /**
  * Das eigene Kommandopult am unteren Rand, wie eine Spielertafel vor dem eigenen Platz:
- * links die Kommandomarker, rechts die Schatzkammer, dazwischen die Mulde für die Hand.
+ * links die Kommandomarker, rechts die Schatzkammer, dazwischen die Mulde für die Hand. Über
+ * der Schatzkammer liegen die eigenen Planeten als Karten (die Planetenreihe mit der Kasse).
  * Die Marker sind Spielsteine: Während einer Verteilung zeigt das Pult den Entwurf, sonst lässt
  * sich der Taktikmarker auf ein System tragen. Eine neue Entscheidung legt ein getragenes Stück
  * zurück.
@@ -45,7 +47,8 @@ export function PlayerSheet({ game }: { readonly game: GameState }): ReactElemen
       <div className="sheet-well" aria-hidden="true">
         <span className="sheet-well-label">{t('sheetWell')}</span>
       </div>
-      <TreasuryWing model={model} pulse={pulse} />
+      <TreasuryWing model={model} pulse={pulse} table={table} />
+      <PlanetRow game={game} table={table} />
       <DragGhost faction={model.faction} seat={seat} />
       <CarryAnnouncer game={game} />
     </section>

@@ -21,19 +21,21 @@ interface ScoreProps {
   readonly option: ObjectiveOption;
 }
 
-/** Ressourcen oder Einfluss: erst die Bezahlung wählen, dann werten. */
-function SpendScore({ game, player, option, spend }: ScoreProps & { readonly spend: Spend }) {
+interface SpendProps extends ScoreProps {
+  readonly spend: Spend;
+  /** Schließt die Bezahlung wieder, ohne zu werten. */
+  readonly onCancel: () => void;
+}
+
+/** Ressourcen oder Einfluss: erst die Bezahlung wählen, dann werten; „Zurück“ schließt sie. */
+function SpendScore({ game, player, option, spend, onCancel }: SpendProps) {
   const t = useT();
   const send = useGameStore((state) => state.send);
   const currency = spend.currency === 'influence' ? 'influence' : 'resources';
   const payment = usePayment(game, player, currency);
+  const objective = option.definition.id;
   const score = () =>
-    send({
-      type: 'ScoreObjective',
-      issuedBy: player,
-      objective: option.definition.id,
-      payment: payment.payment,
-    });
+    send({ type: 'ScoreObjective', issuedBy: player, objective, payment: payment.payment });
   return (
     <div className="score-spend">
       <PaymentPicker
@@ -43,9 +45,14 @@ function SpendScore({ game, player, option, spend }: ScoreProps & { readonly spe
         required={spend.amount}
         state={payment}
       />
-      <button type="button" disabled={payment.value < spend.amount} onClick={score}>
-        {t('score')}
-      </button>
+      <div className="actions">
+        <button type="button" disabled={payment.value < spend.amount} onClick={score}>
+          {t('score')}
+        </button>
+        <button type="button" onClick={onCancel}>
+          {t('cancel')}
+        </button>
+      </div>
     </div>
   );
 }
@@ -57,7 +64,7 @@ export function ScoreAction(props: ScoreProps): ReactElement {
   const [paying, setPaying] = useState(false);
   const spend = spendOf(props.option);
   if (spend !== null && spend.currency !== 'tradeGoods' && paying)
-    return <SpendScore {...props} spend={spend} />;
+    return <SpendScore {...props} spend={spend} onCancel={() => setPaying(false)} />;
   const payment: Payment = { planets: [], tradeGoods: spend?.amount ?? 0 };
   const score = () =>
     spend !== null && spend.currency !== 'tradeGoods'

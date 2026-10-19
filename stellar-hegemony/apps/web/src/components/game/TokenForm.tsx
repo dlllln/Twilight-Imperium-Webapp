@@ -2,8 +2,8 @@ import {
   COMMAND_POOLS,
   type CommandPool,
   type CommandTokensChoice,
-  findPlayer,
   type GameState,
+  type Payment,
   type PlayerId,
   type PoolCounts,
   previewCommandTokens,
@@ -13,6 +13,8 @@ import { SeededRandom } from '@stellar/infrastructure';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { content } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
+import { Actions } from './FormParts.tsx';
+import { PaymentPicker, usePayment } from './PaymentPicker.tsx';
 
 const EMPTY: PoolCounts = { tactic: 0, fleet: 0, strategy: 0 };
 
@@ -26,10 +28,9 @@ interface TokenFormProps {
 }
 
 /** Fragt die Domain, wie viele Marker die Bezahlung bringt (keine doppelte Regel im Client). */
-function gainFor(props: TokenFormProps, tradeGoods: number): number {
+function gainFor(props: TokenFormProps, influence: Payment): number {
   const { game, player, card, ability } = props;
   const context = { random: new SeededRandom(0), now: 0, content };
-  const influence = { planets: [], tradeGoods };
   const preview = previewCommandTokens({ state: game, player, card, context, influence }, ability);
   return preview.ok ? preview.value : 0;
 }
@@ -63,51 +64,39 @@ function PoolStepper({ pool, value, canAdd, change }: StepperProps): ReactElemen
   );
 }
 
-function TradeGoodsInput(props: {
-  readonly max: number;
-  readonly value: number;
-  readonly onChange: (value: number) => void;
-}): ReactElement {
-  const t = useT();
-  return (
-    <label>
-      {t('spendTradeGoods')}
-      <input
-        type="number"
-        min={0}
-        max={props.max}
-        value={props.value}
-        onChange={(event) =>
-          props.onChange(Math.min(props.max, Math.max(0, Number(event.target.value))))
-        }
-      />
-    </label>
-  );
+/** Erkennungszeichen einer Bezahlung: Ändert sie sich, beginnt die Verteilung von vorn. */
+const paymentKey = (payment: Payment): string =>
+  `${payment.planets.join(',')}|${String(payment.tradeGoods)}`;
+
+interface Allocated {
+  readonly key: string;
+  readonly allocation: PoolCounts;
 }
 
-/** Zustand des Formulars; jede Änderung der Bezahlung setzt die Verteilung zurück. */
+const sum = (pools: PoolCounts): number =>
+  COMMAND_POOLS.reduce((all, pool) => all + pools[pool], 0);
+
+/**
+ * Zustand des Formulars: Einfluss aus Planeten und Handelswaren (geteilter Entwurf mit dem Tisch)
+ * und die Verteilung. Jede Änderung der Bezahlung, gleich wo, setzt die Verteilung zurück.
+ */
 function useTokenChoice(props: TokenFormProps) {
-  const [tradeGoods, setTradeGoods] = useState(0);
-  const [allocation, setAllocation] = useState(EMPTY);
-  const gained = gainFor(props, tradeGoods);
-  return {
-    tradeGoods,
+  const payment = usePayment(props.game, props.player, 'influence');
+  const key = paymentKey(payment.payment);
+  const [allocated, setAllocated] = useState<Allocated>({ key, allocation: EMPTY });
+  const allocation = allocated.key === key ? allocated.allocation : EMPTY;
+  const gained = gainFor(props, payment.payment);
+  const change = (pool: CommandPool, delta: number) =>
+    setAllocated((current) => {
+      const base = current.key === key ? current.allocation : EMPTY;
+      return { key, allocation: { ...base, [pool]: base[pool] + delta } };
+    });
+  const choice = (): CommandTokensChoice => ({
+    mechanic: 'commandTokens',
+    influence: payment.payment,
     allocation,
-    gained,
-    remaining: gained - COMMAND_POOLS.reduce((sum, pool) => sum + allocation[pool], 0),
-    available: findPlayer(props.game, props.player)?.tradeGoods ?? 0,
-    pay: (value: number) => {
-      setTradeGoods(value);
-      setAllocation(EMPTY);
-    },
-    change: (pool: CommandPool, delta: number) =>
-      setAllocation((current) => ({ ...current, [pool]: current[pool] + delta })),
-    choice: (): CommandTokensChoice => ({
-      mechanic: 'commandTokens',
-      influence: { planets: [], tradeGoods },
-      allocation,
-    }),
-  };
+  });
+  return { payment, allocation, gained, remaining: gained - sum(allocation), change, choice };
 }
 
 function GainLine(props: { readonly gained: number; readonly remaining: number }): ReactElement {
@@ -120,14 +109,11 @@ function GainLine(props: { readonly gained: number; readonly remaining: number }
   );
 }
 
-/** Auswahl für „Kommandomarker gewinnen“: Einfluss bezahlen und Marker verteilen. */
-export function TokenForm(props: TokenFormProps): ReactElement {
-  const t = useT();
-  const form = useTokenChoice(props);
+type TokenChoice = ReturnType<typeof useTokenChoice>;
+
+function PoolSteppers({ form }: { readonly form: TokenChoice }): ReactElement {
   return (
-    <div className="token-form">
-      <TradeGoodsInput max={form.available} value={form.tradeGoods} onChange={form.pay} />
-      <GainLine gained={form.gained} remaining={form.remaining} />
+    <>
       {COMMAND_POOLS.map((pool) => (
         <PoolStepper
           key={pool}
@@ -137,16 +123,32 @@ export function TokenForm(props: TokenFormProps): ReactElement {
           change={form.change}
         />
       ))}
-      <div className="actions">
-        <button
-          type="button"
-          disabled={form.remaining !== 0}
-          onClick={() => props.onSubmit(form.choice())}
-        >
-          {t('confirm')}
-        </button>
+    </>
+  );
+}
+
+/** Auswahl für „Kommandomarker gewinnen“: Einfluss aus Planeten und Handelswaren, Marker verteilen. */
+export function TokenForm(props: TokenFormProps): ReactElement {
+  const t = useT();
+  const form = useTokenChoice(props);
+  return (
+    <div className="token-form">
+      <PaymentPicker
+        game={props.game}
+        player={props.player}
+        currency="influence"
+        required={0}
+        state={form.payment}
+      />
+      <GainLine gained={form.gained} remaining={form.remaining} />
+      <PoolSteppers form={form} />
+      <Actions
+        label={t('confirm')}
+        disabled={form.remaining !== 0}
+        onClick={() => props.onSubmit(form.choice())}
+      >
         {props.children}
-      </div>
+      </Actions>
     </div>
   );
 }

@@ -3,31 +3,57 @@ import { AnimatePresence } from 'motion/react';
 import type { ReactElement } from 'react';
 import { type EmpireSummary, type Supply, TECHNOLOGY_COLORS } from '../../hud/hud-model.ts';
 import { PILE_MAX, type SheetModel, supplyText } from '../../hud/sheet-model.ts';
-import type { SheetPulse } from '../../hud/use-sheet.ts';
+import type { SheetPulse, SheetTable } from '../../hud/use-sheet.ts';
 import type { MessageKey } from '../../i18n.ts';
+import { GOODS_PIECE } from '../../table/target-ref.ts';
+import { useTarget } from '../../table/use-target.ts';
 import { useT } from '../../use-translation.ts';
 import { TECH_ICONS } from '../hud/tech-icons.ts';
+import { CoinPiece } from './KassePlate.tsx';
+import { dropAttributes } from './SheetPiece.tsx';
 import { Coin, CrateSocket, SheetDelta } from './SheetTokens.tsx';
 
 /** Umfang des Siegpunktrings (Radius 17 im 40er-Raster). */
 const RING = 2 * Math.PI * 17;
 
-/** Haufen goldener Münzen für die Handelswaren; ab zehn wächst nur noch die Zahl. */
-function Goods({ count, pulse }: { readonly count: number; readonly pulse: SheetPulse }) {
+interface GoodsProps {
+  readonly count: number;
+  readonly pulse: SheetPulse;
+  readonly table: SheetTable;
+}
+
+/** Der Münzhaufen; während einer Bezahlung liegt obenauf eine Münze zum Aufnehmen. */
+function Pile({ count, table }: Omit<GoodsProps, 'pulse'>): ReactElement {
   const t = useT();
+  return (
+    <div className="sheet-pile">
+      <AnimatePresence initial={false}>
+        {Array.from({ length: Math.min(count, PILE_MAX) }, (_, index) => (
+          <Coin key={index} index={index} />
+        ))}
+      </AnimatePresence>
+      <CoinPiece piece={GOODS_PIECE} label={t('pickUpCoin')} table={table} />
+    </div>
+  );
+}
+
+/**
+ * Haufen goldener Münzen für die Handelswaren; ab zehn wächst nur noch die Zahl. Der Haufen ist
+ * auch ein Ziel: Münzen aus der Kasse kommen hierher zurück.
+ */
+function Goods({ count, pulse, table }: GoodsProps): ReactElement {
+  const t = useT();
+  const target = useTarget(GOODS_PIECE, undefined, table.router);
   return (
     <div
       className="sheet-goods"
       aria-label={`${t('tradeGoods')}: ${String(count)}`}
       title={t('tradeGoods')}
+      {...target.props}
+      {...dropAttributes(target)}
+      data-over={target.over ? 'true' : undefined}
     >
-      <div className="sheet-pile">
-        <AnimatePresence initial={false}>
-          {Array.from({ length: Math.min(count, PILE_MAX) }, (_, index) => (
-            <Coin key={index} index={index} />
-          ))}
-        </AnimatePresence>
-      </div>
+      <Pile count={count} table={table} />
       <span className="sheet-count">
         <Coins className="sheet-icon" size={12} aria-hidden="true" />
         {count}
@@ -147,19 +173,19 @@ function VictoryPlate({ points, goal, pulse }: VictoryProps): ReactElement {
   );
 }
 
-/** Rechter Flügel: Münzen, Rohstoffkisten, Planetenwerte, Technologielampen, Siegpunkte. */
-export function TreasuryWing({
-  model,
-  pulse,
-}: {
+interface WingProps {
   readonly model: SheetModel;
   readonly pulse: SheetPulse;
-}): ReactElement {
+  readonly table: SheetTable;
+}
+
+/** Rechter Flügel: Münzen, Rohstoffkisten, Planetenwerte, Technologielampen, Siegpunkte. */
+export function TreasuryWing({ model, pulse, table }: WingProps): ReactElement {
   const t = useT();
   const { summary } = model;
   return (
     <div className="sheet-wing treasury" role="group" aria-label={t('sheetTreasury')}>
-      <Goods count={summary.tradeGoods} pulse={pulse} />
+      <Goods count={summary.tradeGoods} pulse={pulse} table={table} />
       <Commodities supply={summary.commodities} pulse={pulse} />
       <div className="sheet-values">
         <ValuePlate kind="res" label="resources" supply={summary.resources} />

@@ -1,7 +1,8 @@
-import { findPlayer, type GameState, warfareTokenSystems } from '@stellar/domain';
-import type { ReactElement } from 'react';
+import { type GameState, warfareTokenSystems } from '@stellar/domain';
+import type { ReactElement, ReactNode } from 'react';
 import type { Language } from '../../i18n.ts';
-import type { TokenPlan } from '../../table/table-specs.ts';
+import { objectiveLabel } from '../../labels.ts';
+import type { ObjectivePlan, Progress, TokenPlan } from '../../table/table-specs.ts';
 import type { TableDecision } from '../../table/use-table-decision.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from '../game/card-text.ts';
@@ -10,8 +11,9 @@ import { PHASE_TITLE } from '../game/TurnPanel.tsx';
 import { ConfirmSeal } from './ConfirmSeal.tsx';
 
 /*
- * Bausteine der Ansage: Kopf, Messleiste, Münzen der Führung, Systemwahl der Kriegsführung und
- * die Knöpfe unten. Die Marker selbst liegen auf dem Pult; hier steht nur, was dort fehlt.
+ * Bausteine der Ansage: Kopf, Messleiste je Art des Entwurfs, Systemwahl der Kriegsführung und
+ * die Knöpfe unten. Marker, Planeten und Münzen liegen auf dem Pult, Aufträge auf der
+ * Auftragsleiste; hier steht nur, was dort fehlt.
  */
 
 export interface PartProps {
@@ -29,6 +31,7 @@ export function subtitleOf(
 ): string | null {
   const { route, specId } = decision;
   if (specId === 'tokens') return t('allocateTokens');
+  if (specId === 'scoring') return t('scoreObjectives');
   if (route.card === null) return null;
   const name = cardText(route.card).name[language];
   return route.ability === 'secondary' ? `${t('secondaryPrompt')}: ${name}` : name;
@@ -52,21 +55,32 @@ export function PromptHead({ game, decision }: PartProps): ReactElement {
   );
 }
 
+/** Die Messleiste ist eine Live-Region: Bildschirmleser hören jede Änderung. Leer bleibt sie weg. */
+function MeterLine({ children }: { readonly children: ReactNode }): ReactElement {
+  return (
+    <p className="table-prompt-meter" aria-live="polite" aria-atomic="true">
+      {children}
+    </p>
+  );
+}
+
 interface MeterProps {
   readonly needed: number;
   readonly plan: TokenPlan;
   readonly warfare: boolean;
+  /** Führung: Wert der Bezahlung in Einfluss laut Domain; sonst `null`. */
+  readonly paid: number | null;
 }
 
 /**
  * Erhaltene (bei der Kriegsführung von der Karte genommene) Marker und was davon noch in der
- * Schale liegt. Ohne Marker bleibt sie leer und unsichtbar. Die Zeile ist eine Live-Region:
- * Bildschirmleser hören jede Änderung, auch die von Plus und Minus an den Leisten.
+ * Schale liegt, bei der Führung dazu der bezahlte Einfluss. Auch Plus und Minus an den Leisten
+ * ändern die Zeile.
  */
-export function PromptMeter({ needed, plan, warfare }: MeterProps): ReactElement {
+export function PromptMeter({ needed, plan, warfare, paid }: MeterProps): ReactElement {
   const t = useT();
   return (
-    <p className="table-prompt-meter" aria-live="polite" aria-atomic="true">
+    <MeterLine>
       {needed > 0 && (
         <>
           <span>
@@ -79,36 +93,73 @@ export function PromptMeter({ needed, plan, warfare }: MeterProps): ReactElement
           </span>
         </>
       )}
-    </p>
+      {paid !== null && (
+        <span>
+          {t('influence')}: <strong data-testid="paid">{paid}</strong>
+        </span>
+      )}
+    </MeterLine>
   );
 }
 
-/** Führung: Handelswaren als Einfluss, Münze für Münze; jede Änderung setzt die Verteilung zurück. */
-export function PromptCoins({ game, decision }: PartProps): ReactElement | null {
+interface ObjectiveMeterProps {
+  readonly plan: ObjectivePlan;
+  readonly progress: Progress;
+}
+
+/** Wertung und Imperium: der gewählte Auftrag und bei Ausgaben „bezahlt / benötigt“. */
+function ObjectiveMeter({ plan, progress }: ObjectiveMeterProps): ReactElement {
   const t = useT();
-  const spent = decision.draft?.tradeGoods ?? 0;
-  const actor = decision.route.actor;
-  const own = actor === null ? 0 : (findPlayer(game, actor)?.tradeGoods ?? 0);
-  if (decision.specId !== 'leadership') return null;
-  const step = (delta: 1 | -1, symbol: string, enabled: boolean) => (
-    <button
-      type="button"
-      className="table-prompt-step"
-      aria-label={`${t('spendTradeGoods')} ${symbol}`}
-      disabled={!enabled}
-      onClick={() => decision.act({ kind: 'tradeGoods', delta })}
-    >
-      {symbol}
-    </button>
-  );
+  const language = useLanguage();
+  const { objective, payment } = plan;
   return (
-    <div className="table-prompt-coins">
-      <span>{t('spendTradeGoods')}</span>
-      {step(-1, '−', spent > 0)}
-      <strong className="table-prompt-count">{spent}</strong>
-      {step(1, '+', spent < own)}
-    </div>
+    <MeterLine>
+      {objective !== null && (
+        <span className="table-prompt-chosen">
+          {t('chosenObjective')}: <strong>{objectiveLabel(objective, language)}</strong>
+        </span>
+      )}
+      {payment !== null && (
+        <span>
+          {t(payment.currency)}: <strong data-testid="paid">{progress.done}</strong> /{' '}
+          {progress.needed}
+        </span>
+      )}
+    </MeterLine>
   );
+}
+
+/** Diplomatie sekundär: vorgemerkte Planeten / erlaubte Anzahl. */
+function ReadyMeter({ progress }: { readonly progress: Progress }): ReactElement {
+  const t = useT();
+  return (
+    <MeterLine>
+      <span>
+        {t('planetsToReady')}: <strong data-testid="ready-count">{progress.done}</strong> /{' '}
+        {progress.needed}
+      </span>
+    </MeterLine>
+  );
+}
+
+/** Die Messleiste passend zur Art des Entwurfs. */
+export function PromptProgress({ decision }: { readonly decision: TableDecision }) {
+  const { draft, progress, specId } = decision;
+  if (draft === null || progress === null) return null;
+  if (draft.kind === 'objective') return <ObjectiveMeter plan={draft} progress={progress} />;
+  if (draft.kind === 'ready') return <ReadyMeter progress={progress} />;
+  const paid = specId === 'leadership' ? (decision.planets?.paid ?? null) : null;
+  return (
+    <PromptMeter needed={progress.needed} plan={draft} warfare={specId === 'warfare'} paid={paid} />
+  );
+}
+
+/** Solange eine Bezahlung offen ist: wo bezahlt wird (Planetenreihe, Karte, Kasse). */
+export function PromptPayHint({ decision }: { readonly decision: TableDecision }) {
+  const t = useT();
+  const { draft } = decision;
+  if (draft?.kind !== 'objective' || draft.payment === null) return null;
+  return <p className="hint table-prompt-pay">{t('payOnTable')}</p>;
 }
 
 /** Kriegsführung: der Weg per Tastatur zum Marker auf der Karte (dort leuchten dieselben Systeme). */
@@ -116,7 +167,7 @@ export function PromptWarfare({ game, decision }: PartProps): ReactElement | nul
   const t = useT();
   const { route, specId, draft } = decision;
   const systems = route.actor === null ? [] : warfareTokenSystems(game, route.actor);
-  if (specId !== 'warfare' || draft === null || systems.length === 0) return null;
+  if (specId !== 'warfare' || draft?.kind !== 'tokens' || systems.length === 0) return null;
   return (
     <SystemSelect
       game={game}

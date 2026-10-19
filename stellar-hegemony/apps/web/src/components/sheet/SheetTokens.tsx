@@ -167,6 +167,22 @@ const COIN_SPOTS: readonly (readonly [number, number])[] = [
   [21, 8],
 ];
 
+/** Die Rautenmünze selbst; auch der Geist einer getragenen Handelsware zeigt sie. */
+export function CoinFace(): ReactElement {
+  return (
+    <svg className="coin-svg" viewBox="0 0 26 16" aria-hidden="true">
+      <polygon className="coin-edge" points="13,2.4 25.2,9.4 13,16 0.8,9.4" />
+      <polygon
+        className="coin-face"
+        points="13,0.8 25.2,7.8 13,14.6 0.8,7.8"
+        fill="url(#sheet-gold)"
+      />
+      <polygon className="coin-inner" points="13,4 19.4,7.8 13,11.4 6.6,7.8" />
+      <path className="coin-shine" d="M6.5 6.2 L12.6 2.6" />
+    </svg>
+  );
+}
+
 /** Goldene Rautenmünze; `index` legt ihren Platz im Haufen fest. */
 export function Coin({ index }: { readonly index: number }): ReactElement {
   const transition = useSheetTransition();
@@ -180,16 +196,7 @@ export function Coin({ index }: { readonly index: number }): ReactElement {
       exit={POP_OUT}
       transition={transition}
     >
-      <svg viewBox="0 0 26 16" aria-hidden="true">
-        <polygon className="coin-edge" points="13,2.4 25.2,9.4 13,16 0.8,9.4" />
-        <polygon
-          className="coin-face"
-          points="13,0.8 25.2,7.8 13,14.6 0.8,7.8"
-          fill="url(#sheet-gold)"
-        />
-        <polygon className="coin-inner" points="13,4 19.4,7.8 13,11.4 6.6,7.8" />
-        <path className="coin-shine" d="M6.5 6.2 L12.6 2.6" />
-      </svg>
+      <CoinFace />
     </motion.span>
   );
 }

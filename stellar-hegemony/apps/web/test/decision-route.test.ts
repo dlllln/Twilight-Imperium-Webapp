@@ -136,7 +136,7 @@ describe('Route der offenen Entscheidung', () => {
     expect(route({ game: { ...game, phase: 'gameOver' } })?.kind).toBe('gameOver');
   });
 
-  it('nur Markerverteilung, Führung und Kriegsführung primär sind auf dem Tisch spielbar', () => {
+  it('Markerverteilung, Wertung, Führung, Imperium, Kriegsführung primär und Diplomatie sekundär sind auf dem Tisch spielbar', () => {
     const game = pickAll(started());
     const actor = activeOf(game);
     const spec = (found: DecisionRoute | null) =>
@@ -149,8 +149,12 @@ describe('Route der offenen Entscheidung', () => {
     expect(spec(primary('armament'))).toBe('warfare');
     expect(spec(secondary('armament'))).toBeNull();
     expect(spec(primary('embassy'))).toBeNull();
+    expect(spec(secondary('embassy'))).toBe('diplomacy');
+    expect(spec(primary('crown'))).toBe('imperial');
+    expect(spec(secondary('crown'))).toBe('imperial');
+    expect(spec(primary('engineering'))).toBeNull();
     expect(spec(route({ game, actor }))).toBeNull();
-    expect(spec(route({ game: statusGame('scoring'), actor }))).toBeNull();
+    expect(spec(route({ game: statusGame('scoring'), actor }))).toBe('scoring');
     expect(spec(route({ game: activated(), actor }))).toBeNull();
   });
 });

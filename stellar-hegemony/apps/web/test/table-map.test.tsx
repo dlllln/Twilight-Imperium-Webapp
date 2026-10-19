@@ -10,7 +10,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { type ReactElement, useMemo } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HexTargets } from '../src/components/map/HexTargets.tsx';
-import { usePicking } from '../src/components/map/use-picking.ts';
+import { usePicking, usePlanetPicking } from '../src/components/map/use-picking.ts';
 import { useGameStore } from '../src/game-store.ts';
 import { useHandStore } from '../src/hand/hand-store.ts';
 import { FLAT_VIEW } from '../src/render/board-view.ts';
@@ -20,6 +20,7 @@ import { content, DEFAULT_VIEWPORT, useGalaxyStore } from '../src/store.ts';
 import { useCarryStore } from '../src/table/carry-store.ts';
 import { useLegalFor } from '../src/table/carry-rules.ts';
 import { useDraftStore } from '../src/table/draft-store.ts';
+import { usePaymentStore } from '../src/table/payment-store.ts';
 import { activatableSystems } from '../src/table/legal-systems.ts';
 import { poolTarget } from '../src/table/target-ref.ts';
 import { useDragSource } from '../src/table/use-drag-source.ts';
@@ -42,6 +43,7 @@ beforeEach(() => {
   useCarryStore.setState({ ...empty, news: null });
   useDraftStore.getState().clear();
   useHandStore.getState().clear();
+  usePaymentStore.setState({ key: null, version: null, plan: null, open: null, tables: 0 });
 });
 
 afterEach(() => {
@@ -69,6 +71,7 @@ function Table({ flyTo }: { readonly flyTo: (hex: SceneHex) => void }): ReactEle
   const state = useGameStore((store) => store.game);
   const hexes = useMemo(() => (state === null ? [] : gameScene(state, content, 'de')), [state]);
   const pick = usePicking(() => false, flyTo);
+  const pickPlanet = usePlanetPicking(() => false);
   if (state === null) return null;
   return (
     <>
@@ -77,6 +80,7 @@ function Table({ flyTo }: { readonly flyTo: (hex: SceneHex) => void }): ReactEle
         {...{ hexes, view: FLAT_VIEW, viewport: DEFAULT_VIEWPORT, bounds: BOUNDS, band: BAND }}
         onPick={pick}
         onView={flyTo}
+        onPlanet={pickPlanet}
       />
     </>
   );
@@ -175,8 +179,11 @@ describe('Systeme auf der Karte als Ablageziele', () => {
     act(() => useHandStore.getState().choose({ player: me, card: WARFARE }));
     expect(hexOf(marked).getAttribute('data-target-state')).toBe('legal');
     fireEvent.click(hexOf(marked));
-    expect(useDraftStore.getState().draft?.system).toBe(marked);
-    expect(useDraftStore.getState().draft?.pools.loose).toBe(1);
+    expect(useDraftStore.getState().draft).toMatchObject({
+      kind: 'tokens',
+      system: marked,
+      pools: { loose: 1 },
+    });
     expect(hexOf(marked).getAttribute('data-target-state')).toBe('chosen');
     expect(hexOf(marked).getAttribute('class')).toContain('target-chosen');
     expect(useGameStore.getState().selected).toBeNull();
@@ -227,5 +234,19 @@ describe('Systeme auf der Karte als Ablageziele', () => {
     act(() => useHandStore.getState().choose({ player: me, card: WARFARE }));
     fireEvent.click(hexOf(marked));
     expect(hexOf(marked).getAttribute('aria-current')).toBe('true');
+  });
+
+  it('ein Klick auf einen Planeten wählt nicht das System', () => {
+    const me = actionPhase();
+    const open = { key: 'produktion', player: me, currency: 'resources', required: 1 } as const;
+    usePaymentStore.getState().claim(open);
+    const flyTo = vi.fn();
+    render(<Table flyTo={flyTo} />);
+    const ring = document.querySelector('svg .planet-target');
+    if (ring === null) throw new Error('kein Planetenziel');
+    fireEvent.click(ring);
+    expect(usePaymentStore.getState().plan?.planets).toEqual([ring.getAttribute('data-planet')]);
+    expect(useGameStore.getState().selected).toBeNull();
+    expect(flyTo).not.toHaveBeenCalled();
   });
 });

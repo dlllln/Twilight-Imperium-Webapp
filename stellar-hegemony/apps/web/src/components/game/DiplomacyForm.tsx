@@ -3,6 +3,7 @@ import {
   type GameState,
   type PlanetId,
   type PlayerId,
+  readyablePlanets,
   type StrategyCardDefinition,
   systemId,
 } from '@stellar/domain';
@@ -27,11 +28,6 @@ const eligibleSystems = (game: GameState, player: PlayerId): readonly string[] =
     .filter((system) => content.tiles.find(system.id)?.back !== 'center')
     .filter((system) => system.planetIds.some((id) => game.planets[id]?.controller === player))
     .map((system) => system.id);
-
-const exhaustedPlanets = (game: GameState, player: PlayerId): readonly PlanetId[] =>
-  Object.values(game.planets)
-    .filter((planet) => planet.controller === player && planet.exhausted)
-    .map((planet) => planet.id);
 
 interface SystemListProps {
   readonly game: GameState;
@@ -95,7 +91,7 @@ function usePlanetSelection(limit: number) {
 function PlanetPicker(props: DiplomacyFormProps): ReactElement {
   const t = useT();
   const language = useLanguage();
-  const planets = exhaustedPlanets(props.game, props.player);
+  const planets = readyablePlanets(props.game, props.player);
   const { chosen, toggle, canAdd } = usePlanetSelection(props.card.parameters.readyPlanets ?? 0);
   const choice: DiplomacyChoice = { mechanic: 'diplomacy', system: null, planets: chosen };
   return (

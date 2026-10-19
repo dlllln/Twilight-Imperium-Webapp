@@ -6,16 +6,18 @@ import {
   objectiveId,
   type ObjectiveId,
   type PlayerId,
+  scoringOptions,
   updatePlayer,
 } from '@stellar/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { objectiveFrame } from '../src/artwork/cards.ts';
 import { ObjectivesPanel } from '../src/components/objectives/ObjectivesPanel.tsx';
+import { ScoreAction } from '../src/components/objectives/ScoreAction.tsx';
 import { SecretChoiceForm } from '../src/components/objectives/SecretChoiceForm.tsx';
 import { TurnPanel } from '../src/components/game/TurnPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
 import { currentActor } from '@stellar/domain';
-import { useGalaxyStore } from '../src/store.ts';
+import { content, useGalaxyStore } from '../src/store.ts';
 import { objectiveLabel, objectiveRequirement } from '../src/labels.ts';
 import { holding, Live } from './card-form-helpers.tsx';
 import { pickAll, started } from './game-helpers.ts';
@@ -216,6 +218,38 @@ describe('Statusphase im Browser (RR 73)', () => {
     const winner = state.players[1] as GameState['players'][number];
     render(<TurnPanel game={{ ...state, phase: 'gameOver', winner: winner.id }} />);
     expect(screen.getByRole('status').textContent).toContain(winner.name);
+  });
+});
+
+describe('Ausgabe-Aufträge werten (RR 61)', () => {
+  it('Zurück schließt die Bezahlung eines Ausgabe-Auftrags', () => {
+    useGalaxyStore.setState({ language: 'de' });
+    const state = pickAll(started());
+    const order = state.players.map((player) => player.id);
+    const me = order[0] as PlayerId;
+    const statusPhase = { step: 'scoring', order, waiting: order, scored: {} } as const;
+    const slot = { id: objectiveId('war-chest'), stage: 1, revealed: true };
+    const objectives = { ...state.objectives, public: [slot] };
+    const status = {
+      ...state,
+      phase: 'status',
+      actionPhase: null,
+      statusPhase,
+      objectives,
+    } as const;
+    const scoring = updatePlayer(status, me, (p) => ({ ...p, tradeGoods: 10 }));
+    seatTable(scoring, { me });
+    const option = scoringOptions(scoring, me, content).find((o) => o.definition.id === slot.id);
+    if (option === undefined) throw new Error('Kriegskasse nicht wählbar');
+    render(<ScoreAction game={scoring} player={me} option={option} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Werten' }));
+    expect(document.querySelector('fieldset.payment')).not.toBeNull();
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Werten' }).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Zurück' }));
+    expect(document.querySelector('fieldset.payment')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Zurück' })).toBeNull();
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Werten' }).disabled).toBe(false);
+    expect(findPlayer(game(), me)?.victoryPoints).toBe(0);
   });
 });
 

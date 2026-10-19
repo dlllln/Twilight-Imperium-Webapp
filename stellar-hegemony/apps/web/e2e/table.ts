@@ -149,3 +149,9 @@ export async function neighbourOfHome(page: Page, seat: string): Promise<Locator
   const index = distances.findIndex((distance) => distance < step * 1.1);
   return hexes.nth(index);
 }
+
+/** Das eigene Heimatsystem wählen und aktivieren (Klick auf das Feld, dann „System aktivieren“). */
+export async function activateHome(page: Page, pages: readonly Page[]): Promise<void> {
+  await page.locator(`[data-seat="${seatOf(pages, page)}"]`).click();
+  await page.getByRole('button', { name: 'System aktivieren', exact: true }).click();
+}

@@ -16,6 +16,7 @@ import { useDropRouter } from '../../table/use-drop-router.ts';
 import { useTableTargets } from '../../table/use-table-decision.ts';
 import { type TargetView, useTarget } from '../../table/use-target.ts';
 import { SystemActions } from '../hud/SystemActions.tsx';
+import { type PlanetHandler, PlanetTargets } from './PlanetTargets.tsx';
 
 /*
  * Unsichtbare Trefferflächen über dem Pixi-Bild: Klick und Tastatur wählen ein System, und
@@ -156,6 +157,8 @@ export interface TargetsProps {
   readonly view: BoardView;
   readonly onPick: PickHandler;
   readonly onView: (hex: SceneHex) => void;
+  /** Klick auf einen angebotenen Planeten (Bezahlung, Bereitmachen). */
+  readonly onPlanet?: PlanetHandler | undefined;
 }
 
 const viewBoxOf = (b: Bounds): string =>
@@ -168,7 +171,7 @@ export function ChosenActions({
   viewport,
   view,
   onView,
-}: Omit<TargetsProps, 'onPick'>) {
+}: Omit<TargetsProps, 'onPick' | 'onPlanet'>) {
   const game = useGameStore((state) => state.game);
   const selected = useGameStore((state) => state.selected);
   const chosen = hexes.find((hex) => hex.systemId !== null && hex.systemId === selected);
@@ -196,7 +199,7 @@ function useSeatStyle(game: GameState | null): CSSProperties | undefined {
 
 /** SVG-Ebene über dem Pixi-Bild, mit derselben Abbildung wie `worldTransform`. */
 export const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTargets(
-  { hexes, bounds, band, viewport, view, onPick, onView },
+  { hexes, bounds, band, viewport, view, onPick, onView, onPlanet },
   svg,
 ): ReactElement {
   const game = useGameStore((state) => state.game);
@@ -207,6 +210,7 @@ export const HexTargets = forwardRef<SVGSVGElement, TargetsProps>(function HexTa
     <svg ref={svg} viewBox={viewBoxOf(bounds)} aria-label="galaxy" style={seat}>
       <g transform={`translate(${String(panX)} ${String(panY)}) scale(${String(zoom)})`}>
         {game === null ? <PlainFields {...fields} /> : <RoutedFields {...fields} game={game} />}
+        {game !== null && <PlanetTargets {...{ game, hexes, view, onPlanet }} />}
       </g>
       <ChosenActions {...{ hexes, bounds, band, viewport, view, onView }} />
     </svg>

@@ -1,11 +1,12 @@
 import type { CSSProperties, ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 import { useCarryStore } from '../../table/carry-store.ts';
-import { CommandToken } from '../sheet/SheetTokens.tsx';
+import { CoinFace, CommandToken } from '../sheet/SheetTokens.tsx';
 
 /*
- * Der Marker unter dem Zeiger, solange er gezogen wird. Er liegt außerhalb des schrägen Pults
- * direkt im Dokument, damit er dem Zeiger unverzerrt folgt; die Platzfarbe bringt er selbst mit.
+ * Das Stück unter dem Zeiger, solange es gezogen wird: ein Marker oder eine Münze (Handelsware
+ * vom Haufen oder aus der Kasse). Es liegt außerhalb des schrägen Pults direkt im Dokument, damit
+ * es dem Zeiger unverzerrt folgt; die Platzfarbe bringt es selbst mit.
  */
 
 interface GhostProps {
@@ -16,6 +17,9 @@ interface GhostProps {
 
 export function DragGhost({ faction, seat }: GhostProps): ReactElement | null {
   const point = useCarryStore((state) => (state.mode === 'drag' ? state.point : null));
+  const coin = useCarryStore(
+    (state) => state.piece?.kind === 'goods' || state.piece?.kind === 'slot',
+  );
   if (point === null) return null;
   const style = {
     '--x': `${String(point.x)}px`,
@@ -23,8 +27,8 @@ export function DragGhost({ faction, seat }: GhostProps): ReactElement | null {
     '--seat': seat,
   } as CSSProperties;
   return createPortal(
-    <div className="drag-ghost" aria-hidden="true" style={style}>
-      <CommandToken faction={faction} />
+    <div className={coin ? 'drag-ghost coin' : 'drag-ghost'} aria-hidden="true" style={style}>
+      {coin ? <CoinFace /> : <CommandToken faction={faction} />}
     </div>,
     document.body,
   );

@@ -96,6 +96,29 @@ export function evaluatePayment(
   );
 }
 
+/** Ein Planet, den der Spieler jetzt ausgeben kann, mit seinem Wert in der Währung. */
+export interface SpendablePlanet {
+  readonly planet: PlanetId;
+  readonly value: number;
+}
+
+/**
+ * Eigene, bereite Planeten mit genau dem Wert, den `evaluatePayment` zählt (samt angelegter
+ * Karten). Was die Bezahlung ablehnen würde, fehlt in der Liste.
+ */
+export function spendablePlanets(
+  state: GameState,
+  tiles: TileCatalog,
+  player: PlayerId,
+  currency: Currency,
+): readonly SpendablePlanet[] {
+  return Object.values(state.planets).flatMap((planet) => {
+    if (planet.controller !== player || planet.exhausted) return [];
+    const value = planetValue(state, tiles, player, planet.id, currency);
+    return value.ok ? [{ planet: planet.id, value: value.value }] : [];
+  });
+}
+
 /** Events, die eine gültige Bezahlung ausführen. */
 export function paymentEvents(player: PlayerId, payment: Payment): readonly EconomyEvent[] {
   const events: EconomyEvent[] = [];

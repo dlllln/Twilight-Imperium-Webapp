@@ -59,7 +59,18 @@ function useResearch({ game, player, card, ability, onSubmit }: TechnologyFormPr
       payment: required === 0 ? NO_PAYMENT : payment.payment,
     });
   const toggleSpecialty = (planet: PlanetId) => setSpecialties((list) => toggled(list, planet));
-  return { chosen, specialties, payment, required, canAdd, toggle, toggleSpecialty, submit };
+  const unpaid = required > 0 && payment.value < required;
+  return {
+    chosen,
+    specialties,
+    payment,
+    required,
+    unpaid,
+    canAdd,
+    toggle,
+    toggleSpecialty,
+    submit,
+  };
 }
 
 type Research = ReturnType<typeof useResearch>;
@@ -135,7 +146,10 @@ function SpecialtyChoices(props: TechnologyFormProps & { readonly form: Research
   );
 }
 
-/** Technologie (RR 81): wählen, Voraussetzungen ggf. per Spezialisierung, Kosten bezahlen. */
+/**
+ * Technologie (RR 81): wählen, Voraussetzungen ggf. per Spezialisierung, Kosten bezahlen.
+ * Erforschen bleibt gesperrt, solange zu wenig bezahlt ist.
+ */
 export function TechnologyForm(props: TechnologyFormProps): ReactElement {
   const t = useT();
   const form = useResearch(props);
@@ -152,7 +166,11 @@ export function TechnologyForm(props: TechnologyFormProps): ReactElement {
           state={form.payment}
         />
       )}
-      <Actions label={t('research')} disabled={form.chosen.length === 0} onClick={form.submit}>
+      <Actions
+        label={t('research')}
+        disabled={form.chosen.length === 0 || form.unpaid}
+        onClick={form.submit}
+      >
         {props.children}
       </Actions>
     </div>

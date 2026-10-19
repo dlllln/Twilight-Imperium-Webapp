@@ -65,7 +65,7 @@ export interface SceneHex {
 
 export const hexKey = (position: Hex): string => `${String(position.q)},${String(position.r)}`;
 
-const lookOf = (planet: PlanetDefinition, back: TileBack): PlanetLook =>
+export const planetLookOf = (planet: PlanetDefinition, back: TileBack): PlanetLook =>
   back === 'center' ? 'center' : (planet.trait ?? 'plain');
 
 /** Zählt Einheiten je Sitz und Typ, sortiert nach Sitz. */
@@ -121,7 +121,7 @@ function scenePlanet(base: PlanetDefinition, back: TileBack, at: PlanetSituation
     id: definition.id,
     name: nameOf(definition.id, at.language),
     definition,
-    look: lookOf(definition, back),
+    look: planetLookOf(definition, back),
     ...planetCondition(planet, at.seatOf),
     legendary: legendaryOf(definition, at.usedLegendaries ?? []),
   };

@@ -2,6 +2,7 @@ import {
   COMMAND_POOLS,
   findPlayer,
   type GameCommand,
+  type PlanetId,
   type PoolCounts,
   type StrategyChoice,
   strategyCardId,
@@ -23,7 +24,8 @@ export const tokenPlan = (
   pools: PoolDraft,
   system: SystemId | null = null,
   tradeGoods = 0,
-): TokenPlan => ({ kind: 'tokens', pools, tradeGoods, system });
+  planets: readonly PlanetId[] = [],
+): TokenPlan => ({ kind: 'tokens', pools, tradeGoods, planets, system });
 
 /** Einen Marker umlegen; andere Aktionen ändern den Entwurf hier nicht. */
 export const applyMove = (draft: TokenPlan, action: TableAction): TokenPlan =>

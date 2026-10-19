@@ -112,7 +112,7 @@ test('Lobby zu dritt: Produktion im eigenen Heimatsystem', async ({ browser }) =
   await active.getByRole('button', { name: 'Infanterie +' }).click();
   await active.getByRole('button', { name: 'Infanterie +' }).click();
   await expect(active.getByTestId('production-cost')).toHaveText('1');
-  await active.locator('.payment input[type="checkbox"]').first().check();
+  await active.locator('.planet-row [role="checkbox"]:not([data-value="0"])').first().click();
   await active.getByRole('button', { name: 'Produzieren' }).click();
   await expect(
     active.getByText(/Alle Schritte dieser taktischen Aktion sind erledigt/),

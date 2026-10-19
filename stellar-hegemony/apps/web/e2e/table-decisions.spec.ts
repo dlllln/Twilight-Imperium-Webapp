@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import {
+  activateHome,
   actorPage,
   center,
   keepSecrets,
@@ -74,4 +75,19 @@ test('Tastatur: Taktikmarker mit Enter aufnehmen und auf einem System ablegen', 
   await target.focus();
   await target.press('Enter');
   await expect(activated(active)).toBeVisible();
+});
+
+test('Tischansicht: Produktion mit einem Planeten auf der Karte bezahlen', async ({ browser }) => {
+  const { pages, active } = await actionPhase(browser);
+  await activateHome(active, pages);
+  await active.getByRole('button', { name: 'Ohne Bewegung weiter' }).click();
+  await active.getByRole('button', { name: 'Infanterie +' }).click();
+  await active.getByRole('button', { name: 'Infanterie +' }).click();
+  const planet = active.locator('svg .planet-target:not([data-value="0"])').first();
+  await planet.click();
+  await expect(planet).toHaveAttribute('data-target-state', 'chosen');
+  await active.getByRole('button', { name: 'Produzieren' }).click();
+  await expect(
+    active.getByText(/Alle Schritte dieser taktischen Aktion sind erledigt/),
+  ).toBeVisible();
 });

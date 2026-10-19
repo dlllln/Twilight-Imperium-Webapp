@@ -2,11 +2,11 @@ import {
   type ContentPort,
   type Currency,
   evaluatePayment,
-  currentPlanetDefinition,
   type GameState,
   type Payment,
-  type PlanetId,
   type PlayerId,
+  type SpendablePlanet,
+  spendablePlanets,
 } from '@stellar/domain';
 
 /** Eigene, bereite Planeten mit ihrem Wert in der gesuchten Währung. */
@@ -15,13 +15,8 @@ export function payablePlanets(
   player: PlayerId,
   content: ContentPort,
   currency: Currency,
-): readonly { readonly planet: PlanetId; readonly value: number }[] {
-  return Object.values(game.planets)
-    .filter((planet) => planet.controller === player && !planet.exhausted)
-    .map((planet) => ({
-      planet: planet.id,
-      value: currentPlanetDefinition(game, content.tiles, planet.id)?.[currency] ?? 0,
-    }));
+): readonly SpendablePlanet[] {
+  return spendablePlanets(game, content.tiles, player, currency);
 }
 
 /** Wert einer Bezahlung laut Domain; eine ungültige Bezahlung zählt 0. */

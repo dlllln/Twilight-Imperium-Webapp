@@ -1,6 +1,16 @@
-import { findPlayer, previewCommandTokens } from '@stellar/domain';
+import { type Payment, previewCommandTokens } from '@stellar/domain';
 import { SeededRandom } from '@stellar/infrastructure';
 import { content } from '../store.ts';
+import {
+  addCoins,
+  ownTradeGoods,
+  paymentOf,
+  type PaymentPlan,
+  paymentPlan,
+  spendableIds,
+  togglePlanet,
+} from './payment-draft.ts';
+import { planetStates, type PlanetSide } from './planet-table.ts';
 import { addedTokens, poolDraft, poolSum } from './pool-draft.ts';
 import {
   applyMove,
@@ -11,46 +21,79 @@ import {
   tokenPlan,
 } from './spec-pools.ts';
 import type { PoolSpec, SpecContext, TableAction, TokenPlan } from './spec-types.ts';
+import type { TargetState } from './target-ref.ts';
 
 /** Die Vorschau würfelt nicht; ein fester Zufall genügt für alle Aufrufe. */
 const PREVIEW_RANDOM = new SeededRandom(0);
 
-/** Fragt die Domain, wie viele Marker die Handelswaren bringen (keine doppelte Regel). */
-function gainFor(ctx: SpecContext, tradeGoods: number): number {
+/** Fragt die Domain, wie viele Marker Einflussplaneten und Handelswaren bringen. */
+function gainFor(ctx: SpecContext, influence: Payment): number {
   const card = content.strategyCards.find((candidate) => candidate.id === ctx.route.card);
   if (card === undefined) return 0;
   const context = { random: PREVIEW_RANDOM, now: 0, content };
-  const influence = { planets: [], tradeGoods };
   const input = { state: ctx.game, player: ctx.actor, card, context, influence };
   const preview = previewCommandTokens(input, ctx.route.ability ?? 'primary');
   return preview.ok ? preview.value : 0;
 }
 
 /** Jede Änderung der Bezahlung setzt die Verteilung zurück; alte Marker bleiben liegen. */
-const fresh = (ctx: SpecContext, tradeGoods: number): TokenPlan =>
-  tokenPlan(poolDraft(currentPools(ctx), gainFor(ctx, tradeGoods), true), null, tradeGoods);
-
-function apply(ctx: SpecContext, draft: TokenPlan, action: TableAction): TokenPlan {
-  if (action.kind !== 'tradeGoods') return applyMove(draft, action);
-  const own = findPlayer(ctx.game, ctx.actor)?.tradeGoods ?? 0;
-  const next = Math.min(own, Math.max(0, draft.tradeGoods + action.delta));
-  return next === draft.tradeGoods ? draft : fresh(ctx, next);
+function fresh(ctx: SpecContext, plan: PaymentPlan): TokenPlan {
+  const pools = poolDraft(currentPools(ctx), gainFor(ctx, paymentOf(plan)), true);
+  return tokenPlan(pools, null, plan.tradeGoods, plan.planets);
 }
 
-/** Führung (RR 52): gewonnene Marker auf die Leisten, Handelswaren als Einfluss. */
+/** Die Bezahlung der Führung als Einfluss-Entwurf. */
+const influenceOf = (draft: TokenPlan): PaymentPlan => ({
+  ...paymentPlan('influence'),
+  planets: draft.planets,
+  tradeGoods: draft.tradeGoods,
+});
+
+const influencePlanets = (ctx: SpecContext) => spendableIds(ctx.game, ctx.actor, 'influence');
+
+function paidWith(ctx: SpecContext, plan: PaymentPlan, action: TableAction): PaymentPlan {
+  if (action.kind === 'planet') return togglePlanet(plan, action.planet, influencePlanets(ctx));
+  if (action.kind !== 'tradeGoods') return plan;
+  return addCoins(plan, action.delta, ownTradeGoods(ctx.game, ctx.actor));
+}
+
+function apply(ctx: SpecContext, draft: TokenPlan, action: TableAction): TokenPlan {
+  if (action.kind !== 'tradeGoods' && action.kind !== 'planet') return applyMove(draft, action);
+  const before = influenceOf(draft);
+  const after = paidWith(ctx, before, action);
+  return after === before ? draft : fresh(ctx, after);
+}
+
+/** Einflussplaneten der Planetenreihe; Handelswaren zahlen mit. */
+const planets = (ctx: SpecContext, draft: TokenPlan): PlanetSide => ({
+  mode: 'pay',
+  currency: 'influence',
+  chosen: draft.planets,
+  offered: influencePlanets(ctx),
+  limit: null,
+  tradeGoods: draft.tradeGoods,
+  required: null,
+});
+
+function targets(ctx: SpecContext, draft: TokenPlan): ReadonlyMap<string, TargetState> {
+  return new Map([...poolTargets(draft), ...planetStates(planets(ctx, draft))]);
+}
+
+/** Führung (RR 52): gewonnene Marker auf die Leisten, Einfluss aus Planeten und Handelswaren. */
 export const LEADERSHIP_SPEC: PoolSpec = {
   id: 'leadership',
-  hint: 'tableHintLeadership',
+  hint: () => 'tableHintLeadership',
   confirm: () => 'confirm',
-  initial: (ctx) => fresh(ctx, 0),
+  initial: (ctx) => fresh(ctx, paymentPlan('influence')),
   apply,
-  targets: (_ctx, draft) => poolTargets(draft),
+  targets,
   progress: (_ctx, draft) =>
     poolProgress(poolSum(addedTokens(draft.pools)) + draft.pools.loose, draft),
   command: (ctx, draft) =>
     strategyCommand(ctx, {
       mechanic: 'commandTokens',
-      influence: { planets: [], tradeGoods: draft.tradeGoods },
+      influence: { planets: draft.planets, tradeGoods: draft.tradeGoods },
       allocation: addedTokens(draft.pools),
     }),
+  planets,
 };

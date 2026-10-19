@@ -76,6 +76,24 @@ describe('Produktion im Taktikpanel (RR 62)', () => {
     expect(fighters()).toBe(before + 2);
     expect(stepOf()).toBe('done');
   });
+
+  it('Produzieren bleibt gesperrt, solange zu wenig bezahlt ist', () => {
+    const { player, home } = begin();
+    store().send({ type: 'ActivateSystem', issuedBy: player, system: home });
+    render(<LiveTurn player={player} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ohne Bewegung weiter' }));
+    const produce = () => screen.getByRole<HTMLButtonElement>('button', { name: 'Produzieren' });
+    expect(
+      screen.getByRole<HTMLButtonElement>('button', { name: 'Ohne Produktion weiter' }).disabled,
+    ).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Jäger +' }));
+    expect(screen.getByTestId('production-cost').textContent).toBe('1');
+    expect(produce().disabled).toBe(true);
+    fireEvent.click(screen.getAllByRole('checkbox')[0] as HTMLElement);
+    expect(produce().disabled).toBe(false);
+    fireEvent.click(screen.getAllByRole('checkbox')[0] as HTMLElement);
+    expect(produce().disabled).toBe(true);
+  });
 });
 
 describe('Einmarsch im Taktikpanel (RR 25)', () => {

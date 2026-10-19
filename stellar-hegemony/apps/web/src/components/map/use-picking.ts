@@ -1,4 +1,4 @@
-import { type SystemId, systemId } from '@stellar/domain';
+import { type PlanetId, type SystemId, systemId } from '@stellar/domain';
 import { useCallback, useEffect, useRef } from 'react';
 import { useGameStore } from '../../game-store.ts';
 import { useOnlineStore } from '../../online/online-store.ts';
@@ -6,6 +6,7 @@ import type { SceneHex } from '../../render/scene-model.ts';
 import { useSettingsStore } from '../../settings-store.ts';
 import { systemTarget, targetKey } from '../../table/target-ref.ts';
 import { type TableDecision, useTableDecision } from '../../table/use-table-decision.ts';
+import { usePlanetTable } from '../../table/use-planet-table.ts';
 
 /** Kriegsführung: ein System, das die Entscheidung als Ziel führt, gibt seinen Marker her. */
 function warfareSystem(decision: TableDecision | null, hex: SceneHex): SystemId | null {
@@ -52,5 +53,29 @@ export function usePicking(wasDrag: () => boolean, flyTo: (hex: SceneHex) => voi
       else latest.current?.act({ kind: 'system', system: warfare });
     },
     [wasDrag, flyTo, latest],
+  );
+}
+
+/** Die jeweils angebotenen Planeten, ohne dass sich die Klick-Funktion bei jedem Zeichnen ändert. */
+function useLatestPlanets() {
+  const table = usePlanetTable(useGameStore((state) => state.game));
+  const latest = useRef(table);
+  useEffect(() => {
+    latest.current = table;
+  });
+  return latest;
+}
+
+/**
+ * Ein Klick auf einen angebotenen Planeten merkt ihn vor oder gibt ihn frei, im selben Entwurf
+ * wie die Planetenreihe. Wer dabei die Karte zieht, verschiebt sie nur.
+ */
+export function usePlanetPicking(wasDrag: () => boolean): (planet: PlanetId) => void {
+  const latest = useLatestPlanets();
+  return useCallback(
+    (planet: PlanetId) => {
+      if (!wasDrag()) latest.current?.toggle(planet);
+    },
+    [wasDrag, latest],
   );
 }

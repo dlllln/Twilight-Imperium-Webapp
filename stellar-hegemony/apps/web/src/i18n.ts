@@ -370,7 +370,6 @@ const DICTIONARY = {
   secondaryPrompt: { de: 'Sekundärfähigkeit', en: 'Secondary ability' },
   useSecondary: { de: 'Nutzen', en: 'Use' },
   decline: { de: 'Ablehnen', en: 'Decline' },
-  spendTradeGoods: { de: 'Handelswaren als Einfluss', en: 'Trade goods as influence' },
   tokensGained: { de: 'Erhaltene Marker', en: 'Tokens gained' },
   tokensTaken: { de: 'Von der Karte genommen', en: 'Taken from the map' },
   toDistribute: { de: 'noch zu verteilen', en: 'left to place' },
@@ -1061,6 +1060,40 @@ const DICTIONARY = {
   placed: { de: 'Abgelegt: {target}.', en: 'Placed: {target}.' },
   withoutToken: { de: 'Ohne Marker ausführen', en: 'Perform without a token' },
   withoutSystem: { de: 'Ohne System ausführen', en: 'Perform without a system' },
+  kasse: { de: 'Kasse', en: 'Payment tray' },
+  pickUpCoin: { de: 'Handelsware aufnehmen', en: 'Pick up a trade good' },
+  planetRow: { de: 'Deine Planeten', en: 'Your planets' },
+  planetCardLabel: {
+    de: '{planet}: {resources} Ressourcen, {influence} Einfluss',
+    en: '{planet}: {resources} resources, {influence} influence',
+  },
+  planetMarked: { de: 'vorgemerkt', en: 'marked' },
+  payOnTable: {
+    de: 'Tippe Planetenkarten oder Planeten auf der Karte an; Handelswaren legst du in die Kasse.',
+    en: 'Tap planet cards or planets on the map; put trade goods in the tray.',
+  },
+  tableHintScoring: {
+    de: 'Tippe einen erfüllten Auftrag an, um ihn zu werten. Das Siegel beendet die Wertung.',
+    en: 'Tap a fulfilled objective to score it. The seal ends scoring.',
+  },
+  tableHintImperial: {
+    de: 'Tippe einen erfüllten öffentlichen Auftrag an oder führe die Karte ohne Wertung aus.',
+    en: 'Tap a fulfilled public objective or perform the card without scoring.',
+  },
+  tableHintDrawSecret: {
+    de: 'Ziehe einen geheimen Auftrag oder lehne ab.',
+    en: 'Draw a secret objective or decline.',
+  },
+  tableHintDiplomacy: {
+    de: 'Tippe erschöpfte Planeten an, um sie bereitzumachen.',
+    en: 'Tap exhausted planets to ready them.',
+  },
+  objectiveStrip: { de: 'Aufträge auf dem Tisch', en: 'Objectives on the table' },
+  objectiveStripToggle: { de: 'Aufträge', en: 'Objectives' },
+  scoreNow: { de: 'Werten: {objective}', en: 'Score: {objective}' },
+  scoredByLabel: { de: 'Gewertet von', en: 'Scored by' },
+  planetsToReady: { de: 'Bereitzumachen', en: 'To ready' },
+  chosenObjective: { de: 'Gewählt', en: 'Chosen' },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof DICTIONARY;

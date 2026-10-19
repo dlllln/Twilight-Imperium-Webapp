@@ -1,0 +1,265 @@
+/*
+ * Auftragsleiste: oben in der Mitte des Tisches, zwischen Spielerleiste (links oben) und Vorrat
+ * (rechts oben). Die Fläche selbst fängt keine Gesten ab; nur Karten und Knöpfe tun es.
+ */
+.objective-strip {
+  --strip-card: 52px;
+  position: absolute;
+  top: 12px;
+  left: 276px;
+  right: 298px;
+  z-index: 22;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.objective-strip-toggle {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid #c9b6833d;
+  border-bottom: 3px solid #000b;
+  border-radius: 7px;
+  background:
+    repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px),
+    linear-gradient(155deg, #192632f5, #080e17f5);
+  color: #c8c6b9;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.objective-strip-toggle:hover {
+  color: #ffdfa2;
+}
+
+.objective-strip-toggle:focus-visible {
+  outline: 2px solid var(--accent, var(--gold-bright));
+  outline-offset: 3px;
+}
+
+.objective-strip-toggle[aria-expanded='true'] svg:last-child {
+  transform: rotate(180deg);
+}
+
+/* Die Karten liegen wie auf einer Filzbahn; wird es eng, rollt die Bahn in sich. */
+.objective-strip-cards {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  max-width: 100%;
+  margin: 0;
+  padding: 7px 10px 9px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  list-style: none;
+  border: 1px solid #c9b6832e;
+  border-bottom: 3px solid #000a;
+  border-radius: 7px 7px 14px 14px;
+  background:
+    repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px),
+    linear-gradient(160deg, #13202bf0, #070c15f0);
+  box-shadow:
+    0 6px 0 #02050b99,
+    0 10px 20px #0005,
+    inset 0 1px #e4d4a514;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+  pointer-events: auto;
+}
+
+.objective-strip[data-expanded='false'] .objective-strip-cards {
+  display: none;
+}
+
+.objective-strip-item {
+  position: relative;
+  display: flex;
+  flex: 0 0 var(--strip-card);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Die Karte: eigener Druck, darüber Name und Punkte als echte Schrift. */
+.objective-strip-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  transform: rotate(-1.5deg);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+.objective-strip-item:nth-child(even) .objective-strip-card {
+  transform: rotate(1.5deg);
+}
+
+.objective-strip-face {
+  display: block;
+  overflow: hidden;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px #0009;
+}
+
+.objective-strip-face .ti4-complete-card {
+  display: block;
+  width: 100%;
+  border-radius: 5px;
+}
+
+.objective-strip-name {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  display: -webkit-box;
+  overflow: hidden;
+  padding: 2px 3px;
+  border-radius: 3px;
+  background: #050a12d9;
+  color: #f0e8d6;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1.15;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.objective-strip-points {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--gold-line);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #2a3150 0%, #0d1228 100%);
+  color: var(--gold-bright);
+  font-family: var(--title-font);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 3px #000a;
+}
+
+/* Kontrollscheiben der Spieler, die gewertet haben: kleine Steine in Sitzfarbe. */
+.objective-strip-discs {
+  position: absolute;
+  top: 18px;
+  left: -4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.objective-strip-disc {
+  width: 11px;
+  height: 11px;
+  border: 1px solid #000c;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 35%,
+    color-mix(in srgb, var(--seat) 55%, #fff) 0%,
+    var(--seat) 55%,
+    color-mix(in srgb, var(--seat) 60%, #000) 100%
+  );
+  box-shadow: 0 2px 2px #000b;
+}
+
+/* Bei einer Entscheidung treten die übrigen Karten zurück, die wählbaren leuchten. */
+.objective-strip[data-mode='decision'] .objective-strip-item[data-pickable='false'] {
+  opacity: 0.45;
+}
+
+button.objective-strip-card {
+  cursor: pointer;
+}
+
+button.objective-strip-card[data-target-state='legal'] .objective-strip-face {
+  box-shadow:
+    0 0 0 1.5px var(--gold-bright),
+    0 0 12px color-mix(in srgb, var(--gold-bright) 55%, transparent),
+    0 4px 8px #0009;
+}
+
+button.objective-strip-card[data-target-state='chosen'] {
+  transform: translateY(-4px) rotate(0deg);
+}
+
+button.objective-strip-card[data-target-state='chosen'] .objective-strip-face {
+  box-shadow:
+    0 0 0 2px var(--gold-bright),
+    0 0 16px color-mix(in srgb, var(--gold-bright) 75%, transparent),
+    0 8px 12px #000b;
+}
+
+button.objective-strip-card:hover,
+button.objective-strip-card:focus-visible {
+  transform: translateY(-2px) rotate(0deg);
+}
+
+button.objective-strip-card:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.objective-strip-score {
+  min-height: 22px;
+  padding: 2px 4px;
+  border: 1px solid var(--gold-line);
+  border-radius: 4px;
+  background: linear-gradient(180deg, #2d3653 0%, #121831 100%);
+  color: var(--gold-bright);
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+/* Schmal oder hochkant: unter der Spielerleiste, links vom Vorrat; zu, bis man sie öffnet. */
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
+  .objective-strip {
+    --strip-card: 46px;
+    top: 74px;
+    left: 10px;
+    right: 58px;
+    align-items: flex-start;
+  }
+
+  .objective-strip-toggle {
+    display: inline-flex;
+  }
+
+  .objective-strip-cards {
+    margin-top: 6px;
+  }
+}
+
+:root.motion-off .objective-strip-card,
+:root.motion-off .objective-strip-toggle svg {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .objective-strip-card,
+  .objective-strip-toggle svg {
+    transition: none;
+  }
+}

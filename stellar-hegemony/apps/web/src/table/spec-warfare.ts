@@ -35,7 +35,7 @@ function targets(ctx: SpecContext, draft: TokenPlan): ReadonlyMap<string, Target
 /** Kriegsführung primär (RR 49.1/49.2); ohne eigenen Marker auf der Karte nur umverteilen. */
 export const WARFARE_SPEC: PoolSpec = {
   id: 'warfare',
-  hint: 'tableHintWarfare',
+  hint: () => 'tableHintWarfare',
   confirm: (ctx) => (tokenSystems(ctx).length === 0 ? 'withoutToken' : 'confirm'),
   initial: (ctx) => tokenPlan(poolDraft(currentPools(ctx), 0, false, 'board')),
   apply,

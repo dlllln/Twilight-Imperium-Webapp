@@ -1,9 +1,16 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { findPlayer, type GameState, type PlayerId, unitTypeId } from '@stellar/domain';
+import {
+  findPlayer,
+  type GameState,
+  type PlayerId,
+  spendablePlanets,
+  unitTypeId,
+} from '@stellar/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { homeSystemOf } from '../src/card-view.ts';
 import { useGameStore } from '../src/game-store.ts';
+import { planetLabel } from '../src/labels.ts';
 import { content } from '../src/store.ts';
 import { holding, Live } from './card-form-helpers.tsx';
 
@@ -70,6 +77,35 @@ describe('Kriegsführung (RR 49)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Produzieren' }));
     expect(store().error).toBeNull();
     expect(fighters()).toBe(before + 1);
+  });
+});
+
+describe('Führung in der klassischen Ansicht (RR 50)', () => {
+  it('Führung klassisch: ein Einflussplanet bringt weitere Marker', () => {
+    const { player, card } = holding('commandTokens');
+    const players = game().players.map((p) => (p.id === player ? { ...p, tradeGoods: 1 } : p));
+    useGameStore.setState({ game: { ...game(), players } });
+    const [planet] = spendablePlanets(game(), content.tiles, player, 'influence');
+    if (planet === undefined || planet.value !== 2) throw new Error('Testpartie geändert');
+    const tactic = findPlayer(game(), player)?.commandPools.tactic ?? 0;
+    render(<Live player={player} card={card} ability="primary" />);
+    const gained = () => screen.getByTestId('tokens-gained').textContent;
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1' } });
+    expect(gained()).toBe('3');
+    fireEvent.click(screen.getByRole('button', { name: 'Taktik +' }));
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: new RegExp(planetLabel(planet.planet, 'de')) }),
+    );
+    expect(screen.getByTestId('paid').textContent).toBe('3');
+    expect(gained()).toBe('4');
+    expect(screen.getByRole('status', { name: 'Taktik' }).textContent).toBe('0');
+    for (let token = 0; token < 4; token += 1)
+      fireEvent.click(screen.getByRole('button', { name: 'Taktik +' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ausführen' }));
+    expect(store().error).toBeNull();
+    expect(findPlayer(game(), player)).toMatchObject({ tradeGoods: 0 });
+    expect(findPlayer(game(), player)?.commandPools.tactic).toBe(tactic + 4);
+    expect(game().planets[planet.planet]?.exhausted).toBe(true);
   });
 });
 

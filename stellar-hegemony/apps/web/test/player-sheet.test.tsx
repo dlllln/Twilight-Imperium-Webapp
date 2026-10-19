@@ -145,6 +145,24 @@ describe('Kommandopult vor dem eigenen Platz', () => {
     expect(screen.getByLabelText('Taktik: 3')).toBeTruthy();
   });
 
+  it('die Planetenreihe zeigt jeden eigenen Planeten; erschöpfte liegen quer', () => {
+    const { actor } = actionPhase();
+    const own = Object.values(game().planets).filter((planet) => planet.controller === actor);
+    const [tired] = own;
+    if (tired === undefined) throw new Error('kein eigener Planet');
+    const planets = { ...game().planets, [tired.id]: { ...tired, exhausted: true } };
+    act(() => useGameStore.setState({ game: { ...game(), planets } }));
+    render(<Live />);
+    const row = screen.getByRole('region', { name: 'Deine Planeten' });
+    const cards = within(row).getAllByRole('listitem');
+    expect(cards.map((card) => card.getAttribute('data-planet')).sort()).toEqual(
+      own.map((planet) => planet.id).sort(),
+    );
+    const turned = cards.filter((card) => card.getAttribute('data-turn') === '90');
+    expect(turned.map((card) => card.getAttribute('data-planet'))).toEqual([tired.id]);
+    expect(turned[0]?.getAttribute('aria-label')).toMatch(/, erschöpft$/);
+  });
+
   it('ohne eigenen Platz gibt es kein Pult', () => {
     actionPhase();
     useGameStore.setState({ me: null });

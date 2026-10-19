@@ -21,6 +21,13 @@ const controls = (state: GameState, player: PlayerId, planet: PlanetId): boolean
 const exhaustedOwn = (state: GameState, player: PlayerId, planets: readonly PlanetId[]) =>
   planets.filter((id) => controls(state, player, id) && state.planets[id]?.exhausted === true);
 
+/** RR 21.3: die eigenen erschöpften Planeten, die die Diplomatie bereitmachen kann. */
+export function readyablePlanets(state: GameState, player: PlayerId): readonly PlanetId[] {
+  return Object.values(state.planets)
+    .filter((planet) => planet.controller === player && planet.exhausted)
+    .map((planet) => planet.id);
+}
+
 function placements(
   state: GameState,
   system: SystemState,
@@ -84,11 +91,12 @@ function secondary(input: EffectInput): Events {
   const { state, player, card } = input;
   const limit = card.parameters.readyPlanets ?? 0;
   return andThen(choiceOf(input, 'diplomacy'), ({ planets }) => {
+    const readyable = readyablePlanets(state, player);
     const checked = firstFailure([
       guard(planets.length <= limit, 'diplomacy.tooManyPlanets', 'Zu viele Planeten', { limit }),
       guard(new Set(planets).size === planets.length, 'payment.duplicatePlanet', 'Planet doppelt'),
       guard(
-        exhaustedOwn(state, player, planets).length === planets.length,
+        planets.every((id) => readyable.includes(id)),
         'diplomacy.notExhausted',
         'Nur eigene erschöpfte Planeten',
       ),

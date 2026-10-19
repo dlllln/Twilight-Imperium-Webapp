@@ -1,16 +1,11 @@
 import type { Bounds, Point } from '../hex-geometry.ts';
 import { hexToPixel } from '../hex-geometry.ts';
 import { type BoardView, lift, plus, type Projected, turn } from '../render/board-view.ts';
-import {
-  PLANET_HEIGHT,
-  planetDiameter,
-  planetSpots,
-  SHIP_HEIGHT,
-  shipSlots,
-} from '../render/hex-layout.ts';
+import { SHIP_HEIGHT, shipSlots } from '../render/hex-layout.ts';
 import type { SceneHex, ScenePlanet, UnitCount } from '../render/scene-model.ts';
 import { type ScreenSize, worldTransform } from '../render/view-transform.ts';
 import type { Viewport } from '../store.ts';
+import { planetAnchors } from './map-anchors.ts';
 import { CLOSE_ZOOM } from './viewport-tween.ts';
 
 /*
@@ -47,19 +42,14 @@ type ToScreen = (board: Point) => Point;
 /** Unter einer stehenden Figur: `below` Karteneinheiten unter ihrem Standpunkt im Bild. */
 const under = (at: Projected, below: number): Point => ({ x: at.x, y: at.y + below * at.scale });
 
-function planetMarks(
-  hex: SceneHex,
-  center: Point,
-  toScreen: ToScreen,
-  tilt: number,
-): CloseUpMark[] {
-  const spots = planetSpots(hex.planets.length);
-  return hex.planets.map((planet, index) => {
-    const spot = spots[index] ?? { x: 0, y: 0 };
-    const radius = planetDiameter(planet, hex.planets.length) / 2;
-    const at = under(lift(plus(center, spot), PLANET_HEIGHT, tilt), radius + PLANET_GAP);
-    return { kind: 'planet', key: `${hex.key}:${planet.id}`, planet, at: toScreen(at) };
-  });
+/** Schild unter jedem Planeten des Felds, knapp unter seinem Rand. */
+function planetMarks(hex: SceneHex, view: BoardView, toScreen: ToScreen): CloseUpMark[] {
+  return planetAnchors(hex, view).map(({ planet, at, radius }) => ({
+    kind: 'planet',
+    key: `${hex.key}:${planet.id}`,
+    planet,
+    at: toScreen({ x: at.x, y: at.y + radius + PLANET_GAP * at.scale }),
+  }));
 }
 
 function fleetMarks(hex: SceneHex, center: Point, toScreen: ToScreen, tilt: number): CloseUpMark[] {
@@ -103,8 +93,5 @@ export function closeUpMarks(
 /** Schilder eines Felds; die Anordnung im Feld zeigt immer zum Betrachter. */
 function hexMarks(hex: SceneHex, view: BoardView, toScreen: ToScreen): CloseUpMark[] {
   const center = turn(view, hexToPixel(hex.position));
-  return [
-    ...planetMarks(hex, center, toScreen, view.tilt),
-    ...fleetMarks(hex, center, toScreen, view.tilt),
-  ];
+  return [...planetMarks(hex, view, toScreen), ...fleetMarks(hex, center, toScreen, view.tilt)];
 }

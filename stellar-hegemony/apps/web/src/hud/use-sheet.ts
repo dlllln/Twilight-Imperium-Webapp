@@ -93,5 +93,7 @@ export function useSheetTable(game: GameState): SheetTable {
 }
 
 /** Läuft eine Markerverteilung, liefert sie den Entwurf der Leisten; sonst `null`. */
-export const poolPlanOf = (table: SheetTable): PoolDraft | null =>
-  table.decision?.draft?.pools ?? null;
+export function poolPlanOf(table: SheetTable): PoolDraft | null {
+  const draft = table.decision?.draft ?? null;
+  return draft?.kind === 'tokens' ? draft.pools : null;
+}

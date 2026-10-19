@@ -129,7 +129,10 @@ function GroundPlanet({ form }: { readonly form: Production }): ReactElement | n
   );
 }
 
-/** Produktion (RR 62): Einheiten bestellen, mit Ressourcen bezahlen, Bodentruppen platzieren. */
+/**
+ * Produktion (RR 62): Einheiten bestellen, mit Ressourcen bezahlen, Bodentruppen platzieren.
+ * Produzieren bleibt gesperrt, solange weniger bezahlt ist, als die Einheiten kosten.
+ */
 export function ProductionForm(props: ProductionFormProps): ReactElement {
   const t = useT();
   const form = useProduction(props);
@@ -150,6 +153,7 @@ export function ProductionForm(props: ProductionFormProps): ReactElement {
       />
       <Actions
         label={form.orders.length === 0 ? t('skipProduction') : t('produce')}
+        disabled={form.orders.length > 0 && payment.value < form.quote.cost}
         onClick={submit}
       >
         {props.children}

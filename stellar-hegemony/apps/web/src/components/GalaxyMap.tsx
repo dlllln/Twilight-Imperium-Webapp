@@ -48,7 +48,7 @@ import { ResourceBar } from './hud/ResourceBar.tsx';
 import { PlayerSheet } from './sheet/PlayerSheet.tsx';
 import { NoticeStack } from './hud/NoticeStack.tsx';
 import { type Band, HexTargets } from './map/HexTargets.tsx';
-import { usePicking } from './map/use-picking.ts';
+import { usePicking, usePlanetPicking } from './map/use-picking.ts';
 import { useCarryStore } from '../table/carry-store.ts';
 import { withTableHighlights } from '../table/table-highlights.ts';
 import type { TargetState } from '../table/target-ref.ts';
@@ -60,6 +60,7 @@ import { FleetPieces } from './pieces/FleetPieces.tsx';
 import { TabletopMapMotion } from './pieces/TabletopMapMotion.tsx';
 import { MapPings } from './MapPings.tsx';
 import { TabletopZones } from './tabletop/TabletopZones.tsx';
+import { ObjectiveStrip } from './table/ObjectiveStrip.tsx';
 import type { FleetProjection } from '../system/fleet-placement.ts';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
@@ -228,6 +229,7 @@ function Hud({ game, table }: { readonly game: GameState; readonly table: boolea
   return (
     <>
       <TabletopZones game={game} />
+      {table && <ObjectiveStrip game={game} />}
       <PlayerRail game={game} />
       {table ? <PlayerSheet game={game} /> : <ResourceBar game={game} />}
       <div className="hud-corner">
@@ -336,6 +338,11 @@ function BoardObjects(props: FleetProjection) {
   );
 }
 
+/** Klicks auf Felder und auf angebotene Planeten; wer die Karte zieht, wählt nichts. */
+function useMapPicking(wasDrag: () => boolean, flyTo: (hex: SceneHex) => void) {
+  return { onPick: usePicking(wasDrag, flyTo), onPlanet: usePlanetPicking(wasDrag) };
+}
+
 export function GalaxyMap(): ReactElement {
   const viewport = useGalaxyStore((state) => state.viewport);
   const hexes = useScene();
@@ -343,7 +350,7 @@ export function GalaxyMap(): ReactElement {
   const { view, svg, size, bounds, band, attributes, flyTo, zoom } = useMapView(hexes);
   const { wasDrag, ...handlers } = usePanZoom(svg, bounds.width, zoom);
   const [flat, onUnavailable] = useFlatFallback();
-  const pick = usePicking(wasDrag, flyTo);
+  const picking = useMapPicking(wasDrag, flyTo);
   return (
     <div className={flat ? 'galaxy flat' : 'galaxy'} {...attributes} {...handlers}>
       {!flat && (
@@ -355,7 +362,7 @@ export function GalaxyMap(): ReactElement {
       <HexTargets
         {...{ hexes, bounds, band, viewport, view }}
         ref={svg}
-        onPick={pick}
+        {...picking}
         onView={flyTo}
       />
       <BoardObjects {...{ hexes, bounds, viewport, view, size }} />

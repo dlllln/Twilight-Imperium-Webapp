@@ -1,0 +1,427 @@
+/*
+ * Planetenreihe am Pult: eigene Planeten als Karten über dem Schatzflügel, flach auf dem Tisch.
+ * In Ruhe ragt nur ein schmaler Streifen hervor; beim Bezahlen oder Bereitmachen hebt sich die
+ * Reihe an, angebotene Karten leuchten in Platzfarbe. Erschöpfte Karten liegen quer, vorgemerkte
+ * schräg. Die Kasse liegt links in der Reihe.
+ */
+
+.hud-shield[data-view='table']:has(.planet-row) {
+  --planet-row-h: 26px;
+}
+
+.hud-shield[data-view='table']:has(.planet-row:not([data-mode='rest'])) {
+  --planet-row-h: 74px;
+}
+
+/* Die Ansage rückt über die Reihe, damit beide sichtbar bleiben. */
+.hud-shield[data-view='table']:has(.planet-row) .hud-corner {
+  bottom: calc(var(--sheet-h) + var(--planet-row-h) + 10px);
+  max-height: calc(100% - var(--sheet-h) - var(--planet-row-h) - 30px);
+}
+
+.planet-row {
+  --card-w: 40px;
+  --card-h: 56px;
+  --disc: 28px;
+  position: absolute;
+  grid-column: 3;
+  grid-row: 1;
+  left: 10px;
+  right: 10px;
+  bottom: calc(100% - 2px);
+  z-index: 4;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  height: var(--planet-row-h, 26px);
+  overflow: hidden;
+  pointer-events: none;
+  transition: height 0.25s var(--ease-out);
+}
+
+/* In Ruhe liegen die Karten unter dem Flügel; man liest nur ihre Ecken. */
+.planet-row[data-mode='rest'] {
+  z-index: -1;
+}
+
+.planet-row:not([data-mode='rest']) {
+  pointer-events: auto;
+}
+
+.planet-cards {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 6px 10px 0;
+  list-style: none;
+  overflow: hidden;
+}
+
+.planet-row:not([data-mode='rest']) .planet-cards {
+  align-items: center;
+  padding-top: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+/* Viele Karten rücken zusammen, nie enger als bis zur Hälfte; dann rollt die Reihe. */
+.planet-cards > li {
+  flex: none;
+  margin: 0 0 0
+    max(
+      -20px,
+      min(6px, calc((100% - var(--count, 1) * var(--card-w)) / max(1, var(--count, 1) - 1)))
+    );
+}
+
+.planet-cards > li:first-child {
+  margin-left: 0;
+}
+
+.planet-slot {
+  display: block;
+  padding: 0;
+}
+
+/* Die Karte: Verlauf nach Planetenart, Bild im Ausschnitt, Werte in den Ecken */
+
+.planet-card {
+  --hi: #807678;
+  --lo: #3c363e;
+  --turn: 0deg;
+  position: relative;
+  display: block;
+  width: var(--card-w);
+  height: var(--card-h);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gold-line);
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 32%),
+    linear-gradient(160deg, var(--hi) 0%, var(--lo) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 3px 6px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  transform: rotate(var(--turn));
+  transform-origin: 50% 60%;
+  transition:
+    transform 0.28s var(--ease-out),
+    box-shadow 0.2s ease,
+    opacity 0.2s ease,
+    filter 0.2s ease;
+}
+
+.planet-card[data-look='cultural'] {
+  --hi: #3480b0;
+  --lo: #12346f;
+}
+
+.planet-card[data-look='hazardous'] {
+  --hi: #b2461e;
+  --lo: #46100a;
+}
+
+.planet-card[data-look='industrial'] {
+  --hi: #68784a;
+  --lo: #2a3422;
+}
+
+.planet-card[data-look='center'] {
+  --hi: #c89836;
+  --lo: #60420e;
+}
+
+.planet-card[data-turn='30'] {
+  --turn: 30deg;
+}
+
+.planet-card[data-turn='90'] {
+  --turn: 90deg;
+}
+
+.planet-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.planet-art {
+  position: absolute;
+  left: calc(50% - var(--disc) / 2);
+  top: 20px;
+  width: var(--disc);
+  height: var(--disc);
+  border-radius: 50%;
+  background-color: var(--lo);
+  background-image: var(--art);
+  background-repeat: no-repeat;
+  background-size: calc(var(--disc) * var(--tile-w) / var(--art-size))
+    calc(var(--disc) * var(--tile-h) / var(--art-size));
+  background-position: calc(var(--disc) * var(--art-x) / var(--art-size) * -1)
+    calc(var(--disc) * var(--art-y) / var(--art-size) * -1);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--hi) 70%, transparent),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.5);
+}
+
+.planet-badge {
+  position: absolute;
+  top: 2px;
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+}
+
+/* Ressourcen im Sechseck, Einfluss im Kreis */
+.planet-badge.res {
+  left: 2px;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: color-mix(in srgb, var(--resources) 75%, #000);
+}
+
+.planet-badge.inf {
+  right: 2px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--influence) 75%, #000);
+}
+
+.planet-skip {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--skip, var(--gold));
+  box-shadow: 0 0 4px var(--skip, var(--gold));
+}
+
+.planet-skip.biotic {
+  --skip: var(--biotic);
+}
+
+.planet-skip.propulsion {
+  --skip: var(--propulsion);
+}
+
+.planet-skip.cybernetic {
+  --skip: var(--cybernetic);
+}
+
+.planet-skip.warfare {
+  --skip: var(--warfare);
+}
+
+.planet-legend {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  color: var(--gold-bright);
+  fill: var(--gold);
+  filter: drop-shadow(0 0 3px var(--gold));
+}
+
+/* Wählen: angebotene Karten leuchten, vorgemerkte in voller Platzfarbe, andere treten zurück */
+
+.planet-row:not([data-mode='rest']) .planet-cards > li.planet-card {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+button.planet-card {
+  cursor: pointer;
+}
+
+button.planet-card:hover:not(:disabled) {
+  border-color: var(--gold-bright);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 36%),
+    linear-gradient(160deg, var(--hi) 0%, var(--lo) 100%);
+  transform: rotate(var(--turn)) translateY(-3px);
+}
+
+button.planet-card:disabled {
+  opacity: 0.55;
+}
+
+button.planet-card:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.planet-card[data-target-state='legal'] {
+  border-color: color-mix(in srgb, var(--seat, var(--gold)) 80%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 0 8px color-mix(in srgb, var(--seat, var(--gold)) 50%, transparent),
+    0 3px 6px rgba(0, 0, 0, 0.6);
+  animation: planet-card-glow 2.4s ease-in-out infinite;
+}
+
+.planet-card[data-target-state='chosen'] {
+  border-color: var(--seat, var(--gold));
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 0 0 2px var(--seat, var(--gold)),
+    0 0 14px var(--seat, var(--gold)),
+    0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes planet-card-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.18);
+  }
+}
+
+/* Kasse: eine Messingplatte mit Münzen, Zahl und Plus/Minus */
+
+.sheet-kasse {
+  position: relative;
+  display: grid;
+  flex: none;
+  grid-template-columns: auto auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  align-items: end;
+  justify-items: center;
+  column-gap: 4px;
+  height: calc(100% - 4px);
+  margin-top: 2px;
+  padding: 3px 6px 4px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--panel-strong, #0b1024) 0%, #070b1c 100%);
+  box-shadow:
+    0 0 0 1px var(--gold-line),
+    inset 0 2px 6px rgba(0, 0, 0, 0.7);
+  outline: 1px solid transparent;
+  outline-offset: 1px;
+  pointer-events: auto;
+  transition: outline-color 0.2s ease;
+}
+
+.sheet-kasse-tray {
+  position: relative;
+  grid-row: 1 / 3;
+  width: 52px;
+  height: 100%;
+  min-height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 60% 30% at 50% 82%, rgba(0, 0, 0, 0.6), transparent 72%);
+}
+
+.sheet-kasse > strong {
+  font-size: 16px;
+  color: var(--gold-bright);
+}
+
+.sheet-kasse .rail-controls {
+  grid-column: 2;
+}
+
+.sheet-kasse > .sheet-caption {
+  grid-row: 3;
+  text-align: center;
+}
+
+.sheet-goods[data-target-state],
+.sheet-kasse[data-target-state] {
+  cursor: pointer;
+  outline: 1px solid transparent;
+  outline-offset: 2px;
+}
+
+.sheet-goods[data-target-state='legal'],
+.sheet-kasse[data-target-state='legal'] {
+  outline-color: color-mix(in srgb, var(--seat, var(--gold)) 80%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--seat, var(--gold)) 40%, transparent);
+}
+
+.sheet-goods[data-over='true'],
+.sheet-kasse[data-over='true'] {
+  outline-color: var(--gold-bright);
+}
+
+.sheet-goods[data-target-state]:focus-visible,
+.sheet-kasse[data-target-state]:focus-visible {
+  outline: 2px solid var(--gold-bright);
+}
+
+/* Die Münze zum Aufnehmen liegt obenauf, über der vordersten Münze. */
+.sheet-pile > .sheet-coin-piece,
+.sheet-kasse-tray > .sheet-coin-piece {
+  position: absolute;
+  left: calc(50% - 15px);
+  bottom: 2px;
+  width: 30px;
+  height: 22px;
+  border-radius: 40%;
+}
+
+.drag-ghost.coin {
+  width: 30px;
+  height: 19px;
+}
+
+.drag-ghost .coin-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Ohne Bewegung: Karten drehen und leuchten ohne Übergang. */
+:root.motion-off .planet-row,
+:root.motion-off .planet-card {
+  transition: none;
+  animation: none;
+}
+
+/*
+ * Schmale Bildschirme (wie das Pult): In Ruhe fehlt die Reihe, damit die Hand Platz hat. Zum
+ * Bezahlen liegt sie über beiden Flügeln; die Ansage rückt darüber.
+ */
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
+  .hud-shield[data-view='table']:has(.planet-row) {
+    --planet-row-h: 0px;
+  }
+
+  .hud-shield[data-view='table']:has(.planet-row:not([data-mode='rest'])) {
+    --planet-row-h: 70px;
+  }
+
+  .planet-row[data-mode='rest'] {
+    display: none;
+  }
+
+  .planet-row {
+    --card-w: 36px;
+    --card-h: 50px;
+    --disc: 24px;
+    grid-column: 1 / -1;
+    left: 0;
+    right: 0;
+  }
+
+  .hud-shield[data-view='table']:has(.planet-row) .hud-corner {
+    bottom: calc(var(--sheet-h) + var(--hand-rise, 70px) + var(--planet-row-h));
+    max-height: calc(100% - var(--sheet-h) - var(--hand-rise, 70px) - var(--planet-row-h) - 20px);
+  }
+}

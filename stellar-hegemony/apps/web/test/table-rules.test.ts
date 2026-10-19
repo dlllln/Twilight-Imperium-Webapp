@@ -10,7 +10,7 @@ import { liftedTokenOf, withoutLifted } from '../src/table/lifted-token.ts';
 import { activatableSystems, canActivateNow } from '../src/table/legal-systems.ts';
 import { poolDraft } from '../src/table/pool-draft.ts';
 import type { TokenPlan } from '../src/table/table-specs.ts';
-import { poolTarget, systemTarget } from '../src/table/target-ref.ts';
+import { GOODS_PIECE, KASSE, poolTarget, systemTarget } from '../src/table/target-ref.ts';
 import { dropIntent } from '../src/table/use-drop-router.ts';
 import type { TableDecision } from '../src/table/use-table-decision.ts';
 import { pickAll, started } from './game-helpers.ts';
@@ -43,7 +43,7 @@ describe('Regeln am Tisch', () => {
     expect(allowed.length).toBeLessThan(Object.keys(game.systems).length);
     expect([...activatableSystems(game, actor)]).toEqual(allowed);
     expect(activatableSystems(game, actor)).toBe(activatableSystems(game, actor));
-    const input = { game, actor, choosing: false, draft: null };
+    const input = { game, actor, choosing: false, draft: null, coins: null };
     expect([...legalFor(input, TACTIC)]).toEqual(allowed.map((id) => `system:${id}`));
     expect(legalFor(input, poolTarget('fleet')).size).toBe(0);
     const other = game.players.find((player) => player.id !== actor)?.id as PlayerId;
@@ -65,7 +65,9 @@ describe('Regeln am Tisch', () => {
     expect(canActivateNow(game, actor, first, false)).toBe(true);
     expect(canActivateNow(game, actor, first, true)).toBe(false);
     expect(systemActions(game, actor, first, true)).toEqual(['view']);
-    expect(legalFor({ game, actor, choosing: true, draft: null }, TACTIC).size).toBe(0);
+    expect(legalFor({ game, actor, choosing: true, draft: null, coins: null }, TACTIC).size).toBe(
+      0,
+    );
     const route = { game, actor, choosing: true, specId: null, draft: null };
     expect(dropIntent(route, TACTIC, systemTarget(first))).toBeNull();
   });
@@ -89,8 +91,8 @@ describe('Regeln am Tisch', () => {
     const game = pickAll(started());
     const actor = activeOf(game);
     const pools = poolDraft({ tactic: 3, fleet: 3, strategy: 2 }, 1, true);
-    const draft: TokenPlan = { kind: 'tokens', pools, tradeGoods: 0, system: null };
-    const input = { game, actor, choosing: true, draft };
+    const draft: TokenPlan = { kind: 'tokens', pools, tradeGoods: 0, planets: [], system: null };
+    const input = { game, actor, choosing: true, draft, coins: null };
     expect([...legalFor(input, poolTarget('loose'))]).toEqual([
       'pool:tactic',
       'pool:fleet',
@@ -116,7 +118,7 @@ describe('Regeln am Tisch', () => {
     const tokensOn = (state: GameState) =>
       gameScene(state, content, 'de').find((hex) => hex.systemId === first)?.tokens;
     const decision = (specId: string | null, system: string | null) =>
-      ({ specId, draft: { system }, route: { actor } }) as unknown as TableDecision;
+      ({ specId, draft: { kind: 'tokens', system }, route: { actor } }) as unknown as TableDecision;
     const lifted = liftedTokenOf(decision('warfare', first));
     expect(lifted).toEqual({ system: first, player: actor });
     expect(liftedTokenOf(decision('warfare', null))).toBeNull();
@@ -124,5 +126,26 @@ describe('Regeln am Tisch', () => {
     expect(tokensOn(game)).toHaveLength(1);
     expect(tokensOn(withoutLifted(game, lifted))).toHaveLength(0);
     expect(withoutLifted(game, null)).toBe(game);
+  });
+
+  it('eine Handelsware darf in die Kasse, zurück nur, was dort liegt', () => {
+    const game = pickAll(started());
+    const actor = activeOf(game);
+    const input = (spent: number, own: number) => ({
+      game,
+      actor,
+      choosing: false,
+      draft: null,
+      coins: { spent, own },
+    });
+    expect([...legalFor(input(0, 2), GOODS_PIECE)]).toEqual(['slot:kasse']);
+    expect(legalFor(input(0, 2), KASSE).size).toBe(0);
+    expect([...legalFor(input(1, 2), KASSE)]).toEqual(['goods:tradeGoods']);
+    expect(legalFor(input(2, 2), GOODS_PIECE).size).toBe(0);
+    expect(legalFor({ ...input(0, 2), coins: null }, GOODS_PIECE).size).toBe(0);
+    const route = { game, actor, choosing: false, specId: null, draft: null };
+    expect(dropIntent(route, GOODS_PIECE, KASSE)).toEqual({ kind: 'coins', delta: 1 });
+    expect(dropIntent(route, KASSE, GOODS_PIECE)).toEqual({ kind: 'coins', delta: -1 });
+    expect(dropIntent(route, GOODS_PIECE, systemTarget('18'))).toBeNull();
   });
 });

@@ -7,14 +7,16 @@ import { content } from '../store.ts';
 import { useCarryStore } from './carry-store.ts';
 import type { DecisionRoute } from './decision-route.ts';
 import { useDraftStore } from './draft-store.ts';
+import { type PlanetTable, planetTableOf } from './planet-table.ts';
 import {
-  type PoolSpec,
+  type AnySpec,
   type Progress,
   type SpecContext,
   TABLE_SPECS,
   type TableAction,
   type TableDraft,
   type TableSpecId,
+  type SpecAlternative,
   tableSpecOf,
 } from './table-specs.ts';
 import type { TargetState } from './target-ref.ts';
@@ -43,6 +45,8 @@ export interface TableDecision {
   readonly act: (action: TableAction) => void;
   readonly confirm: () => void;
   readonly alternative: TableAlternative | null;
+  /** Planeten, die die Entscheidung gerade anbietet (Bezahlung oder Bereitmachen). */
+  readonly planets: PlanetTable | null;
 }
 
 const NO_TARGETS: ReadonlyMap<string, TargetState> = new Map();
@@ -54,7 +58,7 @@ const ROUTE_HINTS: Partial<Record<DecisionRoute['kind'], MessageKey>> = {
 };
 
 interface Ported {
-  readonly spec: PoolSpec;
+  readonly spec: AnySpec;
   readonly ctx: SpecContext;
   readonly key: string;
 }
@@ -97,7 +101,8 @@ function confirmOf(ported: Ported): void {
   if (ported.ctx.route.kind === 'primary') useHandStore.getState().clear();
 }
 
-function alternativeOf(ported: Ported): TableAlternative | null {
+/** Der übliche Ausweg: sekundär ablehnen, primär die gewählte Karte zurücklegen. */
+function routeAlternative(ported: Ported): TableAlternative | null {
   const { route, actor } = ported.ctx;
   if (route.kind === 'secondary')
     return {
@@ -112,6 +117,35 @@ function alternativeOf(ported: Ported): TableAlternative | null {
   return { label: 'cancel', run: cancel };
 }
 
+/** Ein eigener Ausweg der Entscheidung: Handlung am Entwurf oder ein eigener Befehl. */
+function specAlternative(ported: Ported, own: SpecAlternative): TableAlternative {
+  const { action, command } = own;
+  const run = () => {
+    if (action !== undefined) actOn(ported, action);
+    else if (command !== undefined) useGameStore.getState().send(command);
+  };
+  return { label: own.label, run };
+}
+
+function alternativeOf(ported: Ported, draft: TableDraft): TableAlternative | null {
+  const own = ported.spec.alternative?.(ported.ctx, draft) ?? null;
+  return own === null ? routeAlternative(ported) : specAlternative(ported, own);
+}
+
+/** Die Planetenreihe der Entscheidung; Antippen und Münzen werden zu Handlungen am Entwurf. */
+function planetsOf(ported: Ported, draft: TableDraft): PlanetTable | null {
+  const side = ported.spec.planets?.(ported.ctx, draft) ?? null;
+  if (side === null) return null;
+  return planetTableOf(ported.ctx.game, ported.ctx.actor, side, {
+    toggle: (planet) => {
+      actOn(ported, { kind: 'planet', planet });
+    },
+    addCoins: (delta) => {
+      actOn(ported, { kind: 'tradeGoods', delta });
+    },
+  });
+}
+
 const idle = (route: DecisionRoute): TableDecision => ({
   route,
   specId: null,
@@ -123,6 +157,7 @@ const idle = (route: DecisionRoute): TableDecision => ({
   act: () => undefined,
   confirm: () => undefined,
   alternative: null,
+  planets: null,
 });
 
 /** Was der Store zum Entwurf weiß; `failed`, solange eine Ablehnung angezeigt wird. */
@@ -157,15 +192,12 @@ function decisionWith(ported: Ported, stored: Stored): TableDecision {
     draft,
     targets: spec.targets(ctx, draft),
     progress: progressOf(ported, draft, stored),
-    hint: spec.hint,
+    hint: spec.hint(ctx),
     confirmLabel: spec.confirm(ctx, draft),
-    act: (action) => {
-      actOn(ported, action);
-    },
-    confirm: () => {
-      confirmOf(ported);
-    },
-    alternative: alternativeOf(ported),
+    act: (action) => actOn(ported, action),
+    confirm: () => confirmOf(ported),
+    alternative: alternativeOf(ported, draft),
+    planets: planetsOf(ported, draft),
   };
 }
 

@@ -8,9 +8,9 @@ import { TurnPanelBody } from '../game/TurnPanel.tsx';
 import {
   type PartProps,
   PromptActions,
-  PromptCoins,
   PromptHead,
-  PromptMeter,
+  PromptPayHint,
+  PromptProgress,
   PromptWarfare,
 } from './PromptParts.tsx';
 
@@ -40,19 +40,15 @@ function PromptHint({ decision }: { readonly decision: TableDecision }): ReactEl
   return <p className="hint table-prompt-hint">{t(hint)}</p>;
 }
 
-/** Eine am Tisch gespielte Entscheidung: Marker auf dem Pult, hier Messleiste und Siegel. */
+/**
+ * Eine am Tisch gespielte Entscheidung: Marker und Planeten auf dem Pult, Aufträge auf der
+ * Auftragsleiste; hier Messleiste und Siegel.
+ */
 function PortedPrompt({ game, decision }: PartProps): ReactElement {
-  const { draft, progress } = decision;
   return (
     <>
-      {draft !== null && progress !== null && (
-        <PromptMeter
-          needed={progress.needed}
-          plan={draft}
-          warfare={decision.specId === 'warfare'}
-        />
-      )}
-      <PromptCoins game={game} decision={decision} />
+      <PromptProgress decision={decision} />
+      <PromptPayHint decision={decision} />
       <PromptWarfare game={game} decision={decision} />
       <PromptActions decision={decision} />
     </>

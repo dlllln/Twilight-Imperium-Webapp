@@ -6,7 +6,7 @@ import type { PoolSpec } from './spec-types.ts';
 /** Statusphase (RR 73.5): neue Marker aus der Schale legen, jeder Marker darf umziehen. */
 export const TOKENS_SPEC: PoolSpec = {
   id: 'tokens',
-  hint: 'tableHintTokens',
+  hint: () => 'tableHintTokens',
   confirm: () => 'confirm',
   initial: (ctx) =>
     tokenPlan(poolDraft(currentPools(ctx), statusTokenGain(ctx.game, ctx.actor), false)),

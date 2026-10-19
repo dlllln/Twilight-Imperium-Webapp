@@ -1,0 +1,51 @@
+/*
+ * Planetenziele auf der Karte: Ringe über dem Pixi-Bild. Die Fläche bleibt durchsichtig, damit
+ * der Planet darunter zu sehen ist; die Linie bleibt bei jedem Zoom gleich dick.
+ */
+.planet-target {
+  fill: transparent;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.planet-target.target-legal,
+.planet-target.target-chosen {
+  pointer-events: auto;
+}
+
+/* Angeboten: gestrichelt in der eigenen Platzfarbe, die Striche wandern langsam. */
+.planet-target.target-legal {
+  stroke: color-mix(in srgb, var(--seat, var(--gold-bright)) 70%, #fff);
+  stroke-width: 2.5;
+  stroke-dasharray: 6 4;
+  fill: color-mix(in srgb, var(--seat, var(--gold)) 12%, transparent);
+  animation: planet-target-march 1.6s linear infinite;
+}
+
+.planet-target.target-legal:hover {
+  stroke: #fff;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 5px var(--seat, var(--gold)));
+}
+
+/* Vorgemerkt: ein durchgezogener goldener Ring mit Schein. */
+.planet-target.target-chosen {
+  stroke: var(--gold-bright);
+  stroke-width: 3;
+  fill: color-mix(in srgb, var(--gold) 18%, transparent);
+  filter: drop-shadow(0 0 6px var(--gold));
+}
+
+@keyframes planet-target-march {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+/* Ohne Bewegung wandert nichts. */
+:root.motion-off .planet-target {
+  animation: none;
+}

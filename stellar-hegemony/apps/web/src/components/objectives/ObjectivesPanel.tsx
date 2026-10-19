@@ -4,6 +4,7 @@ import { findPlayer, type GameState, type PlayerId, scoringOptions } from '@stel
 import type { ReactElement } from 'react';
 import { objectiveArtwork } from '../../artwork/cards.ts';
 import { useViewer } from '../../game-store.ts';
+import { useSettingsStore } from '../../settings-store.ts';
 import { content } from '../../store.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayerTag } from '../game/PlayerTag.tsx';
@@ -60,11 +61,16 @@ function PublicRow({ game }: { readonly game: GameState }): ReactElement {
   );
 }
 
-/** Die geheimen Aufträge des Spielers am Bildschirm; Aktionsphase-Aufträge lassen sich hier werten. */
+/**
+ * Die geheimen Aufträge des Spielers am Bildschirm. In der klassischen Ansicht lassen sich
+ * Aktionsphase-Aufträge hier werten; in der Tischansicht wertet sie die Auftragsleiste.
+ */
 function SecretList({ game, player }: { readonly game: GameState; readonly player: PlayerId }) {
   const t = useT();
+  const table = useSettingsStore((state) => state.tableView);
   const secrets = findPlayer(game, player)?.secretObjectives ?? [];
-  const actionOptions = game.phase === 'action' ? scoringOptions(game, player, content) : [];
+  const scoreHere = game.phase === 'action' && !table;
+  const actionOptions = scoreHere ? scoringOptions(game, player, content) : [];
   if (secrets.length === 0) return null;
   return (
     <>

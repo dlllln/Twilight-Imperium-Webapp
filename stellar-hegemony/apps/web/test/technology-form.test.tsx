@@ -66,6 +66,25 @@ describe('Technologie im Browser (RR 81)', () => {
     expect(findPlayer(game(), next)?.tradeGoods).toBe(0);
   });
 
+  it('Erforschen bleibt gesperrt, solange zu wenig bezahlt ist', () => {
+    const { player, card } = holding('technology');
+    render(<Live player={player} card={card} ability="primary" />);
+    fireEvent.click(box(ready(player)[0] as TechnologyId));
+    fireEvent.click(screen.getByRole('button', { name: 'Erforschen' }));
+    cleanup();
+    const next = game().actionPhase?.secondary?.awaiting[0] as PlayerId;
+    withGoods(next, 4);
+    render(<Live player={next} card={card} ability="secondary" />);
+    const research = () => screen.getByRole<HTMLButtonElement>('button', { name: 'Erforschen' });
+    expect(research().disabled).toBe(true);
+    fireEvent.click(box(ready(next)[0] as TechnologyId));
+    expect(research().disabled).toBe(true);
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '3' } });
+    expect(research().disabled).toBe(true);
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '4' } });
+    expect(research().disabled).toBe(false);
+  });
+
   it('RR 80.1: die Technologien aller Spieler liegen offen aus', () => {
     holding('technology');
     render(<TechnologyPanel game={game()} />);
