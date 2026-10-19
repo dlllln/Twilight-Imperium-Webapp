@@ -83,6 +83,10 @@ describe('PoK Relikte und Fragmente in der Hand', () => {
     const relics = tableEntries(input(actor)).filter((entry) => entry.kind === 'relic');
     expect(relics.map((entry) => entry.playable)).toEqual([true, false]);
     render(<Live />);
+    // Erst heben, dann spielen: der erste Tipp hebt die Karte nur an.
+    fireEvent.click(screen.getByTestId('relic-trade-prism'));
+    expect(screen.getByTestId('relic-trade-prism').getAttribute('data-lifted')).toBe('true');
+    expect(game().players.find((player) => player.id === actor)?.tradeGoods).toBe(before);
     fireEvent.click(screen.getByTestId('relic-trade-prism'));
     const after = game().players.find((player) => player.id === actor);
     expect(after?.tradeGoods).toBe(before + 2);
@@ -96,6 +100,7 @@ describe('PoK Relikte und Fragmente in der Hand', () => {
     expect(fragments).toHaveLength(2);
     expect(fragments[0]).toMatchObject({ count: 2, playable: true });
     render(<Live />);
+    fireEvent.click(screen.getByTestId('fragment-cultural'));
     fireEvent.click(screen.getByTestId('fragment-cultural'));
     const after = game().players.find((player) => player.id === actor);
     expect(after?.relicFragments).toEqual([]);

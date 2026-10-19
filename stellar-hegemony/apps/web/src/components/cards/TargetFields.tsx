@@ -10,25 +10,7 @@ import { planetLabel } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { SystemSelect } from '../game/FormParts.tsx';
 
-/** Vorauswahl: jeweils die erste zugelassene Möglichkeit, damit die Karte sofort spielbar ist. */
-export function initialTarget(options: TargetOptions): ActionTarget {
-  const planet = options.planets?.options[0];
-  const system = options.systems?.[0];
-  const player = options.players?.[0];
-  return {
-    ...(planet === undefined ? {} : { planets: [planet] }),
-    ...(system === undefined ? {} : { system }),
-    ...(player === undefined ? {} : { player }),
-    ...(options.pool === undefined ? {} : { pool: 'tactic' as const }),
-  };
-}
-
-export const hasTargets = (options: TargetOptions): boolean =>
-  Object.values(options).some((option) => option !== undefined);
-
-/** Verlangte Planeten müssen gewählt sein; alle anderen Felder sind immer belegt. */
-export const targetComplete = (options: TargetOptions, target: ActionTarget): boolean =>
-  options.planets === undefined || (target.planets ?? []).length > 0;
+export { hasTargets, initialTarget, targetComplete } from '../../table/card-targets.ts';
 
 interface FieldProps {
   readonly game: GameState;

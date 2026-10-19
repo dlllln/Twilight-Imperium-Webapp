@@ -1,9 +1,10 @@
 import type { GameState, PlayerState, SystemId } from '@stellar/domain';
 import { type CSSProperties, memo, type ReactElement } from 'react';
 import { useGameStore } from '../../game-store.ts';
-import { hexToPixel, type Point } from '../../hex-geometry.ts';
+import { HEX_SIZE, hexToPixel, type Point } from '../../hex-geometry.ts';
 import { lift, plus, turn } from '../../render/board-view.ts';
 import { TOKEN_Y } from '../../render/hex-layout.ts';
+import { worldTransform } from '../../render/view-transform.ts';
 import { seatColor } from '../../seat-colors.ts';
 import { boardPoint, type FleetProjection } from '../../system/fleet-placement.ts';
 import type { GhostToken } from '../../table/table-specs.ts';
@@ -16,44 +17,64 @@ import './unit-chips.css';
  * Vorschau der Kommandomarker, die das Siegel in Systeme legen würde (Diplomatie primär,
  * Infrastruktur sekundär): durchscheinende Marker an der Stelle, an der echte Marker liegen.
  * Mehrere Spieler stehen nebeneinander. Reine Anzeige, für Hilfsmittel unsichtbar; die Ansage
- * nennt die Wirkung.
+ * nennt die Wirkung. Die Geister wachsen mit dem Feld auf dem Bildschirm, damit sie auch in der
+ * Kommandodeck-Ansicht am Desktop deutlich zu sehen sind.
  */
 
-/** Abstand der Geister nebeneinander, in Bildschirmpixeln. */
-const SPREAD = 30;
+/** Grenzen der Geistgröße in Bildschirmpixeln und ihr Anteil an der Feldbreite. */
+const MIN_GHOST = 40;
+const MAX_GHOST = 76;
+const GHOST_SHARE = 0.45;
+/** Anteil des Fraktionszeichens am Geist. */
+const EMBLEM_SHARE = 0.64;
+/** Luft zwischen Geistern nebeneinander, in Bildschirmpixeln. */
+const GHOST_GAP = 6;
 
-/** Wo die Kommandomarker eines Systems liegen, im Bild der Karte. */
-function tokenPoint(frame: FleetProjection, system: SystemId): Point | null {
+/** Größe eines Geists bei dieser Feldbreite auf dem Bildschirm, gerundet auf ganze Pixel. */
+export const ghostSize = (hexPx: number): number =>
+  Math.round(Math.min(MAX_GHOST, Math.max(MIN_GHOST, hexPx * GHOST_SHARE)));
+
+interface Spot {
+  readonly at: Point;
+  /** Geistgröße an dieser Stelle (Zoom, Maßstab der Ansicht und Perspektive). */
+  readonly size: number;
+}
+
+/** Wo die Kommandomarker eines Systems liegen, im Bild der Karte, und wie groß das Feld dort ist. */
+function tokenSpot(frame: FleetProjection, system: SystemId): Spot | null {
   const hex = frame.hexes.find((entry) => entry.systemId === system);
   if (hex === undefined) return null;
   const center = turn(frame.view, hexToPixel(hex.position));
-  return boardPoint(frame, lift(plus(center, { x: 0, y: TOKEN_Y }), 0, frame.view.tilt));
+  const point = lift(plus(center, { x: 0, y: TOKEN_Y }), 0, frame.view.tilt);
+  const camera = worldTransform(frame.bounds, frame.size, frame.viewport);
+  const hexPx = 2 * HEX_SIZE * camera.scale * point.scale;
+  return { at: boardPoint(frame, point), size: ghostSize(hexPx) };
 }
 
-interface Placed {
+interface Placed extends Spot {
   readonly ghost: GhostToken;
   readonly player: PlayerState;
-  readonly at: Point;
 }
 
 /** Jeder Geist an seinem Platz; die eines Systems nebeneinander um die Markerstelle. */
 function placed(game: GameState, frame: FleetProjection, ghosts: readonly GhostToken[]): Placed[] {
   return ghosts.flatMap((ghost) => {
     const player = game.players.find((entry) => entry.id === ghost.player);
-    const base = tokenPoint(frame, ghost.system);
-    if (player === undefined || base === null) return [];
+    const spot = tokenSpot(frame, ghost.system);
+    if (player === undefined || spot === null) return [];
     const row = ghosts.filter((other) => other.system === ghost.system);
-    const index = row.indexOf(ghost);
-    const at = { x: base.x + (index - (row.length - 1) / 2) * SPREAD, y: base.y };
-    return [{ ghost, player, at }];
+    const shift = (row.indexOf(ghost) - (row.length - 1) / 2) * (spot.size + GHOST_GAP);
+    const at = { x: spot.at.x + shift, y: spot.at.y };
+    return [{ ghost, player, at, size: spot.size }];
   });
 }
 
-function Ghost({ ghost, player, at }: Placed): ReactElement {
+function Ghost({ ghost, player, at, size }: Placed): ReactElement {
   const t = useT();
   const style = {
     left: at.x,
     top: at.y,
+    '--ghost-size': `${String(size)}px`,
     '--ghost-seat': seatColor(player.seat + 1),
   } as CSSProperties;
   return (
@@ -65,7 +86,7 @@ function Ghost({ ghost, player, at }: Placed): ReactElement {
       title={t('tokenGhost').replace('{player}', player.name)}
       aria-hidden="true"
     >
-      <FactionEmblem id={player.faction} size={22} />
+      <FactionEmblem id={player.faction} size={Math.round(size * EMBLEM_SHARE)} />
     </div>
   );
 }

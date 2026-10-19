@@ -59,3 +59,40 @@ test('Auftragsleiste: öffentliche Aufträge und der eigene geheime liegen auf d
   await expect(strip.locator('[data-category="secret"]')).toBeVisible();
   expect(await sideways(page)).toBeLessThanOrEqual(0);
 });
+
+/** Breiten, auf denen Leiste und Spalte der Meldungen nebeneinander am oberen Rand liegen. */
+const WIDE_TABLES = [1101, 1200, 1280, 1366, 1415, 1440];
+
+/**
+ * Die höchste Oberkante, bis zu der die Spalte der Meldungen wachsen darf: Unterkante minus
+ * berechnete Höchsthöhe. Die Höchsthöhe ist in Prozent angegeben; die Spalte wird dafür kurz
+ * übergroß gesetzt, ihre dann begrenzte Höhe ist die Höchsthöhe in Pixeln.
+ */
+const highestCornerTop = (page: Page) =>
+  page.evaluate(() => {
+    const corner = document.querySelector<HTMLElement>('.hud-corner');
+    if (corner === null) throw new Error('keine Spalte der Meldungen');
+    const height = corner.style.height;
+    corner.style.height = '100000px';
+    const { bottom, height: maxHeight } = corner.getBoundingClientRect();
+    corner.style.height = height;
+    return bottom - maxHeight;
+  });
+
+test('Auftragsleiste und Spalte der Meldungen überschneiden sich auf keiner Breite', async ({
+  browser,
+}) => {
+  const [page] = await openTable(browser, 1);
+  if (page === undefined) throw new Error('kein Gerät');
+  await keepSecrets([page]);
+  const cards = page.locator('.objective-strip-cards');
+  const corner = page.locator('.hud-corner');
+  for (const width of WIDE_TABLES) {
+    await page.setViewportSize({ width, height: 800 });
+    await expect(cards).toBeVisible();
+    const strip = await boxOf(cards);
+    expect(overlaps(strip, await boxOf(corner)), `Breite ${String(width)}`).toBe(false);
+    const top = await highestCornerTop(page);
+    expect(top, `Breite ${String(width)}`).toBeGreaterThanOrEqual(strip.y + strip.height);
+  }
+});

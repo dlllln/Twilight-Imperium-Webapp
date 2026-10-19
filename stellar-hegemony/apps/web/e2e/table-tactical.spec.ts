@@ -45,6 +45,26 @@ async function skipUntil(page: Page, skip: string, next: Locator): Promise<void>
   if (await button.isVisible()) await button.click();
 }
 
+/**
+ * Liegt der Geist in seiner Mitte zuoberst, nicht unter einer Flottenfigur? Geister lassen Zeiger
+ * durch; für die Probe fängt der Geist sie kurz selbst, sonst fände `elementFromPoint` ihn nie.
+ */
+const onTop = (ghost: Locator): Promise<boolean> =>
+  ghost.evaluate((element: HTMLElement) => {
+    const box = element.getBoundingClientRect();
+    element.style.pointerEvents = 'auto';
+    const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    element.style.pointerEvents = '';
+    return hit !== null && element.contains(hit);
+  });
+
+/** Der Geist steht im gewählten System, ist mindestens 40px groß und liegt sichtbar obenauf. */
+async function expectGhostIn(ghost: Locator, system: string): Promise<void> {
+  await expect(ghost).toHaveAttribute('data-system', system);
+  expect((await ghost.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(40);
+  expect(await onTop(ghost)).toBe(true);
+}
+
 test('Tischansicht: Diplomatie wählt das System auf der Karte', async ({ browser }) => {
   const pages = await openTable(browser);
   await keepSecrets(pages);
@@ -62,8 +82,7 @@ test('Tischansicht: Diplomatie wählt das System auf der Karte', async ({ browse
   const chosen = (await system.getAttribute('data-system')) ?? '';
   const ghosts = diplomat.locator('.token-ghost');
   await expect(ghosts).toHaveCount(2);
-  for (const ghost of await ghosts.all())
-    await expect(ghost).toHaveAttribute('data-system', chosen);
+  for (const ghost of await ghosts.all()) await expectGhostIn(ghost, chosen);
   const others = pages.filter((page) => page !== diplomat);
   const before = await Promise.all(others.map(onBoard));
   await diplomat.getByRole('button', { name: 'Ausführen' }).click();

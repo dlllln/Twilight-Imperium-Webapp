@@ -1,19 +1,23 @@
 import { type GameState, warfareTokenSystems } from '@stellar/domain';
 import type { ReactElement, ReactNode } from 'react';
-import type { Language } from '../../i18n.ts';
+import type { Language, MessageKey } from '../../i18n.ts';
 import { objectiveLabel, systemLabel } from '../../labels.ts';
 import { payHintOf } from '../../table/planet-table.ts';
 import type {
+  DiscardPlan,
   ObjectivePlan,
   PlacementPlan,
+  PlayersPlan,
   Progress,
   TableDraft,
+  TableSpecId,
   TokenPlan,
 } from '../../table/table-specs.ts';
 import type { TableDecision } from '../../table/use-table-decision.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { cardText } from '../game/card-text.ts';
 import { SystemSelect } from '../game/FormParts.tsx';
+import { PlayerTag } from '../game/PlayerTag.tsx';
 import { PHASE_TITLE } from '../game/TurnPanel.tsx';
 import { ConfirmSeal } from './ConfirmSeal.tsx';
 
@@ -37,9 +41,17 @@ function activeSystemOf(game: GameState | null, t: Translate, language: Language
   return `${t('activeSystem')}: ${systemLabel(game, system, language)}`;
 }
 
+/** Entscheidungen, die statt eines Kartennamens ihre Tätigkeit als zweite Zeile tragen. */
+const SPEC_TITLES: Partial<Record<TableSpecId, MessageKey>> = {
+  tokens: 'allocateTokens',
+  scoring: 'scoreObjectives',
+  discard: 'discardCards',
+  reaction: 'reaction',
+};
+
 /**
- * Was die Entscheidung betrifft: Markerverteilung, aktiviertes System oder Kartenname
- * (sekundär mit Vorsilbe).
+ * Was die Entscheidung betrifft: Markerverteilung, Wertung, Ablegen, Reaktion, aktiviertes
+ * System oder Kartenname (sekundär mit Vorsilbe).
  */
 export function subtitleOf(
   decision: TableDecision,
@@ -48,9 +60,9 @@ export function subtitleOf(
   game: GameState | null = null,
 ): string | null {
   const { route, specId } = decision;
+  const titled = specId === null ? undefined : SPEC_TITLES[specId];
   if (route.kind === 'tactical') return activeSystemOf(game, t, language);
-  if (specId === 'tokens') return t('allocateTokens');
-  if (specId === 'scoring') return t('scoreObjectives');
+  if (titled !== undefined) return t(titled);
   if (route.card === null) return null;
   const name = cardText(route.card).name[language];
   return route.ability === 'secondary' ? `${t('secondaryPrompt')}: ${name}` : name;
@@ -208,16 +220,74 @@ const leadershipPaid = (decision: TableDecision): number | null =>
   decision.specId === 'leadership' ? (decision.planets?.paid ?? null) : null;
 
 interface DraftMeterProps {
+  readonly game: GameState;
   readonly decision: TableDecision;
   readonly draft: TableDraft;
   readonly progress: Progress;
 }
 
+/** Ablegen: vorgemerkte Karten / so viele müssen weg. */
+function DiscardMeter({ progress }: { readonly progress: Progress }): ReactElement {
+  const t = useT();
+  return (
+    <MeterLine>
+      <span>
+        {t('toDiscard')}: <strong data-testid="discard-count">{progress.done}</strong> /{' '}
+        {progress.needed}
+      </span>
+    </MeterLine>
+  );
+}
+
+/** Die gewählten Mitspieler mit ihrer Platzfarbe, durch Kommas getrennt; keiner: Strich. */
+function PlayerNames({ game, plan }: { readonly game: GameState; readonly plan: PlayersPlan }) {
+  if (plan.players.length === 0) return <>—</>;
+  return (
+    <>
+      {plan.players.map((id, index) => (
+        <span key={id}>
+          {index > 0 && ', '}
+          <PlayerTag game={game} id={id} />
+        </span>
+      ))}
+    </>
+  );
+}
+
+/** Politik: der neue Sprecher; Handel: wer einen Freibrief hält. */
+function PlayersMeter(props: {
+  readonly game: GameState;
+  readonly plan: PlayersPlan;
+  readonly politics: boolean;
+}): ReactElement {
+  const t = useT();
+  return (
+    <MeterLine>
+      <span className="table-prompt-chosen" data-testid="chosen-players">
+        {t(props.politics ? 'chooseSpeaker' : 'freeLetter')}:{' '}
+        <PlayerNames game={props.game} plan={props.plan} />
+      </span>
+    </MeterLine>
+  );
+}
+
+/** Messleisten der Hand und der Menschen am Tisch: Ablegen, Politik, Handel. */
+function PeopleMeter(props: DraftMeterProps & { readonly draft: DiscardPlan | PlayersPlan }) {
+  const { game, decision, draft, progress } = props;
+  if (draft.kind === 'discard') return <DiscardMeter progress={progress} />;
+  return <PlayersMeter game={game} plan={draft} politics={decision.specId === 'politics'} />;
+}
+
+const isPeople = (draft: TableDraft): draft is DiscardPlan | PlayersPlan =>
+  draft.kind === 'discard' || draft.kind === 'players';
+
 /** Figuren der Entscheidung (ohne Gebäude): so viele lassen sich zuweisen. */
 const unitCount = (decision: TableDecision): number =>
   decision.pieces.filter((piece) => piece.ref.kind === 'unit').length;
 
-function DraftMeter({ decision, draft, progress }: DraftMeterProps): ReactElement | null {
+function DraftMeter(props: DraftMeterProps): ReactElement | null {
+  const { decision, draft, progress } = props;
+  if (isPeople(draft)) return <PeopleMeter {...props} draft={draft} />;
   if (draft.kind === 'objective') return <ObjectiveMeter plan={draft} progress={progress} />;
   if (draft.kind === 'ready') return <ReadyMeter progress={progress} />;
   if (draft.kind === 'construction') return <BuildMeter progress={progress} />;
@@ -230,10 +300,10 @@ function DraftMeter({ decision, draft, progress }: DraftMeterProps): ReactElemen
 }
 
 /** Die Messleiste passend zur Art des Entwurfs. */
-export function PromptProgress({ decision }: { readonly decision: TableDecision }) {
+export function PromptProgress({ game, decision }: PartProps) {
   const { draft, progress } = decision;
   if (draft === null || progress === null) return null;
-  return <DraftMeter decision={decision} draft={draft} progress={progress} />;
+  return <DraftMeter game={game} decision={decision} draft={draft} progress={progress} />;
 }
 
 /** Eine Bezahlung ist offen: Ausgabe-Auftrag oder Landung auf der Thronwelt. */

@@ -1,11 +1,14 @@
 import type { ContentPort, TacticalStep } from '@stellar/domain';
 import type { DecisionRoute } from './decision-route.ts';
 import { CONSTRUCTION_SPEC } from './spec-construction.ts';
+import { DISCARD_SPEC } from './spec-discard.ts';
 import { DIPLOMACY_SPEC } from './spec-diplomacy.ts';
 import { DIPLOMACY_PRIMARY_SPEC } from './spec-diplomacy-primary.ts';
 import { LEADERSHIP_SPEC } from './spec-leadership.ts';
 import { IMPERIAL_SPEC, SCORING_SPEC } from './spec-objectives.ts';
+import { POLITICS_SPEC, TRADE_SPEC } from './spec-people.ts';
 import { BOMBARD_SPEC, LANDING_SPEC } from './spec-placement.ts';
+import { REACTION_SPEC } from './spec-reaction.ts';
 import { TACTICAL_DONE_SPEC } from './spec-tactical-done.ts';
 import { TOKENS_SPEC } from './spec-tokens.ts';
 import { type AnySpec, type TableSpecId, widenSpec } from './spec-types.ts';
@@ -14,10 +17,12 @@ import { WARFARE_SPEC } from './spec-warfare.ts';
 export type {
   AnySpec,
   ConstructionPlan,
+  DiscardPlan,
   DonePlan,
   GhostToken,
   ObjectivePlan,
   PlacementPlan,
+  PlayersPlan,
   PoolSpec,
   Progress,
   ReadyPlan,
@@ -45,6 +50,10 @@ export const TABLE_SPECS: Readonly<Record<TableSpecId, AnySpec>> = {
   tacticalDone: widenSpec(TACTICAL_DONE_SPEC, 'done'),
   diplomacyPrimary: widenSpec(DIPLOMACY_PRIMARY_SPEC, 'system'),
   construction: widenSpec(CONSTRUCTION_SPEC, 'construction'),
+  discard: widenSpec(DISCARD_SPEC, 'discard'),
+  reaction: widenSpec(REACTION_SPEC, 'done'),
+  politics: widenSpec(POLITICS_SPEC, 'players'),
+  trade: widenSpec(TRADE_SPEC, 'players'),
 };
 
 /**
@@ -71,6 +80,13 @@ const SITE_SPECS: ReadonlySet<TableSpecId> = new Set<TableSpecId>([
 export const takesSite = (specId: TableSpecId | null): boolean =>
   specId !== null && SITE_SPECS.has(specId);
 
+/** Entscheidungen, in denen ein Mitspieler (sein Bild) in den Entwurf geht: Politik, Handel. */
+const PLAYER_SPECS: ReadonlySet<TableSpecId> = new Set<TableSpecId>(['politics', 'trade']);
+
+/** Ob ein Mitspieler auf der Spielerleiste in den Entwurf dieser Entscheidung geht. */
+export const takesPlayer = (specId: TableSpecId | null): boolean =>
+  specId !== null && PLAYER_SPECS.has(specId);
+
 type ByMechanic = Readonly<Partial<Record<string, TableSpecId>>>;
 
 /** Strategiekarten am Tisch: Führung, Imperium und Infrastruktur ganz. */
@@ -80,8 +96,16 @@ const BOTH: ByMechanic = {
   construction: 'construction',
 };
 
-/** Nur primär: Kriegsführung und Diplomatie (System wählen). */
-const PRIMARY: ByMechanic = { warfare: 'warfare', diplomacy: 'diplomacyPrimary' };
+/**
+ * Nur primär: Kriegsführung, Diplomatie (System wählen), Politik (neuer Sprecher) und Handel
+ * (Freibriefe). Die Sekundärfähigkeiten von Politik und Handel bleiben eine Zeile der Ansage.
+ */
+const PRIMARY: ByMechanic = {
+  warfare: 'warfare',
+  diplomacy: 'diplomacyPrimary',
+  politics: 'politics',
+  trade: 'trade',
+};
 
 /** Nur sekundär: Diplomatie (Planeten bereitmachen). */
 const SECONDARY: ByMechanic = { diplomacy: 'diplomacy' };
@@ -103,9 +127,18 @@ function mechanicSpec(route: DecisionRoute, content: ContentPort): TableSpecId |
 const tacticalSpec = (step: TacticalStep | null): TableSpecId | null =>
   step === null ? null : (TACTICAL[step] ?? null);
 
+/** Routen, deren Art schon die Tischentscheidung ist: Marker, Wertung, Ablegen, Reaktion. */
+const DIRECT: Readonly<Partial<Record<DecisionRoute['kind'], TableSpecId>>> = {
+  tokens: 'tokens',
+  scoring: 'scoring',
+  discard: 'discard',
+  reaction: 'reaction',
+};
+
 /** Welche Tischentscheidung zur Route gehört; `null`, wenn die Ansage das alte Formular zeigt. */
 export function tableSpecOf(route: DecisionRoute, content: ContentPort): TableSpecId | null {
-  if (route.kind === 'tokens' || route.kind === 'scoring') return route.kind;
+  const direct = DIRECT[route.kind];
+  if (direct !== undefined) return direct;
   if (route.kind === 'tactical') return tacticalSpec(route.step);
   if (route.kind !== 'primary' && route.kind !== 'secondary') return null;
   return mechanicSpec(route, content);

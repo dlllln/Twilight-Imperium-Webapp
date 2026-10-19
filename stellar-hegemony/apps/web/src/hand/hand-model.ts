@@ -1,3 +1,4 @@
+import { officialLeader } from '@stellar/content';
 import {
   EXPLORATION_DECKS,
   findPlanetDefinition,
@@ -248,4 +249,13 @@ export function entryKey(entry: HandEntry): string {
   if (entry.kind === 'action') return `action-${entry.player}-${entry.card.definition.id}`;
   if (isTable(entry)) return `${entry.kind}-${tableKey(entry)}`;
   return entry.kind;
+}
+
+/**
+ * Karten vor dem eigenen Platz werden erst angehoben, dann gespielt (`lift-store.ts`). Anführer
+ * mit Originalkarte behalten ihre Vorschau, die schon vor dem Ausspielen aufgeht.
+ */
+export function needsLift(entry: HandEntry): boolean {
+  if (entry.kind === 'leader') return officialLeader(entry.leader.id) === undefined;
+  return entry.kind === 'relic' || entry.kind === 'fragment' || entry.kind === 'legendary';
 }

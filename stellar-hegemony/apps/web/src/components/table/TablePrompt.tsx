@@ -13,6 +13,7 @@ import {
   PromptProgress,
   PromptWarfare,
 } from './PromptParts.tsx';
+import { ReactionLine, SecondarySocketLine } from './PromptPeople.tsx';
 import { DiplomacyPick, DoneLine, PlacementList, TradeCorner } from './PromptTactical.tsx';
 import { StructureTray } from './StructureTray.tsx';
 
@@ -47,13 +48,15 @@ function PromptHint({ decision }: { readonly decision: TableDecision }): ReactEl
 
 /**
  * Eine am Tisch gespielte Entscheidung: Marker und Planeten auf dem Pult, Aufträge auf der
- * Auftragsleiste, Figuren und Bauplätze auf der Karte. Hier stehen von oben nach unten
- * Messleiste, Tastaturweg bzw. Bauvorrat, gesetzte Gebäude, Ausweg und Siegel, zuletzt der Handel.
+ * Auftragsleiste, Figuren und Bauplätze auf der Karte, Menschen auf ihren Porträts. Hier stehen
+ * von oben nach unten die offene Karte einer Reaktion, Messleiste, Tastaturweg bzw. Bauvorrat,
+ * gesetzte Gebäude, Ausweg und Siegel, zuletzt der Handel.
  */
 function PortedPrompt({ game, decision }: PartProps): ReactElement {
   return (
     <>
-      <PromptProgress decision={decision} />
+      <ReactionLine game={game} decision={decision} />
+      <PromptProgress game={game} decision={decision} />
       <DoneLine game={game} decision={decision} />
       <PromptPayHint decision={decision} />
       <PromptWarfare game={game} decision={decision} />
@@ -73,6 +76,7 @@ function PromptContent({ game, decision }: PartProps): ReactElement {
     <>
       <PromptHead game={game} decision={decision} />
       <PromptHint decision={decision} />
+      <SecondarySocketLine game={game} decision={decision} />
       {specId !== null ? (
         <PortedPrompt game={game} decision={decision} />
       ) : (

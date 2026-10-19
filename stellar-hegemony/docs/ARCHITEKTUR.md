@@ -977,7 +977,83 @@ dort laut Vorrat und Grenzen noch passen, auf Wunsch mit schon vorgemerkten Geb�
 | `takesSystem`, `takesSite` (`table-specs.ts`)                                                      | Welche Entscheidungen ein System bzw. Planeten als Ziel nehmen, steht an einer Stelle; Ablegen, Antippen, Enter und die Knöpfe am System fragen dort nach (DRY, Protected Variations).                     |
 | `freeArea`, `hudInsets` (Tisch schmal), `chipLayout`                                               | Reine Rechnungen über Bildgröße und Anzeigen: wohin gerahmt wird, wie weit die Karte über der Ansage endet, wie groß die Figuren im Feld stehen (Pure Fabrication, testbar ohne Browser).                  |
 
-## 35. Iterationen
+## 35. Iteration 31 im Detail (Karten und Menschen am Tisch)
+
+Hand, Aktionskarten und die Menschen am Tisch werden in der Tischansicht ohne Formular gespielt.
+Die **Hand** kennt drei Arten (`handModeOf`): ausspielen, ablegen und reagieren. Liegen zu viele
+Aktionskarten auf der Hand, ist sie selbst der Tisch: Antippen merkt eine Karte zum **Ablegen**
+vor (rotes Band „Wird abgelegt“; bei mehreren gleichen Karten kommt je Antippen ein Exemplar
+dazu), die Ansage zählt „Abzulegen: n / m“, das Siegel „Ablegen“ sendet `DiscardActionCards`.
+Solange so über die Hand entschieden wird (Ablegen, Reaktion mit spielbarer Karte), liegt sie
+auch eingeklappt offen; Titel und Beschreibung jeder Karte sagen, was Antippen gerade bewirkt.
+Im **Reaktionsfenster** leuchten die jetzt spielbaren Karten in der Sitzfarbe („Jetzt
+spielbar“); die Ansage zeigt die gespielte Karte, die man verhindern dürfte, oder den Anlass des
+Fensters, und ihr Siegel heißt wie bisher „Keine Karte spielen“ bzw. „Nicht verhindern“.
+
+Eine **Aktionskarte mit Zielen** lässt sich aus der Hand auf den Tisch ziehen: auf ein
+leuchtendes System, einen Planetenring, das Porträt eines Mitspielers oder eine Leiste
+(`cardTargetKeys`, `cardDropTarget`). Ein Ablegen dort spielt sie sofort aus
+(`PlayActionCard`). Das gilt nur für Karten, die ein einziges Ablegen ganz ausspielt
+(`playsByDrop`); eine Karte für mehrere Planeten (Reaktivierung: bis zu zwei) wird nicht
+getragen, sondern über die Zielwahl gespielt. Antippen ohne Bewegung öffnet diese Zielwahl über
+der Karte (Radix misst den Knopf der Karte selbst, `useCardAnchor`); sie bleibt auch der Weg für
+Tastatur und Bildschirmleser. Während des Tragens bleibt die Karte blass im Fächer liegen (motion
+setzt Lage und Deckkraft, sie hebt sich beim Zeigen nicht an), ihr Geist schwebt über dem Zeiger,
+damit er das Ziel nicht verdeckt. Karten vor dem eigenen Platz (Relikte,
+Fragmente, legendäre Planeten, Anführer ohne Originalkarte) heben sich beim ersten Antippen an
+(„Angehoben – noch einmal tippen zum Ausspielen“) und wirken erst beim zweiten
+(`lift-store.ts`, `needsLift`); so löst ein versehentlicher Tipp nichts mehr aus.
+
+Der **Sprechermarker** ist ein eigenes, prozedurales Bild (`SpeakerFace`: Messing-Achteck mit
+Ring in der Sitzfarbe und Hammer) auf dem Porträt des Sprechers; die Phasenleiste behält ihr
+Symbol. Wechselt der Sprecher, gleitet er per `layoutId` zum neuen Porträt, ohne Animationen
+springt er. Bei der **Politik** (primär) wird er zum Stück „Marker aufnehmen: Sprechermarker“:
+ziehen, klicken oder Enter, dann auf ein leuchtendes Porträt legen. Die Porträts sind dabei die
+Radiogruppe „Neuer Sprecher“: Sie besitzt per `aria-owns` nur die Kandidaten (nicht das Porträt
+des Sprechers und nicht den Marker), hat einen einzigen Tab-Halt auf dem gewählten Kandidaten,
+und die Pfeiltasten wählen den nächsten, ohne die Kamera zu verschieben. Der gewählte trägt den
+Marker als gestrichelten Geist; „Ausführen“ sendet ihn. Beim **Handel** (primär) schalten
+die Porträts den **Freibrief** (`aria-pressed`, Band „Freibrief“); die Ansage nennt alle, die
+einen halten. Sonst öffnen die Porträts wie bisher die Übersicht; trägt man etwas, nimmt jedes
+Porträt mit erlaubtem Schlüssel es an (`usePortraitTarget`). Gibt es Ziele auf der Leiste,
+leuchten sie in der Sitzfarbe und alle anderen Porträts treten zurück.
+
+Wer der Karte eines anderen folgt, sieht in der Ansage den **Sockel der Sekundärfähigkeit**: die
+Karte, daneben ein achteckiger Sockel und „Politik – Kosten: 1 Strategiemarker“, „kostenlos“
+(Führung, Freibrief, Fraktionsregel) oder rot „Kein Strategiemarker übrig“. Der Sockel ist ein
+Ziel (`slot:socket`): Den obersten Strategiemarker vom Pult hineinlegen, ihn antippen oder Enter
+führt die Sekundärfähigkeit aus (`socket-play.ts`); kostenlose Karten folgen per Antippen. Am
+Tisch gespielte Entscheidungen gehen dabei über ihr Siegel, sobald der Entwurf bereit ist,
+Politik und Handel ohne eigene Wahl mit genau der Auswahl ihres Formulars; Technologie und
+Kriegsführung behalten ihr Formular, ihr Sockel zeigt nur die Kosten. Fehlt der Marker, bleiben
+Sockel und Siegel gesperrt, „Ablehnen“ bleibt einmalig. Auf der Strategieleiste des Pults trägt
+der oberste Marker dazu einen roten, gestrichelten Ring „wird bezahlt“. Was die
+Sekundärfähigkeit kostet, sagt allein die Domain (`secondaryTokenCost`); `paysStrategyToken`
+fragt dort nach.
+
+Dazu kleinere Korrekturen am Tisch: Das Wappen des Pults nimmt keine Zeiger mehr an, sodass jede
+Handkarte auch bei 1440×900 in ihrer Mitte getroffen wird. `DragGhost` zeigt getragene
+Aktionskarten und den Sprechermarker mit ihrem eigenen Bild statt eines Kommandomarkers. Trägt
+man eine Aktionskarte, zieht `SiteTargets` um jeden erlaubten Planeten einen kühlen Ring „Ziel
+der Karte“. Die Geister der Diplomatie messen 45 % der Hexbreite (40 bis 76 px), liegen über den
+Flotten und unter den Einheitenmarken und tragen einen dicken Ring in der Sitzfarbe. Im breiten
+Querformat (1101 bis 1600 px) hält die Hinweisspalte samt Höchsthöhe Abstand zum Zielstreifen.
+Die klassische Ansicht behält alle Formulare unverändert.
+
+| Element                                                                              | Prinzip                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec-discard`, `spec-reaction`, `spec-people` (`POLITICS_SPEC`, `TRADE_SPEC`)       | Vier neue Einträge in `TABLE_SPECS` mit eigenem Entwurf (`discard`, `done`, `players`); ein Antippen ist eine Handlung `card` bzw. `player` am Entwurf (Open/Closed, Strategy).                    |
+| `target-ref.ts` (`player:`, `speaker:token`, `action:`), `use-drop-router`           | Porträts, Sprechermarker und Handkarten sind neue Arten desselben Schlüssels; Ablegen wird zu „Entwurf fortschreiben“ oder zu genau einem Befehl (Indirection, Protected Variations).              |
+| `card-targets.ts` (`cardTargetKeys`, `cardDropTarget`)                               | Reine Abbildung der Ziele einer Karte auf Schlüssel und zurück; das Zielformular und das Ziehen teilen `initialTarget` (Pure Fabrication, DRY).                                                    |
+| `hand-modes.ts` (`handModeOf`), `lift-store.ts`, `needsLift`                         | Was die Hand gerade bedeutet, ist eine reine Frage an die Entscheidung; Anheben ist ein kleiner eigener Zustand ohne Spielregel (Single Responsibility, Low Coupling).                             |
+| `secondary-socket.ts`, `secondaryTokenCost` (Domain)                                 | Die Domain nennt die Kosten, die sie beim Ausführen auch verlangt; Ansage, Pult und Siegel fragen sie nur ab (Information Expert, DRY).                                                            |
+| `socket-play.ts` (`socketPlayOf`), `withSocket`, `SOCKET`                            | Was der Sockel auslöst, entscheidet eine reine Funktion; Ablage, erlaubte Ziele und Ansage teilen sie, statt eigene Regeln zu kennen (Pure Fabrication, Indirection).                              |
+| `use-portrait-target.ts` (`usePortraitTable`, `usePortraitTarget`), `PlayerRail`     | Ein Hook entscheidet je Porträt Rolle, Klick und Ziel (Radioknopf, Schalter oder Übersicht); die Leiste ermittelt Entscheidung und Ablage einmal und reicht sie weiter (Controller, Low Coupling). |
+| `SpeakerFace`, `SpeakerToken`, `ChoiceMark` (Geist, Freibrief), `table-people.css`   | Reine Anzeige ohne Regel; Name und Zustand trägt immer der Knopf, die Bilder sind für Hilfsmittel unsichtbar (Single Responsibility).                                                              |
+| `PromptPeople` (`SecondarySocketLine`, `ReactionLine`), `PromptText` wiederverwendet | Kleine Bausteine der Ansage je Aufgabe, eingehängt nach Route bzw. `specId`; die offene Karte zeigt dieselbe Komponente wie das alte Formular (Single Responsibility, DRY).                        |
+| `PromptProgress` (`DiscardMeter`, `PlayersMeter`), `subtitleOf` (`SPEC_TITLES`)      | Die Messleiste unterscheidet weiter nach Art des Entwurfs, die zweite Kopfzeile nach Entscheidung über eine Tabelle statt Verzweigungen (Polymorphie über `kind`, Open/Closed).                    |
+
+## 36. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -1011,8 +1087,9 @@ dort laut Vorrat und Grenzen noch passen, auf Wunsch mit schon vorgemerkten Geb�
 | 28  | Ansage am Pult, Marker auf Leisten und Karte        | ✓     |
 | 29  | Planeten und Bezahlung am Tisch, Auftragsleiste     | ✓     |
 | 30  | Taktische Aktion und Bauen am Tisch                 | ✓     |
+| 31  | Karten und Menschen am Tisch                        | ✓     |
 
-## 36. Befehle
+## 37. Befehle
 
 ```
 pnpm install

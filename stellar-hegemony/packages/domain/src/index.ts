@@ -52,6 +52,7 @@ export * from './phases/start-game.ts';
 export * from './action/action-events.ts';
 export * from './action/action-reducers.ts';
 export * from './action/action-commands.ts';
+export * from './action/secondary-cost.ts';
 export * from './action/turn-order.ts';
 export * from './economy/economy-events.ts';
 export * from './economy/economy-reducers.ts';

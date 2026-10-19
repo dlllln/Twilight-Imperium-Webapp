@@ -5,6 +5,7 @@ import { type CSSProperties, type ReactElement, useEffect, useRef } from 'react'
 import { rackOf, type SheetModel } from '../../hud/sheet-model.ts';
 import type { TokenLedger } from '../../hud/token-ledger.ts';
 import type { SheetPulse, SheetTable } from '../../hud/use-sheet.ts';
+import type { SecondarySocket } from '../../table/secondary-socket.ts';
 import { poolTarget, targetKey } from '../../table/target-ref.ts';
 import { useTarget } from '../../table/use-target.ts';
 import { useT } from '../../use-translation.ts';
@@ -74,10 +75,34 @@ interface TrayProps {
 
 interface RackProps extends Omit<TrayProps, 'pulse'> {
   readonly slots: number;
+  /** Der oberste Marker geht an die Sekundärfähigkeit eines anderen. */
+  readonly spending: boolean;
+}
+
+/** Folgt man einer Karte, die einen Strategiemarker kostet, und hat einen, wird er bezahlt. */
+const spendsToken = (socket: SecondarySocket | null): boolean =>
+  socket?.cost === 1 && socket.affordable;
+
+/**
+ * Über dem obersten Marker: ein roter, gestrichelter Ring, der ihn als bezahlt kennzeichnet. Er
+ * liegt in derselben Fassung wie der Marker und fängt keine Gesten.
+ */
+function SpendMark({ index }: { readonly index: number }): ReactElement {
+  const t = useT();
+  return (
+    <span
+      className="sheet-spend"
+      data-spending="true"
+      title={t('spendingToken')}
+      aria-hidden="true"
+      style={rackPlace(index)}
+    />
+  );
 }
 
 /** Fassungen mit den Markern; über dem obersten liegt der Knopf zum Aufnehmen. */
-function TrayRack({ pool, ids, faction, flow, table, slots }: RackProps): ReactElement {
+function TrayRack(props: RackProps): ReactElement {
+  const { pool, ids, faction, flow, table, slots, spending } = props;
   const dragged = useDraggedZone() === pool;
   const top = ids.length - 1;
   return (
@@ -98,6 +123,7 @@ function TrayRack({ pool, ids, faction, flow, table, slots }: RackProps): ReactE
         ))}
       </AnimatePresence>
       {top >= 0 && <SheetPiece zone={pool} table={table} style={rackPlace(top)} />}
+      {spending && top >= 0 && <SpendMark index={top} />}
     </div>
   );
 }
@@ -111,11 +137,13 @@ export function CommandTray({ pool, ids, faction, pulse, flow, table }: TrayProp
   const ref = poolTarget(pool);
   const target = useTarget(ref, table.decision?.targets.get(targetKey(ref)), table.router);
   const rack = rackOf(ids.length);
+  const spending = pool === 'strategy' && spendsToken(table.socket);
+  const paid = spending ? ` · ${t('spendingToken')}` : '';
   return (
     <div
       className="sheet-tray"
       data-pool={pool}
-      aria-label={`${t(pool)}: ${String(ids.length)}`}
+      aria-label={`${t(pool)}: ${String(ids.length)}${paid}`}
       {...target.props}
       {...dropAttributes(target)}
       data-over={target.over ? 'true' : undefined}
@@ -124,7 +152,7 @@ export function CommandTray({ pool, ids, faction, pulse, flow, table }: TrayProp
         <span>{t(pool)}</span>
       </span>
       <TrayRack
-        {...{ pool, faction, flow, table }}
+        {...{ pool, faction, flow, table, spending }}
         ids={ids.slice(0, rack.filled)}
         slots={rack.filled + rack.empty}
       />

@@ -2,6 +2,7 @@ import type { GameState, PlayerId } from '@stellar/domain';
 import { activatableSystems } from './legal-systems.ts';
 import type { PlanetTable } from './planet-table.ts';
 import { canMove } from './pool-draft.ts';
+import { useSocketPlay } from './socket-play.ts';
 import type { TableDraft } from './table-specs.ts';
 import {
   DRAFT_ZONES,
@@ -9,6 +10,7 @@ import {
   isCoinRef,
   KASSE,
   poolTarget,
+  SOCKET,
   systemTarget,
   type TargetRef,
   targetKey,
@@ -87,10 +89,26 @@ function fromDecision(decision: TableDecision | null) {
   return { actor: route.kind === 'waiting' ? null : route.actor, draft, specLegal };
 }
 
+const isStrategyToken = (piece: TargetRef): boolean =>
+  piece.kind === 'pool' && piece.pool === 'strategy';
+
+/** Folgt man einer Karte, darf der oberste Strategiemarker zusätzlich in den Sockel. */
+export function withSocket(
+  legal: ReadonlySet<string>,
+  piece: TargetRef,
+  socket: boolean,
+): ReadonlySet<string> {
+  return socket && isStrategyToken(piece) ? new Set([...legal, targetKey(SOCKET)]) : legal;
+}
+
 /** Für die Stücke am Bildschirm: liefert zu jedem Stück seine erlaubten Ziele. */
 export function useLegalFor(game: GameState | null): (piece: TargetRef) => ReadonlySet<string> {
   const own = fromDecision(useTableDecision(game));
   const choosing = useChosenCard(own.actor) !== null;
   const coins = coinsOf(usePlanetTable(game));
-  return (piece) => (game === null ? NOWHERE : legalFor({ ...own, game, choosing, coins }, piece));
+  const socket = useSocketPlay(game).takesToken;
+  return (piece) => {
+    if (game === null) return NOWHERE;
+    return withSocket(legalFor({ ...own, game, choosing, coins }, piece), piece, socket);
+  };
 }

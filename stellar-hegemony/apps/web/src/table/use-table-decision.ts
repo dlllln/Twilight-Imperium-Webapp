@@ -8,6 +8,7 @@ import { useCarryStore } from './carry-store.ts';
 import type { DecisionRoute } from './decision-route.ts';
 import { useDraftStore } from './draft-store.ts';
 import { type PlanetTable, planetTableOf } from './planet-table.ts';
+import { secondarySocket } from './secondary-socket.ts';
 import {
   type AnySpec,
   type GhostToken,
@@ -93,6 +94,19 @@ function actOn(ported: Ported, action: TableAction): void {
   else store.begin(ported.key, next);
 }
 
+/**
+ * Eine Sekundärfähigkeit, die einen Strategiemarker kostet, den der Spieler nicht hat: Die Domain
+ * lehnt das Ausführen ab, also bleibt das Siegel zu und nur „Ablehnen“ offen.
+ */
+function unaffordable(ported: Ported): boolean {
+  const { game, route } = ported.ctx;
+  return secondarySocket(game, route, content)?.affordable === false;
+}
+
+/** Ob der Entwurf gesendet werden darf: vollständig und bezahlbar. */
+const readyOf = (ported: Ported, draft: TableDraft): boolean =>
+  ported.spec.progress(ported.ctx, draft).ready && !unaffordable(ported);
+
 /** Abgeschickt und weder abgelöst noch abgelehnt: das Siegel bleibt gesperrt. */
 const pendingNow = (key: string): boolean =>
   useDraftStore.getState().sent === key && useGameStore.getState().error === null;
@@ -103,7 +117,7 @@ const pendingNow = (key: string): boolean =>
  */
 function confirmOf(ported: Ported): void {
   const draft = currentDraft(ported);
-  if (!ported.spec.progress(ported.ctx, draft).ready || pendingNow(ported.key)) return;
+  if (!readyOf(ported, draft) || pendingNow(ported.key)) return;
   const store = useGameStore.getState();
   store.setError(null);
   if (!store.send(ported.spec.command(ported.ctx, draft))) return;
@@ -189,11 +203,14 @@ function useStored(): Stored {
   return { key, draft, sent, failed };
 }
 
-/** Fortschritt des Entwurfs; ein abgeschickter Entwurf ist nicht noch einmal bereit. */
+/**
+ * Fortschritt des Entwurfs; ein abgeschickter Entwurf ist nicht noch einmal bereit, eine
+ * unbezahlbare Sekundärfähigkeit nie.
+ */
 function progressOf(ported: Ported, draft: TableDraft, stored: Stored): Progress {
   const progress = ported.spec.progress(ported.ctx, draft);
   const pending = stored.sent === ported.key && !stored.failed;
-  return pending ? { ...progress, ready: false } : progress;
+  return pending || unaffordable(ported) ? { ...progress, ready: false } : progress;
 }
 
 /** Stücke, Geister und erlaubte Ziele, soweit die Entscheidung sie kennt. */

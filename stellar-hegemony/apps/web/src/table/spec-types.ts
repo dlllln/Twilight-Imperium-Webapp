@@ -1,4 +1,5 @@
 import type {
+  ActionCardId,
   GameCommand,
   GameState,
   ObjectiveId,
@@ -32,7 +33,11 @@ export type TableSpecId =
   | 'landing'
   | 'tacticalDone'
   | 'diplomacyPrimary'
-  | 'construction';
+  | 'construction'
+  | 'discard'
+  | 'reaction'
+  | 'politics'
+  | 'trade';
 
 /** Entwurf einer Markerverteilung samt Bezahlung (Führung) und System (Kriegsführung). */
 export interface TokenPlan {
@@ -84,8 +89,28 @@ export interface DonePlan {
   readonly kind: 'done';
 }
 
+/** Ablegen über dem Limit: die gewählten Aktionskarten, je Exemplar ein Eintrag. */
+export interface DiscardPlan {
+  readonly kind: 'discard';
+  readonly cards: readonly ActionCardId[];
+}
+
+/** Politik (neuer Sprecher) und Handel (Freibriefe): die gewählten Mitspieler. */
+export interface PlayersPlan {
+  readonly kind: 'players';
+  readonly players: readonly PlayerId[];
+}
+
 export type TableDraft =
-  TokenPlan | ObjectivePlan | ReadyPlan | PlacementPlan | SystemPlan | ConstructionPlan | DonePlan;
+  | TokenPlan
+  | ObjectivePlan
+  | ReadyPlan
+  | PlacementPlan
+  | SystemPlan
+  | ConstructionPlan
+  | DonePlan
+  | DiscardPlan
+  | PlayersPlan;
 
 export type TableAction =
   | { readonly kind: 'move'; readonly from: DraftZone; readonly to: DraftZone }
@@ -98,7 +123,11 @@ export type TableAction =
   /** Eine Figur einem Planeten zuweisen; `null` lässt sie im Weltraum. */
   | { readonly kind: 'assign'; readonly unit: UnitId; readonly planet: PlanetId | null }
   | { readonly kind: 'place'; readonly type: UnitTypeId; readonly planet: PlanetId }
-  | { readonly kind: 'unplace'; readonly index: number };
+  | { readonly kind: 'unplace'; readonly index: number }
+  /** Eine Aktionskarte der Hand antippen: zum Ablegen vormerken oder zurücknehmen. */
+  | { readonly kind: 'card'; readonly card: ActionCardId }
+  /** Einen Mitspieler antippen oder den Sprechermarker auf sein Bild legen. */
+  | { readonly kind: 'player'; readonly player: PlayerId };
 
 /** Ein Stück der Entscheidung auf dem Tisch: Figur oder Gebäude, und wo es gerade steht. */
 export interface TablePiece {

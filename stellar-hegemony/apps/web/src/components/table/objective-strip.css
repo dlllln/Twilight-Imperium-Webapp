@@ -295,6 +295,40 @@ button.objective-strip-card:focus-visible {
   font-size: 13px;
 }
 
+/*
+ * Die Vergrößerung liegt unter der Leiste und damit dort, wo die Spalte der Meldungen (z 26)
+ * hinaufwachsen kann; solange eine Karte vergrößert ist, liegt die Leiste deshalb über ihr.
+ */
+.objective-strip:has(.objective-strip-zoom) {
+  z-index: 27;
+}
+
+/*
+ * Breiter Tisch: Die Spalte der Meldungen (rechts, über der Ansage) wächst nach oben höchstens
+ * bis knapp unter die Leiste. `--strip-reserve` ist die Unterkante der Leiste samt Luft: oben
+ * 12px, Polster und Rand der Bahn 20px, die Karte (anderthalbmal so hoch wie breit) und 8px
+ * Luft; mit Wertungsknöpfen unter den Karten kommen deren 26px dazu. Die zweite Zeile schlägt die
+ * gleich spezifische Regel der Planetenreihe, unabhängig von der Ladereihenfolge.
+ */
+@media (min-width: 761px) and (orientation: landscape), (min-width: 1101px) {
+  .hud-shield[data-view='table']:has(.objective-strip) {
+    --strip-card: 52px;
+    --strip-score: 0px;
+    --strip-reserve: calc(40px + var(--strip-card) * 1.5 + var(--strip-score));
+  }
+
+  .hud-shield[data-view='table']:has(.objective-strip-score) {
+    --strip-score: 26px;
+  }
+
+  .hud-shield[data-view='table']:has(.objective-strip) .hud-corner,
+  .hud-shield[data-view='table']:has(.objective-strip):has(.planet-row) .hud-corner {
+    max-height: calc(
+      100% - var(--sheet-h) - var(--planet-row-h, 0px) - 10px - var(--strip-reserve)
+    );
+  }
+}
+
 /* Schmal oder hochkant: unter der Spielerleiste, links vom Vorrat; zu, bis man sie öffnet. */
 @media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
   .objective-strip {

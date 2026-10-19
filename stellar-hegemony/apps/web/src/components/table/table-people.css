@@ -1,0 +1,310 @@
+/*
+ * Menschen am Tisch: der Sprechermarker auf dem Porträt (bei der Politik ein Stück zum
+ * Aufnehmen), sein Geist auf dem gewählten Porträt, das Band des Freibriefs beim Handel, die
+ * Porträts als Ziele, dazu in der Ansage der Sockel der Sekundärfähigkeit und die offene Karte
+ * einer Reaktion. Alles prozedural: Formen aus CSS und SVG, keine Bilder.
+ */
+
+/* Der Marker liegt neben dem Knopf des Porträts, an derselben Stelle wie früher das Symbol. */
+
+.hud-portrait {
+  position: relative;
+}
+
+.speaker-token {
+  position: absolute;
+  z-index: 2;
+  left: 36px;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px #000c);
+}
+
+.speaker-face {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Politik: der Marker wird größer und atmet, bis er aufgenommen ist. */
+
+.speaker-token[data-carryable='true'] {
+  left: 33px;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  pointer-events: auto;
+}
+
+/*
+ * Das Stück ist ein Knopf im Porträt; die Regeln für den Knopf des Porträts selbst
+ * (`.hud-portrait button`, auch mit `:has`/`:hover`) dürfen es nicht treffen, daher die
+ * stärkeren Selektoren.
+ */
+.hud-players .hud-portrait .speaker-token > .speaker-piece {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 30%;
+  background: none;
+  box-shadow: none;
+  transform: none;
+  cursor: grab;
+  touch-action: none;
+  animation: speaker-breathe 2.2s ease-in-out infinite;
+}
+
+.hud-players .hud-portrait .speaker-token > .speaker-piece:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.hud-players .hud-portrait .speaker-token > .speaker-piece[aria-pressed='true'] {
+  cursor: grabbing;
+  animation: none;
+  transform: translateY(-3px) scale(1.15);
+  filter: drop-shadow(0 0 6px var(--gold-bright));
+}
+
+@keyframes speaker-breathe {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 5px var(--gold-bright));
+  }
+}
+
+/* Der Geist des Markers zeigt, wohin er mit dem Siegel wandert. */
+
+.speaker-ghost {
+  position: absolute;
+  z-index: 1;
+  left: 33px;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 30%;
+  outline: 1.5px dashed var(--gold-bright);
+  outline-offset: 1px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/*
+ * Porträts als Ziele: erlaubte leuchten in Platzfarbe, gewählte golden. Die Selektoren sind
+ * stärker als der Schatten des Tischs (`.hud-shield .hud-portrait button`), der sonst den Schein
+ * überdeckt. Gibt es Ziele auf der Leiste, treten alle anderen Porträts zurück, auch der Rahmen
+ * des Spielers am Zug.
+ */
+
+.hud-players .hud-portrait > button[data-target-state] {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.hud-players .hud-portrait > button[data-target-state='legal'] {
+  outline-color: color-mix(in srgb, var(--seat, var(--gold)) 90%, transparent);
+  box-shadow:
+    0 4px 12px #0008,
+    0 0 0 1px color-mix(in srgb, var(--seat, var(--gold)) 60%, transparent),
+    0 0 18px 2px color-mix(in srgb, var(--seat, var(--gold)) 60%, transparent);
+  animation: portrait-glow 2.4s ease-in-out infinite;
+}
+
+.hud-players .hud-portrait > button[data-target-state='chosen'] {
+  outline: 3px solid var(--gold-bright);
+  box-shadow:
+    0 4px 12px #0008,
+    0 0 20px 3px rgba(255, 224, 138, 0.6);
+}
+
+.hud-players:has(.hud-portrait > button[data-target-state])
+  .hud-portrait
+  > button:not([data-target-state]) {
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+@keyframes portrait-glow {
+  0%,
+  100% {
+    outline-color: color-mix(in srgb, var(--seat, var(--gold)) 90%, transparent);
+  }
+
+  50% {
+    outline-color: color-mix(in srgb, var(--seat, var(--gold)) 50%, transparent);
+  }
+}
+
+/* Handel: das Band des Freibriefs quer über dem Fuß des Porträts. */
+
+.portrait-free-letter {
+  position: absolute;
+  z-index: 1;
+  left: 46px;
+  bottom: -5px;
+  padding: 1px 10px 1px 8px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 50%, 100% 100%, 0 100%, 4px 50%);
+  background: linear-gradient(180deg, #f3e2b0 0%, #c9a75a 100%);
+  color: #3a2a0c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+  box-shadow: 0 2px 3px #0008;
+  pointer-events: none;
+}
+
+/* Sekundärfähigkeit in der Ansage: Karte, Sockel, Kosten. */
+
+.secondary-socket {
+  display: grid;
+  grid-template-columns: 80px 44px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+  background: linear-gradient(120deg, #00000040, #ffffff08);
+}
+
+.secondary-socket-card {
+  display: block;
+  width: 80px;
+  filter: drop-shadow(1px 3px 3px #000a);
+  transform: rotate(-3deg);
+}
+
+.secondary-socket-slot {
+  width: 38px;
+  height: 38px;
+}
+
+.socket-rim {
+  fill: #0b1220;
+  stroke: var(--gold);
+  stroke-width: 1.5;
+}
+
+.secondary-socket[data-cost='0'] .socket-rim {
+  stroke-dasharray: 3 2;
+}
+
+.socket-token {
+  fill: var(--seat, var(--gold));
+  stroke: #000a;
+  stroke-width: 1;
+}
+
+.socket-cost {
+  fill: #fff6d8;
+  font-family: var(--title-font);
+  font-size: 13px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #000a;
+  stroke-width: 2px;
+}
+
+.secondary-socket-cost {
+  margin: 0;
+  font-size: 12px;
+}
+
+.secondary-socket-name {
+  font-family: var(--title-font);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/*
+ * Der Sockel als Ziel: ein runder Knopf ohne eigenen Rahmen, der leise in der Platzfarbe atmet,
+ * bis der Marker darin liegt; erlaubt (Marker getragen) leuchtet er kräftig.
+ */
+.table-prompt .secondary-socket .secondary-socket-target {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 30%;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+  animation: socket-invite 2.2s ease-in-out infinite;
+}
+
+.table-prompt .secondary-socket .secondary-socket-target:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.table-prompt .secondary-socket .secondary-socket-target[data-target-state='legal'] {
+  animation: none;
+  filter: drop-shadow(0 0 8px var(--seat, var(--gold-bright)));
+}
+
+.table-prompt .secondary-socket .secondary-socket-target[data-over='true'] {
+  filter: drop-shadow(0 0 12px var(--seat, var(--gold-bright)));
+  transform: scale(1.08);
+}
+
+.secondary-socket-target .socket-rim {
+  stroke: var(--seat, var(--gold));
+  stroke-width: 2;
+}
+
+@keyframes socket-invite {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 6px var(--seat, var(--gold-bright)));
+  }
+}
+
+.secondary-socket[data-affordable='false'] .socket-rim {
+  stroke: var(--warfare);
+}
+
+.secondary-socket[data-affordable='false'] .secondary-socket-cost strong {
+  color: var(--warfare);
+}
+
+/* Reaktion: die gespielte Karte liegt verkleinert in der Ansage. */
+
+.table-prompt-reaction .pending-card p {
+  margin: 0 0 6px;
+}
+
+.table-prompt-reaction .action-card {
+  max-width: 180px;
+}
+
+/* Ohne Animationen: kein Atmen, kein Leuchten im Takt. */
+
+:root.motion-off .hud-players .hud-portrait .speaker-token > .speaker-piece,
+:root.motion-off .hud-players .hud-portrait > button[data-target-state='legal'],
+:root.motion-off .table-prompt .secondary-socket .secondary-socket-target {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-players .hud-portrait .speaker-token > .speaker-piece,
+  .hud-players .hud-portrait > button[data-target-state='legal'],
+  .table-prompt .secondary-socket .secondary-socket-target {
+    animation: none;
+  }
+}

@@ -1,4 +1,5 @@
 import {
+  actionCardId,
   agendaId,
   currentActor,
   type GameState,
@@ -154,7 +155,7 @@ describe('Route der offenen Entscheidung', () => {
     expect(spec(secondary('crown'))).toBe('imperial');
     expect(spec(primary('engineering'))).toBe('construction');
     expect(spec(secondary('engineering'))).toBe('construction');
-    expect(spec(primary('senate'))).toBeNull();
+    expect(spec(primary('senate'))).toBe('politics');
     expect(spec(secondary('senate'))).toBeNull();
     expect(spec(route({ game, actor }))).toBeNull();
     expect(spec(route({ game: statusGame('scoring'), actor }))).toBe('scoring');
@@ -166,5 +167,28 @@ describe('Route der offenen Entscheidung', () => {
     expect(stepSpec('invasion')).toBe('landing');
     expect(stepSpec('done')).toBe('tacticalDone');
     expect(stepSpec('production')).toBeNull();
+  });
+
+  it('Politik und Handel primär, Ablegen über dem Limit und die Reaktion sind auf dem Tisch spielbar', () => {
+    const game = pickAll(started());
+    const actor = activeOf(game);
+    const spec = (found: DecisionRoute | null) =>
+      found === null ? null : tableSpecOf(found, content);
+    const primary = (card: string) => route({ game, actor, chosen: strategyCardId(card) });
+    expect(spec(primary('senate'))).toBe('politics');
+    expect(spec(primary('exchange'))).toBe('trade');
+    expect(spec(route({ game: secondaryGame('exchange', [actor]), actor }))).toBeNull();
+    const limit = game.config.rules.actionCardHandLimit;
+    const full = updatePlayer(game, actor, (p) => ({
+      ...p,
+      actionCards: Array.from({ length: limit + 1 }, () => actionCardId('black-market')),
+    }));
+    const discard = route({ game: full, actor });
+    expect(discard?.kind).toBe('discard');
+    expect(spec(discard)).toBe('discard');
+    const reactionWindow = { kind: 'afterActivation' as const, awaiting: [actor], played: [] };
+    const reaction = route({ game: { ...game, reactionWindow }, actor });
+    expect(reaction?.kind).toBe('reaction');
+    expect(spec(reaction)).toBe('reaction');
   });
 });

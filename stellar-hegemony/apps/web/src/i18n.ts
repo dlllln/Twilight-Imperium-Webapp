@@ -1161,6 +1161,59 @@ const DICTIONARY = {
   cargoAutoLoad: { de: 'Fracht laden', en: 'Load cargo' },
   fleetUnstage: { de: '{unit} zurücknehmen', en: 'Take back {unit}' },
   moveSummary: { de: 'Schiffe {ships} · Fracht {cargo}', en: 'Ships {ships} · Cargo {cargo}' },
+  tableHintDiscard: {
+    de: 'Tippe in der Hand die Karten an, die du ablegst.',
+    en: 'Tap the cards in your hand that you discard.',
+  },
+  tableHintReaction: {
+    de: 'Spiele eine leuchtende Karte aus der Hand oder gib weiter.',
+    en: 'Play a glowing card from your hand or pass.',
+  },
+  tableHintPolitics: {
+    de: 'Lege den Sprechermarker auf das Bild eines Mitspielers.',
+    en: "Place the speaker token on another player's portrait.",
+  },
+  tableHintTrade: {
+    de: 'Tippe Mitspieler an, die die Sekundärfähigkeit ohne Strategiemarker nutzen.',
+    en: 'Tap players who use the secondary ability without a strategy token.',
+  },
+  tableHintCardTarget: {
+    de: 'Ziehe die Karte auf ein leuchtendes Ziel oder tippe sie an.',
+    en: 'Drag the card onto a glowing target or tap it.',
+  },
+  toDiscard: { de: 'Abzulegen', en: 'To discard' },
+  discardRibbon: { de: 'Wird abgelegt', en: 'Being discarded' },
+  speakerToken: { de: 'Sprechermarker', en: 'Speaker token' },
+  freeLetter: { de: 'Freibrief', en: 'Free pass' },
+  secondaryCost: { de: 'Kosten', en: 'Cost' },
+  costStrategyToken: { de: '1 Strategiemarker', en: '1 strategy token' },
+  costFree: { de: 'kostenlos', en: 'free' },
+  costMissing: { de: 'Kein Strategiemarker übrig', en: 'No strategy token left' },
+  spendingToken: { de: 'wird bezahlt', en: 'being paid' },
+  liftToPlay: {
+    de: 'Angehoben – noch einmal tippen zum Ausspielen',
+    en: 'Lifted – tap again to play',
+  },
+  siteCard: { de: 'Ziel der Karte', en: 'Card target' },
+  reactionReady: { de: 'Jetzt spielbar', en: 'Playable now' },
+  secondarySocket: { de: 'Sockel der Sekundärfähigkeit', en: 'Secondary ability socket' },
+  socketFollow: { de: 'Sekundärfähigkeit nutzen', en: 'Use secondary ability' },
+  socketHintToken: {
+    de: 'Lege den obersten Strategiemarker in den Sockel oder tippe den Sockel an.',
+    en: 'Drop your top strategy token into the socket or tap the socket.',
+  },
+  socketHintFree: {
+    de: 'Tippe den Sockel an, um der Karte zu folgen.',
+    en: 'Tap the socket to follow the card.',
+  },
+  discardTap: {
+    de: 'Antippen merkt die Karte zum Ablegen vor.',
+    en: 'Tap to mark the card for discarding.',
+  },
+  liftFirst: {
+    de: 'Antippen hebt die Karte an, ein zweites Antippen spielt sie aus.',
+    en: 'Tap to lift the card, tap again to play it.',
+  },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof DICTIONARY;

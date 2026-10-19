@@ -3029,10 +3029,6 @@ select option {
   pointer-events: none;
 }
 
-.hand-anchor {
-  display: contents;
-}
-
 .hand-owner {
   position: absolute;
   left: 50%;
@@ -3548,14 +3544,6 @@ select option {
 
 .portrait-initiative + .portrait-initiative {
   margin-left: 58px;
-}
-
-.portrait-speaker {
-  position: absolute;
-  left: 38px;
-  top: 2px;
-  color: var(--gold-bright);
-  filter: drop-shadow(0 1px 2px #000);
 }
 
 .hud-portrait.active button {
@@ -6545,4 +6533,169 @@ polygon.hex.target-over {
   .hud-shield[data-view='table']:has(.hand-dock.tucked) {
     --hand-rise: 64px;
   }
+}
+
+/*
+ * Iteration 31: Hand am Tisch. Die Hand dient je nach offener Entscheidung zum Ausspielen, zum
+ * Vormerken der abzulegenden Karten (rotes Band, die Karte sinkt ein wenig) oder im
+ * Reaktionsfenster: Dort leuchten die spielbaren Karten in der eigenen Platzfarbe. Karten vor dem
+ * Platz heben sich beim ersten Antippen; eine getragene Aktionskarte bleibt blass im Fächer,
+ * während ihr Geist dem Zeiger folgt.
+ */
+
+.hand-dock .hand-card[data-discard] {
+  filter: none;
+  cursor: pointer;
+}
+
+.hand-dock .hand-card[aria-pressed='true'][data-discard] {
+  translate: 0 10px;
+  border-color: #e5484d;
+  box-shadow:
+    0 0 0 2px rgba(229, 72, 77, 0.8),
+    0 0 18px rgba(229, 72, 77, 0.45),
+    0 12px 28px rgba(0, 0, 0, 0.6);
+}
+
+.hand-discard-ribbon {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  top: 20%;
+  z-index: 3;
+  padding: 4px 0;
+  transform: rotate(-24deg);
+  background: linear-gradient(180deg, #e5484d 0%, #b0262c 100%);
+  border-block: 1px solid rgba(255, 214, 205, 0.55);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: #fff4ef;
+  font-family: var(--title-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.hand-dock .hand-card[data-reaction='ready'] {
+  --glow: var(--seat, var(--hand-gold));
+  border-color: var(--glow);
+  animation: hand-reaction 1.8s ease-in-out infinite;
+}
+
+@keyframes hand-reaction {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1.5px color-mix(in srgb, var(--glow) 70%, transparent),
+      0 0 10px color-mix(in srgb, var(--glow) 40%, transparent),
+      0 12px 28px rgba(0, 0, 0, 0.6);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 2.5px var(--glow),
+      0 0 28px color-mix(in srgb, var(--glow) 75%, transparent),
+      0 12px 28px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Ohne Bewegung: der Schein steht still, statt zu atmen. */
+:root.motion-off .hand-dock .hand-card[data-reaction='ready'] {
+  box-shadow:
+    0 0 0 2.5px var(--glow),
+    0 0 20px color-mix(in srgb, var(--glow) 60%, transparent),
+    0 12px 28px rgba(0, 0, 0, 0.6);
+}
+
+.hand-dock .hand-card[data-lifted='true'] {
+  border-color: var(--seat, var(--hand-gold));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--seat, var(--hand-gold)) 85%, transparent),
+    0 0 22px color-mix(in srgb, var(--seat, var(--hand-gold)) 50%, transparent),
+    0 22px 30px rgba(0, 0, 0, 0.65);
+}
+
+/* Getragen: blass bleibt sie im Fächer liegen (die Deckkraft setzt motion, hier nur die Farbe). */
+.hand-dock .hand-card[data-carried='true'] {
+  filter: grayscale(0.4);
+}
+
+/*
+ * Getragene Aktionskarte: eine kleine, schräge Kartenseite; der Sprechermarker als Scheibe. Beide
+ * sind größer als ein Planet oder ein Namensband und liegen daher über dem Zeiger wie eine Karte
+ * zwischen den Fingern, statt das Ziel zu verdecken; über einem Ziel werden sie durchscheinend.
+ */
+.drag-ghost[data-material='card'] {
+  width: 54px;
+  height: 76px;
+  translate: -30% -112%;
+  scale: 1;
+  rotate: -6deg;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--seat, var(--gold)) 60%, transparent))
+    drop-shadow(0 12px 10px rgba(0, 0, 0, 0.65));
+}
+
+.drag-ghost-card {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 5px;
+  outline: 1px solid rgba(255, 241, 184, 0.6);
+}
+
+.drag-ghost-card .ti4-complete-card {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.drag-ghost[data-material='speaker'] {
+  --chip: 40px;
+  translate: -50% -125%;
+  scale: 1.1;
+}
+
+.drag-ghost[data-material='card'][data-over='true'],
+.drag-ghost[data-material='speaker'][data-over='true'] {
+  opacity: 0.7;
+}
+
+.drag-ghost[data-material='speaker'] svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Der Strategiemarker, mit dem man der Karte eines anderen folgt: blass, rot gestrichelt umrandet. */
+.sheet-spend {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  justify-self: center;
+  width: calc(var(--chip) + 6px);
+  height: calc(var(--chip) + 6px);
+  border: 1.5px dashed #ff6b70;
+  border-radius: 50%;
+  background: rgba(6, 9, 22, 0.5);
+  box-shadow: 0 0 8px rgba(229, 72, 77, 0.55);
+  pointer-events: none;
+}
+
+/*
+ * Die Hand liegt über dem ganzen Pult (Hand 25, beim Anheben 60; Pult 23, beide im selben
+ * Stapelkontext), die 3D-Drehung der Flügel ändert daran nichts. Das Wappen am Flügel ist reine
+ * Zier und fängt keine Zeiger: Wo eine gedrehte Randkarte über ihm liegt, erreicht ein Klick
+ * immer die Karte. Auf schmalen Bildschirmen schneidet die Hand an der Pultoberkante ab und
+ * überlappt das Pult nicht.
+ */
+.sheet-crest,
+.sheet-crest * {
+  pointer-events: none;
 }

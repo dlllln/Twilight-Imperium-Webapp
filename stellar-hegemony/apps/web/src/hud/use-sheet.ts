@@ -5,6 +5,7 @@ import { useSettingsStore } from '../settings-store.ts';
 import { content } from '../store.ts';
 import { useLegalFor } from '../table/carry-rules.ts';
 import type { PoolDraft } from '../table/pool-draft.ts';
+import { type SecondarySocket, useSecondarySocket } from '../table/secondary-socket.ts';
 import type { DropHandler, TargetRef } from '../table/target-ref.ts';
 import { useDropRouter } from '../table/use-drop-router.ts';
 import { type TableDecision, useTableDecision } from '../table/use-table-decision.ts';
@@ -82,6 +83,8 @@ export interface SheetTable {
   readonly decision: TableDecision | null;
   readonly router: DropHandler;
   readonly legalFor: (piece: TargetRef) => ReadonlySet<string>;
+  /** Der Sockel einer offenen Sekundärfähigkeit samt Kosten; sonst `null`. */
+  readonly socket: SecondarySocket | null;
 }
 
 /** Die offene Entscheidung am Pult, einmal je Pult ermittelt und an alle Leisten gereicht. */
@@ -89,7 +92,8 @@ export function useSheetTable(game: GameState): SheetTable {
   const decision = useTableDecision(game);
   const router = useDropRouter(game);
   const legalFor = useLegalFor(game);
-  return { decision, router, legalFor };
+  const socket = useSecondarySocket(game);
+  return { decision, router, legalFor, socket };
 }
 
 /** Läuft eine Markerverteilung, liefert sie den Entwurf der Leisten; sonst `null`. */

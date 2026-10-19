@@ -74,3 +74,26 @@
 :root.motion-off .site-target {
   animation: none;
 }
+
+/*
+ * Ziele einer getragenen Aktionskarte: kühles Weiß-Blau, deutlich anders als Rot, Grün und Gold,
+ * dazu ein ruhiges Glimmen, damit die Ziele beim Tragen sofort ins Auge fallen.
+ */
+.site-target[data-site-kind='card'] {
+  --site: #9fd8ff;
+  stroke-width: 3;
+  animation:
+    site-target-march 1.8s linear infinite,
+    site-card-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes site-card-glow {
+  50% {
+    filter: drop-shadow(0 0 7px #9fd8ff);
+  }
+}
+
+:root.motion-off .site-target[data-site-kind='card'] {
+  animation: none;
+  filter: drop-shadow(0 0 4px #9fd8ff);
+}

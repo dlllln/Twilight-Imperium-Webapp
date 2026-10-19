@@ -123,41 +123,57 @@
 }
 
 /*
- * Vorschau der Kommandomarker (TokenGhosts): durchscheinende Marker mit Fraktionszeichen an der
- * Markerstelle eines Systems, gestrichelt in der Sitzfarbe.
+ * Vorschau der Kommandomarker (TokenGhosts): Marker mit Fraktionszeichen an der Markerstelle
+ * eines Systems, kräftig gestrichelt in der Sitzfarbe, auf dunkler Scheibe und mit langsamem
+ * Schein. Die Ebene hat denselben Rang wie die Flottenfiguren (22), steht aber in der Karte
+ * nach ihnen und liegt deshalb über ihnen, unter den Figuren (23) und dem HUD. Die Größe
+ * (`--ghost-size`) folgt dem Feld auf dem Bildschirm.
  */
 .token-ghost-layer {
   position: absolute;
-  z-index: 21;
+  z-index: 22;
   inset: 0;
   pointer-events: none;
   overflow: clip;
 }
 
 .token-ghost {
+  --ghost-size: 40px;
   position: absolute;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  box-sizing: border-box;
+  width: var(--ghost-size);
+  height: var(--ghost-size);
   transform: translate(-50%, -50%);
-  opacity: 0.62;
-  border: 2px dashed var(--ghost-seat);
+  opacity: 0.9;
+  border: 3px dashed var(--ghost-seat);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--ghost-seat) 26%, #050b14b3);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--ghost-seat) 60%, transparent);
-  animation: token-ghost-breathe 2.4s ease-in-out infinite;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ghost-seat) 30%, #050b14) 0%,
+    #050b14 72%
+  );
+  box-shadow:
+    0 0 0 2px #050b14cc,
+    0 6px 12px #000a,
+    0 0 14px color-mix(in srgb, var(--ghost-seat) 70%, transparent);
+  animation: token-ghost-halo 2.6s ease-in-out infinite;
 }
 
 .token-ghost img,
 .token-ghost svg {
-  width: 20px;
-  height: 20px;
+  width: 64%;
+  height: 64%;
+  filter: drop-shadow(0 1px 2px #000c);
 }
 
-@keyframes token-ghost-breathe {
+@keyframes token-ghost-halo {
   50% {
-    opacity: 0.4;
+    box-shadow:
+      0 0 0 2px #050b14cc,
+      0 6px 12px #000a,
+      0 0 26px 4px color-mix(in srgb, var(--ghost-seat) 85%, transparent);
   }
 }
 

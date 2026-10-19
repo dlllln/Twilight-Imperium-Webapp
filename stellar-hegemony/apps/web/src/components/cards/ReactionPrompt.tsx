@@ -14,7 +14,7 @@ const WINDOW_TEXT = {
 } as const satisfies Record<string, MessageKey>;
 
 /** RR 3.8: die gespielte Karte, die der Spieler jetzt verhindern dürfte. */
-function PendingCard({
+export function PendingCard({
   game,
   pending,
 }: {
@@ -34,8 +34,8 @@ function PendingCard({
   );
 }
 
-/** Die offene Karte oder der Anlass des Zeitfensters. */
-function PromptText({ game }: { readonly game: GameState }): ReactElement | null {
+/** Die offene Karte oder der Anlass des Zeitfensters; auch die Ansage am Pult zeigt sie. */
+export function PromptText({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
   const kind = game.reactionWindow?.kind;
   if (game.pendingPlay !== null) return <PendingCard game={game} pending={game.pendingPlay} />;

@@ -179,3 +179,17 @@ export async function neighbourWithPlanet(page: Page, seat: string): Promise<Loc
   if (index < 0) throw new Error('kein Nachbarfeld mit Planet');
   return hexes.nth(index);
 }
+
+/** Der Knopf eines Porträts links oben, gefunden über den Namen des Spielers. */
+export const portraitTarget = (page: Page, name: string): Locator =>
+  page.locator(`.hud-portrait > button[aria-label="${name}"]`);
+
+/** Zieht ein Stück mit der Maus auf ein Ziel: drücken, in zwölf Schritten hinüber, loslassen. */
+export async function dragOnto(page: Page, from: Locator, to: Locator): Promise<void> {
+  const start = await center(from);
+  const end = await center(to);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x, end.y, { steps: 12 });
+  await page.mouse.up();
+}

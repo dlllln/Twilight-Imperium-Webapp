@@ -59,6 +59,8 @@ describe('PoK Anführer in Hand und Übersicht', () => {
     expect(leaders).toEqual([expect.objectContaining({ playable: true })]);
     render(<Live />);
     fireEvent.click(screen.getByTestId(`leader-${agent.id}`));
+    expect(leaderOf(actor, 'agent')?.status).not.toBe('exhausted');
+    fireEvent.click(screen.getByTestId(`leader-${agent.id}`));
     expect(leaderOf(actor, 'agent')?.status).toBe('exhausted');
   });
 

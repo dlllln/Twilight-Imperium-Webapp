@@ -8,7 +8,7 @@ import {
   useIsPresent,
   useReducedMotion,
 } from 'motion/react';
-import { type CSSProperties, type ReactElement, useRef, useState } from 'react';
+import { type CSSProperties, type ReactElement, type Ref, useRef, useState } from 'react';
 import { useGameStore, useHumanActor, useViewer } from '../../game-store.ts';
 import { lookOf } from '../../hand/card-look.ts';
 import {
@@ -20,11 +20,20 @@ import {
 } from '../../hand/hand-model.ts';
 import { useHandStore } from '../../hand/hand-store.ts';
 import { useSettingsStore } from '../../settings-store.ts';
+import { playsByDrop } from '../../table/card-targets.ts';
 import { useT } from '../../use-translation.ts';
 import { PlayControls } from '../cards/CardItem.tsx';
 import { hasTargets, initialTarget } from '../cards/TargetFields.tsx';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { HandFace, useEntryName } from './HandFaces.tsx';
+import {
+  cardAvailability,
+  type CardMarks,
+  type HandTable,
+  useCardMarks,
+  useHandTable,
+} from './HandMarks.tsx';
+import { type HandCarry, useHandCarry } from './use-hand-carry.ts';
 import { officialLeader } from '@stellar/content';
 import { OriginalLeaderCard } from '../exploration/OriginalLeaderCard.tsx';
 import { leaderEffect } from '../../labels.ts';
@@ -37,14 +46,22 @@ const FLICK_PX = 90;
 /** Bis zu so vielen Karten liegt die Hand locker; darüber rücken die Karten enger. */
 const ROOMY = 5;
 const LIFT = { y: -92, scale: 1.8, rotate: 0, zIndex: 40 } as const;
+/** Angehoben zum Ausspielen (zweites Antippen): bleibt über dem Fächer stehen. */
+const RAISED = { y: -64, scale: 1.3, rotate: 0, opacity: 1, zIndex: 38 } as const;
 const SPRING = { type: 'spring', stiffness: 320, damping: 26 } as const;
+/** Getragen: Die Karte bleibt blass im Fächer liegen, während ihr Geist auf dem Tisch ist. */
+const CARRIED_OPACITY = 0.45;
 /** Neue Karten kommen von unten herein, gespielte fliegen nach oben aufs Spielfeld. */
 const DEALT = { y: 220, opacity: 0 } as const;
 const PLAYED = { y: -260, opacity: 0, scale: 1.25 } as const;
 
 /** Enge des Fächers und Kartenzahl fürs Stylesheet (die Tischansicht fasst die Hand in die Mulde). */
-const dockStyle = (cards: number): CSSProperties =>
-  ({ '--crowd': Math.max(0, cards - ROOMY), '--cards': cards }) as CSSProperties;
+const dockStyle = (cards: number, seat: string | null): CSSProperties =>
+  ({
+    '--crowd': Math.max(0, cards - ROOMY),
+    '--cards': cards,
+    ...(seat === null ? {} : { '--seat': seat }),
+  }) as CSSProperties;
 
 /** Lage im Fächer: zur Mitte hin gerade und oben, nach außen gedreht und tiefer. */
 const fanned = (offset: number) => ({
@@ -53,6 +70,16 @@ const fanned = (offset: number) => ({
   opacity: 1,
   scale: 1,
 });
+
+/**
+ * Lage der Karte: angehoben, im Fächer oder getragen. Getragen hebt sie sich beim Zeigen nicht
+ * an (der Zeiger bleibt während des Ziehens an ihr gefangen) und verblasst über motion selbst,
+ * dessen Inline-Stil sonst jede Deckkraft aus dem Stylesheet überschreibt.
+ */
+const poseOf = (offset: number, lifted: boolean, carried: boolean) =>
+  carried
+    ? { animate: { ...fanned(offset), opacity: CARRIED_OPACITY } }
+    : { animate: lifted ? RAISED : fanned(offset), whileHover: LIFT, whileFocus: LIFT };
 
 const testIdOf = (entry: HandEntry): string | undefined => {
   if (entry.kind === 'action') return `card-${entry.card.definition.id}`;
@@ -118,18 +145,28 @@ interface CardProps {
   readonly entry: HandEntry;
   readonly offset: number;
   readonly onPlay: () => void;
+  readonly hand: HandTable;
   readonly inspect?: boolean;
+  /** Karte mit Zielen am Tisch: Ziehen trägt sie auf ein Ziel statt sie hochzuwerfen. */
+  readonly carry?: HandCarry | null;
+  /** Der Knopf der Karte, an dem eine Zielwahl oder Vorschau hängt. */
+  readonly cardRef?: Ref<HTMLButtonElement>;
 }
 
-/** Antippen oder nach oben Ziehen spielt aus; nach dem Ziehen zählt der Klick nicht doppelt. */
+/**
+ * Antippen oder nach oben Ziehen; nach dem Ziehen zählt der Klick nicht doppelt. Eine Karte, die
+ * sich auf den Tisch tragen lässt, wirft man nicht hoch: Ihr Ziehen gehört dem Tragen.
+ */
 function useGesture(
-  playable: boolean,
-  onPlay: () => void,
+  active: boolean,
+  marks: CardMarks,
   onDragChange: (dragging: boolean) => void,
+  carry: HandCarry | null,
 ) {
   const dragged = useRef(false);
+  const flick = active ? marks.flick : null;
   return {
-    drag: playable ? ('y' as const) : false,
+    drag: flick !== null && carry === null ? ('y' as const) : false,
     dragSnapToOrigin: true,
     onDragStart: () => {
       dragged.current = true;
@@ -137,20 +174,23 @@ function useGesture(
     },
     onDragEnd: (_: unknown, info: PanInfo) => {
       onDragChange(false);
-      if (info.offset.y < -FLICK_PX && playable) onPlay();
+      if (info.offset.y < -FLICK_PX) flick?.();
     },
     onClick: () => {
-      if (!dragged.current && playable) onPlay();
+      const carried = carry?.swallowClick() ?? false;
+      const swallowed = dragged.current || carried;
       dragged.current = false;
+      if (!swallowed && active) marks.tap();
     },
   };
 }
 
-/** Eine Karte im Fächer: anheben zum Lesen, antippen oder nach oben ziehen zum Ausspielen. */
-const cardAvailability = (playable: boolean, inspect: boolean, present: boolean) => ({
-  active: (playable || inspect) && present,
-  disabled: !playable && !inspect,
-});
+/** Die Zeigergesten des Tragens ohne die Angaben, die nur der Hook selbst braucht. */
+function carryHandlers(carry: HandCarry | null, title: string) {
+  if (carry === null) return {};
+  const { onPointerDown, onPointerMove, onPointerUp, onPointerCancel } = carry;
+  return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel, title };
+}
 
 /** A used component stays on the mat, turned sideways until the game readies it again. */
 const exhausted = (entry: HandEntry): boolean => {
@@ -165,7 +205,7 @@ function useCardMotion(enabled: boolean) {
   return { dragging, setDragging, transition: enabled && !reduced ? SPRING : { duration: 0 } };
 }
 
-function useCardIdentity(entry: HandEntry, inspect: boolean, present: boolean) {
+function useCardIdentity(entry: HandEntry, inspect: boolean, present: boolean, disabled: boolean) {
   const t = useT();
   const name = useEntryName();
   return {
@@ -177,32 +217,38 @@ function useCardIdentity(entry: HandEntry, inspect: boolean, present: boolean) {
     'data-leaving': present ? undefined : true,
     'data-exhausted': exhausted(entry),
     'aria-label': name(entry),
-    'aria-disabled': !entry.playable && !inspect,
+    'aria-disabled': disabled,
     title: inspect ? name(entry) : t(entry.playable ? 'playGesture' : 'notPlayableNow'),
   };
 }
 
-function HandCard({ game, entry, offset, onPlay, inspect = false }: CardProps): ReactElement {
-  const motionOn = useSettingsStore((state) => state.animations);
-  const cardMotion = useCardMotion(motionOn);
+function HandCard(props: CardProps): ReactElement {
+  const { game, entry, offset, hand, inspect = false, carry = null } = props;
+  const t = useT();
+  const cardMotion = useCardMotion(useSettingsStore((state) => state.animations));
   const present = useIsPresent();
-  const identity = useCardIdentity(entry, inspect, present);
-  const availability = cardAvailability(entry.playable, inspect, present);
-  const gesture = useGesture(availability.active, onPlay, cardMotion.setDragging);
+  const marks = useCardMarks(entry, hand, props.onPlay);
+  const availability = cardAvailability(entry, marks, inspect, present);
+  const identity = useCardIdentity(entry, inspect, present, availability.disabled);
+  const gesture = useGesture(availability.active, marks, cardMotion.setDragging, carry);
+  const carried = carry?.carried === true;
   return (
     <motion.button
+      ref={props.cardRef}
       {...identity}
+      {...carryHandlers(carry, t('tableHintCardTarget'))}
+      {...marks.attributes}
       data-dragging={cardMotion.dragging}
+      data-carried={carried ? 'true' : undefined}
       initial={DEALT}
-      animate={fanned(offset)}
+      {...poseOf(offset, marks.lifted, carried)}
       exit={PLAYED}
-      whileHover={LIFT}
-      whileFocus={LIFT}
       whileDrag={{ scale: 1.12, rotate: 0, zIndex: 55 }}
       transition={cardMotion.transition}
       {...gesture}
     >
       <HandFace game={game} entry={entry} />
+      {marks.children}
     </motion.button>
   );
 }
@@ -226,18 +272,28 @@ function LeaderCardContent({ entry, onPlay }: CardProps) {
   );
 }
 
+/**
+ * Eine Vorschau oder Zielwahl hängt an der Karte selbst: Radix misst den Knopf, nicht eine Hülle
+ * ohne eigenen Kasten (die läge für das Messen in der linken oberen Ecke).
+ */
+function useCardAnchor() {
+  const card = useRef<HTMLButtonElement>(null);
+  const anchor = useRef({
+    getBoundingClientRect: () => card.current?.getBoundingClientRect() ?? new DOMRect(),
+  });
+  return { card, anchor };
+}
+
 /** Inspect the actual leader before choosing the separately labelled adapted action. */
 function LeaderCard(props: CardProps): ReactElement {
   const [open, setOpen] = useState(false);
+  const { card, anchor } = useCardAnchor();
   const { entry } = props;
   if (entry.kind !== 'leader') return <HandCard {...props} />;
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Anchor asChild>
-        <div className="hand-anchor">
-          <HandCard {...props} inspect onPlay={() => setOpen(true)} />
-        </div>
-      </Popover.Anchor>
+      <Popover.Anchor virtualRef={anchor} />
+      <HandCard {...props} cardRef={card} inspect onPlay={() => setOpen(true)} />
       <Popover.Portal>
         <Popover.Content
           className="ui-popover glass leader-card-preview"
@@ -265,18 +321,32 @@ function DockCard(props: CardProps): ReactElement {
   return <HandCard {...props} />;
 }
 
-/** Aktionskarte mit Zielen: Antippen öffnet die Zielwahl direkt über der Karte. */
+/**
+ * Am Tisch lässt sich eine spielbare Karte tragen, solange die Hand ausspielt und ein einziges
+ * Ablegen sie ganz ausspielt (nicht Karten für mehrere Planeten).
+ */
+const carries = (hand: HandTable, entry: HandEntry): boolean =>
+  hand.carry &&
+  hand.mode !== 'discard' &&
+  entry.playable &&
+  entry.kind === 'action' &&
+  playsByDrop(entry.card.targets);
+
+/**
+ * Aktionskarte mit Zielen: Antippen öffnet die Zielwahl direkt über der Karte; am Tisch lässt
+ * sie sich auch auf ein leuchtendes Ziel ziehen.
+ */
 function TargetedCard(props: Omit<CardProps, 'onPlay'>): ReactElement {
   const [open, setOpen] = useState(false);
-  const { game, entry } = props;
+  const { card: button, anchor } = useCardAnchor();
+  const { game, entry, hand } = props;
+  const card = entry.kind === 'action' ? entry.card : null;
+  const carry = useHandCarry(card, hand.router, carries(hand, entry));
   if (entry.kind !== 'action') return <HandCard {...props} onPlay={() => undefined} />;
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Anchor asChild>
-        <div className="hand-anchor">
-          <HandCard {...props} onPlay={() => setOpen(true)} />
-        </div>
-      </Popover.Anchor>
+      <Popover.Anchor virtualRef={anchor} />
+      <HandCard {...props} cardRef={button} carry={carry} onPlay={() => setOpen(true)} />
       <Popover.Portal>
         <Popover.Content className="ui-popover glass hand-targets" side="top" sideOffset={12}>
           <PlayControls game={game} player={entry.player} card={entry.card} />
@@ -296,9 +366,19 @@ function useEntries(game: GameState): readonly HandEntry[] {
   return handEntries({ game, actor, viewer, selected, choosing });
 }
 
-/** In der Strategiephase wählt man nur über die Hand; dann liegt sie offen, sonst eingeklappt. */
-const neededNow = (game: GameState, entries: readonly HandEntry[]): boolean =>
-  game.phase === 'strategy' && entries.some((entry) => entry.kind === 'pick' && entry.playable);
+/** Ob eine spielbare Karte dieser Art auf der Hand liegt. */
+const anyPlayable = (entries: readonly HandEntry[], kind: HandEntry['kind']): boolean =>
+  entries.some((entry) => entry.kind === kind && entry.playable);
+
+/**
+ * Wird gerade nur über die Hand entschieden, liegt sie offen, sonst eingeklappt: Strategiekarten
+ * wählen, Karten über dem Limit ablegen, im Reaktionsfenster eine spielbare Karte.
+ */
+function neededNow(game: GameState, entries: readonly HandEntry[], hand: HandTable): boolean {
+  if (hand.mode === 'discard') return true;
+  if (hand.mode === 'reaction') return anyPlayable(entries, 'action');
+  return game.phase === 'strategy' && anyPlayable(entries, 'pick');
+}
 
 /** Klappt die Hand aus oder ein; solange sie gebraucht wird, liegt sie ohnehin offen. */
 function HandToggle(): ReactElement {
@@ -341,8 +421,9 @@ export function HandDock({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const entries = useEntries(game);
   const play = usePlay(game);
+  const hand = useHandTable(game);
   const handOpen = useSettingsStore((state) => state.handOpen);
-  const needed = neededNow(game, entries);
+  const needed = neededNow(game, entries, hand);
   const raised = handOpen || needed;
   const middle = (entries.length - 1) / 2;
   return (
@@ -350,12 +431,12 @@ export function HandDock({ game }: { readonly game: GameState }): ReactElement {
       className={raised ? 'hand-dock raised' : 'hand-dock tucked'}
       aria-label={t('yourHand')}
       data-tutorial="hand"
-      style={dockStyle(entries.length)}
+      style={dockStyle(entries.length, hand.seat)}
     >
       {entries.length > 0 && <HandOwner game={game} needed={needed} />}
       <AnimatePresence initial={false}>
         {entries.map((entry, index) => {
-          const props = { game, entry, offset: index - middle };
+          const props = { game, entry, hand, offset: index - middle };
           return <DockCard key={entryKey(entry)} {...props} onPlay={() => play(entry)} />;
         })}
       </AnimatePresence>
