@@ -145,6 +145,7 @@ describe('Einstellungen', () => {
       hintSeen: false,
       handOpen: false,
       tableView: true,
+      tableSounds: true,
     });
   });
 

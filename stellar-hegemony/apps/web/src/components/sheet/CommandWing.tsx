@@ -228,7 +228,12 @@ export function CommandWing({ model, ledger, pulse, table }: WingProps): ReactEl
   const flow: Flow = { onMap: new Set(ledger.board), arriving };
   const shared = { faction: model.faction, pulse, flow };
   return (
-    <div className="sheet-wing command" role="group" aria-label={t('commandTokens')}>
+    <div
+      className="sheet-wing command"
+      role="group"
+      aria-label={t('commandTokens')}
+      data-tutorial="command-tokens"
+    >
       <Crest faction={model.faction} />
       <div className="sheet-rails">
         {COMMAND_POOLS.map((pool) => (

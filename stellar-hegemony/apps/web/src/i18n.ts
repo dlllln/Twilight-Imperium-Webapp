@@ -224,6 +224,7 @@ const DICTIONARY = {
   animationsToggle: { de: 'Animationen', en: 'Animations' },
   tipsToggle: { de: 'Tipps', en: 'Tips' },
   tableViewToggle: { de: 'Tischansicht', en: 'Table view' },
+  tableSoundsToggle: { de: 'Tischklänge', en: 'Table sounds' },
   playerSheet: { de: 'Dein Kommandopult', en: 'Your command console' },
   sheetTreasury: { de: 'Schatzkammer', en: 'Treasury' },
   onBoard: { de: 'Auf der Karte: {count}', en: 'On the map: {count}' },
@@ -1303,6 +1304,16 @@ const DICTIONARY = {
     de: 'Gleichstand: Tippe eine der leuchtenden Platten an und entscheide.',
     en: 'Tie: tap one of the glowing plates and decide.',
   },
+  vpTrack: { de: 'Siegpunktleiste', en: 'Victory point track' },
+  vpMarker: {
+    de: '{name}: {points} von {goal} Siegpunkten',
+    en: '{name}: {points} of {goal} victory points',
+  },
+  finalStanding: { de: 'Endstand', en: 'Final standing' },
+  finalRank: { de: '{rank}. Platz', en: 'Place {rank}' },
+  asList: { de: 'Als Liste', en: 'As a list' },
+  foldMat: { de: 'Matte einklappen', en: 'Fold the mat' },
+  unfoldMat: { de: 'Matte ausklappen', en: 'Unfold the mat' },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof DICTIONARY;

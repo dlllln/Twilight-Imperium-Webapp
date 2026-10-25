@@ -78,4 +78,21 @@ export const RECIPES: Readonly<Record<SoundCue, readonly SoundStep[]>> = {
     tone('triangle', 1047, 1047, 0.15, 0.3, 0.25),
   ],
   victory: arpeggio('triangle', [392, 523, 659, 784, 1047, 1319], 0.12, 0.3),
+  /* Tischklänge: kurz und leise, damit sie Gesten begleiten statt sie zu übertönen. */
+  // Karte kippt quer: ein tiefes Schaben über den Filz.
+  exhaust: [noise(1100, 0, 0.12, 0.1), tone('triangle', 180, 120, 0.02, 0.1, 0.05)],
+  // Karte richtet sich auf: dasselbe Schaben, aufwärts.
+  ready: [noise(1700, 0, 0.1, 0.09), tone('triangle', 150, 230, 0.02, 0.09, 0.05)],
+  // Münze auf Münze: zwei helle, kurze Glockentöne.
+  coin: [tone('sine', 1760, 1700, 0, 0.09, 0.08), tone('sine', 2490, 2400, 0.045, 0.1, 0.05)],
+  // Karte vom Stapel: kurzes Wischen mit leiser werdendem Nachklang.
+  draw: [noise(5200, 0, 0.07, 0.08), noise(3000, 0.05, 0.08, 0.05)],
+  // Karte umdrehen: Luftzug, dann ein weicher Anschlag.
+  reveal: [noise(2600, 0, 0.14, 0.07), tone('sine', 392, 523, 0.1, 0.18, 0.07)],
+  // Hammer auf Holz: dumpfer Schlag mit kurzem Holzklang.
+  gavel: [
+    noise(600, 0, 0.05, 0.2),
+    tone('sine', 140, 90, 0, 0.18, 0.18),
+    tone('triangle', 620, 540, 0.005, 0.06, 0.06),
+  ],
 };

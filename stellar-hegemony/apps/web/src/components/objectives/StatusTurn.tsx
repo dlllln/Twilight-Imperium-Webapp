@@ -16,11 +16,7 @@ import { Actions } from '../game/FormParts.tsx';
 import { Stepper } from '../game/Stepper.tsx';
 import { ObjectiveCard } from './ObjectiveCard.tsx';
 import { ScoreAction } from './ScoreAction.tsx';
-
-interface TurnProps {
-  readonly game: GameState;
-  readonly player: PlayerId;
-}
+import type { TurnProps } from '../game/turn-props.ts';
 
 /** RR 73.1: erfüllbare Aufträge werten, dann „Fertig“. */
 function ScoringStep({ game, player }: TurnProps): ReactElement {

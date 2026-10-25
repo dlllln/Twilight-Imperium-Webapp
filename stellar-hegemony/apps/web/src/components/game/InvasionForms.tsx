@@ -14,11 +14,7 @@ import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { PlanetSelect } from './FormParts.tsx';
 import { PaymentPicker, usePayment } from './PaymentPicker.tsx';
-
-interface TurnProps {
-  readonly game: GameState;
-  readonly player: PlayerId;
-}
+import type { TurnProps } from './turn-props.ts';
 
 type Targets = Readonly<Record<string, PlanetId>>;
 

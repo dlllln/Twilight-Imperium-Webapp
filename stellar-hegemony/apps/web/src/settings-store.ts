@@ -13,10 +13,15 @@ export interface Settings {
   readonly handOpen: boolean;
   /** Tischansicht: steiler Blick auf das Brett, davor das eigene Kommandopult statt der Vorratsleiste. */
   readonly tableView: boolean;
+  /**
+   * Leise Klänge zu Gesten am Tisch (Planet erschöpfen, Münze, Marker, Karte ziehen, Hammer).
+   * Sie schweigen mit dem Klang; wer weniger Bewegung wünscht, startet ohne sie.
+   */
+  readonly tableSounds: boolean;
 }
 
 export interface SettingsStore extends Settings {
-  readonly toggle: (key: 'sound' | 'animations' | 'tips' | 'tableView') => void;
+  readonly toggle: (key: 'sound' | 'animations' | 'tips' | 'tableView' | 'tableSounds') => void;
   readonly setVolume: (volume: number) => void;
   readonly markHintSeen: () => void;
   readonly setHandOpen: (open: boolean) => void;
@@ -42,6 +47,7 @@ const defaults = (): Settings => ({
   hintSeen: false,
   handOpen: false,
   tableView: true,
+  tableSounds: !prefersReducedMotion(),
 });
 
 function load(): Settings {
@@ -55,8 +61,9 @@ function load(): Settings {
 
 function save(settings: Settings): void {
   try {
-    const { sound, volume, animations, tips, hintSeen, handOpen, tableView } = settings;
-    const saved = { sound, volume, animations, tips, hintSeen, handOpen, tableView };
+    const { sound, volume, animations, tips, hintSeen, handOpen, tableView, tableSounds } =
+      settings;
+    const saved = { sound, volume, animations, tips, hintSeen, handOpen, tableView, tableSounds };
     localStorage.setItem(KEY, JSON.stringify(saved));
   } catch {
     // Ohne Speicher gelten die Einstellungen nur bis zum Neuladen.

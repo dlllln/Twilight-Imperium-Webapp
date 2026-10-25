@@ -10,6 +10,7 @@ import { cardTarget, targetKey, type TargetState } from '../../table/target-ref.
 import { type TableDecision, useTableDecision } from '../../table/use-table-decision.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { StripFace, StripZoom, useZoom, type ZoomHandlers } from './StripZoom.tsx';
+import { VictoryTrack } from './VictoryTrack.tsx';
 import './objective-strip.css';
 
 /*
@@ -17,6 +18,7 @@ import './objective-strip.css';
  * öffentliche Aufträge und die eigenen geheimen als kleine Karten. Steht eine Wertung an, werden
  * die wählbaren Karten zu Knöpfen; in der Aktionsphase lassen sich erfüllte geheime Aufträge
  * ohne Bezahlung direkt werten. Gewertete Karten tragen Scheiben in den Farben der Spieler.
+ * Darunter liegt die Siegpunktleiste; sie bleibt auch bei eingeklappter Leiste sichtbar.
  */
 
 export interface ObjectiveStripProps {
@@ -325,6 +327,7 @@ export function ObjectiveStrip({ game }: ObjectiveStripProps): ReactElement {
   return (
     <section
       className="objective-strip"
+      data-tutorial="objective-strip"
       aria-label={t('objectiveStrip')}
       data-mode={mode}
       data-expanded={expanded}
@@ -332,6 +335,7 @@ export function ObjectiveStrip({ game }: ObjectiveStripProps): ReactElement {
     >
       <StripToggle expanded={expanded} list={id} toggle={toggle} />
       <StripCards game={game} decision={decision} id={id} />
+      <VictoryTrack game={game} />
     </section>
   );
 }

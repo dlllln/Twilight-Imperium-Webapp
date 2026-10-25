@@ -15,7 +15,13 @@ export type SoundCue =
   | 'vote'
   | 'phase'
   | 'yourTurn'
-  | 'victory';
+  | 'victory'
+  | 'exhaust'
+  | 'ready'
+  | 'coin'
+  | 'draw'
+  | 'reveal'
+  | 'gavel';
 
 /** Welches Ereignis welchen Klang auslöst (Daten statt Verzweigungen). */
 const CUES: Readonly<Partial<Record<GameEvent['type'], SoundCue>>> = {

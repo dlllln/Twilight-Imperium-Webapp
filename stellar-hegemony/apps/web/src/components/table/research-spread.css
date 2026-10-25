@@ -5,7 +5,7 @@
  * Kopf und Schrift kommen vom Kartentisch der geheimen Aufträge (`card-table.css`).
  */
 .research-spread {
-  --spread-top: calc(var(--strip-reserve, 130px) + 4px);
+  --spread-top: calc(var(--strip-reserve, 130px) + var(--strip-vp, 0px) + 4px);
   --spread-bottom: calc(var(--sheet-h, 132px) + var(--planet-row-h, 0px) + 92px);
   position: absolute;
   top: var(--spread-top);
@@ -26,7 +26,7 @@
   border-radius: 14px;
   color: var(--text);
   background:
-    repeating-linear-gradient(130deg, #ffffff04 0 1px, transparent 1px 6px),
+    var(--felt-texture, repeating-linear-gradient(130deg, #ffffff04 0 1px, transparent 1px 6px)),
     radial-gradient(ellipse at 50% 0%, #10263ce8, #060d18f2 75%);
   box-shadow:
     0 18px 40px #000a,

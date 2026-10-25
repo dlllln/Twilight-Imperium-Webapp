@@ -7,8 +7,9 @@ import type { HistoryEntry } from '../../history/turn-history.ts';
 import { errorText } from '../../i18n.ts';
 import { freshEntries, NOTICE_MS, withFresh } from '../../notices/fresh-notices.ts';
 import { useSettingsStore } from '../../settings-store.ts';
+import { useDecisionRoute } from '../../table/use-decision-route.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
-import { TurnPanel, useTurnPanelKey } from '../game/TurnPanel.tsx';
+import { TurnPanel } from '../game/TurnPanel.tsx';
 import { HistoryText } from '../history/HistoryPanel.tsx';
 import { PromptAnnouncer } from '../table/PromptAnnouncer.tsx';
 import { TablePrompt } from '../table/TablePrompt.tsx';
@@ -109,40 +110,63 @@ function useCardTable(game: GameState): boolean {
   return actor !== null && findPlayer(game, actor)?.secretChoice != null;
 }
 
+/** Klassische Ansicht: Die offene Entscheidung ploppt in der Liste wie eine Benachrichtigung auf. */
+function DecisionNotice({ game }: { readonly game: GameState }): ReactElement {
+  const pop = usePop();
+  return (
+    <motion.div {...pop} className="notice decision">
+      <TurnPanel game={game} />
+    </motion.div>
+  );
+}
+
+/** Kurze Meldungen der anderen und ein abgelehnter Befehl; klassisch dazu die Entscheidung. */
+function NoticeList(props: { readonly game: GameState; readonly notice: string | null }) {
+  const { shown, dismiss } = useFreshNotices();
+  return (
+    <div className="notice-stack" aria-live="polite">
+      <AnimatePresence initial={false}>
+        {shown.map((entry) => (
+          <InfoNotice key={entry.id} entry={entry} game={props.game} onDismiss={dismiss} />
+        ))}
+        <ErrorNotice key="error" />
+      </AnimatePresence>
+      {/* Die alte Entscheidung verschwindet sofort, damit nie zwei Formulare gleichzeitig offen sind. */}
+      {props.notice !== null && <DecisionNotice key={props.notice} game={props.game} />}
+    </div>
+  );
+}
+
+/** Tischansicht: die Ansage über dem Pult und die stehende Live-Zeile. */
+function TableDecisionSlot(props: { readonly game: GameState; readonly open: string | null }) {
+  const { game, open } = props;
+  return (
+    <>
+      {open !== null && <TablePrompt key={open} game={game} />}
+      <PromptAnnouncer game={game} open={open !== null} />
+    </>
+  );
+}
+
 /**
  * Unten rechts, über der Phasenanzeige: kurze Meldungen, was die anderen gerade getan haben.
  * In der klassischen Ansicht ploppt dort auch die offene Entscheidung wie eine Benachrichtigung
  * auf; in der Tischansicht steht sie stattdessen als Ansage über dem Pult, außerhalb der Liste,
- * und eine stehende Live-Zeile sagt jeden Wechsel für Bildschirmleser an.
+ * und eine stehende Live-Zeile sagt jeden Wechsel für Bildschirmleser an. Die Ansicht wird hier
+ * einmal gewählt; Benachrichtigung und Ansage kennen einander nicht.
  * Private Kartenwahlen liegen in beiden Ansichten separat auf dem zentralen Kartentisch und
  * werden weder als Benachrichtigung noch als Ansage eingeengt.
  */
 export function NoticeStack({ game }: { readonly game: GameState }): ReactElement {
-  const decision = useTurnPanelKey(game);
+  const decision = useDecisionRoute(game)?.key ?? null;
   const table = useSettingsStore((state) => state.tableView);
   const cardTable = useCardTable(game);
-  const open = decision !== null && !cardTable;
-  const pop = usePop();
-  const { shown, dismiss } = useFreshNotices();
+  const open = cardTable ? null : decision;
   return (
     <>
       {cardTable && <TurnPanel game={game} />}
-      <div className="notice-stack" aria-live="polite">
-        <AnimatePresence initial={false}>
-          {shown.map((entry) => (
-            <InfoNotice key={entry.id} entry={entry} game={game} onDismiss={dismiss} />
-          ))}
-          <ErrorNotice key="error" />
-        </AnimatePresence>
-        {/* Die alte Entscheidung verschwindet sofort, damit nie zwei Formulare gleichzeitig offen sind. */}
-        {!table && open && (
-          <motion.div {...pop} key={decision} className="notice decision">
-            <TurnPanel game={game} />
-          </motion.div>
-        )}
-      </div>
-      {table && open && <TablePrompt key={decision} game={game} />}
-      {table && <PromptAnnouncer game={game} open={open} />}
+      <NoticeList game={game} notice={table ? null : open} />
+      {table && <TableDecisionSlot game={game} open={open} />}
     </>
   );
 }

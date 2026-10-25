@@ -6,6 +6,7 @@ import {
   type PlayerId,
 } from '@stellar/domain';
 import { useMemo } from 'react';
+import { playTableCue, type TableCue } from '../audio/table-cues.ts';
 import { useGameStore, useViewer } from '../game-store.ts';
 import { useSettingsStore } from '../settings-store.ts';
 import { content } from '../store.ts';
@@ -199,17 +200,30 @@ function paid(intent: Intent<'coins'>, planets: PlanetTable | null): boolean {
   return planets !== null;
 }
 
-/** Ware auf die Matte: den Partner wählen und eine Einheit dazugeben. */
+/** Ware auf die Matte: den Partner wählen und eine Einheit dazugeben; die Münze klingt. */
 function traded(intent: Intent<'trade'>, trade: TradeMat | null): boolean {
-  trade?.choose(intent.partner);
-  trade?.give(intent.good, 1);
-  return trade !== null;
+  if (trade === null) return false;
+  trade.choose(intent.partner);
+  trade.give(intent.good, 1);
+  playTableCue('coin');
+  return true;
+}
+
+/**
+ * Klang eines Ablegens, das nicht über den Entwurf (der klingt selbst) oder die Handelsmatte
+ * läuft: Marker im Sockel oder als Aktivierung auf der Karte.
+ */
+export function intentCue(intent: NonNullable<DropIntent>): TableCue | null {
+  if (intent.kind === 'socket') return 'token';
+  const activates = intent.kind === 'send' && intent.command.type === 'ActivateSystem';
+  return activates ? 'token' : null;
 }
 
 /** Führt eine Absicht aus; ob sie etwas bewirkt hat, entscheidet über das Zurückspringen. */
 function perform(intent: NonNullable<DropIntent>, performers: Performers): boolean {
   if (intent.kind === 'coins') return paid(intent, performers.planets);
   if (intent.kind === 'trade') return traded(intent, performers.trade);
+  playTableCue(intentCue(intent));
   if (intent.kind === 'send') sendNow(intent.command);
   if (intent.kind === 'act') performers.decision?.act(intent.action);
   if (intent.kind === 'socket') performers.play?.();

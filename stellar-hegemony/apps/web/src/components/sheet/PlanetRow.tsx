@@ -164,7 +164,12 @@ function Row({ cards, mode, planets, table, onMat }: RowProps): ReactElement {
   useRegisterPlanetRow();
   const kasse = planets !== null && kasseUseful(planets);
   return (
-    <section className="planet-row" aria-label={t('planetRow')} data-mode={mode}>
+    <section
+      className="planet-row"
+      aria-label={t('planetRow')}
+      data-mode={mode}
+      data-tutorial="planet-row"
+    >
       {kasse && <KassePlate table={table} planets={planets} onMat={onMat} />}
       <CardList cards={cards} mode={mode} planets={planets} />
     </section>

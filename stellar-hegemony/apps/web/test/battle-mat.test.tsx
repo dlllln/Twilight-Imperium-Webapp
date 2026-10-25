@@ -128,6 +128,25 @@ describe('Kampfmatte: Trefferstifte', () => {
   });
 });
 
+describe('Kampfmatte: einklappen', () => {
+  it('der Schalter klappt den Körper ein und wieder aus; der Kopf bleibt stehen', () => {
+    const scene = hitScene();
+    seat(scene, scene.attacker);
+    const fold = within(mat()).getByRole('button', { name: 'Matte einklappen' });
+    const body = document.getElementById(fold.getAttribute('aria-controls') ?? '');
+    expect(fold.getAttribute('aria-expanded')).toBe('true');
+    const ships = () =>
+      within(mat()).queryAllByRole('button', { name: /^(Schlachtschiff|Kreuzer): / });
+    expect(ships().every((button) => body?.contains(button))).toBe(true);
+    fireEvent.click(fold);
+    expect(mat().dataset['folded']).toBe('true');
+    expect(ships()).toHaveLength(0);
+    expect(within(mat()).getByRole('heading', { name: 'Raumkampf' })).toBeTruthy();
+    fireEvent.click(within(mat()).getByRole('button', { name: 'Matte ausklappen' }));
+    expect(ships()).toHaveLength(2);
+  });
+});
+
 describe('Kampfmatte: Rückzug und Würfel', () => {
   it('der Verteidiger merkt ein Ziel vor und kündigt den Rückzug mit dem Siegel an', () => {
     const scene = retreatScene();

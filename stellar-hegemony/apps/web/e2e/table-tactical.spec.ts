@@ -4,6 +4,7 @@ import {
   declineSecondaries,
   keepSecrets,
   neighbourWithPlanet,
+  openShipList,
   openTable,
   phaseOf,
   pickCard,
@@ -103,6 +104,7 @@ test('Tischansicht: Bodentruppen landen über Figur und grünen Ring', async ({ 
   const target = await neighbourWithPlanet(active, seatOf(pages, active));
   await target.click();
   await active.getByRole('button', { name: 'System aktivieren', exact: true }).click();
+  await openShipList(active);
   await active
     .locator('.ship-choices li', { hasText: 'Träger' })
     .first()

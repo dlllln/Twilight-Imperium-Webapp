@@ -3,6 +3,7 @@ import {
   actorPage,
   dragOnto,
   keepSecrets,
+  openShipList,
   openTable,
   phaseOf,
   pickCard,
@@ -44,6 +45,7 @@ async function attack(browser: Browser): Promise<readonly Page[]> {
   await attacker.locator(`[data-seat="${seatOf(pages, defender)}"]`).click();
   await attacker.getByRole('button', { name: 'System aktivieren', exact: true }).click();
   // Nur die Schiffe selbst (direkte Einträge); geladene Fracht schiebt sich als Unterliste dazwischen.
+  await openShipList(attacker);
   const ships = attacker.locator('.ship-choices > li > label > input');
   await expect(ships.first()).toBeVisible();
   for (let ship = 0; ship < (await ships.count()); ship += 1) await ships.nth(ship).check();

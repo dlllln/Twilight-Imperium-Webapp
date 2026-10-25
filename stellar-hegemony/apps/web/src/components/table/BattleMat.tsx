@@ -8,7 +8,8 @@ import {
   type Unit,
   type UnitId,
 } from '@stellar/domain';
-import { type ReactElement, useRef } from 'react';
+import { ChevronUp } from 'lucide-react';
+import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import {
   battleSides,
   type CombatLogEvent,
@@ -164,11 +165,43 @@ function MatDice({ game, log }: { readonly game: GameState; readonly log: MatSta
   );
 }
 
-/** Kopf: Raumkampf oder Einmarsch, das System; ohne eigene Entscheidung der Knopf zum Schließen. */
-function MatHeader({ game, mat }: { readonly game: GameState; readonly mat: MatState }) {
+interface Fold {
+  readonly folded: boolean;
+  readonly toggle: () => void;
+  /** Kennung des Körpers der Matte, den der Schalter ein- und ausklappt. */
+  readonly body: string;
+}
+
+/** Klappt die Matte bis auf ihren Kopf ein, damit die Karte darunter frei liegt. */
+function FoldButton({ fold }: { readonly fold: Fold }): ReactElement {
+  const t = useT();
+  return (
+    <button
+      type="button"
+      className="battle-mat-fold"
+      aria-expanded={!fold.folded}
+      aria-controls={fold.folded ? undefined : fold.body}
+      onClick={fold.toggle}
+    >
+      <ChevronUp size={14} aria-hidden="true" />
+      {t(fold.folded ? 'unfoldMat' : 'foldMat')}
+    </button>
+  );
+}
+
+/**
+ * Kopf: Raumkampf oder Einmarsch, das System, der Schalter zum Einklappen; ohne eigene
+ * Entscheidung der Knopf zum Schließen. Der Kopf rollt nie mit der Matte weg.
+ */
+function MatHeader(props: {
+  readonly game: GameState;
+  readonly mat: MatState;
+  readonly fold: Fold;
+}) {
   const t = useT();
   const language = useLanguage();
   const close = useGameStore((state) => state.closeCombat);
+  const { game, mat, fold } = props;
   return (
     <header className="card-table-header battle-mat-header">
       <div className="card-table-kicker">
@@ -176,12 +209,56 @@ function MatHeader({ game, mat }: { readonly game: GameState; readonly mat: MatS
         <span>{systemLabel(game, mat.system, language)}</span>
       </div>
       <h2>{t(isSpaceBattle(mat.log) ? 'spaceCombat' : 'invasion')}</h2>
-      {mat.decision === null && (
-        <button type="button" className="battle-mat-close" onClick={close}>
-          {t('closeCombat')}
-        </button>
-      )}
+      <div className="battle-mat-tools">
+        <FoldButton fold={fold} />
+        {mat.decision === null && (
+          <button type="button" className="battle-mat-close" onClick={close}>
+            {t('closeCombat')}
+          </button>
+        )}
+      </div>
     </header>
+  );
+}
+
+/** Eingeklappt bleibt die Matte, bis eine neue eigene Entscheidung sie wieder aufklappt. */
+function useFold(decision: string | null): Fold {
+  const body = useId();
+  const [folded, setFolded] = useState(false);
+  const [seen, setSeen] = useState(decision);
+  if (seen !== decision) {
+    setSeen(decision);
+    if (decision !== null) setFolded(false);
+  }
+  return { folded, body, toggle: () => setFolded((value) => !value) };
+}
+
+/** Jede neue Entscheidung beginnt oben im Körper: Stiftkasten und Schiffe zuerst, Würfel darunter. */
+function useTopOnDecision(decision: string | null) {
+  const body = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (body.current !== null) body.current.scrollTop = 0;
+  }, [decision]);
+  return body;
+}
+
+/** Stiftkasten, Seiten, Karten gegen Treffer und Würfel: der rollende Körper unter dem Kopf. */
+function MatBody(props: { readonly game: GameState; readonly mat: MatState; readonly id: string }) {
+  const { game, mat, id } = props;
+  const router = useDropRouter(game);
+  const takers = hitUnits(game, mat.decision);
+  const body = useTopOnDecision(mat.decision?.route.key ?? null);
+  return (
+    <div className="battle-mat-body" id={id} ref={body}>
+      {mat.decision?.specId === 'hits' && <PegTray decision={mat.decision} router={router} />}
+      <div className="mat-sides">
+        {battleSides(game, mat.log).map((player) => (
+          <MatSide key={player} {...{ game, mat, player, takers, router }} />
+        ))}
+      </div>
+      <HitCards game={game} mat={mat} />
+      <MatDice game={game} log={mat.log} />
+    </div>
   );
 }
 
@@ -196,11 +273,10 @@ function HitCards({ game, mat }: { readonly game: GameState; readonly mat: MatSt
 export function BattleMat({ game }: { readonly game: GameState }): ReactElement | null {
   const t = useT();
   const mat = useBattleMat(game);
-  const router = useDropRouter(game);
+  const fold = useFold(mat?.decision?.route.key ?? null);
   const ref = useRef<HTMLElement>(null);
   useMatFloor(ref, mat !== null);
   if (mat === null) return null;
-  const takers = hitUnits(game, mat.decision);
   return (
     <section
       ref={ref}
@@ -208,17 +284,12 @@ export function BattleMat({ game }: { readonly game: GameState }): ReactElement 
       role="region"
       aria-label={t('battleMat')}
       data-testid="battle-mat"
+      data-tutorial="battle-mat"
       data-deciding={mat.decision?.specId ?? undefined}
+      data-folded={fold.folded}
     >
-      <MatHeader game={game} mat={mat} />
-      {mat.decision?.specId === 'hits' && <PegTray decision={mat.decision} router={router} />}
-      <div className="mat-sides">
-        {battleSides(game, mat.log).map((player) => (
-          <MatSide key={player} {...{ game, mat, player, takers, router }} />
-        ))}
-      </div>
-      <HitCards game={game} mat={mat} />
-      <MatDice game={game} log={mat.log} />
+      <MatHeader game={game} mat={mat} fold={fold} />
+      {!fold.folded && <MatBody game={game} mat={mat} id={fold.body} />}
     </section>
   );
 }

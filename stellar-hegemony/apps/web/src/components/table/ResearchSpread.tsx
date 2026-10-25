@@ -195,6 +195,7 @@ export function ResearchSpread({ game }: { readonly game: GameState }): ReactEle
     <section
       ref={ref}
       className="research-spread"
+      data-tutorial="research-spread"
       role="region"
       aria-label={t('researchSpread')}
       data-testid="research-spread"

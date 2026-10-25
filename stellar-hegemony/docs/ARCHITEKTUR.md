@@ -1205,45 +1205,123 @@ Landung dort (Zentrumsmarker entfernt) folgt die Agendaphase, und abgestimmt wir
 | `combat-view.ts` (`combatRole`, `combatSystemOf`, `battleSides`, `latestVolleys`)    | Kampfansicht und Kampfmatte teilen dieselben Ansichten über Protokoll und Spielstand (Information Expert, DRY).                                                                                                |
 | `use-mat-floor.ts`                                                                   | Forschungsauslage, Kampfmatte und Agendatisch messen ihre Unterkante mit demselben Haken (Pure Fabrication, DRY).                                                                                              |
 
-## 38. Iterationen
+## 38. Iteration 34 im Detail (Siegpunktleiste, Filz, Kartenflüge, Tischklänge, Aufräumen)
 
-| #   | Inhalt                                              | Stand |
-| --- | --------------------------------------------------- | ----- |
-| 1   | Monorepo, Tooling, CI, Domain-Grundtypen            | ✓     |
-| 2   | Galaxie-Aufbau, Hex-Rendering, Map-Import           | ✓     |
-| 3   | Phasen-State-Machine, Strategiephase                | ✓     |
-| 4   | Taktische Aktion: Bewegung, Kapazität, Flottenlimit | ✓     |
-| 5   | Weltraumkanone, Raumkampf, Rückzug, Kampfansicht    | ✓     |
-| 6   | Invasion, Produktion, Wirtschaft, Transaktionen     | ✓     |
-| 7   | Technologie, Einheiten-Upgrades                     | ✓     |
-| 8   | Ziele, Statusphase, Sieg                            | ✓     |
-| 9   | Effekt-System, Aktionskarten, Timing-Fenster        | ✓     |
-| 10  | Agendaphase, Abstimmung                             | ✓     |
-| 11  | Fraktionsfähigkeiten, KI-Gegner                     | ✓     |
-| 12  | Multiplayer, Persistenz, Reconnect                  | ✓     |
-| 13  | Animationen, Sound-Hooks, Tutorial                  | ✓     |
-| 14  | Systemansicht mit Kamerafahrt, moderne Oberfläche   | ✓     |
-| 15  | Gängige Namen, schlichtere Oberfläche mit Reitern   | ✓     |
-| 16  | Kampfsimulator, Kampfbühne auch in der Partie       | ✓     |
-| 17  | Handkarten statt Knöpfe, Systemzoom ohne Fenster    | ✓     |
-| 18  | Spieltisch über der Karte, Fraktionswahl            | ✓     |
-| 19  | Plastische Karte: Kacheln, Schatten, Leuchtränder   | ✓     |
-| 20  | Nahzoom statt Systemansicht, Shader-Planeten        | ✓     |
-| 21  | Schräger Blick vom Heimatsystem, eigene Planeten    | ✓     |
-| 22  | Nur private Lobbys, Zugverlauf, Rückgängig, Tablet  | ✓     |
-| 23  | Ganze Karte, freier Blick, Meldungen, Mechs (PoK)   | ✓     |
-| 24  | Erkundung, Relikte, legendäre Planeten (PoK)        | ✓     |
-| 25  | Anführer: Agent, Kommandant, Held (PoK)             | ✓     |
-| 26  | Acht Fraktionen, 7–8 Spieler, weitere Karten (PoK)  | ✓     |
-| 27  | Tischansicht: steiler Blick, eigenes Kommandopult   | ✓     |
-| 28  | Ansage am Pult, Marker auf Leisten und Karte        | ✓     |
-| 29  | Planeten und Bezahlung am Tisch, Auftragsleiste     | ✓     |
-| 30  | Taktische Aktion und Bauen am Tisch                 | ✓     |
-| 31  | Karten und Menschen am Tisch                        | ✓     |
-| 32  | Werft, Forschungsauslage und Handelsmatte           | ✓     |
-| 33  | Kampfmatte und Agendatisch                          | ✓     |
+Die letzte Runde am Tisch poliert, statt neue Regeln zu bauen. Unter der Auftragsleiste liegt die
+**Siegpunktleiste** (`VictoryTrack`): Felder von 0 bis zum Ziel der Spielkonfiguration, jedes
+fünfte hervorgehoben, das Ziel mit Krone. Je Spieler liegt eine Scheibe in seiner Sitzfarbe auf
+dem Feld seiner Punkte; mehrere Scheiben auf einem Feld stapeln sich in Sitzreihenfolge (`vpTrack`,
+rein). Wer wertet, dessen Scheibe gleitet über einen CSS-Übergang weiter; ohne Animationen und bei
+reduzierter Bewegung springt sie. Bildschirmleser hören je Spieler „Name: Punkte von Ziel
+Siegpunkten“. Ist die Partie entschieden, liegt darüber der **Endstand** (`finalStanding`): der
+Sieger zuerst mit Krone, dann nach Punkten; gleiche Punkte teilen sich den Platz.
 
-## 39. Befehle
+**Filz und Holz** kommen aus eigenem Rauschen (`render/table-textures.ts` über `noise.ts`): Je
+Stoff wird beim Start einmal eine kleine Kachel gerechnet (Filz 128×128 hell, Holz 256×64 dunkle
+Jahresringe), mit `seamless` kachelbar gemacht, offscreen gezeichnet und als
+`--felt-texture`/`--wood-texture` am Wurzelelement hinterlegt. Matten, Ansage und Auftragsleiste
+legen den Filz als oberste Schicht über ihre Farbe, die Flügel des Pults das Holz. Ohne Canvas
+bleibt das bisherige Linienmuster (`var(--felt-texture, …)`); die Kacheln sind zart (Filz im
+Mittel unter 10 % deckend), damit Schrift lesbar bleibt.
+
+**Kartenflüge** (`DeckFlights`, rein in `table/deck-flights.ts`): Zieht der Betrachter selbst
+Aktionskarten, Relikte oder geheime Aufträge, fliegen höchstens drei eigene Kartenrückseiten vom
+Stapel im Vorrat (eingeklappt vom Vorrat selbst) in die Hand bzw. auf die Auftragsleiste. Die
+Bewegungen kommen aus `tabletopMovements` des Spieltischs, fremde Ziehungen fliegen nicht. Die
+Flüge sind reine Darstellung (`aria-hidden`, ohne Zeiger); ohne Animationen fliegt nichts.
+
+**Tischklänge** begleiten Gesten, nicht Ereignisse: Planeten erschöpfen und bereitmachen, Münze
+(Handelswaren), Marker (Kommandomarker, Stifte, Figuren, Bestellungen), Karte ziehen, Agenda
+aufdecken und der Hammer bei Abstimmung, Stichentscheid und Sprecherwahl. Alle Klänge sind eigene
+Rezepte aus Tönen und Rauschen (`sound-recipes.ts`, Web Audio), leiser als die Klänge der Partie
+(`TABLE_GAIN`). Sie folgen dem Entwurf (`actionCue`, `planetCue`, `confirmCue`, `intentCue`) und
+schweigen ohne Klang, bei Lautstärke null oder mit ausgeschaltetem Schalter „Tischklänge“; der ist
+bei reduzierter Bewegung von Haus aus aus.
+
+**Anleitung**: Wichtige Stellen des Tischs tragen `data-tutorial` (Auftragsleiste,
+Siegpunktleiste, Kommandomarker, Spielerleiste, Phasenanzeige, Planetenreihe, Kampfmatte,
+Agendatisch, Forschungsauslage). Ein Schritt nennt mit `table` sein Ziel am Tisch; in der
+Tischansicht zeigt die Anleitung dorthin statt auf die Seitenleiste. Ein neuer Schritt „Am Tisch
+spielen“ erklärt Aufnehmen und Ablegen (Ziehen, Klick oder Tastatur), das Bezahlen und „Als
+Liste“.
+
+**Aufräumen**: Was eine Tischentscheidung noch als Formularliste kennt (die Schiffsliste der
+Bewegung), liegt in der Ansage eingeklappt unter „Als Liste“ (`FormList` in `AsListScope`):
+zugeklappt gar nicht im Baum, damit es nie zwei Bedienwege mit demselben Namen gibt. Merkt der
+Tisch etwas vor (Flottengriff auf die Karte), klappt sie von selbst auf und zeigt den Entwurf. Die
+übrigen ungeportierten Entscheidungen (sekundäre Politik und Handel, Antwort auf ein Angebot,
+Kanonen- und Kampfschritte ohne Wahl) sind ohnehin nur eine Zeile mit Schaltern. `NoticeStack`
+entscheidet einmal, ob die Ansage am Tisch (`TableDecisionSlot`) oder die klassische Meldung
+(`DecisionNotice`) gilt; der tote Tischzweig der Meldung und `useTurnPanelKey` entfallen.
+`TurnProps` steht einmal in `components/game/turn-props.ts`.
+
+**Behobene Punkte**: Die Kampfmatte hat einen festen Kopf mit Schalter „Matte einklappen“ und
+einen rollenden Körper; auf niedrigen Schirmen (1280×720) rückt sie zusammen (Kopf in einer
+Zeile, kleinere Figuren), jede neue Entscheidung beginnt oben, und der klebende Stiftkasten
+verdeckt beim Rollen kein Schiff (`scroll-padding-top`). Rückzugsziele leuchten kühl, breit und
+atmend. Die Siegpunktleiste lässt Klicks zur Karte durch und schiebt nur die Auslagen in der
+Mitte hinab, nicht die Spalte der Ansage. Ein Angebot an der Handelsmatte mitten in der Produktion verwirft die vorgemerkte
+Werftbestellung nicht mehr (`draft-carry.ts`: ein reiner Handel trägt den Entwurf auf den neuen
+Stand). Hochkant ragt ein voller Fächer (ab sieben Karten) weiter über das Pult, damit auch die
+äußeren Karten mit ihrer Mitte antippbar sind. Während der Weltraumkanonen heißt der Verteidiger
+schon „Verteidiger“ (`combatRole` kennt den Besetzer des Systems).
+
+| Element                                                         | Prinzip                                                                                                                                                             |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hud/vp-track.ts` (`vpTrack`, `finalStanding`)                  | Reine Abbildung des Spielstands auf Felder, Stapel und Plätze; die Darstellung rechnet nichts (Information Expert, Pure Fabrication).                               |
+| `VictoryTrack`, `DeckFlights`                                   | Nur Darstellung: lesen Spielstand bzw. letzte Ereignisse, ohne eigene Regeln; die Leiste hängt sich an die Auftragsleiste an (Single Responsibility, Low Coupling). |
+| `render/table-textures.ts` (`Weave`, `weavePixels`, `seamless`) | Ein Stoff ist eine Beschreibung (Größe, Saat, Deckkraft); neue Stoffe sind neue Einträge, die Pixelrechnung bleibt (Open/Closed, Strategy).                         |
+| CSS-Variablen `--felt-texture`, `--wood-texture` mit Rückfall   | Flächen hängen an einer Variable, nicht an Canvas; ohne Canvas gilt das alte Muster (Protected Variations, Dependency Inversion).                                   |
+| `table/deck-flights.ts` (`deckFlights`, `FLIGHT_SOURCES`)       | Welche Ziehung fliegt und wohin, steht in Tabellen und reinen Funktionen; Messen im DOM bleibt im Bauteil (Pure Fabrication, testbar ohne DOM).                     |
+| `audio/table-cues.ts`, `table/gesture-cues.ts`                  | Welche Geste welchen Klang trägt, steht in Tabellen; gespielt wird über den bestehenden `SoundPort` (Indirection, Dependency Inversion, DRY).                       |
+| `sound-cues.ts`/`sound-recipes.ts` erweitert                    | Neue Klänge sind neue Rezepte desselben Synthesizers; die Zuordnung der Partie-Ereignisse bleibt unverändert (Open/Closed).                                         |
+| `table/draft-carry.ts` (`carriedKey`, `installDraftCarry`)      | Ein Beobachter des Spielstands entscheidet allein, wann ein Entwurf mitzieht; Store und Entscheidung bleiben unverändert (Observer, Protected Variations).          |
+| `AsList.tsx` (`AsListScope`, `FormList`)                        | Ein Kontext entscheidet, ob eine Formularliste eingeklappt erscheint; die Formulare selbst bleiben unverändert (Open/Closed, Low Coupling).                         |
+| `NoticeStack` (`TableDecisionSlot`, `DecisionNotice`)           | Die Wahl der Ansicht fällt an einer Stelle; jede Ansicht hat ihr eigenes Bauteil ohne toten Zweig (Single Responsibility, Polymorphie).                             |
+| `components/game/turn-props.ts`                                 | Eine gemeinsame Schnittstelle statt sechs Kopien (DRY).                                                                                                             |
+| `combatRole` mit `occupantOf`                                   | Die Rolle folgt aus Protokoll und Spielstand an einer Stelle, für Kampfansicht und Kampfmatte zugleich (Information Expert).                                        |
+| `TutorialStep.table`, `data-tutorial`                           | Ein Schritt nennt sein Ziel am Tisch als Daten; die Anleitung wählt nur zwischen Anker und Tischziel (Information Expert, Open/Closed).                             |
+
+## 39. Iterationen
+
+| #   | Inhalt                                                     | Stand |
+| --- | ---------------------------------------------------------- | ----- |
+| 1   | Monorepo, Tooling, CI, Domain-Grundtypen                   | ✓     |
+| 2   | Galaxie-Aufbau, Hex-Rendering, Map-Import                  | ✓     |
+| 3   | Phasen-State-Machine, Strategiephase                       | ✓     |
+| 4   | Taktische Aktion: Bewegung, Kapazität, Flottenlimit        | ✓     |
+| 5   | Weltraumkanone, Raumkampf, Rückzug, Kampfansicht           | ✓     |
+| 6   | Invasion, Produktion, Wirtschaft, Transaktionen            | ✓     |
+| 7   | Technologie, Einheiten-Upgrades                            | ✓     |
+| 8   | Ziele, Statusphase, Sieg                                   | ✓     |
+| 9   | Effekt-System, Aktionskarten, Timing-Fenster               | ✓     |
+| 10  | Agendaphase, Abstimmung                                    | ✓     |
+| 11  | Fraktionsfähigkeiten, KI-Gegner                            | ✓     |
+| 12  | Multiplayer, Persistenz, Reconnect                         | ✓     |
+| 13  | Animationen, Sound-Hooks, Tutorial                         | ✓     |
+| 14  | Systemansicht mit Kamerafahrt, moderne Oberfläche          | ✓     |
+| 15  | Gängige Namen, schlichtere Oberfläche mit Reitern          | ✓     |
+| 16  | Kampfsimulator, Kampfbühne auch in der Partie              | ✓     |
+| 17  | Handkarten statt Knöpfe, Systemzoom ohne Fenster           | ✓     |
+| 18  | Spieltisch über der Karte, Fraktionswahl                   | ✓     |
+| 19  | Plastische Karte: Kacheln, Schatten, Leuchtränder          | ✓     |
+| 20  | Nahzoom statt Systemansicht, Shader-Planeten               | ✓     |
+| 21  | Schräger Blick vom Heimatsystem, eigene Planeten           | ✓     |
+| 22  | Nur private Lobbys, Zugverlauf, Rückgängig, Tablet         | ✓     |
+| 23  | Ganze Karte, freier Blick, Meldungen, Mechs (PoK)          | ✓     |
+| 24  | Erkundung, Relikte, legendäre Planeten (PoK)               | ✓     |
+| 25  | Anführer: Agent, Kommandant, Held (PoK)                    | ✓     |
+| 26  | Acht Fraktionen, 7–8 Spieler, weitere Karten (PoK)         | ✓     |
+| 27  | Tischansicht: steiler Blick, eigenes Kommandopult          | ✓     |
+| 28  | Ansage am Pult, Marker auf Leisten und Karte               | ✓     |
+| 29  | Planeten und Bezahlung am Tisch, Auftragsleiste            | ✓     |
+| 30  | Taktische Aktion und Bauen am Tisch                        | ✓     |
+| 31  | Karten und Menschen am Tisch                               | ✓     |
+| 32  | Werft, Forschungsauslage und Handelsmatte                  | ✓     |
+| 33  | Kampfmatte und Agendatisch                                 | ✓     |
+| 34  | Siegpunktleiste, Filz, Kartenflüge, Tischklänge, Aufräumen | ✓     |
+
+## 40. Befehle
 
 ```
 pnpm install

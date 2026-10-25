@@ -15,7 +15,8 @@ export const setSoundPort = (next: SoundPort | null): void => {
   port = next;
 };
 
-const soundPort = (): SoundPort => (port ??= new SynthSound());
+/** Der eine Synthesizer der Seite; Partie- und Tischklänge teilen ihn. */
+export const soundPort = (): SoundPort => (port ??= new SynthSound());
 
 /** Jeder Teilklang liest die aktuellen Einstellungen, auch nach Stummschalten einer Folge. */
 function queueCues(cues: readonly SoundCue[]): () => void {

@@ -25,17 +25,13 @@ import { useT } from '../../use-translation.ts';
 import { OfferMat, TradeMat } from '../table/TradeMat.tsx';
 import { PlayerTag } from './PlayerTag.tsx';
 import { Stepper } from './Stepper.tsx';
+import type { TurnProps } from './turn-props.ts';
 
 /*
  * Tausch mit Nachbarn (RR 82). In der Tischansicht liegt er als Handelsmatte in der Ansage,
  * sonst als Formular; beide bauen auf demselben Entwurf (`trade-draft.ts`): Ein anderer Partner
  * leert das Verlangte, ein ganz leeres Angebot lässt sich nicht machen.
  */
-
-interface TurnProps {
-  readonly game: GameState;
-  readonly player: PlayerId;
-}
 
 const GOODS: readonly GoodKind[] = ['tradeGoods', 'commodities'];
 

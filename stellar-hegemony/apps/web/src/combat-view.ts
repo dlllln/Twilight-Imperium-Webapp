@@ -11,6 +11,7 @@ import {
   tacticalDecider,
   technologyCatalog,
   type Unit,
+  unitsInSystem,
   type Volley,
 } from '@stellar/domain';
 
@@ -192,10 +193,25 @@ export function combatRole(
   return defenderOf(game, log) === player ? 'defender' : 'bystander';
 }
 
-/** Verteidiger laut Protokoll, sonst laut laufendem Raumkampf. */
+/**
+ * Wer im umkämpften System steht, ohne der Aktive zu sein. Vor dem Raumkampf (Weltraumkanonen)
+ * nennt noch kein Ereignis den Verteidiger; er ist trotzdem schon Verteidiger, kein Zuschauer.
+ */
+function occupantOf(game: GameState, log: readonly CombatLogEvent[]): PlayerId | null {
+  const id = game.actionPhase?.tactical?.system ?? combatSystemOf(log);
+  const system = id === null ? undefined : game.systems[id];
+  if (system === undefined) return null;
+  const others = unitsInSystem(game, system).filter(
+    (unit) => unit.owner !== game.actionPhase?.active,
+  );
+  return others[0]?.owner ?? null;
+}
+
+/** Verteidiger laut Protokoll, sonst laut laufendem Raumkampf, sonst wer im System steht. */
 function defenderOf(game: GameState, log: readonly CombatLogEvent[]): PlayerId | null {
   const started = log.find((event) => event.type === 'SpaceCombatStarted');
-  return started?.defender ?? game.actionPhase?.tactical?.combat?.defender ?? null;
+  const fighting = started?.defender ?? game.actionPhase?.tactical?.combat?.defender;
+  return fighting ?? occupantOf(game, log);
 }
 
 /** Das erste Ereignis des Protokolls nennt immer das umkämpfte System. */

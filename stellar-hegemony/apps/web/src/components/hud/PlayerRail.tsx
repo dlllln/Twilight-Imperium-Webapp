@@ -282,17 +282,12 @@ export function PlayerRail({ game }: { readonly game: GameState }): ReactElement
     <>
       <ol
         className="hud-players"
+        data-tutorial="player-rail"
         data-choosing={table.mode ?? undefined}
         aria-label={t('initiativeOrder')}
       >
         {playerRail(game).map((entry) => (
-          <Portrait
-            key={entry.id}
-            game={game}
-            entry={entry}
-            table={table}
-            partner={entry.id === partner}
-          />
+          <Portrait key={entry.id} {...{ game, entry, table }} partner={entry.id === partner} />
         ))}
       </ol>
       <SpeakerGroup table={table} />

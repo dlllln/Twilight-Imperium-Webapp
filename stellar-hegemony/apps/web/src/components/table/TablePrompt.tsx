@@ -5,6 +5,7 @@ import { useSettingsStore } from '../../settings-store.ts';
 import { type TableDecision, useTableDecision } from '../../table/use-table-decision.ts';
 import { useT } from '../../use-translation.ts';
 import { TurnPanelBody } from '../game/TurnPanel.tsx';
+import { AsListScope } from './AsList.tsx';
 import {
   type PartProps,
   PromptActions,
@@ -86,7 +87,9 @@ function PromptContent({ game, decision }: PartProps): ReactElement {
         <PortedPrompt game={game} decision={decision} />
       ) : (
         <div className="table-prompt-body">
-          <TurnPanelBody game={game} route={route} />
+          <AsListScope>
+            <TurnPanelBody game={game} route={route} />
+          </AsListScope>
         </div>
       )}
     </>

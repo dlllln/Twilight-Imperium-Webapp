@@ -31,7 +31,7 @@
   border-bottom: 3px solid #000b;
   border-radius: 7px;
   background:
-    repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px),
+    var(--felt-texture, repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px)),
     linear-gradient(155deg, #192632f5, #080e17f5);
   color: #c8c6b9;
   font-size: 10px;
@@ -69,7 +69,7 @@
   border-bottom: 3px solid #000a;
   border-radius: 7px 7px 14px 14px;
   background:
-    repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px),
+    var(--felt-texture, repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px)),
     linear-gradient(160deg, #13202bf0, #070c15f0);
   box-shadow:
     0 6px 0 #02050b99,
@@ -307,8 +307,10 @@ button.objective-strip-card:focus-visible {
  * Breiter Tisch: Die Spalte der Meldungen (rechts, über der Ansage) wächst nach oben höchstens
  * bis knapp unter die Leiste. `--strip-reserve` ist die Unterkante der Leiste samt Luft: oben
  * 12px, Polster und Rand der Bahn 20px, die Karte (anderthalbmal so hoch wie breit) und 8px
- * Luft; mit Wertungsknöpfen unter den Karten kommen deren 26px dazu. Die zweite Zeile schlägt die
- * gleich spezifische Regel der Planetenreihe, unabhängig von der Ladereihenfolge.
+ * Luft; mit Wertungsknöpfen unter den Karten kommen deren 26px dazu. Die Siegpunktleiste
+ * (`--strip-vp`, `victory-track.css`) ist schmaler als die Leiste und reicht nicht bis zur Spalte;
+ * nur die Auslagen in der Mitte rücken um sie hinab. Die zweite Zeile schlägt die gleich
+ * spezifische Regel der Planetenreihe, unabhängig von der Ladereihenfolge.
  */
 @media (min-width: 761px) and (orientation: landscape), (min-width: 1101px) {
   .hud-shield[data-view='table']:has(.objective-strip) {

@@ -1,12 +1,17 @@
 import type { LocalizedText } from '@stellar/content';
 import type { PhaseName } from '@stellar/domain';
 
-/** Ein Schritt der Anleitung; `anchor` nennt das hervorgehobene Element (`data-tutorial`). */
+/**
+ * Ein Schritt der Anleitung; `anchor` nennt das hervorgehobene Element (`data-tutorial`). Liegt
+ * am Tisch ein eigenes Element dafür (`table`, etwa die Auftragsleiste statt der Seitenleiste),
+ * leuchtet dieses.
+ */
 export interface TutorialStep {
   readonly id: string;
   readonly anchor: string | null;
   readonly title: LocalizedText;
   readonly text: LocalizedText;
+  readonly table?: string;
 }
 
 const step = (
@@ -15,6 +20,9 @@ const step = (
   title: LocalizedText,
   text: LocalizedText,
 ): TutorialStep => ({ id, anchor, title, text });
+
+/** Derselbe Schritt mit einem Element des Spieltischs. */
+const atTable = (base: TutorialStep, table: string): TutorialStep => ({ ...base, table });
 
 /** Unsere eigene Anleitung: kurze Erklärungen zur Bedienung und zum Ablauf. */
 export const TUTORIAL_STEPS: readonly TutorialStep[] = [
@@ -63,14 +71,17 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
       en: 'Each round has four parts: strategy, action, status and, once someone has taken the throne world, the council with its votes.',
     },
   ),
-  step(
-    'strategy',
-    'strategy',
-    { de: 'Strategiekarten', en: 'Strategy cards' },
-    {
-      de: 'Reihum wählt jeder eine Karte. Die Zahl bestimmt, wer in der Aktionsphase zuerst handelt. Wer die Karte ausspielt, nutzt ihre starke Fähigkeit; alle anderen dürfen die schwächere gegen einen Strategiemarker mitnutzen. Liegen gebliebene Karten sammeln Handelswaren.',
-      en: 'Everyone picks a card in turn. Its number decides who acts first in the action phase. Whoever plays it uses its strong ability; everyone else may use the weaker one for a strategy token. Cards left over collect trade goods.',
-    },
+  atTable(
+    step(
+      'strategy',
+      'strategy',
+      { de: 'Strategiekarten', en: 'Strategy cards' },
+      {
+        de: 'Reihum wählt jeder eine Karte. Die Zahl bestimmt, wer in der Aktionsphase zuerst handelt. Wer die Karte ausspielt, nutzt ihre starke Fähigkeit; alle anderen dürfen die schwächere gegen einen Strategiemarker mitnutzen. Liegen gebliebene Karten sammeln Handelswaren.',
+        en: 'Everyone picks a card in turn. Its number decides who acts first in the action phase. Whoever plays it uses its strong ability; everyone else may use the weaker one for a strategy token. Cards left over collect trade goods.',
+      },
+    ),
+    'hand',
   ),
   step(
     'turn',
@@ -81,32 +92,53 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
       en: 'In the action phase everyone acts once per turn. Tactical: activate a system with a tactic token, fly ships in, fight, land and build. Strategic: play your own card. You may pass once your card is used. Whatever you have to decide pops up at the bottom right; above it you briefly see what the others are doing.',
     },
   ),
-  step(
-    'players',
-    'players',
-    { de: 'Marker und Vorräte', en: 'Tokens and supplies' },
-    {
-      de: 'Die drei Zahlen sind deine Kommandomarker: Taktik, Flotte und Strategie. Die Flotte begrenzt, wie viele Schiffe in einem System stehen dürfen. Dazu kommen Handelswaren, Rohstoffe und Handkarten.',
-      en: 'The three numbers are your command tokens: tactic, fleet and strategy. Fleet limits how many ships may share a system. Next to them: trade goods, commodities and hand size.',
-    },
+  atTable(
+    step(
+      'players',
+      'players',
+      { de: 'Marker und Vorräte', en: 'Tokens and supplies' },
+      {
+        de: 'Die drei Zahlen sind deine Kommandomarker: Taktik, Flotte und Strategie. Die Flotte begrenzt, wie viele Schiffe in einem System stehen dürfen. Dazu kommen Handelswaren, Rohstoffe und Handkarten.',
+        en: 'The three numbers are your command tokens: tactic, fleet and strategy. Fleet limits how many ships may share a system. Next to them: trade goods, commodities and hand size.',
+      },
+    ),
+    'command-tokens',
   ),
-  step(
-    'combat',
-    null,
-    { de: 'Kampf', en: 'Combat' },
-    {
-      de: 'Treffen Flotten aufeinander, öffnet sich die Kampfansicht. Jede Einheit würfelt; erreicht der Wurf ihren Kampfwert, trifft sie. Der Getroffene verteilt die Treffer, manche Schiffe werden erst beschädigt. Vor jeder Runde ist ein Rückzug möglich.',
-      en: 'When fleets meet, the combat view opens. Every unit rolls; reaching its combat value scores a hit. The defender of each hit chooses which units take it; some ships are only damaged at first. A retreat is possible before each round.',
-    },
+  atTable(
+    step(
+      'combat',
+      null,
+      { de: 'Kampf', en: 'Combat' },
+      {
+        de: 'Treffen Flotten aufeinander, öffnet sich die Kampfansicht. Jede Einheit würfelt; erreicht der Wurf ihren Kampfwert, trifft sie. Der Getroffene verteilt die Treffer, manche Schiffe werden erst beschädigt. Vor jeder Runde ist ein Rückzug möglich.',
+        en: 'When fleets meet, the combat view opens. Every unit rolls; reaching its combat value scores a hit. The defender of each hit chooses which units take it; some ships are only damaged at first. A retreat is possible before each round.',
+      },
+    ),
+    'battle-mat',
   ),
-  step(
-    'objectives',
-    'objectives',
-    { de: 'Aufträge und Punkte', en: 'Objectives and points' },
-    {
-      de: 'Öffentliche Aufträge gelten für alle, geheime nur für dich. In der Statusphase wertest du, was du erfüllst. Die Leiste zeigt, wie nah jeder dem Sieg ist.',
-      en: 'Public objectives are open to everyone, secret ones only to you. In the status phase you score what you have achieved. The track shows how close everyone is to winning.',
-    },
+  atTable(
+    step(
+      'objectives',
+      'objectives',
+      { de: 'Aufträge und Punkte', en: 'Objectives and points' },
+      {
+        de: 'Öffentliche Aufträge gelten für alle, geheime nur für dich. In der Statusphase wertest du, was du erfüllst. Die Leiste zeigt, wie nah jeder dem Sieg ist.',
+        en: 'Public objectives are open to everyone, secret ones only to you. In the status phase you score what you have achieved. The track shows how close everyone is to winning.',
+      },
+    ),
+    'vp-track',
+  ),
+  atTable(
+    step(
+      'table',
+      null,
+      { de: 'Am Tisch spielen', en: 'Playing at the table' },
+      {
+        de: 'In der Tischansicht nimmst du Spielsteine auf und legst sie ab: ziehen, zweimal klicken oder Enter und Enter; Escape legt zurück. Zum Bezahlen tippst du Planeten der Planetenreihe an und legst Münzen in die Kasse. Was der Tisch noch nicht kennt, liegt in der Ansage eingeklappt „Als Liste“.',
+        en: 'In table view you pick pieces up and put them down: drag, click twice or press Enter twice; Escape puts a piece back. To pay, tap planets in the planet row and put coins into the till. Whatever the table does not handle yet sits folded in the prompt “As a list”.',
+      },
+    ),
+    'planet-row',
   ),
   step(
     'hand',

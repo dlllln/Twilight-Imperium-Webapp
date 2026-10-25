@@ -1,8 +1,6 @@
 import {
   canExploreFrontier,
-  type GameState,
   type MovementOption,
-  type PlayerId,
   type ShipMoveOrder,
   type SystemId,
   type TacticalActionState,
@@ -16,14 +14,11 @@ import { unitsOf } from '../../unit-stats.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { moveOrders, useMovementOrders } from '../../system/movement-draft.ts';
 import { moveSummary } from '../../table/move-draft.ts';
+import { FormList } from '../table/AsList.tsx';
 import { BombardForm, LandingForm } from './InvasionForms.tsx';
 import { ProductionForm } from './ProductionForm.tsx';
 import { TransactionForm } from './TransactionForm.tsx';
-
-interface TurnProps {
-  readonly game: GameState;
-  readonly player: PlayerId;
-}
+import type { TurnProps } from './turn-props.ts';
 
 type OrdersApi = ReturnType<typeof useMovementOrders>;
 
@@ -100,11 +95,13 @@ function MovementForm({ game, player }: TurnProps): ReactElement {
       <h3>{t('movement')}</h3>
       {options.length > 0 && <p className="hint">{t('fleetDragHint')}</p>}
       {options.length === 0 && <p className="hint">{t('noMovableShips')}</p>}
-      <ul className="ship-choices">
-        {options.map((option) => (
-          <ShipChoice key={option.ship.id} game={game} player={player} option={option} api={api} />
-        ))}
-      </ul>
+      <FormList openWhen={moves.length > 0}>
+        <ul className="ship-choices">
+          {options.map((option) => (
+            <ShipChoice key={option.ship.id} {...{ game, player, option, api }} />
+          ))}
+        </ul>
+      </FormList>
       <MovementMeter moves={moves} />
       <button type="button" onClick={() => send({ type: 'MoveShips', issuedBy: player, moves })}>
         {moves.length === 0 ? t('skipMovement') : t('moveShips')}

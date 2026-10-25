@@ -6,7 +6,8 @@ import {
   type GameState,
   votingPower,
 } from '@stellar/domain';
-import { type ReactElement, useRef } from 'react';
+import { type ReactElement, useEffect, useRef } from 'react';
+import { playTableCue } from '../../audio/table-cues.ts';
 import { AGENDA_BACK } from '../../artwork/cards.ts';
 import { planetLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
@@ -171,9 +172,10 @@ function Plate(props: PlateProps): ReactElement {
   );
 }
 
-/** Die Agendakarte dreht sich beim Aufdecken jeder neuen Agenda einmal um. */
+/** Die Agendakarte dreht sich beim Aufdecken jeder neuen Agenda einmal um, mit leisem Klang. */
 function FlipCard({ game, view }: { readonly game: GameState; readonly view: AgendaView }) {
   const number = game.agendaPhase?.number ?? 1;
+  useEffect(() => playTableCue('reveal'), []);
   return (
     <div className="agenda-flip" data-agenda={view.agenda.id}>
       <span className="agenda-flip-back" aria-hidden="true">
@@ -202,6 +204,7 @@ export function AgendaTable({ game }: { readonly game: GameState }): ReactElemen
       role="region"
       aria-label={t('agendaTable')}
       data-testid="agenda-table"
+      data-tutorial="agenda-table"
       data-deciding={decision?.specId ?? undefined}
     >
       <FlipCard key={view.agenda.id} game={game} view={view} />

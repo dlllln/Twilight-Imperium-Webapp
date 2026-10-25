@@ -7,7 +7,7 @@
   align-items: center;
   gap: 14px;
   background:
-    repeating-linear-gradient(130deg, #ffffff04 0 1px, transparent 1px 6px),
+    var(--felt-texture, repeating-linear-gradient(130deg, #ffffff04 0 1px, transparent 1px 6px)),
     radial-gradient(ellipse at 50% 0%, #1c1a3ae8, #080816f2 75%);
 }
 

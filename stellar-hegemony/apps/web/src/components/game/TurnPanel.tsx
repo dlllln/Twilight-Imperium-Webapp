@@ -1,6 +1,5 @@
 import type {
   GameState,
-  PlayerId,
   StrategyCardDefinition,
   StrategyCardId,
   StrategyChoice,
@@ -24,14 +23,10 @@ import { ChoiceForm } from './ChoiceForm.tsx';
 import { PlayerTag } from './PlayerTag.tsx';
 import { CombatPending, TacticalTurn } from './TacticalPanel.tsx';
 import { TransactionForm, TransactionReply } from './TransactionForm.tsx';
+import type { TurnProps } from './turn-props.ts';
 
 const definitionOf = (id: StrategyCardId | null | undefined): StrategyCardDefinition | undefined =>
   content.strategyCards.find((card) => card.id === id);
-
-interface TurnProps {
-  readonly game: GameState;
-  readonly player: PlayerId;
-}
 
 function SecondaryPrompt({ game, player }: TurnProps): ReactElement | null {
   const t = useT();
@@ -186,14 +181,6 @@ function BotNotice({ game, player }: TurnProps): ReactElement {
       <WaitingLine game={game} player={player} />
     </section>
   );
-}
-
-/**
- * Schlüssel der offenen Entscheidung: Ändert er sich, ploppt die Benachrichtigung neu auf;
- * `null`, wenn es nichts zu zeigen gibt.
- */
-export function useTurnPanelKey(game: GameState): string | null {
-  return useDecisionRoute(game)?.key ?? null;
 }
 
 /** Ein kurzer Satz zur Phase, solange Tipps eingeschaltet sind. */

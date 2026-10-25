@@ -4615,7 +4615,10 @@ body {
       transparent 62%
     ),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 7px),
-    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 7px),
+    var(
+      --wood-texture,
+      repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 7px)
+    ),
     linear-gradient(180deg, var(--panel-strong) 0%, #070b1c 100%);
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.55),
@@ -5553,7 +5556,10 @@ body {
         transparent 65%
       )
       padding-box,
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 7px)
+    var(
+        --felt-texture,
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 7px)
+      )
       padding-box,
     linear-gradient(180deg, var(--panel-strong) 0%, #070b1c 100%) padding-box,
     linear-gradient(
@@ -5697,6 +5703,44 @@ body {
 
 .table-prompt .game-over {
   margin: 0;
+}
+
+/* „Als Liste“: eingeklappte Formularliste in der Ansage, ein flacher Messingstreifen. */
+.as-list {
+  margin: 4px 0;
+}
+
+.as-list-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 10px;
+  border: 1px solid #c9b6833d;
+  border-radius: 7px;
+  background: #ffffff08;
+  color: #c8c6b9;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.as-list-toggle:hover,
+.as-list-toggle:focus-visible {
+  color: #ffdfa2;
+}
+
+.as-list-toggle:focus-visible {
+  outline: 2px solid var(--accent, var(--gold-bright));
+  outline-offset: 2px;
+}
+
+.as-list-toggle[aria-expanded='true'] svg:last-child {
+  transform: rotate(180deg);
+}
+
+.as-list-body {
+  margin-top: 6px;
 }
 
 /*
@@ -6541,6 +6585,26 @@ polygon.hex.target-over {
 @media (min-width: 761px) and (max-width: 1100px) and (orientation: portrait) {
   .hud-shield[data-view='table']:has(.planet-row:not([data-mode='rest'])) .table-prompt {
     max-height: calc(min(260px, 30dvh) - var(--planet-row-h, 0px));
+  }
+
+  /*
+   * Ein voller Fächer (ab sieben Karten, etwa die Strategiekarten) ragt hier 40px weiter über das
+   * Pult: Seine äußeren Karten sinken sonst mit ihrer Mitte unter die Pultkante und sind nur noch
+   * an der Ecke antippbar. Die Ansage rückt um dasselbe Stück hinauf.
+   */
+  .hud-shield[data-view='table']:has(
+      .hand-dock:not(.tucked) > .hand-card:nth-child(7 of .hand-card)
+    ) {
+    --hand-rise: 240px;
+  }
+
+  .hud-shield[data-view='table'] .hand-dock:has(> .hand-card:nth-child(7 of .hand-card)) {
+    --tabletop-raised: -14px;
+  }
+
+  .hud-shield[data-view='table']
+    .hand-dock:not(.tucked):has(> .hand-card:nth-child(7 of .hand-card)) {
+    --hand-bottom: -14px;
   }
 }
 

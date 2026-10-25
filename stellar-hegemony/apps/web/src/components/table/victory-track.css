@@ -1,0 +1,190 @@
+/*
+ * Siegpunktleiste: eine schmale Filzbahn unter der Auftragsleiste. Die Felder teilen sich die
+ * Breite gleichmäßig; die Scheiben liegen darüber und gleiten beim Werten weiter.
+ */
+.vp-track {
+  --fields: 11;
+  --marker: 13px;
+  position: relative;
+  width: min(100%, 560px);
+  margin-top: 4px;
+  pointer-events: none;
+}
+
+.vp-track-fields {
+  display: grid;
+  grid-template-columns: repeat(var(--fields), minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #c9b6832e;
+  border-bottom: 2px solid #000a;
+  border-radius: 6px;
+  background:
+    var(--felt-texture, repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px)),
+    linear-gradient(160deg, #13202bf0, #070c15f0);
+  box-shadow:
+    0 4px 0 #02050b99,
+    inset 0 1px #e4d4a514;
+}
+
+.vp-track-fields li {
+  display: grid;
+  place-items: center;
+  height: 22px;
+  border-left: 1px solid #c9b68322;
+  color: #8f8e86;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.vp-track-fields li:first-child {
+  border-left: 0;
+}
+
+.vp-track-fields li[data-fifth='true'] {
+  color: #d9c58f;
+}
+
+.vp-track-fields li[data-goal='true'] {
+  color: var(--gold-bright, #ffd76a);
+}
+
+/* Die Scheiben liegen über den Feldern; mehrere auf einem Feld rücken versetzt zusammen. */
+.vp-track-markers {
+  position: absolute;
+  inset: 0 0 2px;
+  pointer-events: none;
+}
+
+.vp-marker {
+  position: absolute;
+  top: calc(50% - var(--marker) / 2 + var(--stack) * -4px + 2px);
+  left: calc((var(--field) + 0.5) / var(--fields) * 100% - var(--marker) / 2 + var(--stack) * 5px);
+  width: var(--marker);
+  height: var(--marker);
+  border: 1.5px solid #0009;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff8 0 18%, transparent 45%), var(--seat);
+  box-shadow: 0 2px 2px #000a;
+  transition:
+    left 700ms cubic-bezier(0.3, 1.25, 0.5, 1),
+    top 700ms ease;
+}
+
+/* Endstand: eine Messingtafel, die über der Leiste liegt und nach unten wächst. */
+.vp-standing {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  z-index: 2;
+  width: min(360px, 92vw);
+  padding: 10px 14px 12px;
+  translate: -50% 0;
+  border: 1px solid var(--gold-line, #c9b68366);
+  border-bottom: 3px solid #000b;
+  border-radius: 10px;
+  background:
+    var(--felt-texture, repeating-linear-gradient(130deg, #ffffff03 0 1px, transparent 1px 5px)),
+    radial-gradient(ellipse at 50% 0%, #2a2614f2, #0b0a08f5 80%);
+  box-shadow: 0 14px 30px #000b;
+  animation: vp-standing-rise 420ms ease-out both;
+}
+
+.vp-standing h2 {
+  margin: 0 0 8px;
+  color: var(--gold-bright, #ffd76a);
+  font-family: var(--title-font);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.vp-standing ol {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vp-standing li {
+  display: grid;
+  grid-template-columns: 58px 14px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #ffffff08;
+  font-size: 13px;
+}
+
+.vp-standing li[data-winner='true'] {
+  background: color-mix(in srgb, var(--seat) 22%, #ffffff08);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--seat) 60%, transparent);
+}
+
+.vp-standing-rank {
+  color: var(--muted, #9aa);
+  font-size: 11px;
+}
+
+.vp-standing-disc {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--seat);
+  box-shadow: 0 1px 2px #000a;
+}
+
+.vp-standing-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vp-standing-crown {
+  vertical-align: -2px;
+  color: var(--gold-bright, #ffd76a);
+}
+
+.vp-standing strong {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes vp-standing-rise {
+  from {
+    opacity: 0;
+    translate: -50% -8px;
+  }
+}
+
+:root.motion-off .vp-marker,
+:root.motion-off .vp-standing {
+  transition: none;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vp-marker,
+  .vp-standing {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Breiter Tisch: Die Leiste wächst um die Siegpunktleiste; die Auslagen in der Mitte rücken mit. */
+@media (min-width: 761px) and (orientation: landscape), (min-width: 1101px) {
+  .hud-shield[data-view='table']:has(.vp-track) {
+    --strip-vp: 28px;
+  }
+}
+
+/* Schmal oder hochkant liegt sie unter dem Schalter der Auftragsleiste, über die ganze Breite. */
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
+  .vp-track {
+    width: 100%;
+    max-width: 420px;
+  }
+}

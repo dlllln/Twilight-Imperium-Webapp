@@ -62,7 +62,12 @@ function UndoButton({ game }: { readonly game: GameState }): ReactElement | null
 export function PhaseDock({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   return (
-    <section key={game.phase} className="hud-phase" aria-label={t('currentPhase')}>
+    <section
+      key={game.phase}
+      className="hud-phase"
+      aria-label={t('currentPhase')}
+      data-tutorial="phase-dock"
+    >
       <small>
         {t('currentPhase')} · {t('round')} {game.round}
       </small>

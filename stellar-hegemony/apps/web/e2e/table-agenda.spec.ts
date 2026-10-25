@@ -1,5 +1,13 @@
 import { type Browser, expect, type Locator, type Page, test } from '@playwright/test';
-import { chooseFaction, keepSecrets, NAMES, openSeat, phaseOf, pickCard } from './table.ts';
+import {
+  chooseFaction,
+  keepSecrets,
+  NAMES,
+  openSeat,
+  openShipList,
+  phaseOf,
+  pickCard,
+} from './table.ts';
 
 /*
  * Agendatisch (RR 2, RR 7): Erst nach der Landung auf der Thronwelt gibt es eine Agendaphase. Anna
@@ -68,6 +76,7 @@ async function skipIf(button: Locator, next: Locator): Promise<void> {
 async function landOnThrone(page: Page): Promise<void> {
   await page.locator('[data-system="thronwelt"]').first().click();
   await page.getByRole('button', { name: 'System aktivieren', exact: true }).click();
+  await openShipList(page);
   const carrier = page.locator('.ship-choices li', { hasText: 'Träger' }).first();
   await carrier.locator('input').first().check();
   await carrier.locator('.cargo li', { hasText: 'Infanterie' }).first().locator('input').check();

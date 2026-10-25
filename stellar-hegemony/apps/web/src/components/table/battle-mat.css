@@ -7,13 +7,22 @@
 .battle-mat {
   gap: 12px;
   background:
-    repeating-linear-gradient(45deg, #ffffff05 0 1px, transparent 1px 7px),
+    var(--felt-texture, repeating-linear-gradient(45deg, #ffffff05 0 1px, transparent 1px 7px)),
     radial-gradient(ellipse at 50% 30%, #2a1418e8, #0b080ef2 78%);
   border-color: #c9504a80;
 }
 
+/*
+ * Kopf fest, Körper rollt: Die Matte selbst rollt nicht mehr, nur ihr Körper; so bleibt der Kopf
+ * mit System und Schalter auch hochkant immer zu sehen.
+ */
+.battle-mat {
+  overflow: hidden;
+}
+
 .battle-mat-header {
   position: relative;
+  flex: none;
   margin: 0;
 }
 
@@ -22,10 +31,52 @@
   font-size: clamp(17px, 1.6vw, 22px);
 }
 
-.battle-mat-close {
+.battle-mat-tools {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -4px;
+  right: -4px;
+  display: flex;
+  gap: 6px;
+}
+
+.battle-mat-fold {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 2px 10px;
+  font-size: 11px;
+}
+
+.battle-mat-fold[aria-expanded='false'] svg {
+  rotate: 180deg;
+}
+
+.battle-mat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Fokus und Ziehen rollen ein Schiff unter den klebenden Stiftkasten, nicht dahinter. */
+.battle-mat-body:has(> .peg-tray) {
+  scroll-padding-top: 64px;
+}
+
+/* Eingeklappt bleibt nur der Kopf, schmal am linken Rand der freien Mitte. */
+.battle-mat[data-folded='true'] {
+  right: auto;
+  width: min(420px, calc(100% - 32px));
+}
+
+/* In der schmalen Matte (eingeklappt, Rückzug) steht der Schalter über dem Titel, nicht darauf. */
+.battle-mat:is([data-folded='true'], [data-deciding='retreat']) .battle-mat-header {
+  padding-top: 26px;
 }
 
 .mat-sides {
@@ -173,11 +224,11 @@
   fill: #ffffff8c;
 }
 
-/* Stiftkasten: die freien Stifte als Häufchen, das sich aufnehmen lässt. Er klebt oben in der
-   Matte, damit Stifte und Schiffe auch beim Rollen zugleich zu sehen sind. */
+/* Stiftkasten: die freien Stifte als Häufchen, das sich aufnehmen lässt. Er klebt oben im
+   Körper der Matte, damit Stifte und Schiffe auch beim Rollen zugleich zu sehen sind. */
 .peg-tray {
   position: sticky;
-  top: -14px;
+  top: 0;
   z-index: 1;
   display: flex;
   align-items: center;
@@ -262,4 +313,120 @@
 .battle-mat[data-deciding='retreat'] {
   right: auto;
   width: min(420px, calc(100% - 32px));
+}
+
+/*
+ * Rückzug: Die erlaubten Ziele leuchten kräftiger als andere Ziele, kühl statt in Sitzfarbe und
+ * mit atmendem Schein, damit man sie auch bei weit herausgezoomter Karte findet.
+ */
+.galaxy:has(.battle-mat[data-deciding='retreat']) polygon.hex.target-legal {
+  stroke: #9be7ff;
+  stroke-width: 6;
+  stroke-dasharray: 14 6;
+  fill: #6fd3ff3d;
+  filter: drop-shadow(0 0 10px #6fd3ffcc);
+  animation:
+    hex-target-march 1.4s linear infinite,
+    retreat-breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes retreat-breathe {
+  50% {
+    fill: #6fd3ff66;
+  }
+}
+
+:root.motion-off .galaxy:has(.battle-mat[data-deciding='retreat']) polygon.hex.target-legal {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .galaxy:has(.battle-mat[data-deciding='retreat']) polygon.hex.target-legal {
+    animation: none;
+  }
+}
+
+/*
+ * Niedrige Schirme im Querformat (etwa 1280×720): Die Matte rückt zusammen, damit sie nicht die
+ * ganze freie Mitte deckt; Kopf in einer Zeile, kleinere Figuren, Würfel neben den Seiten.
+ */
+@media (max-height: 800px) and (min-width: 761px) and (orientation: landscape) {
+  .battle-mat {
+    gap: 6px;
+    padding: 8px 12px 10px;
+  }
+
+  .battle-mat-header {
+    display: flex;
+    align-items: center;
+    gap: 4px 12px;
+    text-align: left;
+  }
+
+  .battle-mat-header h2 {
+    order: -1;
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .battle-mat-header .card-table-kicker {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-start;
+    gap: 2px 12px;
+  }
+
+  /* Die Schalter stehen in der Zeile statt darüber; so überdeckt keiner den Kopf. */
+  .battle-mat-tools {
+    position: static;
+    flex: none;
+  }
+
+  /* Schmale Matte (Rückzug, eingeklappt): Titel und Schalter oben, System darunter. */
+  .battle-mat:is([data-folded='true'], [data-deciding='retreat']) .battle-mat-header {
+    flex-wrap: wrap;
+    padding-top: 0;
+  }
+
+  .battle-mat:is([data-folded='true'], [data-deciding='retreat']) .battle-mat-tools {
+    margin-left: auto;
+  }
+
+  .battle-mat:is([data-folded='true'], [data-deciding='retreat']) .card-table-kicker {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  .battle-mat-body {
+    gap: 6px;
+  }
+
+  .mat-side {
+    gap: 4px;
+    padding: 6px 8px 8px;
+  }
+
+  .mat-ships {
+    gap: 4px;
+  }
+
+  .mat-ship {
+    width: 68px;
+    padding: 3px 2px 2px;
+    font-size: 10px;
+  }
+
+  .mat-ship img {
+    width: 58px;
+    height: 28px;
+  }
+
+  .peg-tray {
+    padding: 3px 8px;
+  }
+
+  .peg-pile {
+    min-height: 30px;
+    padding: 3px 8px;
+  }
 }

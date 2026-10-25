@@ -181,6 +181,17 @@ export async function declineSecondaries(pages: readonly Page[], count: number):
   }
 }
 
+/**
+ * Die Schiffsliste der Bewegung liegt in der Ansage eingeklappt „Als Liste“ (der Tisch bewegt mit
+ * den Flottengriffen); wer per Liste wählt, klappt sie zuerst auf.
+ */
+export async function openShipList(page: Page): Promise<void> {
+  const toggle = page.getByRole('button', { name: 'Als Liste' });
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+  await expect(page.locator('.ship-choices')).toBeVisible();
+}
+
 /** Mittelpunkt eines Elements auf dem Bildschirm. */
 export const center = async (locator: Locator) => {
   const box = await locator.boundingBox();

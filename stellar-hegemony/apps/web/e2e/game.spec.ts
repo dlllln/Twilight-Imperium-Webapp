@@ -6,6 +6,7 @@ import {
   keepSecrets,
   NAMES,
   neighbourOfHome,
+  openShipList,
   openTable,
   phaseOf,
   pickFirstFree,
@@ -83,6 +84,7 @@ test('Lobby zu dritt: Führung, Diplomatie, taktische Aktion mit Rückgängig un
 
   await target.click();
   await active.getByRole('button', { name: 'System aktivieren', exact: true }).click();
+  await openShipList(active);
   await active.locator('.ship-choices input[type="checkbox"]').first().check();
   await active.getByRole('button', { name: 'Schiffe bewegen' }).click();
   await skipRemainingSteps(active);

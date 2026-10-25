@@ -67,6 +67,7 @@ import { TabletopZones } from './tabletop/TabletopZones.tsx';
 import { ObjectiveStrip } from './table/ObjectiveStrip.tsx';
 import { AgendaTable } from './table/AgendaTable.tsx';
 import { BattleMat } from './table/BattleMat.tsx';
+import { DeckFlights } from './table/DeckFlights.tsx';
 import { ResearchSpread } from './table/ResearchSpread.tsx';
 import type { FleetProjection } from '../system/fleet-placement.ts';
 
@@ -253,6 +254,7 @@ function Hud({ game, table }: { readonly game: GameState; readonly table: boolea
         <PhaseDock game={game} />
       </div>
       <HandDock game={game} />
+      {table && <DeckFlights game={game} />}
     </>
   );
 }

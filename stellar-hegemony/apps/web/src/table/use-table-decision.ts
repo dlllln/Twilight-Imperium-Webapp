@@ -1,4 +1,5 @@
 import type { GameState } from '@stellar/domain';
+import { playTableCue } from '../audio/table-cues.ts';
 import { useGameStore } from '../game-store.ts';
 import { useHandStore } from '../hand/hand-store.ts';
 import type { MessageKey } from '../i18n.ts';
@@ -7,6 +8,7 @@ import { content } from '../store.ts';
 import { useCarryStore } from './carry-store.ts';
 import type { DecisionRoute } from './decision-route.ts';
 import { useDraftStore } from './draft-store.ts';
+import { actionCue, confirmCue, planetCue } from './gesture-cues.ts';
 import { type PlanetTable, planetTableOf } from './planet-table.ts';
 import { secondarySocket } from './secondary-socket.ts';
 import {
@@ -87,11 +89,14 @@ function currentDraft(ported: Ported): TableDraft {
   return key === ported.key && draft !== null ? draft : ported.spec.initial(ported.ctx);
 }
 
-function actOn(ported: Ported, action: TableAction): void {
+/** Schreibt den Entwurf fort; nur eine Handlung, die etwas ändert, trägt ihren Klang. */
+function actOn(ported: Ported, action: TableAction, cue = actionCue(action)): void {
   const store = useDraftStore.getState();
-  const next = ported.spec.apply(ported.ctx, currentDraft(ported), action);
+  const draft = currentDraft(ported);
+  const next = ported.spec.apply(ported.ctx, draft, action);
   if (store.key === ported.key) store.update(next);
   else store.begin(ported.key, next);
+  if (next !== draft) playTableCue(cue);
 }
 
 /**
@@ -121,6 +126,7 @@ function confirmOf(ported: Ported): void {
   const store = useGameStore.getState();
   store.setError(null);
   if (!store.send(ported.spec.command(ported.ctx, draft))) return;
+  playTableCue(confirmCue(ported.spec.id));
   useDraftStore.getState().markSent(ported.key);
   if (ported.ctx.route.kind === 'primary') useHandStore.getState().clear();
 }
@@ -162,7 +168,7 @@ function planetsOf(ported: Ported, draft: TableDraft): PlanetTable | null {
   if (side === null) return null;
   return planetTableOf(ported.ctx.game, ported.ctx.actor, side, {
     toggle: (planet) => {
-      actOn(ported, { kind: 'planet', planet });
+      actOn(ported, { kind: 'planet', planet }, planetCue(side.mode, side.chosen.includes(planet)));
     },
     addCoins: (delta) => {
       actOn(ported, { kind: 'tradeGoods', delta });

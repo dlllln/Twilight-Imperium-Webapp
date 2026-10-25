@@ -1,4 +1,4 @@
-import { currentAgenda, type GameState, type PlayerId } from '@stellar/domain';
+import { currentAgenda } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
 import { useGameStore } from '../../game-store.ts';
 import { content } from '../../store.ts';
@@ -8,11 +8,7 @@ import { PlayerTag } from '../game/PlayerTag.tsx';
 import { AgendaCard } from './AgendaCard.tsx';
 import { outcomeLabel } from './outcome-label.ts';
 import { VoteForm } from './VoteForm.tsx';
-
-interface TurnProps {
-  readonly game: GameState;
-  readonly player: PlayerId;
-}
+import type { TurnProps } from '../game/turn-props.ts';
 
 /** RR 2.19: bei Gleichstand wählt der Sprecher eines der gleichauf liegenden Ergebnisse. */
 function TieBreakForm({ game, player, tied }: TurnProps & { readonly tied: readonly string[] }) {
