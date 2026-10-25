@@ -8,7 +8,9 @@ import { LEADERSHIP_SPEC } from './spec-leadership.ts';
 import { IMPERIAL_SPEC, SCORING_SPEC } from './spec-objectives.ts';
 import { POLITICS_SPEC, TRADE_SPEC } from './spec-people.ts';
 import { BOMBARD_SPEC, LANDING_SPEC } from './spec-placement.ts';
+import { PRODUCTION_SPEC, WARFARE_SECONDARY_SPEC } from './spec-production.ts';
 import { REACTION_SPEC } from './spec-reaction.ts';
+import { TECHNOLOGY_SPEC } from './spec-research.ts';
 import { TACTICAL_DONE_SPEC } from './spec-tactical-done.ts';
 import { TOKENS_SPEC } from './spec-tokens.ts';
 import { type AnySpec, type TableSpecId, widenSpec } from './spec-types.ts';
@@ -24,8 +26,10 @@ export type {
   PlacementPlan,
   PlayersPlan,
   PoolSpec,
+  ProductionPlan,
   Progress,
   ReadyPlan,
+  ResearchPlan,
   SpecAlternative,
   SpecContext,
   SystemPlan,
@@ -54,6 +58,9 @@ export const TABLE_SPECS: Readonly<Record<TableSpecId, AnySpec>> = {
   reaction: widenSpec(REACTION_SPEC, 'done'),
   politics: widenSpec(POLITICS_SPEC, 'players'),
   trade: widenSpec(TRADE_SPEC, 'players'),
+  production: widenSpec(PRODUCTION_SPEC, 'production'),
+  warfareSecondary: widenSpec(WARFARE_SECONDARY_SPEC, 'production'),
+  technology: widenSpec(TECHNOLOGY_SPEC, 'research'),
 };
 
 /**
@@ -69,11 +76,16 @@ const SYSTEM_SPECS: ReadonlySet<TableSpecId> = new Set<TableSpecId>([
 export const takesSystem = (specId: TableSpecId | null): boolean =>
   specId !== null && SYSTEM_SPECS.has(specId);
 
-/** Entscheidungen, deren Ziele Planeten im System sind: Bombardement, Landung, Infrastruktur. */
+/**
+ * Entscheidungen, deren Ziele Planeten im System sind: Bombardement, Landung, Infrastruktur und
+ * die Werft (Bodentruppen auf Planeten mit Produktion).
+ */
 const SITE_SPECS: ReadonlySet<TableSpecId> = new Set<TableSpecId>([
   'bombard',
   'landing',
   'construction',
+  'production',
+  'warfareSecondary',
 ]);
 
 /** Ob die Entscheidung Figuren oder Gebäude auf Planeten legt (Ringe auf der Karte). */
@@ -89,11 +101,12 @@ export const takesPlayer = (specId: TableSpecId | null): boolean =>
 
 type ByMechanic = Readonly<Partial<Record<string, TableSpecId>>>;
 
-/** Strategiekarten am Tisch: Führung, Imperium und Infrastruktur ganz. */
+/** Strategiekarten am Tisch: Führung, Imperium, Infrastruktur und Technologie ganz. */
 const BOTH: ByMechanic = {
   commandTokens: 'leadership',
   imperial: 'imperial',
   construction: 'construction',
+  technology: 'technology',
 };
 
 /**
@@ -107,13 +120,14 @@ const PRIMARY: ByMechanic = {
   trade: 'trade',
 };
 
-/** Nur sekundär: Diplomatie (Planeten bereitmachen). */
-const SECONDARY: ByMechanic = { diplomacy: 'diplomacy' };
+/** Nur sekundär: Diplomatie (Planeten bereitmachen) und Kriegsführung (Werft im Heimatsystem). */
+const SECONDARY: ByMechanic = { diplomacy: 'diplomacy', warfare: 'warfareSecondary' };
 
-/** Schritte der taktischen Aktion am Tisch: Bombardement, Landung und das Ende. */
+/** Schritte der taktischen Aktion am Tisch: Bombardement, Landung, Produktion und das Ende. */
 const TACTICAL: Readonly<Partial<Record<TacticalStep, TableSpecId>>> = {
   bombardment: 'bombard',
   invasion: 'landing',
+  production: 'production',
   done: 'tacticalDone',
 };
 

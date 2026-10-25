@@ -1,6 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 import {
   actorPage,
+  center,
   declineSecondaries,
   dragOnto,
   keepSecrets,
@@ -18,6 +19,34 @@ import {
 
 // Drei Geräte mit Software-Rendering teilen sich den Rechner; der Ablauf braucht Luft.
 test.describe.configure({ timeout: 180_000 });
+
+/**
+ * Trägt den Strategiemarker über den Sockel, ohne loszulassen: Der Geist liegt sichtbar und
+ * mittig unter dem Zeiger, und an dieser Stelle ist er das oberste Element (nichts verdeckt ihn).
+ */
+async function hoverSocket(page: Page, token: Locator, socket: Locator): Promise<void> {
+  const start = await center(token);
+  const end = await center(socket);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x, end.y, { steps: 12 });
+  const point = await center(socket);
+  await page.mouse.move(point.x, point.y, { steps: 2 });
+  const ghost = page.locator('.drag-ghost');
+  await expect(ghost).toBeVisible();
+  const middle = await center(ghost);
+  expect(Math.abs(middle.x - point.x)).toBeLessThanOrEqual(12);
+  expect(Math.abs(middle.y - point.y)).toBeLessThanOrEqual(12);
+  const onTop = await page.evaluate(({ x, y }) => {
+    const element = document.querySelector<HTMLElement>('.drag-ghost');
+    if (element === null) return false;
+    element.style.pointerEvents = 'auto';
+    const hit = document.elementFromPoint(x, y)?.closest('.drag-ghost') != null;
+    element.style.pointerEvents = '';
+    return hit;
+  }, point);
+  expect(onTop).toBe(true);
+}
 
 /** Ohne Führung und Diplomatie im Spiel: Wer die Politik hält, ist als Erster am Zug. */
 const POLITICS_FIRST = [
@@ -61,7 +90,8 @@ test('Tischansicht: Politik – der Sprechermarker wandert auf ein anderes Portr
   );
   // Folgen heißt: den obersten Strategiemarker vom Pult in den Sockel der Ansage legen.
   const socket = follower.locator('[data-target="slot:socket"]');
-  await dragOnto(follower, follower.locator('[data-piece="pool:strategy"]'), socket);
+  await hoverSocket(follower, follower.locator('[data-piece="pool:strategy"]'), socket);
+  await follower.mouse.up();
   await expect(follower.locator('.secondary-socket')).toHaveCount(0);
   await declineSecondaries(pages, 1);
 });

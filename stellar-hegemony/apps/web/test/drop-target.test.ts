@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+import { useCarryStore } from '../src/table/carry-store.ts';
+import { legalOver } from '../src/table/use-drag-source.ts';
 import { dropTargetAt } from '../src/table/drop-target.ts';
 import {
   cardTarget,
@@ -40,6 +42,29 @@ describe('Ziel unter dem Zeiger', () => {
     expect(dropTargetAt({ x: 0, y: 0 }, stack(ghost))).toBeNull();
   });
 
+  it('ein erlaubtes Ziel unter einem nicht erlaubten gewinnt, sonst das oberste', () => {
+    const ring = element('planet:mecatol');
+    const hex = element('system:18');
+    const points = stack(ring, hex);
+    expect(dropTargetAt({ x: 0, y: 0 }, points, new Set(['system:18']))).toEqual({
+      kind: 'system',
+      id: '18',
+    });
+    expect(dropTargetAt({ x: 0, y: 0 }, points, new Set(['slot:dock']))).toEqual({
+      kind: 'planet',
+      id: 'mecatol',
+    });
+  });
+
+  it('beim Ziehen leuchtet nur ein erlaubtes Ziel unter dem Zeiger', () => {
+    const points = stack(element('system:18'));
+    useCarryStore.getState().pickUp(GOODS_PIECE, new Set(['player:p2']), 'drag');
+    expect(legalOver({ x: 0, y: 0 }, points)).toBeNull();
+    useCarryStore.getState().pickUp(GOODS_PIECE, new Set(['system:18']), 'drag');
+    expect(legalOver({ x: 0, y: 0 }, points)).toBe('system:18');
+    useCarryStore.getState().putDown();
+  });
+
   it('unbekannte Zielschlüssel ergeben null', () => {
     const odd = element('nebel:x');
     const broken = element('pool:bank');
@@ -56,8 +81,8 @@ describe('Ziel unter dem Zeiger', () => {
       'slot:kasse',
     ]);
     for (const ref of refs) expect(parseTargetKey(targetKey(ref))).toEqual(ref);
-    expect(parseTargetKey('goods:commodities')).toBeNull();
-    expect(parseTargetKey('slot:dock')).toBeNull();
+    expect(parseTargetKey('goods:gold')).toBeNull();
+    expect(parseTargetKey('slot:hangar')).toBeNull();
     expect(parseTargetKey('constructor:x')).toBeNull();
     const card = element('card:erobern');
     expect(dropTargetAt({ x: 0, y: 0 }, stack(card))).toEqual({ kind: 'card', id: 'erobern' });

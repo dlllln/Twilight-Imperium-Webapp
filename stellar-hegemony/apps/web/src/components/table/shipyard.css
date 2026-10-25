@@ -1,0 +1,402 @@
+/*
+ * Iteration 32: die Werft in der Ansage. Oben stehen Titel und Dock (achteckige Liegeplätze)
+ * nebeneinander, darunter liegen die Spielsteine wie im Bauvorrat in einer eingelassenen Mulde,
+ * eine Reihe, die seitwärts rollt; ein ausblendender Rand zeigt, wo noch Steine liegen. Alles
+ * bleibt niedrig; das Siegel klebt ohnehin unten in der Ansage (styles.css).
+ */
+
+.shipyard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'title dock'
+    'pieces pieces'
+    'ground ground';
+  align-items: center;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+.shipyard-title {
+  grid-area: title;
+  margin: 0;
+  font-family: var(--title-font);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+}
+
+.shipyard-pieces {
+  grid-area: pieces;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 5px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  list-style: none;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(255, 255, 255, 0.025) 100%);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.7),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Rollt die Reihe weiter, blendet ihr Rand aus: Dort liegen noch Steine. */
+.shipyard-pieces[data-hidden='end'] {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+}
+
+.shipyard-pieces[data-hidden='start'] {
+  mask-image: linear-gradient(90deg, transparent, #000 32px);
+}
+
+.shipyard-pieces[data-hidden='both'] {
+  mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+}
+
+.shipyard-piece {
+  display: grid;
+  grid-template-columns: 44px auto;
+  grid-template-areas:
+    'figure name'
+    'figure cost'
+    'figure supply'
+    'figure steps';
+  align-items: center;
+  column-gap: 5px;
+  row-gap: 1px;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 2px 6px 2px 2px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.shipyard-piece[data-ordered]:not([data-ordered='0']) {
+  background: color-mix(in srgb, var(--seat, var(--gold)) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--seat, var(--gold)) 45%, transparent);
+}
+
+/* Der Stein selbst: kleiner als im Bauvorrat; der Name steht daneben. */
+.shipyard-piece .shipyard-figure {
+  grid-area: figure;
+  align-self: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 3px;
+}
+
+.shipyard-piece .shipyard-figure img,
+.shipyard-piece .shipyard-figure .structure-piece-shape {
+  width: 34px;
+  height: 34px;
+}
+
+.shipyard-figure:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.shipyard-name {
+  grid-area: name;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.shipyard-cost,
+.shipyard-supply {
+  font-size: 9.5px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.shipyard-cost {
+  grid-area: cost;
+  color: var(--gold-bright);
+}
+
+.shipyard-supply {
+  grid-area: supply;
+  color: var(--text-dim, rgba(230, 236, 255, 0.7));
+}
+
+.shipyard-piece .rail-controls {
+  grid-area: steps;
+  gap: 4px;
+}
+
+.shipyard-piece output {
+  min-width: 1.2em;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+}
+
+/* Das Dock: Liegeplätze als Achtecke, belegte tragen die kleine Figur der Bestellung. */
+.shipyard-dock {
+  grid-area: dock;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px;
+  min-width: 0;
+  min-height: 28px;
+  padding: 3px 5px;
+  border: 1px dashed var(--gold-line);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.3);
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.shipyard-dock[data-target-state='legal'] {
+  border-style: solid;
+  border-color: var(--seat, var(--gold-bright));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--seat, var(--gold)) 50%, transparent);
+  cursor: pointer;
+}
+
+.shipyard-dock.target-over,
+.shipyard-dock[data-target-state='legal']:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--seat, var(--gold)) 22%, rgba(0, 0, 0, 0.3));
+  box-shadow: 0 0 12px var(--seat, var(--gold));
+}
+
+.shipyard-dock:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.shipyard-berth {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.shipyard-berth.filled {
+  background: color-mix(in srgb, var(--seat, var(--gold)) 35%, #0b1129);
+}
+
+.shipyard-berth img,
+.shipyard-berth .structure-piece-shape {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/* Planet neuer Bodentruppen, bei mehreren Planeten mit kleinen Schaltern. */
+.shipyard-ground {
+  grid-area: ground;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 11px;
+}
+
+.shipyard-ground strong {
+  color: #6fe0c8;
+}
+
+.shipyard-ground-pick {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.shipyard-ground-pick button {
+  padding: 2px 8px;
+  border: 1px solid var(--gold-line);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 10px;
+  color: var(--text);
+}
+
+.shipyard-ground-pick button[aria-pressed='true'] {
+  border-color: #6fe0c8;
+  background: color-mix(in srgb, #6fe0c8 22%, transparent);
+}
+
+/*
+ * Folgt man mit der Werft einer Karte (Kriegsführung sekundär), rückt der Sockel zusammen: Die
+ * Karte liegt klein daneben, damit Werft und Spielsteine über dem Siegel Platz haben.
+ */
+.table-prompt:has(> .shipyard) .secondary-socket {
+  grid-template-columns: 40px 44px 1fr;
+  gap: 8px;
+  padding: 3px 8px;
+}
+
+.table-prompt:has(> .shipyard) .secondary-socket-card {
+  width: 40px;
+}
+
+/*
+ * Niedrige Bildschirme (Laptop, Tablet quer): Titel und Dock rücken als schmale Spalte neben
+ * die Reihe der Spielsteine, damit die Werft über dem Siegel in eine Zeile passt.
+ */
+@media (max-height: 820px) {
+  .shipyard {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'pieces title'
+      'pieces dock'
+      'ground ground';
+    align-items: end;
+    gap: 3px 6px;
+  }
+
+  .shipyard-title {
+    align-self: start;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+
+  .shipyard-pieces {
+    align-self: stretch;
+    padding: 3px;
+  }
+
+  .shipyard-dock {
+    align-self: start;
+    justify-content: flex-start;
+    max-width: 66px;
+    min-height: 22px;
+    padding: 2px 3px;
+    gap: 2px;
+  }
+
+  .shipyard-berth {
+    width: 16px;
+    height: 16px;
+  }
+
+  .shipyard-berth img,
+  .shipyard-berth .structure-piece-shape {
+    width: 13px;
+    height: 13px;
+  }
+
+  .shipyard-piece .shipyard-figure {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .shipyard-piece .shipyard-figure img,
+  .shipyard-piece .shipyard-figure .structure-piece-shape {
+    width: 30px;
+    height: 30px;
+  }
+
+  .shipyard-name {
+    font-size: 9.5px;
+  }
+}
+
+/*
+ * Niedrige Bildschirme, solange die Werft offen ist: die Phasenanzeige schrumpft wie auf dem
+ * Telefon zu einer Zeile mit Symbolknöpfen (Namen tragen Titel und Beschriftung weiter), damit
+ * die Ansage Werft, Dock und Siegel zugleich zeigt.
+ */
+@media (max-height: 820px) {
+  .hud-shield .hud-corner:has(.shipyard) .hud-phase {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0 6px;
+    align-items: center;
+    min-width: 0;
+    padding: 4px 10px 5px 20px;
+    text-align: left;
+  }
+
+  .hud-shield .hud-corner:has(.shipyard) .hud-phase > small,
+  .hud-shield .hud-corner:has(.shipyard) .hud-phase > strong,
+  .hud-shield .hud-corner:has(.shipyard) .hud-phase > .hud-actor {
+    grid-column: 1;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .hud-shield .hud-corner:has(.shipyard) .hud-phase > small {
+    grid-row: 1;
+    font-size: 8px;
+  }
+
+  .hud-shield .hud-corner:has(.shipyard) .hud-phase > strong {
+    grid-row: 2;
+    font-size: 13px;
+  }
+
+  .hud-shield .hud-corner:has(.shipyard) .hud-phase > .hud-actor {
+    grid-row: 3;
+    font-size: 10px;
+  }
+
+  .hud-shield .hud-corner:has(.shipyard) .hud-phase .hex-button {
+    grid-row: 1 / span 3;
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 760px) {
+  .shipyard {
+    gap: 4px;
+  }
+
+  .shipyard-title {
+    font-size: 10px;
+  }
+
+  .shipyard-pieces {
+    padding: 4px;
+  }
+
+  .shipyard-piece .shipyard-figure {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .shipyard-piece .shipyard-figure img,
+  .shipyard-piece .shipyard-figure .structure-piece-shape {
+    width: 30px;
+    height: 30px;
+  }
+
+  .shipyard-dock {
+    min-height: 26px;
+    padding: 2px 4px;
+  }
+
+  .shipyard-berth {
+    width: 18px;
+    height: 18px;
+  }
+}

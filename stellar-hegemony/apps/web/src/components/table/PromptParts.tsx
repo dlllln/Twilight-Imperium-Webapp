@@ -1,10 +1,11 @@
 import { type GameState, warfareTokenSystems } from '@stellar/domain';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import type { Language, MessageKey } from '../../i18n.ts';
 import { objectiveLabel, systemLabel } from '../../labels.ts';
 import { payHintOf } from '../../table/planet-table.ts';
+import { shipyardOf } from '../../table/shipyard.ts';
+import { researchSpreadOf } from '../../table/spec-research.ts';
 import type {
-  DiscardPlan,
   ObjectivePlan,
   PlacementPlan,
   PlayersPlan,
@@ -20,6 +21,7 @@ import { SystemSelect } from '../game/FormParts.tsx';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { PHASE_TITLE } from '../game/TurnPanel.tsx';
 import { ConfirmSeal } from './ConfirmSeal.tsx';
+import { MeterLine, ProductionMeter, ResearchMeter } from './PromptMeters.tsx';
 
 /*
  * Bausteine der Ansage: Kopf, Messleiste je Art des Entwurfs, Systemwahl der Kriegsführung und
@@ -86,15 +88,6 @@ export function PromptHead({ game, decision }: PartProps): ReactElement {
       <h2>{t(PHASE_TITLE[game.phase])}</h2>
       {subtitle !== null && <h3>{subtitle}</h3>}
     </header>
-  );
-}
-
-/** Die Messleiste ist eine Live-Region: Bildschirmleser hören jede Änderung. Leer bleibt sie weg. */
-function MeterLine({ children }: { readonly children: ReactNode }): ReactElement {
-  return (
-    <p className="table-prompt-meter" aria-live="polite" aria-atomic="true">
-      {children}
-    </p>
   );
 }
 
@@ -271,32 +264,63 @@ function PlayersMeter(props: {
   );
 }
 
-/** Messleisten der Hand und der Menschen am Tisch: Ablegen, Politik, Handel. */
-function PeopleMeter(props: DraftMeterProps & { readonly draft: DiscardPlan | PlayersPlan }) {
-  const { game, decision, draft, progress } = props;
-  if (draft.kind === 'discard') return <DiscardMeter progress={progress} />;
-  return <PlayersMeter game={game} plan={draft} politics={decision.specId === 'politics'} />;
-}
-
-const isPeople = (draft: TableDraft): draft is DiscardPlan | PlayersPlan =>
-  draft.kind === 'discard' || draft.kind === 'players';
-
 /** Figuren der Entscheidung (ohne Gebäude): so viele lassen sich zuweisen. */
 const unitCount = (decision: TableDecision): number =>
   decision.pieces.filter((piece) => piece.ref.kind === 'unit').length;
 
+type DraftOf<K extends TableDraft['kind']> = Extract<TableDraft, { readonly kind: K }>;
+
+type MeterFor<K extends TableDraft['kind']> = (
+  props: DraftMeterProps & { readonly draft: DraftOf<K> },
+) => ReactElement | null;
+
+/** Marker: erhaltene bzw. genommene Marker, bei der Führung der bezahlte Einfluss. */
+const TokensMeter: MeterFor<'tokens'> = ({ decision, draft, progress }) => (
+  <PromptMeter
+    needed={progress.needed}
+    plan={draft}
+    warfare={decision.specId === 'warfare'}
+    paid={leadershipPaid(decision)}
+  />
+);
+
+/** Werft: Zahlen aus der Werft, der bezahlte Wert aus der Planetenreihe. */
+const YardMeter: MeterFor<'production'> = ({ game, decision }) => {
+  const yard = shipyardOf(game, decision);
+  return yard === null ? null : (
+    <ProductionMeter yard={yard} paid={decision.planets?.paid ?? null} />
+  );
+};
+
+/** Forschungsauslage: Zahlen aus der Auslage, der bezahlte Wert aus der Planetenreihe. */
+const SpreadMeter: MeterFor<'research'> = ({ game, decision }) => {
+  const spread = researchSpreadOf(game, decision);
+  if (spread === null) return null;
+  return <ResearchMeter spread={spread} paid={decision.planets?.paid ?? null} />;
+};
+
+/** Je Art des Entwurfs ihre Messleiste (Polymorphie über `kind` statt Verzweigungen). */
+const METERS: { readonly [K in TableDraft['kind']]: MeterFor<K> } = {
+  tokens: TokensMeter,
+  objective: ({ draft, progress }) => <ObjectiveMeter plan={draft} progress={progress} />,
+  ready: ({ progress }) => <ReadyMeter progress={progress} />,
+  placement: ({ decision, draft, progress }) => (
+    <PlacementMeter plan={draft} progress={progress} units={unitCount(decision)} />
+  ),
+  system: () => null,
+  construction: ({ progress }) => <BuildMeter progress={progress} />,
+  done: () => null,
+  discard: ({ progress }) => <DiscardMeter progress={progress} />,
+  players: ({ game, decision, draft }) => (
+    <PlayersMeter game={game} plan={draft} politics={decision.specId === 'politics'} />
+  ),
+  production: YardMeter,
+  research: SpreadMeter,
+};
+
 function DraftMeter(props: DraftMeterProps): ReactElement | null {
-  const { decision, draft, progress } = props;
-  if (isPeople(draft)) return <PeopleMeter {...props} draft={draft} />;
-  if (draft.kind === 'objective') return <ObjectiveMeter plan={draft} progress={progress} />;
-  if (draft.kind === 'ready') return <ReadyMeter progress={progress} />;
-  if (draft.kind === 'construction') return <BuildMeter progress={progress} />;
-  if (draft.kind === 'placement')
-    return <PlacementMeter plan={draft} progress={progress} units={unitCount(decision)} />;
-  if (draft.kind !== 'tokens') return null;
-  const warfare = decision.specId === 'warfare';
-  const paid = leadershipPaid(decision);
-  return <PromptMeter needed={progress.needed} plan={draft} warfare={warfare} paid={paid} />;
+  const Meter = METERS[props.draft.kind] as MeterFor<TableDraft['kind']>;
+  return <Meter {...props} />;
 }
 
 /** Die Messleiste passend zur Art des Entwurfs. */
@@ -306,14 +330,23 @@ export function PromptProgress({ game, decision }: PartProps) {
   return <DraftMeter game={game} decision={decision} draft={draft} progress={progress} />;
 }
 
-/** Eine Bezahlung ist offen: Ausgabe-Auftrag oder Landung auf der Thronwelt. */
-const paying = (draft: TableDraft | null): boolean =>
+/** Entwürfe mit eigener Bezahlung im Entwurf: Ausgabe-Auftrag oder Landung auf der Thronwelt. */
+const ownPayment = (draft: TableDraft | null): boolean =>
   (draft?.kind === 'objective' || draft?.kind === 'placement') && draft.payment !== null;
+
+/** Werft und Forschung bezahlen, solange die Planetenreihe eine Bezahlung anbietet. */
+const rowPayment = (decision: TableDecision): boolean =>
+  (decision.draft?.kind === 'production' || decision.draft?.kind === 'research') &&
+  decision.planets?.mode === 'pay';
+
+/** Eine Bezahlung ist offen. */
+const paying = (decision: TableDecision): boolean =>
+  ownPayment(decision.draft) || rowPayment(decision);
 
 /** Solange eine Bezahlung offen ist: wo bezahlt wird (Planetenreihe, Karte, Kasse). */
 export function PromptPayHint({ decision }: { readonly decision: TableDecision }) {
   const t = useT();
-  if (!paying(decision.draft)) return null;
+  if (!paying(decision)) return null;
   return (
     <p className="hint table-prompt-pay">{t(payHintOf(decision.planets?.ownTradeGoods ?? 0))}</p>
   );

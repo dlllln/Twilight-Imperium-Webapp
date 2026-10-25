@@ -1214,6 +1214,58 @@ const DICTIONARY = {
     de: 'Antippen hebt die Karte an, ein zweites Antippen spielt sie aus.',
     en: 'Tap to lift the card, tap again to play it.',
   },
+  shipyard: { de: 'Werft', en: 'Shipyard' },
+  shipyardDock: { de: 'Dock der Werft', en: 'Shipyard dock' },
+  dockCount: { de: 'Im Dock', en: 'In the dock' },
+  unitCost: { de: 'Kosten {cost}', en: 'Cost {cost}' },
+  unitCostPair: { de: 'Kosten {cost} je zwei', en: 'Cost {cost} per two' },
+  unitSupply: { de: 'Vorrat: {count}', en: 'Supply: {count}' },
+  finishWithoutBuilding: { de: 'Ohne Bau abschließen', en: 'Finish without building' },
+  siteDeploy: { de: 'Bodentruppen auf: {planet}', en: 'Ground forces to: {planet}' },
+  tableHintProduction: {
+    de: 'Lege Einheiten aus der Werft ins Dock und bezahle mit Planeten und Handelswaren.',
+    en: 'Place units from the shipyard in the dock and pay with planets and trade goods.',
+  },
+  tableHintWarfareSecondary: {
+    de: 'Baue im Heimatsystem: Einheiten aus der Werft ins Dock legen und bezahlen.',
+    en: 'Build in your home system: place units from the shipyard in the dock and pay.',
+  },
+  researchSpread: { de: 'Forschungsauslage', en: 'Research spread' },
+  tableHintResearch: {
+    de: 'Wähle Technologien aus der Auslage; Spezialisierungen ersetzen fehlende Farben.',
+    en: 'Choose technologies from the spread; specialties replace missing colours.',
+  },
+  researchChosen: { de: 'Gewählt', en: 'Chosen' },
+  researchLocked: { de: 'Voraussetzungen fehlen', en: 'Prerequisites missing' },
+  researchFull: { de: 'Keine weitere Technologie möglich', en: 'No further technology allowed' },
+  researchUnmet: {
+    de: 'Voraussetzungen fehlen für {technology}: {colors}',
+    en: 'Prerequisites missing for {technology}: {colors}',
+  },
+  specialtySkip: { de: 'Spezialisierung nutzen: {planet}', en: 'Use specialty: {planet}' },
+  specialtyUnused: {
+    de: 'Eine gewählte Spezialisierung wird nicht gebraucht.',
+    en: 'A chosen specialty is not needed.',
+  },
+  tradeMat: { de: 'Handelsmatte', en: 'Trade mat' },
+  tradeYouGive: { de: 'Du gibst', en: 'You give' },
+  tradeYouAsk: { de: 'Du erbittest', en: 'You ask for' },
+  tradeAsk: { de: 'Erbitten', en: 'Ask for' },
+  pickUpCrate: { de: 'Rohstoff aufnehmen', en: 'Pick up commodity' },
+  commodity: { de: 'Rohstoff', en: 'Commodity' },
+  tableHintTradeDrop: {
+    de: 'Ziehe Handelswaren oder Rohstoffe auf das Bild eines Nachbarn, um zu handeln.',
+    en: "Drag trade goods or commodities onto a neighbour's portrait to trade.",
+  },
+  tradeNothing: {
+    de: 'Lege etwas auf die Matte, bevor du ein Angebot machst.',
+    en: 'Put something on the mat before you make an offer.',
+  },
+  tradePartnerMark: { de: 'Handelspartner', en: 'Trading partner' },
+  socketHintDraft: {
+    de: 'Triff erst deine Wahl am Tisch; dann nimmt der Sockel deinen Strategiemarker.',
+    en: 'Make your choice on the table first; then the socket takes your strategy token.',
+  },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof DICTIONARY;

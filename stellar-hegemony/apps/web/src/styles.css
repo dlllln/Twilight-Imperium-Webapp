@@ -5699,14 +5699,46 @@ body {
   margin: 0;
 }
 
-/* Unten: Ausweg als flacher Stein, rechts das Siegel */
+/*
+ * Unten: Ausweg als flacher Stein, rechts das Siegel. Die Leiste klebt am unteren Rand der Ansage:
+ * Ist die Entscheidung höher als die Ansage (Werft, Forschung mit Bezahlung, Sockel), gleitet der
+ * Inhalt darunter hindurch, und Ausweg und Siegel bleiben immer im Blick.
+ */
 
 .table-prompt-actions {
+  position: sticky;
+  bottom: -14px;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 2px;
+  margin: 2px -14px 0 -16px;
+  padding: 6px 14px 8px 16px;
+  background: linear-gradient(180deg, transparent 0, #070b1c 10px);
+}
+
+.table-prompt-actions:empty {
+  display: none;
+}
+
+/* Als letzte Zeile reicht die Leiste bis an die Unterkante der Ansage. */
+.table-prompt > .table-prompt-actions:last-child {
+  margin-bottom: -14px;
+  padding-bottom: 12px;
+}
+
+/* Das Siegel behält seine Beschriftung ganz; eng wird es nur für den Ausweg, der umbricht. */
+.table-prompt-actions > .confirm-seal {
+  flex-shrink: 0;
+  min-width: max-content;
+}
+
+.table-prompt-actions > .table-prompt-alt {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
 }
 
 .table-prompt-alt {
@@ -6500,6 +6532,18 @@ polygon.hex.target-over {
   }
 }
 
+/*
+ * Tablet hochkant: Hebt sich zum Bezahlen die Planetenreihe, rückt die Ecke um ihre Höhe hinauf.
+ * Die Ansage gibt diese Höhe ab, damit Phasenanzeige und Ansage oben nicht über die Karte wachsen
+ * (die Karte rechnet mit Pult, Hand, Phase und höchstens 260px Ansage, `map-frame.ts`). Werft und
+ * Siegel bleiben darin über das Rollen und die klebende Leiste erreichbar.
+ */
+@media (min-width: 761px) and (max-width: 1100px) and (orientation: portrait) {
+  .hud-shield[data-view='table']:has(.planet-row:not([data-mode='rest'])) .table-prompt {
+    max-height: calc(min(260px, 30dvh) - var(--planet-row-h, 0px));
+  }
+}
+
 /* Telefone: Jede Breite zählt; die Ansage bleibt so niedrig wie die Meldungen am Spieltisch. */
 @media (max-width: 760px) {
   .hud-shield[data-view='table'] {
@@ -6671,6 +6715,52 @@ polygon.hex.target-over {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/*
+ * Iteration 32: Ein Marker über einem erlaubten Ziel setzt sich sichtbar ab. Er liegt dort über
+ * einem Bett in derselben Platzfarbe (Sockel, Leiste); ein dunkler Rand und ein kräftigerer
+ * Schatten halten ihn davon getrennt, statt dass er im Leuchten des Ziels aufgeht.
+ */
+.drag-ghost:not([data-material])[data-over='true'] {
+  scale: 1.4;
+  filter: drop-shadow(0 0 1.5px #000) drop-shadow(0 0 1.5px #000)
+    drop-shadow(0 10px 8px rgba(0, 0, 0, 0.7));
+}
+
+/* Eine Rohstoffkiste aus der Handelsmatte: Holz in Platzfarbe getönt, Bretter und Beschläge. */
+.drag-ghost[data-material='crate'] {
+  --chip: 30px;
+  scale: 1.15;
+}
+
+.drag-ghost .crate-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.crate-body {
+  fill: color-mix(in srgb, var(--seat, var(--gold)) 22%, #8a5a2b);
+}
+
+.crate-slat {
+  fill: none;
+  stroke: #3d2511;
+  stroke-width: 1.6;
+}
+
+.crate-brace {
+  fill: none;
+  stroke: color-mix(in srgb, #3d2511 70%, var(--seat, var(--gold)));
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.crate-rim {
+  fill: none;
+  stroke: #f2d79a;
+  stroke-width: 1.4;
 }
 
 /* Der Strategiemarker, mit dem man der Karte eines anderen folgt: blass, rot gestrichelt umrandet. */

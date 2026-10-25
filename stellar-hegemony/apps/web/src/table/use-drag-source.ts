@@ -1,6 +1,6 @@
 import { type KeyboardEvent, type MouseEvent, type PointerEvent, useRef } from 'react';
 import { type CarryMode, type Point, useCarryStore } from './carry-store.ts';
-import { dropTargetAt } from './drop-target.ts';
+import { dropTargetAt, type PointQuery } from './drop-target.ts';
 import { type DropHandler, type TargetRef, targetKey } from './target-ref.ts';
 
 /*
@@ -61,8 +61,15 @@ function moved(source: Source, event: PointerEvent<HTMLElement>): void {
     useCarryStore.getState().pickUp(source.piece, source.legal(), 'drag');
   }
   if (!gesture.dragging) return;
-  const over = dropTargetAt(point);
-  useCarryStore.getState().track(point, over === null ? null : targetKey(over));
+  useCarryStore.getState().track(point, legalOver(point));
+}
+
+/** Das erlaubte Ziel unter dem Zeiger; ein nicht erlaubtes Feld darunter leuchtet nicht auf. */
+export function legalOver(point: Point, doc: PointQuery = document): string | null {
+  const { legal } = useCarryStore.getState();
+  const over = dropTargetAt(point, doc, legal);
+  const key = over === null ? null : targetKey(over);
+  return key !== null && legal.has(key) ? key : null;
 }
 
 /** Ablegen nur auf einem erlaubten Ziel, und nur wenn es dort etwas bewirkt. */
@@ -80,7 +87,7 @@ function released(source: Source, event: PointerEvent<HTMLElement>): void {
   if (!dragged) return;
   gesture.swallowClick = true;
   const carry = useCarryStore.getState();
-  const target = dropTargetAt(pointOf(event));
+  const target = dropTargetAt(pointOf(event), document, carry.legal);
   if (target !== null && dropOn(source, target)) carry.place(target);
   else carry.putDown();
 }

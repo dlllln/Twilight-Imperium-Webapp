@@ -26,3 +26,9 @@ export function areNeighbors(state: GameState, a: PlayerId, b: PlayerId): boolea
 
 export const neighborsOf = (state: GameState, player: PlayerId): readonly PlayerId[] =>
   state.players.map((p) => p.id).filter((id) => areNeighbors(state, player, id));
+
+/** RR 82.1: Nachbarn, mit denen in diesem Zug noch nicht gehandelt wurde. */
+export const tradePartners = (state: GameState, player: PlayerId): readonly PlayerId[] =>
+  neighborsOf(state, player).filter(
+    (id) => state.actionPhase?.transactedWith.includes(id) !== true,
+  );

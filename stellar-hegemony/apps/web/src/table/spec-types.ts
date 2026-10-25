@@ -7,6 +7,7 @@ import type {
   PlayerId,
   StructurePlacement,
   SystemId,
+  TechnologyId,
   UnitId,
   UnitTypeId,
 } from '@stellar/domain';
@@ -37,7 +38,10 @@ export type TableSpecId =
   | 'discard'
   | 'reaction'
   | 'politics'
-  | 'trade';
+  | 'trade'
+  | 'production'
+  | 'warfareSecondary'
+  | 'technology';
 
 /** Entwurf einer Markerverteilung samt Bezahlung (Führung) und System (Kriegsführung). */
 export interface TokenPlan {
@@ -101,6 +105,28 @@ export interface PlayersPlan {
   readonly players: readonly PlayerId[];
 }
 
+/**
+ * Werft (taktische Produktion, Kriegsführung sekundär): bestellte Einheiten je Art, der Planet
+ * neuer Bodentruppen und die Bezahlung in Ressourcen.
+ */
+export interface ProductionPlan {
+  readonly kind: 'production';
+  /** Wo gebaut wird: aktiviertes System bzw. Heimatsystem; `null`, wenn es keines gibt. */
+  readonly system: SystemId | null;
+  readonly orders: Readonly<Record<string, number>>;
+  /** Ausdrücklich gewählter Planet für Bodentruppen; `null` heißt: der erste mögliche. */
+  readonly groundPlanet: PlanetId | null;
+  readonly payment: PaymentPlan;
+}
+
+/** Forschungsauslage: gewählte Technologien, genutzte Spezialisierungen und die Bezahlung. */
+export interface ResearchPlan {
+  readonly kind: 'research';
+  readonly technologies: readonly TechnologyId[];
+  readonly specialties: readonly PlanetId[];
+  readonly payment: PaymentPlan;
+}
+
 export type TableDraft =
   | TokenPlan
   | ObjectivePlan
@@ -110,7 +136,9 @@ export type TableDraft =
   | ConstructionPlan
   | DonePlan
   | DiscardPlan
-  | PlayersPlan;
+  | PlayersPlan
+  | ProductionPlan
+  | ResearchPlan;
 
 export type TableAction =
   | { readonly kind: 'move'; readonly from: DraftZone; readonly to: DraftZone }
@@ -127,7 +155,18 @@ export type TableAction =
   /** Eine Aktionskarte der Hand antippen: zum Ablegen vormerken oder zurücknehmen. */
   | { readonly kind: 'card'; readonly card: ActionCardId }
   /** Einen Mitspieler antippen oder den Sprechermarker auf sein Bild legen. */
-  | { readonly kind: 'player'; readonly player: PlayerId };
+  | { readonly kind: 'player'; readonly player: PlayerId }
+  /** Eine Einheit der Werft bestellen (+1) oder zurücknehmen (−1); mit Planet für Bodentruppen. */
+  | {
+      readonly kind: 'order';
+      readonly type: UnitTypeId;
+      readonly delta: 1 | -1;
+      readonly planet: PlanetId | null;
+    }
+  /** Eine Technologie der Auslage wählen oder zurücklegen. */
+  | { readonly kind: 'technology'; readonly technology: TechnologyId }
+  /** Einen Planeten mit Spezialisierung als Ersatz einer Voraussetzung nutzen oder nicht. */
+  | { readonly kind: 'specialty'; readonly planet: PlanetId };
 
 /** Ein Stück der Entscheidung auf dem Tisch: Figur oder Gebäude, und wo es gerade steht. */
 export interface TablePiece {

@@ -12,6 +12,7 @@ import {
   productionLimit,
   productionSites,
 } from './production-queries.ts';
+import { ownedOnBoard, supplyAllows } from './unit-supply.ts';
 
 /** Was eine Bestellung kostet und was im System möglich ist (für Clients, ohne Würfel). */
 export interface ProductionQuote {
@@ -76,4 +77,49 @@ export function productionQuote(
     blockaded: ships && isBlockaded(state, system, player, content.units),
     groundPlanets: ownSitePlanets(state, player, sites),
   };
+}
+
+/** Eine baubare Einheit: wie viele bestellt sind, ob eine weitere passt und was im Vorrat bleibt. */
+export interface ProductionChoice {
+  readonly unit: UnitDefinition;
+  readonly ordered: number;
+  readonly canAdd: boolean;
+  /** Was nach der Bestellung noch im Vorrat liegt; `null` ohne Grenze (RR 24.5). */
+  readonly supply: number | null;
+}
+
+const orderedOf = (orders: readonly ProductionOrder[], unit: UnitDefinition): number =>
+  orders.filter((order) => order.type === unit.id).reduce((sum, order) => sum + order.count, 0);
+
+function supplyLeft(
+  state: GameState,
+  player: PlayerId,
+  unit: UnitDefinition,
+  ordered: number,
+): number | null {
+  if (unit.componentLimit === 'unlimited') return null;
+  return unit.componentLimit - ownedOnBoard(state, player, unit.id) - ordered;
+}
+
+/**
+ * Information Expert für die Werft: jede baubare Einheit mit ihrer Bestellmenge. Eine weitere
+ * passt, solange Produktionswert und Vorrat reichen; blockiert passen keine Schiffe (RR 14).
+ */
+export function productionChoices(
+  state: GameState,
+  system: SystemId,
+  player: PlayerId,
+  orders: readonly ProductionOrder[],
+  base: ContentPort,
+): readonly ProductionChoice[] {
+  const content = { ...base, units: technologyCatalog(state, base) };
+  const count = orders.reduce((sum, order) => sum + order.count, 0);
+  const room = count < productionLimit(productionSites(state, system, player, content));
+  const blockaded = isBlockaded(state, system, player, content.units);
+  return producibleUnits(state, player, content.units).map((unit) => {
+    const ordered = orderedOf(orders, unit);
+    const fits = room && supplyAllows(state, player, unit, ordered + 1);
+    const supply = supplyLeft(state, player, unit, ordered);
+    return { unit, ordered, canAdd: fits && !(isShip(unit) && blockaded), supply };
+  });
 }

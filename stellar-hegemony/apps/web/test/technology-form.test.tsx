@@ -1,10 +1,19 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { findPlayer, type GameState, type PlayerId, type TechnologyId } from '@stellar/domain';
+import {
+  findPlayer,
+  type GameState,
+  type PlanetId,
+  planetId,
+  type PlayerId,
+  researchOptions as domainOptions,
+  type TechnologyColor,
+  type TechnologyId,
+} from '@stellar/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { TechnologyPanel } from '../src/components/technology/TechnologyPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
-import { technologyLabel } from '../src/labels.ts';
+import { planetLabel, technologyLabel } from '../src/labels.ts';
 import { content } from '../src/store.ts';
 import { researchOptions } from '../src/technology-view.ts';
 import { holding, Live } from './card-form-helpers.tsx';
@@ -32,7 +41,54 @@ const withGoods = (player: PlayerId, tradeGoods: number) =>
     },
   });
 
+/** Planeten des Spielplans mit Spezialisierung. */
+const SPECIALTIES: ReadonlyMap<string, TechnologyColor> = new Map(
+  content.tiles
+    .all()
+    .flatMap((tile) => tile.planets)
+    .flatMap((planet) =>
+      planet.technologySpecialty === undefined
+        ? []
+        : [[planet.id, planet.technologySpecialty] as const],
+    ),
+);
+
+/**
+ * Der Spieler hält einen bereiten Planeten, dessen Spezialisierung einer Technologie genau die
+ * eine fehlende Farbe ersetzt; der Spielstand im Store bekommt ihn.
+ */
+function holdSpecialty(player: PlayerId): { planet: PlanetId; technology: TechnologyId } {
+  for (const [id, color] of SPECIALTIES) {
+    const planet = game().planets[id];
+    if (planet === undefined) continue;
+    const held = { ...planet, controller: player, exhausted: false };
+    const next = { ...game(), planets: { ...game().planets, [id]: held } };
+    const options = domainOptions(next, player, content, { technologies: [], specialties: [] });
+    const match = options.find((o) => o.missing.length === 1 && o.missing[0] === color);
+    if (match === undefined) continue;
+    useGameStore.setState({ game: next });
+    return { planet: planetId(id), technology: match.technology.id };
+  }
+  throw new Error('keine passende Spezialisierung');
+}
+
 describe('Technologie im Browser (RR 81)', () => {
+  it('klassisch: gesperrte Technologien sind nicht wählbar, eine Spezialisierung entsperrt sie', () => {
+    const { player, card } = holding('technology');
+    const { planet, technology } = holdSpecialty(player);
+    render(<Live player={player} card={card} ability="primary" />);
+    const locked = box(technology) as HTMLInputElement;
+    expect(locked.closest('.tech-option')?.classList.contains('locked')).toBe(true);
+    expect(locked.disabled).toBe(true);
+    fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(planetLabel(planet, 'de')) }));
+    expect((box(technology) as HTMLInputElement).disabled).toBe(false);
+    expect(box(technology).closest('.tech-option')?.classList.contains('locked')).toBe(false);
+    fireEvent.click(box(technology));
+    fireEvent.click(screen.getByRole('button', { name: 'Erforschen' }));
+    expect(store().error).toBeNull();
+    expect(owned(player)).toContain(technology);
+  });
+
   it('RR 81.2: primär eine Technologie kostenlos, eine zweite erst nach Bezahlung', () => {
     const { player, card } = holding('technology');
     const [first, second, third] = ready(player) as TechnologyId[];

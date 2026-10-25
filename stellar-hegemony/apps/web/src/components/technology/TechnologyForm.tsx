@@ -3,17 +3,21 @@ import {
   type Payment,
   type PlanetId,
   type PlayerId,
+  type ResearchOption,
   researchCost,
+  researchOptions,
   type StrategyCardDefinition,
   type TechnologyChoice,
   type TechnologyColor,
+  type TechnologyDefinition,
   type TechnologyId,
 } from '@stellar/domain';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { technologyArtwork, technologyFrame } from '../../artwork/cards.ts';
 import { planetLabel, technologyEffectText, technologyLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
-import { type ResearchOption, researchOptions, specialtyPlanets } from '../../technology-view.ts';
+import { RESEARCH_COLUMNS } from '../../table/spec-research.ts';
+import { specialtyPlanets } from '../../technology-view.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { CardArtwork } from '../cards/CardArtwork.tsx';
 import { Actions } from '../game/FormParts.tsx';
@@ -29,92 +33,102 @@ export interface TechnologyFormProps {
   readonly children?: ReactNode;
 }
 
-const COLORS: readonly (TechnologyColor | null)[] = [
-  'biotic',
-  'propulsion',
-  'cybernetic',
-  'warfare',
-  null,
-];
 const NO_PAYMENT: Payment = { planets: [], tradeGoods: 0 };
 
 const toggled = <T,>(list: readonly T[], item: T): readonly T[] =>
   list.includes(item) ? list.filter((other) => other !== item) : [...list, item];
 
-/** Auswahl, Spezialisierungen und Bezahlung; Anzahl und Kosten entscheidet die Domain. */
-function useResearch({ game, player, card, ability, onSubmit }: TechnologyFormProps) {
+/**
+ * Auswahl und Spezialisierungen. Was einer Technologie noch fehlt, sagt die Domain samt der
+ * gewählten Spezialisierungen; gesperrte Technologien kommen nicht dazu (behebt A2).
+ */
+function useChoice(props: TechnologyFormProps) {
   const [chosen, setChosen] = useState<readonly TechnologyId[]>([]);
   const [specialties, setSpecialties] = useState<readonly PlanetId[]>([]);
-  const payment = usePayment(game, player, 'resources');
-  const cost = researchCost(card, ability, chosen.length);
-  const required = cost.ok ? cost.value : 0;
-  const canAdd = researchCost(card, ability, chosen.length + 1).ok;
+  const canAdd = researchCost(props.card, props.ability, chosen.length + 1).ok;
+  const request = { technologies: chosen, specialties };
+  const options = researchOptions(props.game, props.player, content, request);
+  const open = (id: TechnologyId) =>
+    canAdd && options.some((option) => option.technology.id === id && option.missing.length === 0);
   const toggle = (id: TechnologyId) =>
-    setChosen((current) => (current.includes(id) || canAdd ? toggled(current, id) : current));
+    setChosen((current) => (current.includes(id) || open(id) ? toggled(current, id) : current));
+  const toggleSpecialty = (planet: PlanetId) => setSpecialties((list) => toggled(list, planet));
+  return { chosen, specialties, options, canAdd, toggle, toggleSpecialty };
+}
+
+/** Auswahl, Spezialisierungen und Bezahlung; Anzahl und Kosten entscheidet die Domain. */
+function useResearch(props: TechnologyFormProps) {
+  const { game, player, card, ability, onSubmit } = props;
+  const payment = usePayment(game, player, 'resources');
+  const choice = useChoice(props);
+  const cost = researchCost(card, ability, choice.chosen.length);
+  const required = cost.ok ? cost.value : 0;
   const submit = () =>
     onSubmit({
       mechanic: 'technology',
-      technologies: chosen,
-      specialties,
+      technologies: choice.chosen,
+      specialties: choice.specialties,
       payment: required === 0 ? NO_PAYMENT : payment.payment,
     });
-  const toggleSpecialty = (planet: PlanetId) => setSpecialties((list) => toggled(list, planet));
   const unpaid = required > 0 && payment.value < required;
-  return {
-    chosen,
-    specialties,
-    payment,
-    required,
-    unpaid,
-    canAdd,
-    toggle,
-    toggleSpecialty,
-    submit,
-  };
+  return { ...choice, payment, required, unpaid, submit };
 }
 
 type Research = ReturnType<typeof useResearch>;
 
-function OptionRow({
-  option,
-  form,
-}: {
-  readonly option: ResearchOption;
-  readonly form: Research;
-}): ReactElement {
+export interface ResearchCardFaceProps {
+  readonly technology: TechnologyDefinition;
+  readonly missing: readonly TechnologyColor[];
+}
+
+/**
+ * Das Gesicht einer Technologiekarte für Formular und Forschungsauslage: Rahmen, Bild der
+ * Farbe, Name, Voraussetzungen (fehlende hohl) und Wirkung. Liegt direkt im Etikett der Karte.
+ */
+export function ResearchCardFace({ technology, missing }: ResearchCardFaceProps): ReactElement {
   const language = useLanguage();
-  const { technology, missing } = option;
-  const checked = form.chosen.includes(technology.id);
   return (
-    <label className={`tech-option ti4-print-card${missing.length > 0 ? ' locked' : ''}`}>
+    <>
       <CardArtwork artwork={technologyFrame(technology.id)} className="ti4-print-frame" />
       <CardArtwork artwork={technologyArtwork(technology.color)} className="ti4-technology-art" />
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={!checked && !form.canAdd}
-        onChange={() => form.toggle(technology.id)}
-      />
       <span className="tech-name">{technologyLabel(technology.id, language)}</span>
       <Prerequisites technology={technology} missing={missing} />
       <span className="tech-effect">{technologyEffectText(technology.id, language)}</span>
+    </>
+  );
+}
+
+/** Eine Technologie im Formular; gesperrte und überzählige lassen sich nicht ankreuzen. */
+function OptionRow(props: { readonly option: ResearchOption; readonly form: Research }) {
+  const { technology, missing } = props.option;
+  const { form } = props;
+  const checked = form.chosen.includes(technology.id);
+  const locked = missing.length > 0;
+  return (
+    <label className={`tech-option ti4-print-card${locked ? ' locked' : ''}`}>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={!checked && (locked || !form.canAdd)}
+        onChange={() => form.toggle(technology.id)}
+      />
+      <ResearchCardFace technology={technology} missing={missing} />
     </label>
   );
 }
 
-function OptionGroups(props: TechnologyFormProps & { readonly form: Research }): ReactElement {
+function OptionGroups({ form }: { readonly form: Research }): ReactElement {
   const t = useT();
-  const options = researchOptions(props.game, props.player, content, props.form.chosen);
   return (
     <div className="tech-groups">
-      {COLORS.map((color) => {
-        const group = options.filter((option) => option.technology.color === color);
+      {RESEARCH_COLUMNS.map((color) => {
+        const group = form.options.filter((option) => option.technology.color === color);
         if (group.length === 0) return null;
         return (
           <fieldset key={color ?? 'upgrade'} className={`tech-group tech-${color ?? 'upgrade'}`}>
             <legend>{color === null ? t('unitUpgrades') : t(color)}</legend>
             {group.map((option) => (
-              <OptionRow key={option.technology.id} option={option} form={props.form} />
+              <OptionRow key={option.technology.id} option={option} form={form} />
             ))}
           </fieldset>
         );
@@ -155,7 +169,7 @@ export function TechnologyForm(props: TechnologyFormProps): ReactElement {
   const form = useResearch(props);
   return (
     <div className="choice-form technology-form">
-      <OptionGroups {...props} form={form} />
+      <OptionGroups form={form} />
       <SpecialtyChoices {...props} form={form} />
       {form.required > 0 && (
         <PaymentPicker

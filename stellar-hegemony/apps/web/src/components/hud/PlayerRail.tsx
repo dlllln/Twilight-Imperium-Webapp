@@ -2,6 +2,7 @@ import {
   findPlayer,
   strategyCardsOf,
   type GameState,
+  type PlayerId,
   type PlayerState,
   type StrategyCardState,
 } from '@stellar/domain';
@@ -14,14 +15,17 @@ import { useSettingsStore } from '../../settings-store.ts';
 import { SPEAKER_PIECE } from '../../table/target-ref.ts';
 import { useDragSource } from '../../table/use-drag-source.ts';
 import type { TableDecision } from '../../table/use-table-decision.ts';
+import { useTradeMat } from '../../table/use-trade-mat.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { strategyFrame } from '../../artwork/cards.ts';
 import { factionLabel } from '../../labels.ts';
 import { CompleteCardArtwork } from '../cards/CompleteCardArtwork.tsx';
 import { useSidebarStore } from '../game/sidebar-store.ts';
+import { CoinFace } from '../sheet/SheetTokens.tsx';
 import { FactionEmblem } from '../simulator/FactionEmblem.tsx';
 import { SpeakerFace } from '../table/SpeakerFace.tsx';
 import '../table/table-people.css';
+import '../table/trade-mat.css';
 import {
   type PortraitButton,
   type PortraitTable,
@@ -171,6 +175,28 @@ function ChoiceMark({ button }: { readonly button: PortraitButton }): ReactEleme
   );
 }
 
+/** Kennung des versteckten Satzes „Handelspartner“; das Porträt des Partners nennt ihn. */
+const TRADE_MARK_ID = 'portrait-trade-mark';
+
+/** Das Band „Handelspartner“ am Porträt des Nachbarn, dem die Handelsmatte gerade gilt. */
+function TradeMark({ shown }: { readonly shown: boolean }): ReactElement | null {
+  const t = useT();
+  if (!shown) return null;
+  return (
+    <span className="portrait-trade-mark" aria-hidden="true">
+      <CoinFace />
+      <span className="portrait-trade-word">{t('tradePartnerMark')}</span>
+    </span>
+  );
+}
+
+/** Der Partner hört „Handelspartner“ als Beschreibung, neben einem „Hierher legen“. */
+function withTradeMark(props: PortraitButton['props'], partner: boolean): PortraitButton['props'] {
+  if (!partner) return props;
+  const ids = [props['aria-describedby'], TRADE_MARK_ID].filter((id) => id !== undefined);
+  return { ...props, 'aria-describedby': ids.join(' ') };
+}
+
 /** Name im Band der Platzfarbe, dazu KI und gepasst. */
 function NameBand({ name, entry }: { readonly name: string; readonly entry: RailEntry }) {
   const t = useT();
@@ -188,6 +214,8 @@ interface PortraitProps {
   readonly game: GameState;
   readonly entry: RailEntry;
   readonly table: PortraitTable;
+  /** Der gewählte Partner der Handelsmatte. */
+  readonly partner: boolean;
 }
 
 /**
@@ -195,7 +223,7 @@ interface PortraitProps {
  * getragene Stücke lassen sich darauf ablegen. Der Sprechermarker liegt neben dem Knopf, damit
  * er als eigenes Stück aufgenommen werden kann.
  */
-function Portrait({ game, entry, table }: PortraitProps) {
+function Portrait({ game, entry, table, partner }: PortraitProps) {
   const language = useLanguage();
   const me = useGameStore((state) => state.me);
   const player = findPlayer(game, entry.id);
@@ -213,10 +241,11 @@ function Portrait({ game, entry, table }: PortraitProps) {
         type="button"
         aria-label={player.name}
         title={factionLabel(player.faction, language)}
-        {...button.props}
+        {...withTradeMark(button.props, partner)}
       >
         <PortraitContents game={game} player={player} entry={entry} />
         <ChoiceMark button={button} />
+        <TradeMark shown={partner} />
       </button>
       {entry.speaker && <SpeakerToken table={table} />}
     </li>
@@ -239,11 +268,13 @@ function SpeakerGroup({ table }: { readonly table: PortraitTable }): ReactElemen
 
 /**
  * Porträts aller Spieler links oben: Wappen, Siegpunkte, Strategiekarten, wer am Zug ist. Bei
- * der Politik sind die Kandidaten die Radiogruppe „Neuer Sprecher“.
+ * der Politik sind die Kandidaten die Radiogruppe „Neuer Sprecher“; liegt die Handelsmatte,
+ * trägt der gewählte Nachbar das Band „Handelspartner“.
  */
 export function PlayerRail({ game }: { readonly game: GameState }): ReactElement {
   const t = useT();
   const table = usePortraitTable(game);
+  const partner: PlayerId | null = useTradeMat(game)?.draft.partner ?? null;
   return (
     <>
       <ol
@@ -252,10 +283,21 @@ export function PlayerRail({ game }: { readonly game: GameState }): ReactElement
         aria-label={t('initiativeOrder')}
       >
         {playerRail(game).map((entry) => (
-          <Portrait key={entry.id} game={game} entry={entry} table={table} />
+          <Portrait
+            key={entry.id}
+            game={game}
+            entry={entry}
+            table={table}
+            partner={entry.id === partner}
+          />
         ))}
       </ol>
       <SpeakerGroup table={table} />
+      {partner !== null && (
+        <span id={TRADE_MARK_ID} hidden>
+          {t('tradePartnerMark')}
+        </span>
+      )}
     </>
   );
 }

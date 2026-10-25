@@ -1053,7 +1053,97 @@ Die klassische Ansicht behält alle Formulare unverändert.
 | `PromptPeople` (`SecondarySocketLine`, `ReactionLine`), `PromptText` wiederverwendet | Kleine Bausteine der Ansage je Aufgabe, eingehängt nach Route bzw. `specId`; die offene Karte zeigt dieselbe Komponente wie das alte Formular (Single Responsibility, DRY).                        |
 | `PromptProgress` (`DiscardMeter`, `PlayersMeter`), `subtitleOf` (`SPEC_TITLES`)      | Die Messleiste unterscheidet weiter nach Art des Entwurfs, die zweite Kopfzeile nach Entscheidung über eine Tabelle statt Verzweigungen (Polymorphie über `kind`, Open/Closed).                    |
 
-## 36. Iterationen
+## 36. Iteration 32 im Detail (Werft, Forschungsauslage und Handelsmatte)
+
+Drei weitere Entscheidungen bekommen am Tisch ihre Regeln, Entwürfe und Ablagen; die Bausteine
+der Oberfläche setzen darauf auf. Die **Werft** dient der Produktion der taktischen Aktion und
+der Kriegsführung (sekundär) im Heimatsystem: Jede baubare Einheitenart liegt als Stück in der
+Werft (`yard:infantry`). Abgelegt im **Dock** (`slot:dock`) oder im System wird sie bestellt,
+abgelegt auf einem eigenen Planeten mit Produktion (`site:`) geht sie dorthin, wo neue
+Bodentruppen stehen sollen. Ob eine weitere Einheit passt, sagt die Domain: Produktionswert,
+Vorrat (RR 24.5) und Blockade (RR 14, keine Schiffe, Bodentruppen schon). Ohne eigene Wahl gehen
+Bodentruppen wie im Formular auf den ersten möglichen Planeten. Kostet die Bestellung etwas,
+bietet die Planetenreihe Ressourcen an; das Siegel „Produzieren“ bleibt gesperrt, bis bezahlt,
+die Bestellung gültig und ein Planet für Bodentruppen da ist. Ohne Bestellung heißt es „Ohne
+Produktion weiter“ bzw. bei der Kriegsführung „Ohne Bau abschließen“; die taktische Produktion
+behält diesen Satz mit Bestellung als Ausweg neben dem Siegel, die Kriegsführung ihr „Ablehnen“.
+Ziele der Werft sind nur das System und die Planeten der Bezahlung; Bauplätze stehen nicht in den
+Zielen, damit ihre Ringe die Ringe der Bezahlung nicht verdecken. Erst ein getragenes Stück macht
+die Planeten mit Produktion zu erlaubten Ablagen. Das Siegel erprobt auch den leeren Befehl: Die
+Kriegsführung baut selbst ohne Bestellung über die Produktion des Heimatsystems, und ohne
+Produktionseinheit lehnte die Domain ab.
+
+Die **Forschungsauslage** spielt die Technologie primär und sekundär. `researchSpreadOf` ordnet
+die noch nicht erforschten Technologien in Spalten je Farbe (dazu die Aufwertungen) und nennt je
+Karte ihren Zustand: gewählt, offen, gesperrt (mit den fehlenden Farben) oder voll (die Karte
+erlaubt keine weitere). Planeten mit Spezialisierung ersetzen eine fehlende Farbe; ein so
+genutzter Planet verlässt die Bezahlung und wird ihr nicht mehr angeboten. Anzahl und Kosten
+nennt `researchCost`, ob die Wahl samt Spezialisierungen gilt, erprobt `researchEvents`; eine
+nicht gebrauchte Spezialisierung meldet die Messleiste. Gesperrte Karten lassen sich nicht wählen
+(behebt A2) und liegen am Ende ihrer Spalte. Verliert eine gewählte Karte ihre Voraussetzung (eine
+andere ging zurück), nennen Karte und Messleiste die fehlenden Farben (`unmet`).
+
+Die **Handelsmatte** liegt für den Aktiven, solange keine andere Entscheidung ansteht, kein
+Angebot offen ist und es Handelspartner gibt (`tradePartners`: Nachbarn, mit denen in diesem Zug
+noch nicht gehandelt wurde). Münzen und Rohstoffkisten (`goods:commodities`, keine Münzen, nie
+in der Kasse) dürfen auf das Bild eines Partners, solange von dieser Ware etwas übrig ist; das
+wählt den Partner und legt eine Einheit auf „Du gibst“. Ein anderer Partner setzt die Bitte
+zurück (behebt D5), beide Seiten bleiben im Vorrat ihres Besitzers, ein leeres Angebot wird nicht
+gemacht. Der Entwurf liegt unter `version|player`; jeder neue Stand beginnt mit leerer Matte.
+Kasse und Matte teilen einen Münzvorrat: Münzen in der Kasse einer Bezahlung fehlen der Matte
+(`useTradeMat`), Münzen auf der Matte fehlen der Kasse (`coinsOf`, Plus der Kasse).
+
+Weil Technologie und Kriegsführung sekundär jetzt Tischentscheidungen sind, führt der Sockel der
+Sekundärfähigkeit auch sie aus: über das Siegel, sobald der Entwurf bereit ist. Bis dahin meldet
+`socketPlayOf` `awaitsDraft`, und der Sockel wartet auf die Wahl am Tisch. Eine leere Werft gilt
+dem Sockel nie als bereit: Wer nichts bauen will, lehnt kostenlos ab, statt einen Strategiemarker
+für nichts in den Sockel zu legen; „Ohne Bau abschließen“ bleibt am Siegel eine bewusste Wahl.
+
+Auf dem Tisch liegen die drei als eigene Bausteine: `Shipyard` in der Ansage (Werft, Dock mit
+einem Liegeplatz je Punkt Produktionswert, Planet neuer Bodentruppen), `ResearchSpread` als nicht
+modale Auslage links neben der Ansage (dieselben Kartenflächen wie das Formular, gesperrte Karten
+mit gesperrtem Eingabefeld) und `TradeMat` im Handelsformular (zwei Hälften „Du gibst“ und „Du
+erbittest“; der Empfänger sieht dieselbe Matte nur lesend). Bauplätze leuchten als eigene Ringe
+(`deploy`), nur solange eine Bodentruppe getragen wird. Das Siegel der Werft erprobt außerdem den
+fertigen Befehl (`tryCommand`): Flottenlimit und Kapazität prüft die Domain erst nach dem Bau, und
+ein Schiff zu viel soll nicht erst der Server ablehnen. Ein Stück fällt auf das oberste
+_erlaubte_ Ziel unter dem Zeiger (`dropTargetAt` mit den erlaubten Schlüsseln); ein Ring der
+Bezahlung über dem Hex der Produktion verschluckt so kein Schiff mehr. Unter dem Zeiger leuchtet
+nur ein erlaubtes Ziel auf (`legalOver`); ein Feld, auf das das Stück nicht darf, bleibt dunkel. Auf niedrigen Bildschirmen
+schrumpft die Phasenanzeige zu einer Zeile, solange die Werft offen ist, damit Werft, Dock und
+Siegel zugleich in der Ansage stehen.
+
+Die Leiste mit Ausweg und Siegel klebt in jeder Entscheidung am unteren Rand der Ansage; ist der
+Inhalt höher (Werft, Forschung mit Bezahlung, Sockel), gleitet er darunter hindurch, und das
+Siegel behält seine Beschriftung ganz. Werft und Handelsmatte rollen die Ansage nur so weit wie
+nötig und bündig an einer Zeile (`prompt-scroll.ts`): die Werft, bis ihre Steine über der Leiste
+stehen, die Matte nach jeder Änderung, bis „Angebot machen“ zu sehen ist. Die Steine der Werft
+tragen ihren Namen, die günstigen liegen vorn (`cheapFirst`), und ein ausblendender Rand zeigt,
+dass die Reihe weiterrollt. Die Matte ist flach (eine Zeile je Hälfte, Fuß mit Hinweis und
+Knopf; der Hinweis bleibt als Live-Region im Baum). Auf dem Tablet hochkant gibt die Ansage beim
+Bezahlen die Höhe der Planetenreihe ab, damit Phase und Ansage nicht über die Heimat am unteren
+Kartenrand wachsen; folgt man mit der Werft einer Karte, rückt der Sockel zusammen. Gesperrte
+Karten der Forschungsauslage liegen als schmale Streifen am Ende der Spalten; auf Telefonen sind
+die verdeckten Leisten (Spieler, Aufträge) solange `inert`.
+
+Der Ende-zu-Ende-Test der Matte legt über das Feld „Map-String“ eine eigene Galaxie aus, in der
+die drei Heimatsysteme aneinanderstoßen (`openTable` mit `MapEdit`); so sind alle von Beginn an
+Nachbarn. Nach Handel primär folgt der Nächste (er füllt seine Rohstoffe auf), zieht an seinem
+Zug eine Rohstoffkiste auf das Bild eines Nachbarn und bietet an; der nimmt auf seinem Gerät an.
+Trägt man den Strategiemarker, rückt der Sockel auch über einer offenen Werft ins Bild.
+
+| Element                                                                                       | Prinzip                                                                                                                                                                                      |
+| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `productionChoices`, `researchOptions`, `specialtyPlanets`, `tradePartners`                   | Die Domain beantwortet, was sie beim Ausführen auch prüft: Platz, Vorrat und Blockade je Einheit, fehlende Farben nach Wahl und Spezialisierungen, Partner je Zug (Information Expert, DRY). |
+| `spec-production` (`PRODUCTION_SPEC`, `WARFARE_SECONDARY_SPEC`), `spec-research`              | Drei neue Einträge in `TABLE_SPECS` mit eigenem Entwurf (`production`, `research`); dieselbe Werft für zwei Wege, unterschieden nur durch System, Siegel und Befehl (Open/Closed, Strategy). |
+| `production-draft.ts`, `research-draft.ts`, `trade-draft.ts`                                  | Reine Funktionen über den Entwürfen; was erlaubt ist, kommt als Argument aus der Domain (Pure Fabrication, testbar ohne Spielstand).                                                         |
+| `shipyard.ts` (`shipyardFor`, `shipyardOf`), `researchSpreadOf`                               | Ansichten über dem Entwurf, die Ansage, Pult und Karte teilen; die Werft rechnet je Bild nur einmal (Information Expert, Low Coupling).                                                      |
+| `trade-store.ts`, `use-trade-mat.ts` (`useTradeMat`, `traderOf`)                              | Die Matte ist keine Entscheidung mit Siegel, sondern ein eigener Entwurf neben ihr; wann sie liegt, sagt eine reine Regel (Single Responsibility, Protected Variations).                     |
+| `target-ref.ts` (`yard:`, `slot:dock`, `goods:commodities`), `carry-rules`, `use-drop-router` | Neue Stücke und Ablagen sind neue Arten desselben Schlüssels; Ablegen wird zu Bestellung, Planet oder Ware auf der Matte (Indirection, Protected Variations).                                |
+| `PromptMeters` (`ProductionMeter`, `ResearchMeter`), `METERS` in `PromptParts`                | Die Messleiste wählt ihre Darstellung über eine Tabelle je Art des Entwurfs statt über Verzweigungen (Polymorphie über `kind`, Open/Closed).                                                 |
+| `socket-play.ts` (`awaitsDraft`)                                                              | Was der Sockel auslöst, bleibt eine reine Funktion; sie unterscheidet nur noch „bereit“ und „wartet auf den Tisch“ (Pure Fabrication).                                                       |
+
+## 37. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -1088,8 +1178,9 @@ Die klassische Ansicht behält alle Formulare unverändert.
 | 29  | Planeten und Bezahlung am Tisch, Auftragsleiste     | ✓     |
 | 30  | Taktische Aktion und Bauen am Tisch                 | ✓     |
 | 31  | Karten und Menschen am Tisch                        | ✓     |
+| 32  | Werft, Forschungsauslage und Handelsmatte           | ✓     |
 
-## 37. Befehle
+## 38. Befehle
 
 ```
 pnpm install

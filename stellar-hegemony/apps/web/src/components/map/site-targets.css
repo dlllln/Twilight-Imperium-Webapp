@@ -1,7 +1,8 @@
 /*
  * Planeten als Ziele für Figuren und Gebäude: Ringe über dem Pixi-Bild, etwas weiter als die
- * Bezahlringe. Rot heißt Bombardement, Grün Landung, Gold Infrastruktur. Die Linie bleibt bei
- * jedem Zoom gleich dick, die Fläche bleibt fast durchsichtig.
+ * Bezahlringe. Rot heißt Bombardement, Grün Landung, Gold Infrastruktur, Grün-Türkis neue
+ * Bodentruppen der Werft. Die Linie bleibt bei jedem Zoom gleich dick, die Fläche bleibt fast
+ * durchsichtig.
  */
 .site-target {
   --site: var(--gold-bright, #f3d27a);
@@ -96,4 +97,27 @@
 :root.motion-off .site-target[data-site-kind='card'] {
   animation: none;
   filter: drop-shadow(0 0 4px #9fd8ff);
+}
+
+/*
+ * Bauplätze neuer Bodentruppen der Werft: Grün-Türkis, deutlich anders als das Grün der
+ * Landung, mit kräftigerer Linie. Sie erscheinen nur, solange eine Bodentruppe getragen wird.
+ */
+.site-target[data-site-kind='deploy'] {
+  --site: #3fd6c0;
+  stroke-width: 3;
+  animation:
+    site-target-march 1.8s linear infinite,
+    site-deploy-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes site-deploy-glow {
+  50% {
+    filter: drop-shadow(0 0 7px #3fd6c0);
+  }
+}
+
+:root.motion-off .site-target[data-site-kind='deploy'] {
+  animation: none;
+  filter: drop-shadow(0 0 4px #3fd6c0);
 }

@@ -199,10 +199,15 @@
   stroke-dasharray: 3 2;
 }
 
-.socket-token {
-  fill: var(--seat, var(--gold));
-  stroke: #000a;
-  stroke-width: 1;
+/*
+ * Das Bett des Markers: hohl und gestrichelt, damit der getragene Marker (der Geist am Zeiger)
+ * darüber deutlich zu sehen bleibt.
+ */
+.socket-bed {
+  fill: #00000080;
+  stroke: var(--seat, var(--gold));
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
 }
 
 .socket-cost {
@@ -281,6 +286,28 @@
 
 .secondary-socket[data-affordable='false'] .secondary-socket-cost strong {
   color: var(--warfare);
+}
+
+/* Wartet der Sockel auf die Wahl am Tisch, liegt er gedämpft da; eine kleine Zeile sagt warum. */
+
+.secondary-socket-wait {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+.secondary-socket-wait[data-awaits='true'] {
+  opacity: 0.6;
+  cursor: help;
+}
+
+.secondary-socket-draft {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
 }
 
 /* Reaktion: die gespielte Karte liegt verkleinert in der Ansage. */

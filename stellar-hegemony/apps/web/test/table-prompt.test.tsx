@@ -108,7 +108,7 @@ type Change = (state: GameState, me: PlayerId) => GameState;
 const unchanged: Change = (state) => state;
 
 /** Die Sekundärfähigkeit der Karte steht für einen Mitspieler offen; er sitzt am Bildschirm. */
-function following(mechanic: 'imperial' | 'diplomacy', change = unchanged): PlayerId {
+function following(mechanic: 'imperial' | 'diplomacy' | 'politics', change = unchanged): PlayerId {
   const state = pickAll(started());
   const turn = state.actionPhase as NonNullable<GameState['actionPhase']>;
   const me = state.players.find((player) => player.id !== turn.active)?.id as PlayerId;
@@ -230,11 +230,11 @@ describe('Ansage am Pult (Tischansicht)', () => {
   });
 
   it('nicht umgestellte Entscheidungen zeigen ihr Formular in der Ansage', () => {
-    choosing('technology');
+    following('politics');
     render(<Live />);
     const body = prompt().querySelector('.table-prompt-body') as HTMLElement;
-    expect(body.querySelector('.technology-form')).not.toBeNull();
-    expect(screen.getAllByRole('button', { name: 'Erforschen' })).toHaveLength(1);
+    expect(body.querySelector('.choice-form')?.textContent).toContain('Du ziehst 2 Aktionskarten.');
+    expect(within(body).getAllByRole('button', { name: 'Ausführen' })).toHaveLength(1);
     expect(screen.queryByTestId('confirm')).toBeNull();
   });
 

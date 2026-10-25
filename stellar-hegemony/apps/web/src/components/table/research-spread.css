@@ -1,0 +1,351 @@
+/*
+ * Forschungsauslage: ein offener Kartentisch in der freien Mitte zwischen Auftragsleiste und
+ * Pult, links von der Spalte der Ansage (Rand 76px, Spalte 340px, Luft). Sie liegt über der
+ * Karte und dem Pult, aber unter Hand und Ansage und rollt in sich, statt etwas zu verdecken.
+ * Kopf und Schrift kommen vom Kartentisch der geheimen Aufträge (`card-table.css`).
+ */
+.research-spread {
+  --spread-top: calc(var(--strip-reserve, 130px) + 4px);
+  --spread-bottom: calc(var(--sheet-h, 132px) + var(--planet-row-h, 0px) + 92px);
+  position: absolute;
+  top: var(--spread-top);
+  left: 276px;
+  right: calc(76px + 340px + 16px);
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100% - var(--spread-top) - var(--spread-bottom));
+  padding: 14px 16px 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  border: 1px solid var(--gold-line);
+  border-bottom: 3px solid #000b;
+  border-radius: 14px;
+  color: var(--text);
+  background:
+    repeating-linear-gradient(130deg, #ffffff04 0 1px, transparent 1px 6px),
+    radial-gradient(ellipse at 50% 0%, #10263ce8, #060d18f2 75%);
+  box-shadow:
+    0 18px 40px #000a,
+    inset 0 1px 0 #ffe6a826;
+  pointer-events: auto;
+}
+
+.research-spread .research-spread-header {
+  margin: 0;
+}
+
+.research-spread .research-spread-header h2 {
+  margin: 6px 0 4px;
+  font-size: clamp(17px, 1.6vw, 22px);
+}
+
+.research-spread .research-spread-header p {
+  font-size: 12px;
+}
+
+.research-spread-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Planeten mit Spezialisierung: kleine Messingschalter über der Auslage. */
+.research-skips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 10px;
+  margin: 0;
+  padding: 6px 10px 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+}
+
+.research-skips legend {
+  padding: 0 4px;
+  color: var(--gold-bright);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.specialty-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--tech) 50%, transparent);
+  border-radius: 999px;
+  background: #0b1424;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.specialty-skip[data-chosen='true'] {
+  border-color: var(--tech);
+  background: color-mix(in srgb, var(--tech) 22%, #0b1424);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tech) 45%, transparent);
+}
+
+.specialty-skip input {
+  margin: 0;
+  accent-color: var(--tech);
+}
+
+/* Spalten je Farbe; wird es eng, brechen sie in die nächste Reihe um. */
+.research-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+
+.research-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 6px 8px;
+  border: 0;
+  border-top: 2px solid var(--tech);
+  border-radius: 4px;
+  background: linear-gradient(#ffffff06, transparent 40%);
+}
+
+.research-column legend {
+  padding: 0 6px;
+  color: var(--tech);
+  font-family: var(--title-font);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+/*
+ * Eine Karte: Bild der Farbe oben, Name und Voraussetzungen, darunter die Wirkung. Die Regeln des
+ * Formulars (`.tech-option.ti4-print-card`) legen ein Raster mit Kästchen links an; hier liegt
+ * das Kästchen unsichtbar über der ganzen Karte, damit Antippen und `check()` es treffen.
+ */
+.research-spread .research-card.tech-option {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'art art'
+    'name dots'
+    'effect effect'
+    'state state';
+  row-gap: 5px;
+  column-gap: 6px;
+  margin: 0;
+  padding: 10px 11px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 16px #0009;
+  transform-origin: 50% 100%;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+  animation: research-rise 360ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+.research-spread .research-card > .research-card-input {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.research-spread .research-card .ti4-technology-art {
+  width: 100%;
+  height: 34px;
+  border-radius: 4px;
+}
+
+.research-spread .research-card .tech-name {
+  min-width: 0;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.research-spread .research-card .tech-effect {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+}
+
+.research-card-state {
+  grid-area: state;
+  justify-self: start;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #f3e6c4;
+  background: #0009;
+}
+
+.research-spread .research-card:hover:not(:has(input:disabled)) {
+  transform: translateY(-3px);
+}
+
+.research-spread .research-card:has(input:focus-visible) {
+  outline: 3px solid var(--gold-bright);
+  outline-offset: 3px;
+}
+
+.research-spread .research-card[data-state='chosen'] {
+  border-color: var(--gold-bright);
+  box-shadow:
+    0 12px 22px #000b,
+    0 0 0 2px var(--gold-bright),
+    0 0 22px color-mix(in srgb, var(--tech) 55%, transparent);
+  transform: translateY(-6px);
+}
+
+.research-spread .research-card[data-state='chosen'] .research-card-state {
+  color: #182331;
+  background: var(--gold-bright);
+}
+
+.research-spread .research-card[data-state='locked'] {
+  cursor: not-allowed;
+  filter: grayscale(0.7) brightness(0.8);
+}
+
+/*
+ * Gesperrte Karten liegen am Ende der Spalte als schmale Streifen: nur Name, fehlende Farben und
+ * der Zustand, ohne Bild und Wirkung. So stehen die wählbaren Karten oben dicht beisammen.
+ */
+.research-spread .research-card.tech-option[data-state='locked'] {
+  grid-template-areas:
+    'name dots'
+    'state state';
+  row-gap: 3px;
+  padding: 6px 9px;
+  box-shadow: 0 3px 6px #0008;
+}
+
+.research-spread .research-card[data-state='locked'] .ti4-technology-art,
+.research-spread .research-card[data-state='locked'] .tech-effect {
+  display: none;
+}
+
+.research-spread .research-card[data-state='locked'] .tech-name {
+  font-size: 12px;
+}
+
+.research-spread .research-card[data-state='locked'] .research-card-state {
+  font-size: 9.5px;
+}
+
+/* Gewählt, aber ohne erfüllte Voraussetzung: der Zustand warnt in Rot. */
+.research-spread .research-card[data-unmet='true'] .research-card-state {
+  color: #ffd2d4;
+  background: #5a1b22;
+}
+
+.table-prompt-meter > .table-prompt-unmet {
+  flex-basis: 100%;
+  color: #ffb4b8;
+}
+
+.research-spread .research-card[data-state='locked'] .research-card-state {
+  color: #ffd2d4;
+  background: #5a1b22cc;
+}
+
+.research-spread .research-card[data-state='full'] {
+  cursor: default;
+  opacity: 0.55;
+}
+
+@keyframes research-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(-2deg);
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Ohne Bewegung: die Karten liegen sofort da und heben sich nicht an. */
+:root.motion-off .research-spread .research-card.tech-option {
+  animation: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .research-spread .research-card.tech-option {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Niedrige Bildschirme: der Hinweis steht schon in der Ansage; die Karten bekommen den Platz. */
+@media (max-height: 780px) {
+  .research-spread .research-spread-header p {
+    display: none;
+  }
+}
+
+/*
+ * Hochkant und Telefone: Die Ansage steht dort fast über die ganze Breite. Die Auslage liegt
+ * darüber, zwischen Auftragsleiste und Phasenanzeige: Die Spalte der Meldungen beginnt über Pult,
+ * Hand (`--hand-rise`) und der höchstens so hohen Ansage (auf dem Tablet gibt sie beim Bezahlen
+ * die Höhe der Planetenreihe ab, styles.css); darüber stehen Phasenanzeige und Abstand. Auf
+ * Telefonen kommt die Planetenreihe hinzu, und der Platz reicht nur, wenn die Auslage solange
+ * auch Spielerleiste und Auftragsleiste überdeckt; beide sind dann außer Reichweite (`inert`)
+ * und danach unverändert.
+ */
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait) {
+  .research-spread {
+    --spread-top: 112px;
+    --spread-bottom: calc(
+      var(--sheet-h, 96px) + var(--hand-rise, 200px) + min(260px, 30dvh) + 84px
+    );
+    left: 10px;
+    right: 76px;
+  }
+}
+
+@media (max-width: 760px) {
+  .research-spread {
+    --spread-top: 8px;
+    --spread-bottom: calc(
+      var(--sheet-h, 96px) + var(--hand-rise, 118px) + var(--planet-row-h, 0px) +
+        min(182px, 30dvh) + 92px
+    );
+    left: 8px;
+    right: 8px;
+    gap: 6px;
+    padding: 8px 10px 10px;
+  }
+
+  .research-spread .research-spread-header h2,
+  .research-spread .research-spread-header p {
+    display: none;
+  }
+
+  .research-columns {
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+    gap: 8px;
+  }
+
+  .research-spread .research-card .tech-effect {
+    -webkit-line-clamp: 3;
+  }
+}

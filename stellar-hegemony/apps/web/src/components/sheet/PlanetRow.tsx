@@ -18,6 +18,7 @@ import { useRegisterPlanetRow } from '../../table/payment-store.ts';
 import { kasseUseful, type PlanetTable, planetStates } from '../../table/planet-table.ts';
 import { planetTarget, targetKey, type TargetState } from '../../table/target-ref.ts';
 import { usePlanetTable } from '../../table/use-planet-table.ts';
+import { useOfferedGoods } from '../../table/use-trade-mat.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { KassePlate } from './KassePlate.tsx';
 import './planet-row.css';
@@ -153,16 +154,18 @@ function CardList({ cards, mode, planets }: ListProps): ReactElement {
 
 interface RowProps extends ListProps {
   readonly table: SheetTable;
+  /** Münzen auf der Handelsmatte; sie fehlen der Kasse. */
+  readonly onMat: number;
 }
 
 /** Die angezeigte Reihe; solange sie steht, weiß das Bezahlformular davon. */
-function Row({ cards, mode, planets, table }: RowProps): ReactElement {
+function Row({ cards, mode, planets, table, onMat }: RowProps): ReactElement {
   const t = useT();
   useRegisterPlanetRow();
   const kasse = planets !== null && kasseUseful(planets);
   return (
     <section className="planet-row" aria-label={t('planetRow')} data-mode={mode}>
-      {kasse && <KassePlate table={table} planets={planets} />}
+      {kasse && <KassePlate table={table} planets={planets} onMat={onMat} />}
       <CardList cards={cards} mode={mode} planets={planets} />
     </section>
   );
@@ -171,11 +174,13 @@ function Row({ cards, mode, planets, table }: RowProps): ReactElement {
 export function PlanetRow({ game, table }: PlanetRowProps): ReactElement | null {
   const viewer = useViewer();
   const offered = usePlanetTable(game);
+  const onMat = useOfferedGoods(game, viewer).tradeGoods;
   const cards = useMemo(
     () => (viewer === null ? [] : planetRow(game, viewer, content)),
     [game, viewer],
   );
   const planets = offered !== null && offered.player === viewer ? offered : null;
   if (cards.length === 0 && planets === null) return null;
-  return <Row cards={cards} mode={planets?.mode ?? 'rest'} planets={planets} table={table} />;
+  const mode = planets?.mode ?? 'rest';
+  return <Row cards={cards} mode={mode} planets={planets} table={table} onMat={onMat} />;
 }

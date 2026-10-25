@@ -9,15 +9,21 @@ import {
   updatePlayer,
 } from '@stellar/domain';
 import type { ReactElement } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { homeSystemOf } from '../src/card-view.ts';
 import { TurnPanel } from '../src/components/game/TurnPanel.tsx';
 import { useGameStore } from '../src/game-store.ts';
+import { useSettingsStore } from '../src/settings-store.ts';
 import { currentActor } from '@stellar/domain';
 import { content, useGalaxyStore } from '../src/store.ts';
 import { pickAll, started } from './game-helpers.ts';
 
 afterEach(cleanup);
+
+// Diese Fälle prüfen das Formular der klassischen Ansicht; die Handelsmatte prüft trade-mat.test.
+beforeEach(() => {
+  useSettingsStore.setState({ tableView: false });
+});
 
 const game = () => useGameStore.getState().game as GameState;
 
@@ -66,9 +72,23 @@ describe('Tausch mit Nachbarn (RR 82)', () => {
   it('ein abgelehntes Angebot ändert nichts', () => {
     const { player } = neighbours();
     render(<Live />);
+    fireEvent.click(screen.getByRole('button', { name: 'Geben: Handelswaren +' }));
     fireEvent.click(screen.getByRole('button', { name: 'Angebot machen' }));
     fireEvent.click(screen.getByRole('button', { name: 'Ablehnen' }));
     expect(game().actionPhase?.transaction).toBeNull();
     expect(findPlayer(game(), player)?.tradeGoods).toBe(2);
+  });
+
+  it('klassisch: ein ganz leeres Angebot lässt sich nicht machen', () => {
+    neighbours();
+    render(<Live />);
+    const propose = screen.getByRole<HTMLButtonElement>('button', { name: 'Angebot machen' });
+    expect(propose.disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Geben: Handelswaren +' }));
+    expect(propose.disabled).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Geben: Handelswaren −' }));
+    expect(propose.disabled).toBe(true);
+    fireEvent.click(propose);
+    expect(game().actionPhase?.transaction).toBeNull();
   });
 });

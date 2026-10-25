@@ -15,6 +15,7 @@ import {
 } from './PromptParts.tsx';
 import { ReactionLine, SecondarySocketLine } from './PromptPeople.tsx';
 import { DiplomacyPick, DoneLine, PlacementList, TradeCorner } from './PromptTactical.tsx';
+import { Shipyard } from './Shipyard.tsx';
 import { StructureTray } from './StructureTray.tsx';
 
 /*
@@ -49,8 +50,8 @@ function PromptHint({ decision }: { readonly decision: TableDecision }): ReactEl
 /**
  * Eine am Tisch gespielte Entscheidung: Marker und Planeten auf dem Pult, Aufträge auf der
  * Auftragsleiste, Figuren und Bauplätze auf der Karte, Menschen auf ihren Porträts. Hier stehen
- * von oben nach unten die offene Karte einer Reaktion, Messleiste, Tastaturweg bzw. Bauvorrat,
- * gesetzte Gebäude, Ausweg und Siegel, zuletzt der Handel.
+ * von oben nach unten die offene Karte einer Reaktion, Messleiste, Tastaturweg bzw. Bauvorrat
+ * oder Werft, gesetzte Gebäude, Ausweg und Siegel, zuletzt der Handel.
  */
 function PortedPrompt({ game, decision }: PartProps): ReactElement {
   return (
@@ -62,6 +63,7 @@ function PortedPrompt({ game, decision }: PartProps): ReactElement {
       <PromptWarfare game={game} decision={decision} />
       <DiplomacyPick game={game} decision={decision} />
       <StructureTray game={game} decision={decision} />
+      <Shipyard game={game} decision={decision} />
       <PlacementList game={game} decision={decision} />
       <PromptActions decision={decision} />
       <TradeCorner game={game} decision={decision} />

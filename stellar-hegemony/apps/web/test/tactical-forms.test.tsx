@@ -94,6 +94,32 @@ describe('Produktion im Taktikpanel (RR 62)', () => {
     fireEvent.click(screen.getAllByRole('checkbox')[0] as HTMLElement);
     expect(produce().disabled).toBe(true);
   });
+
+  it('klassisches Produktionsformular: Plus ist gesperrt, wenn der Vorrat erschöpft ist', () => {
+    const { player, home } = begin();
+    const carrier = unitTypeId('carrier');
+    const limit = content.units.find(carrier)?.componentLimit as number;
+    // Die übrigen Träger des Vorrats stehen in einem leeren System; daheim bliebe das Flottenlimit.
+    const owned = Object.values(game().systems)
+      .flatMap((system) => system.spaceUnits)
+      .filter((unit) => unit.owner === player && unit.type === carrier).length;
+    const empty = Object.values(game().systems).find(
+      (system) => system.id !== home && system.spaceUnits.length === 0,
+    ) as GameState['systems'][string];
+    const spaceUnits = Array.from({ length: limit - owned }, (_, at) => ({
+      id: unitId(`traeger-${String(at)}`),
+      type: carrier,
+      owner: player,
+      damaged: false,
+    }));
+    const systems = { ...game().systems, [empty.id]: { ...empty, spaceUnits } };
+    useGameStore.setState({ game: { ...game(), systems } });
+    store().send({ type: 'ActivateSystem', issuedBy: player, system: home });
+    render(<LiveTurn player={player} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ohne Bewegung weiter' }));
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Träger +' }).disabled).toBe(true);
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Jäger +' }).disabled).toBe(false);
+  });
 });
 
 describe('Einmarsch im Taktikpanel (RR 25)', () => {

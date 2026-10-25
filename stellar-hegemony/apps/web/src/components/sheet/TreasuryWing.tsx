@@ -7,14 +7,15 @@ import { type EmpireSummary, type Supply, TECHNOLOGY_COLORS } from '../../hud/hu
 import { PILE_MAX, type SheetModel, supplyText } from '../../hud/sheet-model.ts';
 import type { SheetPulse, SheetTable } from '../../hud/use-sheet.ts';
 import type { MessageKey } from '../../i18n.ts';
-import { GOODS_PIECE } from '../../table/target-ref.ts';
+import { CRATE_PIECE, GOODS_PIECE } from '../../table/target-ref.ts';
 import { usePlanetTable } from '../../table/use-planet-table.ts';
 import { useTarget } from '../../table/use-target.ts';
+import { useOfferedGoods } from '../../table/use-trade-mat.ts';
 import { useT } from '../../use-translation.ts';
 import { TECH_ICONS } from '../hud/tech-icons.ts';
 import { CoinPiece } from './KassePlate.tsx';
 import { dropAttributes } from './SheetPiece.tsx';
-import { Coin, CrateSocket, SheetDelta } from './SheetTokens.tsx';
+import { Coin, Crate, SheetDelta, Socket } from './SheetTokens.tsx';
 
 /** Umfang des Siegpunktrings (Radius 17 im 40er-Raster). */
 const RING = 2 * Math.PI * 17;
@@ -23,12 +24,14 @@ interface GoodsProps {
   readonly count: number;
   /** Münzen, die gerade in der Kasse liegen; sie fehlen auf dem Haufen. */
   readonly inKasse: number;
+  /** Münzen auf der Handelsmatte; auch sie fehlen auf dem Haufen. */
+  readonly offered: number;
   readonly pulse: SheetPulse;
   readonly table: SheetTable;
 }
 
 /** Der Münzhaufen; während einer Bezahlung liegt obenauf eine Münze zum Aufnehmen. */
-function Pile({ count, table }: Omit<GoodsProps, 'pulse' | 'inKasse'>): ReactElement {
+function Pile({ count, table }: Pick<GoodsProps, 'count' | 'table'>): ReactElement {
   const t = useT();
   return (
     <div className="sheet-pile">
@@ -50,13 +53,13 @@ function goodsText(t: (key: MessageKey) => string, count: number, inKasse: numbe
 
 /**
  * Haufen goldener Münzen für die Handelswaren; ab zehn wächst nur noch die Zahl. Der Haufen ist
- * auch ein Ziel: Münzen aus der Kasse kommen hierher zurück. Münzen in der Kasse liegen nicht
- * mehr auf dem Haufen; die Beschriftung nennt weiter den ganzen Vorrat.
+ * auch ein Ziel: Münzen aus der Kasse kommen hierher zurück. Münzen in der Kasse oder auf der
+ * Handelsmatte liegen nicht mehr auf dem Haufen; die Beschriftung nennt weiter den ganzen Vorrat.
  */
-function Goods({ count, inKasse, pulse, table }: GoodsProps): ReactElement {
+function Goods({ count, inKasse, offered, pulse, table }: GoodsProps): ReactElement {
   const t = useT();
   const target = useTarget(GOODS_PIECE, undefined, table.router);
-  const left = Math.max(0, count - inKasse);
+  const left = Math.max(0, count - inKasse - offered);
   const text = goodsText(t, count, inKasse);
   return (
     <div
@@ -80,9 +83,35 @@ function Goods({ count, inKasse, pulse, table }: GoodsProps): ReactElement {
   );
 }
 
-/** Genau so viele Fassungen wie das Rohstofflimit; jede volle trägt eine Kiste. */
-function Commodities({ supply, pulse }: { readonly supply: Supply; readonly pulse: SheetPulse }) {
+/** Eine Fassung; auf der obersten vollen liegt, solange gehandelt wird, die Kiste zum Aufnehmen. */
+function CrateSlot(props: {
+  readonly filled: boolean;
+  readonly top: boolean;
+  readonly table: SheetTable;
+}) {
   const t = useT();
+  return (
+    <Socket>
+      <AnimatePresence initial={false}>{props.filled && <Crate key="crate" />}</AnimatePresence>
+      {props.top && (
+        <CoinPiece piece={CRATE_PIECE} label={t('pickUpCrate')} table={props.table} look="crate" />
+      )}
+    </Socket>
+  );
+}
+
+interface CommoditiesProps {
+  readonly supply: Supply;
+  /** Kisten auf der Handelsmatte; ihre Fassungen sind leer, die Beschriftung zählt sie mit. */
+  readonly offered: number;
+  readonly pulse: SheetPulse;
+  readonly table: SheetTable;
+}
+
+/** Genau so viele Fassungen wie das Rohstofflimit; jede volle trägt eine Kiste. */
+function Commodities({ supply, offered, pulse, table }: CommoditiesProps) {
+  const t = useT();
+  const left = Math.max(0, supply.ready - offered);
   return (
     <div
       className="sheet-commodities"
@@ -92,7 +121,7 @@ function Commodities({ supply, pulse }: { readonly supply: Supply; readonly puls
       <div className="sheet-crates">
         <Package className="sheet-icon" size={12} aria-hidden="true" />
         {Array.from({ length: supply.total }, (_, index) => (
-          <CrateSocket key={index} filled={index < supply.ready} />
+          <CrateSlot key={index} filled={index < left} top={index === left - 1} table={table} />
         ))}
       </div>
       <span className="sheet-caption" aria-hidden="true">
@@ -207,10 +236,17 @@ export function TreasuryWing({ game, model, pulse, table }: WingProps): ReactEle
   const t = useT();
   const { summary } = model;
   const inKasse = useCoinsInKasse(game);
+  const offered = useOfferedGoods(game, model.player);
+  const goods = { inKasse, offered: offered.tradeGoods, pulse, table };
   return (
     <div className="sheet-wing treasury" role="group" aria-label={t('sheetTreasury')}>
-      <Goods count={summary.tradeGoods} inKasse={inKasse} pulse={pulse} table={table} />
-      <Commodities supply={summary.commodities} pulse={pulse} />
+      <Goods count={summary.tradeGoods} {...goods} />
+      <Commodities
+        supply={summary.commodities}
+        offered={offered.commodities}
+        pulse={pulse}
+        table={table}
+      />
       <div className="sheet-values">
         <ValuePlate kind="res" label="resources" supply={summary.resources} />
         <ValuePlate kind="inf" label="influence" supply={summary.influence} />

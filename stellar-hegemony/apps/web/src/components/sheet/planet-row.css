@@ -390,6 +390,21 @@ button.planet-card:focus-visible {
   border-radius: 40%;
 }
 
+/* Die Rohstoffkiste zum Aufnehmen liegt über der obersten vollen Fassung (nur zum Handeln). */
+.sheet-socket > .sheet-crate-piece {
+  border-radius: 6px;
+}
+
+/*
+ * Münze und Kiste sind die Griffe der Bezahlung und der Handelsmatte. Gezeichnet bleiben sie
+ * klein; der Finger trifft auf mindestens 44px (auf dem Tablet verkleinert das Pult sie noch).
+ */
+.sheet-piece.sheet-coin-piece::before,
+.sheet-piece.sheet-crate-piece::before {
+  inset: min(0px, calc((100% - 44px) / 2));
+  border-radius: 30%;
+}
+
 .drag-ghost.coin {
   width: 30px;
   height: 19px;

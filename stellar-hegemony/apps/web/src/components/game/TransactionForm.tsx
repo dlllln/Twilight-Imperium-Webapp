@@ -2,60 +2,94 @@ import {
   findPlayer,
   type GameState,
   type Goods,
-  neighborsOf,
   NO_GOODS,
   type PlayerId,
+  tradePartners,
 } from '@stellar/domain';
 import { type ReactElement, useState } from 'react';
 import { useGameStore } from '../../game-store.ts';
+import { useSettingsStore } from '../../settings-store.ts';
+import type { GoodKind } from '../../table/target-ref.ts';
+import {
+  askGoods,
+  canPropose,
+  choosePartner,
+  fitted,
+  giveGoods,
+  proposalOf,
+  type TradeDraft,
+  tradeDraft,
+} from '../../table/trade-draft.ts';
+import { useTradeMat } from '../../table/use-trade-mat.ts';
 import { useT } from '../../use-translation.ts';
+import { OfferMat, TradeMat } from '../table/TradeMat.tsx';
 import { PlayerTag } from './PlayerTag.tsx';
 import { Stepper } from './Stepper.tsx';
+
+/*
+ * Tausch mit Nachbarn (RR 82). In der Tischansicht liegt er als Handelsmatte in der Ansage,
+ * sonst als Formular; beide bauen auf demselben Entwurf (`trade-draft.ts`): Ein anderer Partner
+ * leert das Verlangte, ein ganz leeres Angebot lässt sich nicht machen.
+ */
 
 interface TurnProps {
   readonly game: GameState;
   readonly player: PlayerId;
 }
 
-/** Nachbarn, mit denen in diesem Zug noch getauscht werden darf (RR 82.1). */
-const partnersOf = (game: GameState, player: PlayerId): readonly PlayerId[] =>
-  neighborsOf(game, player).filter((id) => game.actionPhase?.transactedWith.includes(id) !== true);
+const GOODS: readonly GoodKind[] = ['tradeGoods', 'commodities'];
+
+/** Vorrat eines Spielers an Handelswaren und Rohstoffen; ohne Spieler `null`. */
+function goodsOf(game: GameState, id: PlayerId | null): Goods | null {
+  const found = id === null ? undefined : findPlayer(game, id);
+  return found === undefined
+    ? null
+    : { tradeGoods: found.tradeGoods, commodities: found.commodities };
+}
 
 function GoodsSteppers(props: {
   readonly label: string;
-  readonly owner: PlayerId;
-  readonly game: GameState;
   readonly value: Goods;
-  readonly onChange: (goods: Goods) => void;
+  /** Vorrat, der diese Seite begrenzt; `null` sperrt Plus. */
+  readonly stock: Goods | null;
+  readonly onStep: (good: GoodKind, delta: number) => void;
 }): ReactElement {
   const t = useT();
-  const stock = findPlayer(props.game, props.owner);
-  const step = (key: keyof Goods) => (
-    <Stepper
-      label={`${props.label}: ${t(key)}`}
-      value={props.value[key]}
-      canAdd={props.value[key] < (stock?.[key] ?? 0)}
-      onChange={(delta) => props.onChange({ ...props.value, [key]: props.value[key] + delta })}
-    />
-  );
+  const { label, value, stock, onStep } = props;
   return (
     <>
-      {step('tradeGoods')}
-      {step('commodities')}
+      {GOODS.map((good) => (
+        <Stepper
+          key={good}
+          label={`${label}: ${t(good)}`}
+          value={value[good]}
+          canAdd={stock !== null && value[good] < stock[good]}
+          onChange={(delta) => onStep(good, delta)}
+        />
+      ))}
     </>
   );
 }
 
-function useOffer(game: GameState, player: PlayerId) {
-  const partners = partnersOf(game, player);
-  const [chosen, setPartner] = useState<PlayerId | null>(null);
-  const partner = chosen !== null && partners.includes(chosen) ? chosen : (partners[0] ?? null);
-  const [offer, setOffer] = useState(NO_GOODS);
-  const [request, setRequest] = useState(NO_GOODS);
-  return { partners, partner, setPartner, offer, setOffer, request, setRequest };
+/** Entwurf des Formulars: wie die Matte, nur lokal und mit dem ersten Nachbarn vorgewählt. */
+function useClassicDraft(game: GameState, player: PlayerId) {
+  const partners = tradePartners(game, player);
+  const [stored, setStored] = useState<TradeDraft>(tradeDraft);
+  const own = goodsOf(game, player) ?? NO_GOODS;
+  const fit = fitted(stored, partners, own, goodsOf(game, stored.partner));
+  const first = partners[0];
+  const draft = fit.partner === null && first !== undefined ? choosePartner(fit, first) : fit;
+  const theirs = goodsOf(game, draft.partner);
+  return {
+    partners,
+    draft,
+    own,
+    theirs,
+    choose: (partner: PlayerId) => setStored(choosePartner(draft, partner)),
+    give: (good: GoodKind, delta: number) => setStored(giveGoods(draft, good, delta, own)),
+    ask: (good: GoodKind, delta: number) => setStored(askGoods(draft, good, delta, theirs)),
+  };
 }
-
-type Offer = ReturnType<typeof useOffer>;
 
 function PartnerChoice(props: {
   readonly game: GameState;
@@ -76,39 +110,17 @@ function PartnerChoice(props: {
   );
 }
 
-/** Was der aktive Spieler gibt und was er vom Nachbarn verlangt. */
-function OfferFields(props: TurnProps & { readonly partner: PlayerId; readonly form: Offer }) {
-  const t = useT();
-  const { game, player, partner, form } = props;
-  return (
-    <>
-      <GoodsSteppers
-        label={t('give')}
-        owner={player}
-        game={game}
-        value={form.offer}
-        onChange={form.setOffer}
-      />
-      <GoodsSteppers
-        label={t('ask')}
-        owner={partner}
-        game={game}
-        value={form.request}
-        onChange={form.setRequest}
-      />
-    </>
-  );
-}
-
-/** RR 82: Angebot an einen Nachbarn; er nimmt es an oder lehnt ab. */
-export function TransactionForm({ game, player }: TurnProps): ReactElement | null {
+/** Das Formular der klassischen Ansicht: Nachbar, was man gibt, was man verlangt. */
+function ClassicTransaction({ game, player }: TurnProps): ReactElement | null {
   const t = useT();
   const send = useGameStore((state) => state.send);
-  const form = useOffer(game, player);
-  const { partner, offer, request } = form;
-  if (partner === null) return null;
-  const propose = () =>
-    send({ type: 'ProposeTransaction', issuedBy: player, partner, offer, request });
+  const form = useClassicDraft(game, player);
+  const { draft } = form;
+  if (draft.partner === null) return null;
+  const propose = () => {
+    const command = proposalOf(draft, player);
+    if (command !== null) send(command);
+  };
   return (
     <details className="transaction">
       <summary>{t('transaction')}</summary>
@@ -116,15 +128,23 @@ export function TransactionForm({ game, player }: TurnProps): ReactElement | nul
       <PartnerChoice
         game={game}
         partners={form.partners}
-        value={partner}
-        onChange={form.setPartner}
+        value={draft.partner}
+        onChange={form.choose}
       />
-      <OfferFields game={game} player={player} partner={partner} form={form} />
-      <button type="button" onClick={propose}>
+      <GoodsSteppers label={t('give')} value={draft.give} stock={form.own} onStep={form.give} />
+      <GoodsSteppers label={t('ask')} value={draft.ask} stock={form.theirs} onStep={form.ask} />
+      <button type="button" disabled={!canPropose(draft)} onClick={propose}>
         {t('propose')}
       </button>
     </details>
   );
+}
+
+/** RR 82: Angebot an einen Nachbarn; am Tisch als Handelsmatte, sonst als Formular. */
+export function TransactionForm({ game, player }: TurnProps): ReactElement | null {
+  const mat = useTradeMat(game);
+  if (mat !== null && mat.player === player) return <TradeMat game={game} mat={mat} />;
+  return <ClassicTransaction game={game} player={player} />;
 }
 
 function GoodsText({ goods }: { readonly goods: Goods }): ReactElement {
@@ -137,10 +157,11 @@ function GoodsText({ goods }: { readonly goods: Goods }): ReactElement {
   );
 }
 
-/** Das offene Angebot: der Empfänger stimmt zu oder lehnt ab. */
+/** Das offene Angebot: der Empfänger stimmt zu oder lehnt ab; am Tisch liegt es dazu als Matte. */
 export function TransactionReply({ game, player }: TurnProps): ReactElement | null {
   const t = useT();
   const send = useGameStore((state) => state.send);
+  const table = useSettingsStore((state) => state.tableView);
   const pending = game.actionPhase?.transaction;
   if (pending == null) return null;
   return (
@@ -150,6 +171,9 @@ export function TransactionReply({ game, player }: TurnProps): ReactElement | nu
         <PlayerTag game={game} id={pending.from} /> {t('offers')}{' '}
         <GoodsText goods={pending.offer} /> {t('asksFor')} <GoodsText goods={pending.request} />
       </p>
+      {table && (
+        <OfferMat game={game} from={pending.from} offer={pending.offer} request={pending.request} />
+      )}
       <div className="actions">
         <button type="button" onClick={() => send({ type: 'AcceptTransaction', issuedBy: player })}>
           {t('accept')}

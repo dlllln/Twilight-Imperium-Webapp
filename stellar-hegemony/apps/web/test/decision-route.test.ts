@@ -137,7 +137,7 @@ describe('Route der offenen Entscheidung', () => {
     expect(route({ game: { ...game, phase: 'gameOver' } })?.kind).toBe('gameOver');
   });
 
-  it('Markerverteilung, Wertung, Führung, Imperium, Infrastruktur, Kriegsführung primär, Diplomatie und die Schritte Bombardement, Landung und Ende sind auf dem Tisch spielbar', () => {
+  it('Markerverteilung, Wertung, Führung, Imperium, Infrastruktur, Technologie, Kriegsführung, Diplomatie und die Schritte Bombardement, Landung, Produktion und Ende sind auf dem Tisch spielbar', () => {
     const game = pickAll(started());
     const actor = activeOf(game);
     const spec = (found: DecisionRoute | null) =>
@@ -148,7 +148,9 @@ describe('Route der offenen Entscheidung', () => {
     expect(spec(primary('vanguard'))).toBe('leadership');
     expect(spec(secondary('vanguard'))).toBe('leadership');
     expect(spec(primary('armament'))).toBe('warfare');
-    expect(spec(secondary('armament'))).toBeNull();
+    expect(spec(secondary('armament'))).toBe('warfareSecondary');
+    expect(spec(primary('research'))).toBe('technology');
+    expect(spec(secondary('research'))).toBe('technology');
     expect(spec(primary('embassy'))).toBe('diplomacyPrimary');
     expect(spec(secondary('embassy'))).toBe('diplomacy');
     expect(spec(primary('crown'))).toBe('imperial');
@@ -166,7 +168,8 @@ describe('Route der offenen Entscheidung', () => {
     expect(stepSpec('bombardment')).toBe('bombard');
     expect(stepSpec('invasion')).toBe('landing');
     expect(stepSpec('done')).toBe('tacticalDone');
-    expect(stepSpec('production')).toBeNull();
+    expect(stepSpec('production')).toBe('production');
+    expect(stepSpec('movement')).toBeNull();
   });
 
   it('Politik und Handel primär, Ablegen über dem Limit und die Reaktion sind auf dem Tisch spielbar', () => {

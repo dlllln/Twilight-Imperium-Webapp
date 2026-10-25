@@ -27,17 +27,22 @@ import { actionCardLabel, objectiveLabel, planetLabel, systemLabel, unitLabel } 
  * „planet:mecatol“) steht als `data-target` im DOM und kommt beim Ablegen zurück. Ein Planet als
  * Bezahlung heißt „planet:“, ein Planet als Ziel für Figuren und Gebäude „site:“. Dazu kommen
  * Menschen und Karten am Tisch: das Bild eines Mitspielers („player:“), der Sprechermarker
- * („speaker:token“) und eine Aktionskarte aus der Hand („action:“).
+ * („speaker:token“) und eine Aktionskarte aus der Hand („action:“). Die Werft legt Einheiten
+ * als Stücke aus („yard:infantry“) in ihr Dock („slot:dock“), die Handelsmatte nimmt Münzen und
+ * Rohstoffkisten („goods:commodities“) auf.
  */
 
 /** Die Felder einer Markerverteilung: die drei Leisten und die Schale „Neue Marker“. */
 export type DraftZone = CommandPool | 'loose';
 
 /**
- * Ablagen ohne eigene Kennung: die Kasse am Pult, der Weltraum des aktivierten Systems und der
- * Sockel der Sekundärfähigkeit in der Ansage.
+ * Ablagen ohne eigene Kennung: die Kasse am Pult, der Weltraum des aktivierten Systems, der
+ * Sockel der Sekundärfähigkeit in der Ansage und das Dock der Werft.
  */
-export type SlotName = 'kasse' | 'space' | 'socket';
+export type SlotName = 'kasse' | 'space' | 'socket' | 'dock';
+
+/** Waren am Pult: Handelswaren (Münzen) und Rohstoffe (Kisten). */
+export type GoodKind = 'tradeGoods' | 'commodities';
 
 export const DRAFT_ZONES: readonly DraftZone[] = ['loose', ...COMMAND_POOLS];
 
@@ -46,14 +51,15 @@ export type TargetRef =
   | { readonly kind: 'pool'; readonly pool: DraftZone }
   | { readonly kind: 'planet'; readonly id: PlanetId }
   | { readonly kind: 'card'; readonly id: string }
-  | { readonly kind: 'goods'; readonly good: 'tradeGoods' }
+  | { readonly kind: 'goods'; readonly good: GoodKind }
   | { readonly kind: 'slot'; readonly name: SlotName }
   | { readonly kind: 'site'; readonly id: PlanetId }
   | { readonly kind: 'unit'; readonly id: UnitId }
   | { readonly kind: 'structure'; readonly type: UnitTypeId }
   | { readonly kind: 'player'; readonly id: PlayerId }
   | { readonly kind: 'speaker' }
-  | { readonly kind: 'action'; readonly id: ActionCardId };
+  | { readonly kind: 'action'; readonly id: ActionCardId }
+  | { readonly kind: 'yard'; readonly type: UnitTypeId };
 
 /** Wie ein Ziel in der laufenden Entscheidung dasteht. */
 export type TargetState = 'legal' | 'chosen' | 'blocked';
@@ -79,6 +85,9 @@ export const cardTarget = (id: string): TargetRef => ({ kind: 'card', id });
 /** Der eigene Stapel Handelswaren: Münzen werden hier aufgenommen. */
 export const GOODS_PIECE: TargetRef = { kind: 'goods', good: 'tradeGoods' };
 
+/** Der eigene Stapel Rohstoffe: Kisten werden hier aufgenommen (nur für den Handel). */
+export const CRATE_PIECE: TargetRef = { kind: 'goods', good: 'commodities' };
+
 /** Die Kasse am Pult: Münzen, die in die laufende Bezahlung gehen. */
 export const KASSE: TargetRef = { kind: 'slot', name: 'kasse' };
 
@@ -87,6 +96,9 @@ export const SPACE: TargetRef = { kind: 'slot', name: 'space' };
 
 /** Der Sockel der Sekundärfähigkeit: Wer folgt, legt hier seinen Strategiemarker ab. */
 export const SOCKET: TargetRef = { kind: 'slot', name: 'socket' };
+
+/** Das Dock der Werft: Einheiten, die hier abgelegt werden, gehen in die Bestellung. */
+export const DOCK: TargetRef = { kind: 'slot', name: 'dock' };
 
 /** Ein Planet als Ziel für Figuren und Gebäude (anders als `planet:` beim Bezahlen). */
 export const siteTarget = (id: PlanetId | string): TargetRef => ({
@@ -118,6 +130,12 @@ export const actionPiece = (id: ActionCardId | string): TargetRef => ({
   id: actionCardId(id),
 });
 
+/** Eine Einheit einer Art aus der Werft (Bestellung, nicht eine Figur auf dem Plan). */
+export const yardPiece = (type: UnitTypeId | string): TargetRef => ({
+  kind: 'yard',
+  type: unitTypeId(type),
+});
+
 /** Der Teil hinter dem Doppelpunkt. */
 function partOf(ref: TargetRef): string {
   switch (ref.kind) {
@@ -128,6 +146,7 @@ function partOf(ref: TargetRef): string {
     case 'slot':
       return ref.name;
     case 'structure':
+    case 'yard':
       return ref.type;
     case 'speaker':
       return 'token';
@@ -145,9 +164,17 @@ const SLOTS: ReadonlyMap<string, TargetRef> = new Map([
   ['kasse', KASSE],
   ['space', SPACE],
   ['socket', SOCKET],
+  ['dock', DOCK],
 ]);
 
 const slotOf = (value: string): TargetRef | null => SLOTS.get(value) ?? null;
+
+const GOODS: ReadonlyMap<string, TargetRef> = new Map([
+  ['tradeGoods', GOODS_PIECE],
+  ['commodities', CRATE_PIECE],
+]);
+
+const goodsOf = (value: string): TargetRef | null => GOODS.get(value) ?? null;
 
 const speakerOf = (value: string): TargetRef | null => (value === 'token' ? SPEAKER_PIECE : null);
 
@@ -157,7 +184,7 @@ const PARSERS: ReadonlyMap<string, (value: string) => TargetRef | null> = new Ma
   ['pool', (value: string) => (isZone(value) ? poolTarget(value) : null)],
   ['planet', planetTarget],
   ['card', cardTarget],
-  ['goods', (value: string) => (value === 'tradeGoods' ? GOODS_PIECE : null)],
+  ['goods', goodsOf],
   ['slot', slotOf],
   ['site', siteTarget],
   ['unit', unitTarget],
@@ -165,6 +192,7 @@ const PARSERS: ReadonlyMap<string, (value: string) => TargetRef | null> = new Ma
   ['player', playerTarget],
   ['speaker', speakerOf],
   ['action', actionPiece],
+  ['yard', yardPiece],
 ]);
 
 /** Liest einen Schlüssel zurück; Unbekanntes ergibt `null`. */
@@ -179,6 +207,7 @@ const SLOT_LABELS: Readonly<Record<SlotName, MessageKey>> = {
   kasse: 'kasse',
   space: 'spaceSlot',
   socket: 'secondarySocket',
+  dock: 'shipyardDock',
 };
 
 type Labeler = (ref: TargetRef, game: GameState, language: Language) => string;
@@ -204,25 +233,38 @@ const LABELS: LabelsByKind = {
   card: (ref, _game, language) => objectiveLabel(ref.id, language),
   unit: (ref, game, language) => unitName(ref.id, game, language),
   structure: (ref, _game, language) => unitLabel(ref.type, language),
-  goods: (_ref, _game, language) => translate(language, 'tradeGoods'),
+  goods: (ref, _game, language) => translate(language, ref.good),
   slot: (ref, _game, language) => translate(language, SLOT_LABELS[ref.name]),
   pool: (ref, _game, language) =>
     translate(language, ref.pool === 'loose' ? 'looseTokens' : ref.pool),
   player: (ref, game) => findPlayer(game, ref.id)?.name ?? ref.id,
   speaker: (_ref, _game, language) => translate(language, 'speakerToken'),
   action: (ref, _game, language) => actionCardLabel(ref.id, language),
+  yard: (ref, _game, language) => unitLabel(ref.type, language),
 };
 
 /** Name eines Ziels für Ansagen: Leiste, System, Planet, Auftrag, Figur, Mitspieler, Karte … */
 export const targetLabel = (ref: TargetRef, game: GameState, language: Language): string =>
   (LABELS[ref.kind] as Labeler)(ref, game, language);
 
-/** Münzen: der Stapel Handelswaren und die Kasse (nicht der Weltraum, der auch eine Ablage ist). */
+/**
+ * Münzen: der Stapel Handelswaren und die Kasse (nicht der Weltraum, der auch eine Ablage ist,
+ * und nicht die Rohstoffkisten, die nicht bezahlen).
+ */
 export const isCoinRef = (ref: TargetRef): boolean =>
-  ref.kind === 'goods' || (ref.kind === 'slot' && ref.name === 'kasse');
+  (ref.kind === 'goods' && ref.good === 'tradeGoods') ||
+  (ref.kind === 'slot' && ref.name === 'kasse');
 
-/** Name eines getragenen Stücks: Münzen heißen Handelsware, ob vom Haufen oder aus der Kasse. */
+/** Eine Rohstoffkiste vom eigenen Stapel. */
+export const isCrateRef = (ref: TargetRef): boolean =>
+  ref.kind === 'goods' && ref.good === 'commodities';
+
+/**
+ * Name eines getragenen Stücks: Münzen heißen Handelsware, ob vom Haufen oder aus der Kasse,
+ * Kisten Rohstoff.
+ */
 export function pieceLabel(ref: TargetRef, game: GameState, language: Language): string {
   if (isCoinRef(ref)) return translate(language, 'tradeGood');
+  if (isCrateRef(ref)) return translate(language, 'commodity');
   return targetLabel(ref, game, language);
 }

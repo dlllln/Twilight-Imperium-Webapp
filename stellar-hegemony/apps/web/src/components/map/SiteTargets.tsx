@@ -9,6 +9,7 @@ import {
   type DropHandler,
   siteTarget,
   targetKey,
+  type TargetRef,
   type TargetState,
 } from '../../table/target-ref.ts';
 import {
@@ -29,18 +30,23 @@ import './site-targets.css';
  * getragen, legt ein Antippen sie hier ab. Anders als die Bezahlringe sind diese Ringe Knöpfe,
  * denn Figuren und Gebäude haben keinen zweiten Weg über die Planetenreihe. Wird eine
  * Aktionskarte aus der Hand getragen, leuchten stattdessen nur ihre Planeten kühl weiß-blau,
- * auch ganz ohne Tischentscheidung; ein Antippen spielt die Karte dort aus.
+ * auch ganz ohne Tischentscheidung; ein Antippen spielt die Karte dort aus. Wird eine
+ * Bodentruppe aus der Werft getragen, leuchten die Planeten mit Produktion grün-türkis: Dort
+ * abgelegt, wird sie bestellt und geht auf diesen Planeten. Ohne getragenes Stück zeigt die Werft
+ * keine Ringe, damit sie die Ringe der Bezahlung nicht verdecken.
  */
 
 /** Ein Planet als Ziel wurde angetippt. */
 export type SiteHandler = (planet: PlanetId) => void;
 
-export type SiteKind = 'bombard' | 'landing' | 'construction' | 'card';
+export type SiteKind = 'bombard' | 'landing' | 'construction' | 'card' | 'deploy';
 
 const KINDS: Partial<Record<TableSpecId, SiteKind>> = {
   bombard: 'bombard',
   landing: 'landing',
   construction: 'construction',
+  production: 'deploy',
+  warfareSecondary: 'deploy',
 };
 
 const LABELS: Readonly<Record<SiteKind, MessageKey>> = {
@@ -48,6 +54,7 @@ const LABELS: Readonly<Record<SiteKind, MessageKey>> = {
   landing: 'siteLand',
   construction: 'siteBuild',
   card: 'siteCard',
+  deploy: 'siteDeploy',
 };
 
 /** Die Beschriftung nennt den Planeten, auch wenn der Text keinen Platzhalter hat. */
@@ -150,13 +157,29 @@ function SiteRing({ site, kind, count, router, onSite }: RingProps): ReactElemen
 const kindOf = (decision: TableDecision | null): SiteKind | undefined =>
   decision?.specId == null ? undefined : KINDS[decision.specId];
 
-/** Planeten einer getragenen Aktionskarte, alle erlaubt; `null`, solange keine getragen wird. */
-function useCardSites(): ReadonlyMap<string, TargetState> | null {
-  const carried = useCarryStore((state) => state.piece?.kind === 'action');
+/** Getragene Stücke, deren Planeten allein aus den erlaubten Ablagen kommen. */
+const CARRIED: Partial<Record<TargetRef['kind'], SiteKind>> = {
+  action: 'card',
+  yard: 'deploy',
+};
+
+interface CarriedSites {
+  readonly kind: SiteKind;
+  readonly states: ReadonlyMap<string, TargetState>;
+}
+
+/**
+ * Planeten einer getragenen Aktionskarte bzw. Bodentruppe der Werft, alle erlaubt; `null`,
+ * solange keines davon getragen wird.
+ */
+function useCarriedSites(): CarriedSites | null {
+  const kind = useCarryStore((state) =>
+    state.piece === null ? undefined : CARRIED[state.piece.kind],
+  );
   const legal = useCarryStore((state) => state.legal);
-  if (!carried) return null;
+  if (kind === undefined) return null;
   const sites = [...legal].filter((key) => key.startsWith('site:'));
-  return new Map(sites.map((key) => [key, 'legal' as const]));
+  return { kind, states: new Map(sites.map((key) => [key, 'legal' as const])) };
 }
 
 export interface SiteTargetsProps {
@@ -168,8 +191,8 @@ export interface SiteTargetsProps {
 }
 
 /**
- * Ringe um alle Planeten, die Bombardement, Landung, Infrastruktur oder die getragene
- * Aktionskarte anbieten, in derselben Ebene wie die Felder und über ihnen. `memo`: Schwenken
+ * Ringe um alle Planeten, die Bombardement, Landung, Infrastruktur, die getragene Aktionskarte
+ * oder die getragene Bodentruppe der Werft anbieten, in derselben Ebene wie die Felder und über ihnen. `memo`: Schwenken
  * und Zoomen zeichnen sie nicht neu.
  */
 export const SiteTargets = memo(function SiteTargets({
@@ -181,17 +204,17 @@ export const SiteTargets = memo(function SiteTargets({
   const decision = useTableDecision(game);
   const states = useTableTargets(game);
   const router = useDropRouter(game);
-  const card = useCardSites();
-  const kind = card === null ? kindOf(decision) : 'card';
+  const carried = useCarriedSites();
+  const kind = carried?.kind ?? kindOf(decision);
   if (kind === undefined) return null;
   const pick = onSite ?? ((planet: PlanetId) => decision?.act({ kind: 'site', planet }));
   return (
     <g className="site-targets" data-site-kind={kind}>
-      {sitesOf(hexes, view, card ?? states).map((site) => (
+      {sitesOf(hexes, view, carried?.states ?? states).map((site) => (
         <SiteRing
           key={site.id}
           {...{ site, kind, router }}
-          count={card === null && decision !== null ? countAt(decision, site.id) : 0}
+          count={carried === null && decision !== null ? countAt(decision, site.id) : 0}
           onSite={pick}
         />
       ))}

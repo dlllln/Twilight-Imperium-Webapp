@@ -50,10 +50,30 @@ export async function openSeat(browser: Browser, name: string): Promise<Page> {
   return page;
 }
 
-/** Gastgeber eröffnet, Gäste treten bei, der Gastgeber startet; freie Plätze übernimmt die KI. */
-export async function openTable(browser: Browser, humans = 3, players = 3): Promise<Page[]> {
+/** Ändert den Map-String der Galaxie, bevor die Partie eröffnet wird. */
+export type MapEdit = (mapString: string) => string;
+
+/** Der Gastgeber setzt die Galaxie über das Feld „Map-String“ und importiert sie. */
+async function importMap(host: Page, edit: MapEdit): Promise<void> {
+  const field = host.getByLabel('Map-String');
+  await field.fill(edit(await field.inputValue()));
+  await host.getByRole('button', { name: 'Importieren', exact: true }).click();
+  await expect(host.locator('.map-panel .error')).toHaveCount(0);
+}
+
+/**
+ * Gastgeber eröffnet, Gäste treten bei, der Gastgeber startet; freie Plätze übernimmt die KI.
+ * Mit `edit` legt der Gastgeber vorher eine eigene Galaxie aus.
+ */
+export async function openTable(
+  browser: Browser,
+  humans = 3,
+  players = 3,
+  edit?: MapEdit,
+): Promise<Page[]> {
   const host = await openSeat(browser, NAMES[0]);
   await host.getByLabel('Spieler').selectOption(String(players));
+  if (edit !== undefined) await importMap(host, edit);
   await host.getByRole('button', { name: 'Online-Partie eröffnen' }).click();
   const code = (await host.getByTestId('lobby-code').textContent()) ?? '';
   const pages = [host];
@@ -190,6 +210,21 @@ export async function dragOnto(page: Page, from: Locator, to: Locator): Promise<
   const end = await center(to);
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
+  await page.mouse.move(end.x, end.y, { steps: 12 });
+  await page.mouse.up();
+}
+
+/**
+ * Zieht ein Stück auf ein Ziel, das erst beim Tragen erscheint (Bauplätze der Werft): drücken,
+ * ein Stück anheben, auf das Ziel warten, hinüber und loslassen.
+ */
+export async function dragOntoShown(page: Page, from: Locator, to: Locator): Promise<void> {
+  const start = await center(from);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x - 12, start.y - 12, { steps: 3 });
+  await expect(to).toBeVisible();
+  const end = await center(to);
   await page.mouse.move(end.x, end.y, { steps: 12 });
   await page.mouse.up();
 }

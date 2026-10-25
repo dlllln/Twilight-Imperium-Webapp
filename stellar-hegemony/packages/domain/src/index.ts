@@ -102,6 +102,7 @@ export * from './technology/technology-catalog.ts';
 export * from './technology/technology-events.ts';
 export * from './technology/technology-reducers.ts';
 export * from './technology/research.ts';
+export * from './technology/research-options.ts';
 export * from './transaction/goods.ts';
 export * from './transaction/neighbors.ts';
 export * from './transaction/transaction-events.ts';

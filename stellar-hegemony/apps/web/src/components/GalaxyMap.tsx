@@ -65,6 +65,7 @@ import { TabletopMapMotion } from './pieces/TabletopMapMotion.tsx';
 import { MapPings } from './MapPings.tsx';
 import { TabletopZones } from './tabletop/TabletopZones.tsx';
 import { ObjectiveStrip } from './table/ObjectiveStrip.tsx';
+import { ResearchSpread } from './table/ResearchSpread.tsx';
 import type { FleetProjection } from '../system/fleet-placement.ts';
 
 /** Pixi wird nachgeladen, damit die Oberfläche sofort erscheint. */
@@ -240,6 +241,7 @@ function Hud({ game, table }: { readonly game: GameState; readonly table: boolea
     <>
       <TabletopZones game={game} />
       {table && <ObjectiveStrip game={game} />}
+      {table && <ResearchSpread game={game} />}
       <PlayerRail game={game} />
       {table ? <PlayerSheet game={game} /> : <ResourceBar game={game} />}
       <div className="hud-corner">

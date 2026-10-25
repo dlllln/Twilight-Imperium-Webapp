@@ -26,10 +26,16 @@ interface CoinPieceProps {
   readonly piece: TargetRef;
   readonly label: string;
   readonly table: SheetTable;
+  /** Münze (Haufen, Kasse) oder Rohstoffkiste (Fassung); bestimmt nur die Form des Knopfs. */
+  readonly look?: 'coin' | 'crate';
 }
 
-/** Eine Münze zum Aufnehmen; nur da, wo sie hin darf. Trägt man etwas anderes, klickt man durch. */
-export function CoinPiece({ piece, label, table }: CoinPieceProps): ReactElement | null {
+/**
+ * Eine Münze oder Kiste zum Aufnehmen; nur da, wo sie hin darf. Trägt man etwas anderes, klickt
+ * man durch.
+ */
+export function CoinPiece(props: CoinPieceProps): ReactElement | null {
+  const { piece, label, table, look = 'coin' } = props;
   const key = targetKey(piece);
   const source = useDragSource(piece, () => table.legalFor(piece), table.router);
   const elsewhere = useCarryStore(
@@ -39,7 +45,7 @@ export function CoinPiece({ piece, label, table }: CoinPieceProps): ReactElement
   return (
     <button
       type="button"
-      className="sheet-piece sheet-coin-piece"
+      className={`sheet-piece sheet-${look}-piece`}
       aria-label={label}
       style={elsewhere ? { pointerEvents: 'none' } : undefined}
       {...source}
@@ -50,10 +56,12 @@ export function CoinPiece({ piece, label, table }: CoinPieceProps): ReactElement
 interface StepsProps {
   readonly planets: PlanetTable;
   readonly count: number;
+  /** Wie viele Münzen die Kasse höchstens nehmen kann (ohne die auf der Handelsmatte). */
+  readonly most: number;
 }
 
 /** Plus und Minus der Kasse; ihre Klicks erreichen die Kasse als Ziel nicht. */
-function KasseSteps({ planets, count }: StepsProps): ReactElement {
+function KasseSteps({ planets, count, most }: StepsProps): ReactElement {
   const t = useT();
   const step = (sign: '−' | '+', delta: 1 | -1, enabled: boolean) => (
     <button
@@ -73,7 +81,7 @@ function KasseSteps({ planets, count }: StepsProps): ReactElement {
   return (
     <span className="rail-controls" role="group" aria-label={t('kasse')}>
       {step('−', -1, count > 0)}
-      {step('+', 1, count < planets.ownTradeGoods)}
+      {step('+', 1, count < most)}
     </span>
   );
 }
@@ -81,9 +89,11 @@ function KasseSteps({ planets, count }: StepsProps): ReactElement {
 interface KasseProps {
   readonly table: SheetTable;
   readonly planets: PlanetTable;
+  /** Münzen auf der Handelsmatte: derselbe Vorrat, sie fehlen der Kasse. */
+  readonly onMat: number;
 }
 
-export function KassePlate({ table, planets }: KasseProps): ReactElement {
+export function KassePlate({ table, planets, onMat }: KasseProps): ReactElement {
   const t = useT();
   const target = useTarget(KASSE, undefined, table.router);
   const count = planets.tradeGoods ?? 0;
@@ -105,7 +115,7 @@ export function KassePlate({ table, planets }: KasseProps): ReactElement {
         <CoinPiece piece={KASSE} label={`${t('pickUpCoin')}: ${t('kasse')}`} table={table} />
       </div>
       <strong data-testid="kasse-count">{count}</strong>
-      <KasseSteps planets={planets} count={count} />
+      <KasseSteps planets={planets} count={count} most={planets.ownTradeGoods - onMat} />
       <span className="sheet-caption" aria-hidden="true">
         {t('kasse')}
       </span>

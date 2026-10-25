@@ -5,7 +5,7 @@ import { actionFrame } from '../../artwork/cards.ts';
 import { unitArtwork } from '../../artwork/units.ts';
 import { useGameStore } from '../../game-store.ts';
 import { useCarryStore } from '../../table/carry-store.ts';
-import type { TargetRef } from '../../table/target-ref.ts';
+import { isCrateRef, type TargetRef } from '../../table/target-ref.ts';
 import { CompleteCardArtwork } from '../cards/CompleteCardArtwork.tsx';
 import { CoinFace, CommandToken } from '../sheet/SheetTokens.tsx';
 import { SpeakerFace } from './SpeakerFace.tsx';
@@ -13,10 +13,10 @@ import { seatNumberOf } from './StructureTray.tsx';
 
 /*
  * Das Stück unter dem Zeiger, solange es gezogen wird: ein Marker, eine Münze (Handelsware vom
- * Haufen oder aus der Kasse), eine Figur oder ein Gebäude (mit ihrem Bild in der Platzfarbe des
- * Besitzers), eine Aktionskarte aus der Hand (klein und schräg) oder der Sprechermarker. Es liegt
- * außerhalb des schrägen Pults direkt im Dokument, damit es dem Zeiger unverzerrt folgt; die
- * Platzfarbe bringt es selbst mit.
+ * Haufen oder aus der Kasse), eine Rohstoffkiste, eine Figur, ein Gebäude oder eine Einheit aus
+ * der Werft (mit ihrem Bild in der Platzfarbe des Besitzers), eine Aktionskarte aus der Hand
+ * (klein und schräg) oder der Sprechermarker. Es liegt außerhalb des schrägen Pults direkt im
+ * Dokument, damit es dem Zeiger unverzerrt folgt; die Platzfarbe bringt es selbst mit.
  */
 
 interface GhostProps {
@@ -31,9 +31,10 @@ interface Figure {
   readonly seat: number;
 }
 
-/** Figuren stehen auf dem Spielplan, Gebäude kommen aus dem eigenen Bauvorrat. */
+/** Figuren stehen auf dem Spielplan, Gebäude und Einheiten der Werft gehören einem selbst. */
 function figureOf(game: GameState, piece: TargetRef, me: PlayerId | null): Figure | null {
-  if (piece.kind === 'structure') return { type: piece.type, seat: seatNumberOf(game, me) };
+  if (piece.kind === 'structure' || piece.kind === 'yard')
+    return { type: piece.type, seat: seatNumberOf(game, me) };
   if (piece.kind !== 'unit') return null;
   const unit = locateUnit(game, piece.id)?.unit;
   return unit === undefined ? null : { type: unit.type, seat: seatNumberOf(game, unit.owner) };
@@ -46,7 +47,7 @@ function useCarriedFigure(): Figure | null {
   return game === null || piece === null ? null : figureOf(game, piece, me);
 }
 
-type Material = 'unit' | 'coin' | 'token' | 'card' | 'speaker';
+type Material = 'unit' | 'coin' | 'crate' | 'token' | 'card' | 'speaker';
 
 /** Figur oder Gebäude mit Bild; ohne Bild ein Sechseck, ohne Figur ein Marker. */
 function FigureFace({ faction }: { readonly faction: string }) {
@@ -68,40 +69,49 @@ function CardFace() {
   );
 }
 
-function GhostFace({
-  material,
-  faction,
-}: {
-  readonly material: Material;
-  readonly faction: string;
-}) {
-  switch (material) {
-    case 'coin':
-      return <CoinFace />;
-    case 'token':
-      return <CommandToken faction={faction} />;
-    case 'card':
-      return <CardFace />;
-    case 'speaker':
-      return <SpeakerFace />;
-    case 'unit':
-      return <FigureFace faction={faction} />;
-  }
+/** Eine Rohstoffkiste: eigene Form aus Brettern und Beschlägen, keine fremde Grafik. */
+function CrateFace() {
+  return (
+    <svg className="crate-svg" viewBox="0 0 40 40" aria-hidden="true">
+      <rect className="crate-body" x="4" y="7" width="32" height="27" rx="2" />
+      <path className="crate-slat" d="M4 16.5h32M4 25h32" />
+      <path className="crate-brace" d="M7 10l26 21M33 10L7 31" />
+      <rect className="crate-rim" x="4" y="7" width="32" height="27" rx="2" />
+    </svg>
+  );
 }
+
+type FaceProps = { readonly faction: string };
+
+/** Je Material sein Bild; Marker und Figuren brauchen die Fraktion für den Rückfall. */
+const FACES: Readonly<Record<Material, (props: FaceProps) => ReactElement | null>> = {
+  coin: () => <CoinFace />,
+  crate: () => <CrateFace />,
+  token: ({ faction }) => <CommandToken faction={faction} />,
+  card: () => <CardFace />,
+  speaker: () => <SpeakerFace />,
+  unit: ({ faction }) => <FigureFace faction={faction} />,
+};
 
 const MATERIALS: Partial<Record<TargetRef['kind'], Material>> = {
   goods: 'coin',
   slot: 'coin',
   unit: 'unit',
   structure: 'unit',
+  yard: 'unit',
   action: 'card',
   speaker: 'speaker',
 };
 
+/** Rohstoffe sind Kisten, keine Münzen, obwohl sie wie Handelswaren am Pult liegen. */
+function materialOf(piece: TargetRef | null): Material {
+  if (piece === null) return 'token';
+  if (isCrateRef(piece)) return 'crate';
+  return MATERIALS[piece.kind] ?? 'token';
+}
+
 function useMaterial(): Material {
-  return useCarryStore((state) =>
-    state.piece === null ? 'token' : (MATERIALS[state.piece.kind] ?? 'token'),
-  );
+  return useCarryStore((state) => materialOf(state.piece));
 }
 
 /** Marker und Münzen tragen kein eigenes Material-Attribut; ihre Regeln sind älter. */
@@ -113,6 +123,7 @@ export function DragGhost({ faction, seat }: GhostProps): ReactElement | null {
   const over = useCarryStore((state) => state.over !== null && state.legal.has(state.over));
   const material = useMaterial();
   if (point === null) return null;
+  const Face = FACES[material];
   const style = {
     '--x': `${String(point.x)}px`,
     '--y': `${String(point.y)}px`,
@@ -126,7 +137,7 @@ export function DragGhost({ faction, seat }: GhostProps): ReactElement | null {
       aria-hidden="true"
       style={style}
     >
-      <GhostFace material={material} faction={faction} />
+      <Face faction={faction} />
     </div>,
     document.body,
   );

@@ -4,19 +4,18 @@ import {
   isGroundForce,
   type PlanetId,
   type PlayerId,
+  type ProductionChoice,
   type ProductionOrder,
   type ProductionRequest,
-  producibleUnits,
+  productionChoices,
   productionQuote,
   type SystemId,
-  type UnitDefinition,
   unitTypeId,
 } from '@stellar/domain';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { UnitArtwork } from '../../artwork/UnitArtwork.tsx';
 import { unitLabel } from '../../labels.ts';
 import { content } from '../../store.ts';
-import { unitsOf } from '../../unit-stats.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { Actions, PlanetSelect } from './FormParts.tsx';
 import { PaymentPicker, usePayment } from './PaymentPicker.tsx';
@@ -48,6 +47,7 @@ function useProduction(props: ProductionFormProps) {
   const [counts, setCounts] = useState<Counts>({});
   const orders = ordersOf(counts);
   const quote = productionQuote(game, system, player, orders, content);
+  const choices = productionChoices(game, system, player, orders, content);
   const [chosenPlanet, setGroundPlanet] = useState<PlanetId | null>(null);
   const groundPlanet = chosenPlanet ?? quote.groundPlanets[0] ?? null;
   const change = (type: string, delta: number) =>
@@ -57,7 +57,7 @@ function useProduction(props: ProductionFormProps) {
     payment,
     groundPlanet: needsGroundPlanet(orders) ? groundPlanet : null,
   });
-  return { counts, orders, quote, groundPlanet, setGroundPlanet, change, request };
+  return { counts, orders, quote, choices, groundPlanet, setGroundPlanet, change, request };
 }
 
 type Production = ReturnType<typeof useProduction>;
@@ -73,7 +73,7 @@ function ProductionUnits({
     <UnitSteppers
       form={form}
       seat={(findPlayer(props.game, props.player)?.seat ?? 0) + 1}
-      units={producibleUnits(props.game, props.player, unitsOf(props.game))}
+      choices={form.choices}
     />
   );
 }
@@ -91,24 +91,24 @@ function QuoteLine({ quote }: { readonly quote: Production['quote'] }): ReactEle
   );
 }
 
+/** Je baubarer Einheit ein Zähler; ob eine weitere passt (Platz, Vorrat, Blockade), sagt die Domain. */
 function UnitSteppers({
   form,
-  units,
+  choices,
   seat,
 }: {
   readonly form: Production;
-  readonly units: readonly UnitDefinition[];
+  readonly choices: readonly ProductionChoice[];
   readonly seat: number;
 }) {
   const language = useLanguage();
-  const room = form.quote.count < form.quote.limit;
-  return units.map((unit) => (
+  return choices.map(({ unit, canAdd }) => (
     <div key={unit.id} className="production-unit">
       <UnitArtwork type={unit.id} seat={seat} />
       <Stepper
         label={unitLabel(unit.id, language)}
         value={form.counts[unit.id] ?? 0}
-        canAdd={room}
+        canAdd={canAdd}
         onChange={(delta) => form.change(unit.id, delta)}
       />
     </div>
