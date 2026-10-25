@@ -1,0 +1,227 @@
+/*
+ * Agendatisch: liegt wie die Forschungsauslage in der freien Mitte (Lage und Rahmen aus
+ * `research-spread.css`). Die Agenda dreht sich einmal von der Rückseite auf; darunter liegen
+ * die Ergebnisplatten als Messingschilde. Formen und Verläufe sind eigene.
+ */
+.agenda-table {
+  align-items: center;
+  gap: 14px;
+  background:
+    repeating-linear-gradient(130deg, #ffffff04 0 1px, transparent 1px 6px),
+    radial-gradient(ellipse at 50% 0%, #1c1a3ae8, #080816f2 75%);
+}
+
+/* Die Karte: beide Seiten liegen übereinander, die Rückseite dreht sich weg. */
+.agenda-flip {
+  display: grid;
+  width: min(420px, 100%);
+  perspective: 900px;
+}
+
+.agenda-flip > span {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.agenda-flip-back {
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+  rotate: y 180deg;
+  animation: agenda-back-turn 0.7s ease-in-out both;
+}
+
+.agenda-flip-back .ti4-card-artwork,
+.agenda-flip-back img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.agenda-flip-face {
+  animation: agenda-face-turn 0.7s ease-in-out both;
+}
+
+@keyframes agenda-back-turn {
+  from {
+    rotate: y 0deg;
+  }
+
+  to {
+    rotate: y 180deg;
+  }
+}
+
+@keyframes agenda-face-turn {
+  from {
+    rotate: y -180deg;
+  }
+
+  to {
+    rotate: y 0deg;
+  }
+}
+
+.motion-off .agenda-flip > span {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agenda-flip > span {
+    animation: none;
+  }
+}
+
+/* Die Ergebnisplatten. */
+.outcome-plates {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.outcome-plate {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 120px;
+  max-width: 180px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--gold-line);
+  border-bottom: 3px solid #000a;
+  border-radius: 12px;
+  color: var(--text);
+  background: linear-gradient(180deg, #3b3220, #17130b);
+  box-shadow: inset 0 1px 0 #ffe6a833;
+  font: inherit;
+  font-size: 12px;
+  text-align: center;
+}
+
+button.outcome-plate {
+  cursor: pointer;
+}
+
+button.outcome-plate:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+button.outcome-plate:not(:disabled):hover,
+button.outcome-plate:focus-visible {
+  border-color: var(--gold-bright);
+}
+
+.outcome-plate[data-target-state='legal'] {
+  box-shadow:
+    inset 0 1px 0 #ffe6a833,
+    0 0 0 2px #c49bff55;
+}
+
+.outcome-plate[aria-pressed='true'] {
+  border-color: #c49bff;
+  background: linear-gradient(180deg, #3d2a5c, #160f24);
+  box-shadow: 0 0 16px #c49bff80;
+}
+
+.outcome-plate[data-tied='true'] {
+  border-color: #ffd36a;
+  animation: plate-glow 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes plate-glow {
+  from {
+    box-shadow: 0 0 4px #ffd36a55;
+  }
+
+  to {
+    box-shadow: 0 0 18px #ffd36acc;
+  }
+}
+
+.motion-off .outcome-plate[data-tied='true'] {
+  animation: none;
+  box-shadow: 0 0 14px #ffd36a99;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outcome-plate[data-tied='true'] {
+    animation: none;
+    box-shadow: 0 0 14px #ffd36a99;
+  }
+}
+
+.plate-sign {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: var(--gold-bright);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.outcome-plate[data-outcome='against'] .plate-sign {
+  stroke: #ff8a7a;
+}
+
+.plate-planet {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #cfe6ff, #3a6ea8 55%, #0d1f3a);
+  box-shadow: 0 0 8px #6aa8ff66;
+}
+
+.plate-name {
+  font-weight: 600;
+}
+
+.plate-votes {
+  color: var(--gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+.plate-cast,
+.plate-pending {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.plate-voter {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px 1px 2px;
+  border-radius: 999px;
+  background: #0006;
+  font-size: 11px;
+}
+
+/* Eigene, noch nicht abgegebene Stimmen: violette Plättchen mit dem Einfluss des Planeten. */
+.plate-chip {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #e3cbff;
+  border-radius: 50%;
+  color: #1a0f2a;
+  background: radial-gradient(circle at 35% 30%, #f3e8ff, #b48cf0);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.plate-tied {
+  color: #ffd36a;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

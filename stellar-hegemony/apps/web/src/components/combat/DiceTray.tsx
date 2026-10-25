@@ -2,7 +2,7 @@ import type { UnitRoll, Volley } from '@stellar/domain';
 import type { CSSProperties, ReactElement } from 'react';
 import { unitLabel } from '../../labels.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
-import { useDiceReveal } from './use-dice-reveal.ts';
+import { type DiceReveal, useDiceReveal } from './use-dice-reveal.ts';
 import './dice-tray.css';
 
 interface DieProps {
@@ -36,41 +36,78 @@ function Die({ roll, result, order }: DieProps): ReactElement {
   );
 }
 
-function DiceResults({ volley }: { readonly volley: Volley }): ReactElement {
+/** Ein Würfel im Becher: zehnseitig, aber ohne Zahl; das Ergebnis steht erst nach dem Wurf fest. */
+function CuppedDie({ order }: { readonly order: number }): ReactElement {
+  return (
+    <span
+      className="die tabletop-die cupped"
+      aria-hidden="true"
+      style={{ '--die-order': Math.min(order, 7) } as CSSProperties}
+    />
+  );
+}
+
+const diceOf = (volley: Volley) =>
+  volley.rolls.flatMap((roll) => roll.results.map((result, index) => ({ roll, result, index })));
+
+function DiceResults({ volley, held }: { readonly volley: Volley; readonly held: boolean }) {
   return (
     <span className="dice tabletop-dice">
-      {volley.rolls
-        .flatMap((roll) => roll.results.map((result, index) => ({ roll, result, index })))
-        .map(({ roll, result, index }, order) => (
+      {diceOf(volley).map(({ roll, result, index }, order) =>
+        held ? (
+          <CuppedDie key={`${roll.unit}-${index}`} order={order} />
+        ) : (
           <Die key={`${roll.unit}-${index}`} roll={roll} result={result} order={order} />
-        ))}
+        ),
+      )}
     </span>
   );
 }
 
-/** Gemeinsame Würfelschale für echte Kämpfe und den Simulator, mit sofortiger Aufdeckung. */
-export function DiceTray({ volley }: { readonly volley: Volley }): ReactElement {
+/** Ergebnis der Salve, solange die Würfel liegen; im Becher nur „Würfeln“. */
+function TrayResult({ volley, reveal }: { readonly volley: Volley; readonly reveal: DiceReveal }) {
   const t = useT();
   const language = useLanguage();
-  const { rolling, finish } = useDiceReveal(volley);
+  if (reveal.held)
+    return (
+      <div className="dice-tray-result">
+        <span className="volley-cup">{t('diceInCup')}</span>
+        <button type="button" className="dice-roll" onClick={reveal.roll}>
+          {t('rollDice')}
+        </button>
+      </div>
+    );
+  return (
+    <div className="dice-tray-result">
+      <strong className="volley-hits" aria-live="polite">
+        {volley.hits} {t('hits')}
+      </strong>
+      {reveal.rolling && (
+        <button type="button" className="dice-reveal" onClick={reveal.finish}>
+          {language === 'de' ? 'Ergebnis zeigen' : 'Show result'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Gemeinsame Würfelschale für echte Kämpfe und den Simulator, mit sofortiger Aufdeckung. Mit
+ * `gated` liegt der eigene Wurf am Tisch zuerst im Becher, bis „Würfeln“ ihn wirft.
+ */
+export function DiceTray(props: { readonly volley: Volley; readonly gated?: boolean }) {
+  const language = useLanguage();
+  const reveal = useDiceReveal(props.volley, props.gated);
   return (
     <div
       className="dice-tray"
-      data-rolling={rolling}
+      data-rolling={reveal.rolling}
+      data-held={reveal.held || undefined}
       role="group"
       aria-label={language === 'de' ? 'Würfelschale' : 'Dice tray'}
     >
-      <DiceResults volley={volley} />
-      <div className="dice-tray-result">
-        <strong className="volley-hits" aria-live="polite">
-          {volley.hits} {t('hits')}
-        </strong>
-        {rolling && (
-          <button type="button" className="dice-reveal" onClick={finish}>
-            {language === 'de' ? 'Ergebnis zeigen' : 'Show result'}
-          </button>
-        )}
-      </div>
+      <DiceResults volley={props.volley} held={reveal.held} />
+      <TrayResult volley={props.volley} reveal={reveal} />
     </div>
   );
 }

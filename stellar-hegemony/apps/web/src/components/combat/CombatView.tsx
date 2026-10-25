@@ -5,12 +5,15 @@ import {
   type CombatLogEvent,
   combatDecision,
   combatParties,
+  combatRole,
+  combatSystemOf,
   isSpaceBattle,
 } from '../../combat-view.ts';
 import { useOthersTurn, useGameStore } from '../../game-store.ts';
 import type { MessageKey } from '../../i18n.ts';
 import { systemLabel } from '../../labels.ts';
 import { combatBackdrop } from '../../render/images.ts';
+import { useSettingsStore } from '../../settings-store.ts';
 import { content } from '../../store.ts';
 import { useLanguage, useT } from '../../use-translation.ts';
 import { PlayableCards } from '../cards/PlayableCards.tsx';
@@ -22,22 +25,9 @@ import { FleetColumn } from './FleetColumn.tsx';
 import { HitAssignmentForm } from './HitAssignmentForm.tsx';
 import { RetreatForm } from './RetreatForm.tsx';
 
-/** Das erste Ereignis des Protokolls nennt immer das umkämpfte System. */
-const systemOf = (log: readonly CombatLogEvent[]): SystemId | null => {
-  const first = log[0];
-  return first !== undefined && 'system' in first ? first.system : null;
-};
-
 /** Überschrift: Raumkampf, sobald im Weltraum gekämpft wurde, sonst Einmarsch. */
 const titleOf = (log: readonly CombatLogEvent[]): MessageKey =>
   isSpaceBattle(log) ? 'spaceCombat' : 'invasion';
-
-function roleOf(game: GameState, log: readonly CombatLogEvent[], player: PlayerId): MessageKey {
-  if (game.actionPhase?.active === player) return 'attacker';
-  const started = log.find((event) => event.type === 'SpaceCombatStarted');
-  if (started?.defender === player) return 'defender';
-  return 'bystander';
-}
 
 /** Treffer zuweisen; Karten gegen Treffer stehen direkt daneben (RR 3.10). */
 function HitsDecision(props: {
@@ -112,7 +102,7 @@ function Fleets({
           game={game}
           system={system}
           player={player}
-          role={roleOf(game, log, player)}
+          role={combatRole(game, log, player)}
           log={log}
         />
       ))}
@@ -121,7 +111,8 @@ function Fleets({
 }
 
 /**
- * Eigene Kampfansicht über der Karte: im Raumkampf die bewegte Bühne mit Lasern und
+ * Klassische Ansicht: eigene Kampfansicht über der Karte (in der Tischansicht liegt statt dessen
+ * die Kampfmatte in der freien Mitte, siehe `table/BattleMat.tsx`): im Raumkampf die bewegte Bühne mit Lasern und
  * Explosionen, beide Flotten als Miniaturen, Würfelprotokoll
  * und die gerade offene Entscheidung (Treffer zuweisen, Rückzug).
  */
@@ -131,8 +122,9 @@ export function CombatView(): ReactElement | null {
   const game = useGameStore((state) => state.game);
   const open = useGameStore((state) => state.combatOpen);
   const log = useGameStore((state) => state.combatLog);
-  const system = systemOf(log);
-  if (game === null || !open || system === null) return null;
+  const table = useSettingsStore((state) => state.tableView);
+  const system = combatSystemOf(log);
+  if (table || game === null || !open || system === null) return null;
   const backdrop = combatBackdrop();
   return (
     <div className="combat-overlay" role="dialog" aria-modal="true" aria-label={t(titleOf(log))}>

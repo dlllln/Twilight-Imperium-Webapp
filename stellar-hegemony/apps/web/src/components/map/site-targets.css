@@ -121,3 +121,8 @@
   animation: none;
   filter: drop-shadow(0 0 4px #3fd6c0);
 }
+
+/* Planetenwahl auf dem Agendatisch: violett wie das Siegel der Agenda, ohne Zahl am Ring. */
+.site-target[data-site-kind='elect'] {
+  --site: #c49bff;
+}

@@ -153,6 +153,60 @@
   }
 }
 
+/*
+ * Am Tisch liegt der eigene Wurf zuerst im Becher: verdeckte Zehnseiter ohne Zahl, leicht
+ * wippend, bis „Würfeln“ sie in die Schale wirft (danach dieselbe Rollbewegung wie oben).
+ */
+.dice-tray .tabletop-die.cupped {
+  background:
+    linear-gradient(149deg, #91aabb40 0 25%, transparent 26%),
+    linear-gradient(210deg, #0009 0 26%, transparent 27%),
+    linear-gradient(155deg, #34414d, #121c26 63%, #090f15);
+  animation: tabletop-die-wobble 1.4s ease-in-out infinite;
+  animation-delay: calc(var(--die-order, 0) * 90ms);
+}
+
+@keyframes tabletop-die-wobble {
+  50% {
+    transform: translateY(-2px) rotate(-6deg);
+  }
+}
+
+.volley-cup {
+  color: #9fb4c2;
+  font-size: 11px;
+}
+
+.dice-roll {
+  padding: 5px 12px;
+  border: 1px solid #f0c76a;
+  border-radius: 999px;
+  color: #241703;
+  background: linear-gradient(#ffe39a, #d6a544);
+  box-shadow:
+    0 2px 0 #7a5418,
+    0 0 12px #f0c76a55;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dice-roll:focus-visible {
+  outline: 2px solid #fff3c4;
+  outline-offset: 2px;
+}
+
+.motion-off .dice-tray .tabletop-die.cupped {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-tray .tabletop-die.cupped {
+    animation: none;
+  }
+}
+
 .round-log.sim-dice-report {
   width: min(660px, calc(100% - 28px));
   max-height: min(42vh, 360px);

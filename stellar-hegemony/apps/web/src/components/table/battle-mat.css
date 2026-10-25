@@ -1,0 +1,265 @@
+/*
+ * Kampfmatte: liegt wie die Forschungsauslage in der freien Mitte (Lage, Rahmen und Rollen aus
+ * `research-spread.css`). Ein dunkler Filz mit roter Mittellinie trennt die Seiten; die Schiffe
+ * stehen als Figuren darauf, rote Trefferstifte stecken in ihnen. Darunter Stiftkasten und
+ * Würfelschale. Alles aus eigenen Verläufen und Formen.
+ */
+.battle-mat {
+  gap: 12px;
+  background:
+    repeating-linear-gradient(45deg, #ffffff05 0 1px, transparent 1px 7px),
+    radial-gradient(ellipse at 50% 30%, #2a1418e8, #0b080ef2 78%);
+  border-color: #c9504a80;
+}
+
+.battle-mat-header {
+  position: relative;
+  margin: 0;
+}
+
+.battle-mat-header h2 {
+  margin: 6px 0 2px;
+  font-size: clamp(17px, 1.6vw, 22px);
+}
+
+.battle-mat-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.mat-sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0;
+  border: 1px solid #ffffff14;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    transparent calc(50% - 1px),
+    #c9504a66 50%,
+    transparent calc(50% + 1px)
+  );
+}
+
+.mat-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px 12px;
+}
+
+.mat-side header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.mat-role {
+  color: var(--gold-bright);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mat-side[data-role='defender'] .mat-role {
+  color: #8fc9ff;
+}
+
+.mat-ships {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mat-ship {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 92px;
+  padding: 6px 4px 4px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--text);
+  background: #00000040;
+  font: inherit;
+  font-size: 11px;
+  text-align: center;
+}
+
+.mat-ship img {
+  width: 84px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.7));
+}
+
+.mat-ship[data-damaged='true'] img {
+  filter: drop-shadow(0 0 6px rgba(255, 90, 40, 0.9)) saturate(0.6);
+}
+
+.mat-ship-target {
+  cursor: pointer;
+  border-color: #ffffff2e;
+}
+
+.mat-ship-target:hover,
+.mat-ship-target:focus-visible {
+  border-color: var(--gold-bright);
+}
+
+.mat-ship-target[data-target-state='legal'] {
+  border-color: #ff8a7a99;
+  box-shadow: 0 0 0 2px #ff6a5a33;
+}
+
+.mat-ship-target[data-over='true'] {
+  border-color: #ffb3a8;
+  box-shadow: 0 0 14px #ff6a5a99;
+}
+
+.mat-ship-target[data-mark='destroy'],
+.mat-ship-target[data-mark='both'] {
+  background: linear-gradient(180deg, #5a1414aa, #1a0606cc);
+}
+
+.mat-ship-target[data-mark='destroy'] img,
+.mat-ship-target[data-mark='both'] img {
+  opacity: 0.55;
+}
+
+.mat-ship-target[data-mark='sustain'] {
+  background: linear-gradient(180deg, #5a3a14aa, #1a1006cc);
+}
+
+.mat-ship-name {
+  line-height: 1.2;
+}
+
+/* Gesteckte Stifte: oben rechts im Schiff, leicht schräg. */
+.mat-ship-pegs {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  display: flex;
+  gap: 1px;
+  rotate: 12deg;
+}
+
+.hit-peg {
+  display: block;
+  width: 12px;
+  height: 21px;
+  filter: drop-shadow(0 2px 2px #000a);
+}
+
+.hit-peg-head {
+  fill: #d8322a;
+  stroke: #6e0d0a;
+  stroke-width: 1;
+}
+
+.hit-peg-shaft {
+  fill: #a81f19;
+  stroke: #5a0b08;
+  stroke-width: 0.8;
+}
+
+.hit-peg-shine {
+  fill: #ffffff8c;
+}
+
+/* Stiftkasten: die freien Stifte als Häufchen, das sich aufnehmen lässt. Er klebt oben in der
+   Matte, damit Stifte und Schiffe auch beim Rollen zugleich zu sehen sind. */
+.peg-tray {
+  position: sticky;
+  top: -14px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border: 1px dashed #ff8a7a66;
+  border-radius: 10px;
+  background: #1c0d10f0;
+}
+
+.peg-pile {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid #6e0d0a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #3a1210, #1a0606);
+  cursor: grab;
+  touch-action: none;
+}
+
+.peg-pile[aria-pressed='true'] {
+  outline: 2px solid var(--gold-bright);
+  cursor: grabbing;
+}
+
+.peg-tray-count {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.peg-tray[data-free='0'] .peg-tray-count {
+  color: var(--muted);
+}
+
+.mat-dice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+}
+
+/* Ein getragener Stift: schmal und senkrecht unter dem Zeiger. */
+.drag-ghost[data-material='peg'] {
+  width: 16px;
+  height: 28px;
+  translate: -50% -90%;
+  filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.6));
+}
+
+.drag-ghost[data-material='peg'] .hit-peg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 760px) {
+  .mat-sides {
+    grid-template-columns: 1fr;
+    background: none;
+  }
+
+  .mat-ship {
+    width: 78px;
+  }
+
+  .mat-ship img {
+    width: 70px;
+    height: 36px;
+  }
+}
+
+/* Rückzug: Die Matte schrumpft auf ihren Kopf, damit die leuchtenden Ziele auf der Karte frei
+   liegen; Flotten und Würfel kehren mit der nächsten Entscheidung zurück. */
+.battle-mat[data-deciding='retreat'] .mat-sides,
+.battle-mat[data-deciding='retreat'] .mat-dice {
+  display: none;
+}
+
+.battle-mat[data-deciding='retreat'] {
+  right: auto;
+  width: min(420px, calc(100% - 32px));
+}

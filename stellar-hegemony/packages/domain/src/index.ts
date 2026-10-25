@@ -80,6 +80,7 @@ export * from './combat/hit-assignment.ts';
 export * from './combat/space-combat.ts';
 export * from './combat/tactical-flow.ts';
 export * from './combat/combat-commands.ts';
+export * from './combat/combat-choices.ts';
 export * from './combat/space-cannon.ts';
 export * from './game/event-chain.ts';
 export * from './tactical/tactical-steps.ts';

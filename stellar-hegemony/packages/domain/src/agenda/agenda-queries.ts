@@ -47,3 +47,18 @@ export function votingPower(
     .map((planet) => ({ id: planet.state.id, influence: planet.definition.influence }));
   return { planets, bonus: lawVotes(state, player) };
 }
+
+/**
+ * Stimmen einer Abgabe (RR 2.6, RR 2.13): Einfluss der gewählten bereiten eigenen Planeten plus
+ * Stimmen aus Gesetzen. Planeten, die nicht abstimmen dürfen, zählen nicht.
+ */
+export function votesFrom(
+  state: GameState,
+  player: PlayerId,
+  planets: readonly PlanetId[],
+  content: ContentPort,
+): number {
+  const power = votingPower(state, player, content);
+  const chosen = power.planets.filter((planet) => planets.includes(planet.id));
+  return chosen.reduce((sum, planet) => sum + planet.influence, power.bonus);
+}

@@ -1266,6 +1266,43 @@ const DICTIONARY = {
     de: 'Triff erst deine Wahl am Tisch; dann nimmt der Sockel deinen Strategiemarker.',
     en: 'Make your choice on the table first; then the socket takes your strategy token.',
   },
+  battleMat: { de: 'Kampfmatte', en: 'Battle mat' },
+  hitPeg: { de: 'Trefferstift', en: 'Hit peg' },
+  hitPegs: { de: 'Trefferstifte', en: 'Hit pegs' },
+  pickUpPeg: { de: 'Trefferstift aufnehmen', en: 'Pick up hit peg' },
+  pegsLeft: { de: 'noch {n}', en: '{n} left' },
+  hitSuggestion: { de: 'Vorschlag', en: 'Suggestion' },
+  sustainAndDestroy: { de: 'Schaden abfangen und zerstören', en: 'Sustain damage and destroy' },
+  tableHintHits: {
+    de: 'Lege die roten Trefferstifte auf deine Schiffe oder tippe ein Schiff an, um seinen Treffer zu wechseln.',
+    en: 'Place the red hit pegs on your ships or tap a ship to change its hit.',
+  },
+  retreatHeading: { de: 'Rückzug ankündigen', en: 'Announce retreat' },
+  announceRetreat: { de: 'Rückzug ankündigen', en: 'Announce retreat' },
+  tableHintRetreat: {
+    de: 'Tippe ein leuchtendes System auf der Karte an, um dorthin zurückzuziehen, oder kämpfe weiter.',
+    en: 'Tap a glowing system on the map to retreat there, or keep fighting.',
+  },
+  rollDice: { de: 'Würfeln', en: 'Roll' },
+  diceInCup: { de: 'Würfel im Becher', en: 'Dice in the cup' },
+  latestRoll: { de: 'Letzter Wurf', en: 'Latest roll' },
+  agendaTable: { de: 'Agendatisch', en: 'Agenda table' },
+  agendaBack: { de: 'Agenda, verdeckt', en: 'Agenda, face down' },
+  outcomePlates: { de: 'Ergebnisse', en: 'Outcomes' },
+  outcomePlate: { de: 'Ergebnis', en: 'Outcome' },
+  plateVotes: { de: '{n} Stimmen', en: '{n} votes' },
+  tiedPlate: { de: 'Gleichstand', en: 'Tied' },
+  voteHeading: { de: 'Abstimmung', en: 'Vote' },
+  yourVotes: { de: 'Deine Stimmen', en: 'Your votes' },
+  siteElect: { de: 'Wählen: {planet}', en: 'Elect: {planet}' },
+  tableHintVote: {
+    de: 'Wähle eine Ergebnisplatte und tippe Planeten an; ihr Einfluss liegt als Stimmen darauf.',
+    en: 'Choose an outcome plate and tap planets; their influence lies on it as votes.',
+  },
+  tableHintTieBreak: {
+    de: 'Gleichstand: Tippe eine der leuchtenden Platten an und entscheide.',
+    en: 'Tie: tap one of the glowing plates and decide.',
+  },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof DICTIONARY;

@@ -14,12 +14,12 @@ import { type TargetProps, useTarget } from '../../table/use-target.ts';
 /*
  * Die Porträts als Ziele am Tisch: Bei der Politik sind sie eine Radiogruppe „Neuer Sprecher“,
  * auf die der Sprechermarker gelegt wird; beim Handel schalten sie den Freibrief eines
- * Mitspielers. Sonst öffnen sie wie bisher die Übersicht. Wird etwas getragen (Sprechermarker
+ * Mitspielers, bei einer Wahl auf dem Agendatisch wählen sie die Platte des Spielers. Sonst öffnen sie wie bisher die Übersicht. Wird etwas getragen (Sprechermarker
  * oder eine Aktionskarte aus der Hand), nimmt jedes Porträt mit erlaubtem Schlüssel es an.
  */
 
 /** Wofür die Porträts gerade stehen; `null` heißt: wie bisher die Übersicht öffnen. */
-export type PortraitMode = 'politics' | 'trade' | null;
+export type PortraitMode = 'politics' | 'trade' | 'vote' | null;
 
 /** Einmal je Leiste ermittelt und an alle Porträts gereicht. */
 export interface PortraitTable {
@@ -44,8 +44,10 @@ export interface PortraitButton {
   readonly mode: PortraitMode;
 }
 
+/** Eine Abstimmung nimmt die Porträts nur bei einer Wahl (dann führt sie Spieler als Ziele). */
 function modeOf(decision: TableDecision | null): PortraitMode {
   const id = decision?.specId ?? null;
+  if (id === 'vote') return offeredPlayers(decision).length > 0 ? 'vote' : null;
   return id === 'politics' || id === 'trade' ? id : null;
 }
 
@@ -104,7 +106,7 @@ function tabStop(table: PortraitTable, id: PlayerId, chosen: boolean): 0 | -1 {
 
 /** Rolle des Knopfs: Radioknopf (Politik) oder Schalter (Handel), nur für angebotene Spieler. */
 function roleOf(table: PortraitTable, id: PlayerId, chosen: boolean, carrying: boolean) {
-  if (table.mode === 'trade') return { 'aria-pressed': chosen };
+  if (table.mode === 'trade' || table.mode === 'vote') return { 'aria-pressed': chosen };
   if (table.mode !== 'politics') return {};
   const radio = { role: 'radio' as const, id: radioId(id), 'aria-checked': chosen };
   return carrying ? radio : { ...radio, tabIndex: tabStop(table, id, chosen) };
@@ -114,7 +116,7 @@ function roleOf(table: PortraitTable, id: PlayerId, chosen: boolean, carrying: b
 function ownHandlers(table: PortraitTable, id: PlayerId, offered: boolean, open: () => void) {
   if (table.mode === null || !offered) return { onClick: open };
   const pick = () => table.decision?.act({ kind: 'player', player: id });
-  if (table.mode === 'trade') return { onClick: pick };
+  if (table.mode !== 'politics') return { onClick: pick };
   return { onClick: pick, onKeyDown: (event: KeyboardEvent) => arrowKey(table, id, event) };
 }
 

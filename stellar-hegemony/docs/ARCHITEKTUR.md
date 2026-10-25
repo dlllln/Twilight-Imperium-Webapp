@@ -1143,7 +1143,69 @@ Trägt man den Strategiemarker, rückt der Sockel auch über einer offenen Werft
 | `PromptMeters` (`ProductionMeter`, `ResearchMeter`), `METERS` in `PromptParts`                | Die Messleiste wählt ihre Darstellung über eine Tabelle je Art des Entwurfs statt über Verzweigungen (Polymorphie über `kind`, Open/Closed).                                                 |
 | `socket-play.ts` (`awaitsDraft`)                                                              | Was der Sockel auslöst, bleibt eine reine Funktion; sie unterscheidet nur noch „bereit“ und „wartet auf den Tisch“ (Pure Fabrication).                                                       |
 
-## 37. Iterationen
+## 37. Iteration 33 im Detail (Kampfmatte und Agendatisch)
+
+Die letzten Entscheidungen, die in der Tischansicht noch als Formular erschienen, bekommen ihre
+Regeln, Entwürfe und Ablagen in `TABLE_SPECS`: Treffer zuweisen (`hits`), Rückzug ankündigen
+(`retreat`), Abstimmen (`vote`) und Gleichstand entscheiden (`tieBreak`). Was gerade im Kampf
+entschieden wird, sagt der Spielstand, nicht die Route: Der Angreifer steht während des Raumkampfs
+auf einer taktischen Route, der Verteidiger auf einer Kampfroute; `tableSpecOf(route, content,
+game)` fragt für beide `combatChoiceOf` (Domain). Die alten Formulare (`HitAssignmentForm`,
+`RetreatForm`, `VoteForm`, Stichentscheid in `AgendaTurn`) bleiben der klassischen Ansicht.
+
+Die **Kampfmatte** (`BattleMat`) ersetzt in der Tischansicht die modale Kampfansicht: Sie liegt
+als Region in der freien Mitte wie die Forschungsauslage (gemeinsame Messung der Unterkante in
+`use-mat-floor.ts`), Karte, Pult und Ansage bleiben bedienbar. Je Seite stehen Rolle, Spieler und
+die Schiffe im System (`battleSides`, `combatRole`). Wer Treffer verteilt, sieht seine Schiffe als
+Knöpfe: Antippen oder Enter schaltet die Stifte weiter (keiner → Schaden abfangen → zerstören →
+beides, ohne Schadensresistenz nur keiner ↔ zerstören), ein roter Stift aus dem Stiftkasten
+(`peg:hit`) lässt sich ziehen oder mit Klick bzw. Enter tragen und auf ein Schiff legen. Der
+Entwurf beginnt mit dem Vorschlag der Domain (`hitChoice().suggestion`); „Vorschlag“ stellt ihn
+wieder her, die Messleiste zählt gelegte / verlangte Stifte, das Siegel „Treffer bestätigen“ ist
+erst bei genau der verlangten Zahl bereit. Verlangt werden `min(Treffer, aufnehmbare Treffer)`;
+mehr Stifte, als verlangt, liegen nie. Eine Einheit darf Schaden abfangen _und_ zerstört werden
+(zwei Stifte), was das alte Formular nicht ausdrücken konnte. Karten gegen Treffer liegen bei der
+eigenen Zuweisung an der Matte (RR 3.10). Beim **Rückzug** leuchten die erlaubten Systeme auf der
+Karte (`retreatChoice`); Antippen merkt eines vor, das Siegel heißt dann „Rückzug ankündigen“,
+ohne Ziel „Weiterkämpfen“. Für Tastatur und Bildschirmleser stehen in der Ansage Schalter
+„Rückzug nach …“. Ohne eigene Entscheidung lässt sich die Matte schließen; sie bleibt neben
+Reaktionen liegen und räumt den Tisch, sobald eine andere Entscheidung beginnt.
+
+Die **Würfelschale** der Matte nutzt `VolleyDice` und `DiceTray` unverändert weiter und ergänzt nur
+den Becher: Mit `gated` liegt der eigene Wurf verdeckt im Becher, bis „Würfeln“ ihn wirft; Würfe
+der KI und der Mitspieler decken sich von selbst auf. Die Würfe stehen beim Würfeln schon fest
+(Domain); der Becher ist reine Darstellung und hält keinen Zug auf. Welche Würfe schon geworfen
+wurden, merkt `useThrownDice`, damit ein Neuzeichnen der Matte den Becher nicht wieder füllt.
+
+Der **Agendatisch** (`AgendaTable`) liegt in der Agendaphase in der freien Mitte. Die Agenda dreht
+sich beim Aufdecken einmal von der Rückseite auf (ohne Animationen und bei reduzierter Bewegung
+liegt sie sofort offen). Darunter liegt je Ergebnis eine Platte: Dafür und Dagegen mit eigenem
+Zeichen, bei einer Wahl das Wappen des Spielers, bei einer Planetenwahl eine Planetenscheibe. Jede
+Platte nennt die abgegebenen Stimmen und trägt die Wappen der Abstimmenden. Wer abstimmt, tippt
+eine Platte an (bei einer Wahl auch das Porträt, bei einer Planetenwahl den Planeten auf der
+Karte) und Planeten der Planetenreihe (Einfluss, keine Kasse: Handelswaren sind keine Stimmen);
+ihre Stimmen stapeln sich als Plättchen auf der gewählten Platte, `votesFrom` zählt sie samt
+Gesetzen. „Enthalten“ ist der Ausweg neben dem Siegel „Abstimmen“. Bei Gleichstand leuchten nur
+die gleichauf liegenden Platten; der Sprecher tippt eine an und entscheidet mit dem Siegel.
+
+Die Ende-zu-Ende-Tests legen eigene Galaxien aus: Für die Matte stoßen die Heimatsysteme
+aneinander, der Angreifer fliegt in die Heimat des Nachbarn, und wer Treffer verteilt, legt Stifte
+mit Ziehen und Antippen. Für den Agendatisch liegt die eigene Heimat neben Mecatol Rex; nach der
+Landung dort (Zentrumsmarker entfernt) folgt die Agendaphase, und abgestimmt wird auf den Platten.
+
+| Element                                                                              | Prinzip                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `combatChoiceOf`, `hitChoice`, `retreatChoice`, `votesFrom` (Domain)                 | Die Domain beantwortet, was sie beim Ausführen prüft: wer gerade entscheidet, wie viele Treffer welche Schiffe nehmen, wohin ein Rückzug geht, wie viele Stimmen eine Abgabe bringt (Information Expert, DRY). |
+| `spec-battle` (`HITS_SPEC`, `RETREAT_SPEC`), `spec-agenda` (`VOTE_SPEC`, `TIE_SPEC`) | Vier neue Einträge in `TABLE_SPECS`; Ansage, Siegel, Planetenreihe und Ablagen bleiben unverändert (Open/Closed, Strategy).                                                                                    |
+| `tableSpecOf(route, content, game)`, `combatSpec`                                    | Kampfentscheidungen hängen am Spielstand statt an der Route; ein optionaler Parameter erweitert die Auswahl, ohne bestehende Aufrufer zu ändern (Protected Variations).                                        |
+| `hit-draft.ts` (`cycleMark`, `addPeg`, `assignmentOf`, `marksFrom`)                  | Reine Funktionen über den Stiften; was erlaubt ist, kommt als Argument aus der Domain (Pure Fabrication, testbar ohne Spielstand).                                                                             |
+| `target-ref.ts` (`peg:hit`, `outcome:`), `use-drop-router` (`unitAction`)            | Stift und Platte sind neue Arten desselben Schlüssels; der Stift auf einem Schiff wird zur Handlung `peg` des Entwurfs (Indirection, Polymorphie über `kind`).                                                 |
+| `BattleMat`, `MatShip`, `HitPeg`, `AgendaTable`                                      | Darstellung ohne eigene Regeln: Sie lesen die Entscheidung und rufen `act`; Platten, Schiffe und Stiftkasten sind Ziele bzw. Stücke wie Pult und Karte (Single Responsibility, Low Coupling).                  |
+| `DiceTray`/`VolleyDice` mit `gated`, `useThrownDice`                                 | Die bestehende Würfelschale wird erweitert, nicht ersetzt; der Becher ist eine reine Darstellungsfrage (Open/Closed, DRY).                                                                                     |
+| `combat-view.ts` (`combatRole`, `combatSystemOf`, `battleSides`, `latestVolleys`)    | Kampfansicht und Kampfmatte teilen dieselben Ansichten über Protokoll und Spielstand (Information Expert, DRY).                                                                                                |
+| `use-mat-floor.ts`                                                                   | Forschungsauslage, Kampfmatte und Agendatisch messen ihre Unterkante mit demselben Haken (Pure Fabrication, DRY).                                                                                              |
+
+## 38. Iterationen
 
 | #   | Inhalt                                              | Stand |
 | --- | --------------------------------------------------- | ----- |
@@ -1179,8 +1241,9 @@ Trägt man den Strategiemarker, rückt der Sockel auch über einer offenen Werft
 | 30  | Taktische Aktion und Bauen am Tisch                 | ✓     |
 | 31  | Karten und Menschen am Tisch                        | ✓     |
 | 32  | Werft, Forschungsauslage und Handelsmatte           | ✓     |
+| 33  | Kampfmatte und Agendatisch                          | ✓     |
 
-## 38. Befehle
+## 39. Befehle
 
 ```
 pnpm install

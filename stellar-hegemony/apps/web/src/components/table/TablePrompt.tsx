@@ -13,6 +13,7 @@ import {
   PromptProgress,
   PromptWarfare,
 } from './PromptParts.tsx';
+import { RetreatPick } from './PromptBattle.tsx';
 import { ReactionLine, SecondarySocketLine } from './PromptPeople.tsx';
 import { DiplomacyPick, DoneLine, PlacementList, TradeCorner } from './PromptTactical.tsx';
 import { Shipyard } from './Shipyard.tsx';
@@ -43,7 +44,8 @@ const COMPACT = new Set(['waiting', 'gameOver']);
 function PromptHint({ decision }: { readonly decision: TableDecision }): ReactElement | null {
   const t = useT();
   const { hint, route, specId } = decision;
-  if (hint === null || route.kind === 'combat' || specId === 'tacticalDone') return null;
+  if (hint === null || specId === 'tacticalDone') return null;
+  if (route.kind === 'combat' && specId === null) return null;
   return <p className="hint table-prompt-hint">{t(hint)}</p>;
 }
 
@@ -62,6 +64,7 @@ function PortedPrompt({ game, decision }: PartProps): ReactElement {
       <PromptPayHint decision={decision} />
       <PromptWarfare game={game} decision={decision} />
       <DiplomacyPick game={game} decision={decision} />
+      <RetreatPick game={game} decision={decision} />
       <StructureTray game={game} decision={decision} />
       <Shipyard game={game} decision={decision} />
       <PlacementList game={game} decision={decision} />

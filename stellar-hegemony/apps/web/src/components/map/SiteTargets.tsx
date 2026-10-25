@@ -33,13 +33,14 @@ import './site-targets.css';
  * auch ganz ohne Tischentscheidung; ein Antippen spielt die Karte dort aus. Wird eine
  * Bodentruppe aus der Werft getragen, leuchten die Planeten mit Produktion grün-türkis: Dort
  * abgelegt, wird sie bestellt und geht auf diesen Planeten. Ohne getragenes Stück zeigt die Werft
- * keine Ringe, damit sie die Ringe der Bezahlung nicht verdecken.
+ * keine Ringe, damit sie die Ringe der Bezahlung nicht verdecken. Bei einer Planetenwahl auf dem
+ * Agendatisch tragen die wählbaren Planeten violette Ringe: Antippen wählt ihre Platte.
  */
 
 /** Ein Planet als Ziel wurde angetippt. */
 export type SiteHandler = (planet: PlanetId) => void;
 
-export type SiteKind = 'bombard' | 'landing' | 'construction' | 'card' | 'deploy';
+export type SiteKind = 'bombard' | 'landing' | 'construction' | 'card' | 'deploy' | 'elect';
 
 const KINDS: Partial<Record<TableSpecId, SiteKind>> = {
   bombard: 'bombard',
@@ -47,6 +48,8 @@ const KINDS: Partial<Record<TableSpecId, SiteKind>> = {
   construction: 'construction',
   production: 'deploy',
   warfareSecondary: 'deploy',
+  vote: 'elect',
+  tieBreak: 'elect',
 };
 
 const LABELS: Readonly<Record<SiteKind, MessageKey>> = {
@@ -55,6 +58,7 @@ const LABELS: Readonly<Record<SiteKind, MessageKey>> = {
   construction: 'siteBuild',
   card: 'siteCard',
   deploy: 'siteDeploy',
+  elect: 'siteElect',
 };
 
 /** Die Beschriftung nennt den Planeten, auch wenn der Text keinen Platzhalter hat. */

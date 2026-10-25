@@ -11,6 +11,7 @@ import {
   tacticalDecider,
   technologyCatalog,
   type Unit,
+  type Volley,
 } from '@stellar/domain';
 
 /** Ereignisse, die die Kampfansicht als Protokoll zeigt. */
@@ -158,4 +159,47 @@ export function combatDecision(game: GameState, content: ContentPort): CombatDec
   const units = shipsOf(game, tactical.system, player, catalog);
   const suggestion = suggestHitAssignment(units, pending.hits, catalog);
   return { kind: 'hits', player, hits: pending.hits, units, suggestion };
+}
+
+/** Die Salven eines Protokolleintrags: eine (Kanonen, Jägerabwehr, Bombardement) oder mehrere. */
+function volleysOf(event: CombatLogEvent): readonly Volley[] {
+  if ('volleys' in event) return event.volleys;
+  return 'volley' in event ? [event.volley] : [];
+}
+
+/** Die Würfe des jüngsten Wurfs im Protokoll, für die Würfelschale der Kampfmatte. */
+export function latestVolleys(log: readonly CombatLogEvent[]): readonly Volley[] {
+  const latest = [...log].reverse().find((event) => volleysOf(event).length > 0);
+  return latest === undefined ? [] : volleysOf(latest);
+}
+
+/** Wer im System kämpft: Aktiver, Verteidiger des Raumkampfs und alle aus dem Protokoll. */
+export function battleSides(game: GameState, log: readonly CombatLogEvent[]): PlayerId[] {
+  const defender = game.actionPhase?.tactical?.combat?.defender;
+  const sides = [...combatParties(game, log), ...(defender == null ? [] : [defender])];
+  return [...new Set(sides)];
+}
+
+export type CombatRole = 'attacker' | 'defender' | 'bystander';
+
+/** Rolle einer Seite: der Aktive greift an, der Verteidiger steht im Raumkampf oder im System. */
+export function combatRole(
+  game: GameState,
+  log: readonly CombatLogEvent[],
+  player: PlayerId,
+): CombatRole {
+  if (game.actionPhase?.active === player) return 'attacker';
+  return defenderOf(game, log) === player ? 'defender' : 'bystander';
+}
+
+/** Verteidiger laut Protokoll, sonst laut laufendem Raumkampf. */
+function defenderOf(game: GameState, log: readonly CombatLogEvent[]): PlayerId | null {
+  const started = log.find((event) => event.type === 'SpaceCombatStarted');
+  return started?.defender ?? game.actionPhase?.tactical?.combat?.defender ?? null;
+}
+
+/** Das erste Ereignis des Protokolls nennt immer das umkämpfte System. */
+export function combatSystemOf(log: readonly CombatLogEvent[]): SystemId | null {
+  const first = log[0];
+  return first !== undefined && 'system' in first ? first.system : null;
 }

@@ -53,6 +53,20 @@ export async function openSeat(browser: Browser, name: string): Promise<Page> {
 /** Ändert den Map-String der Galaxie, bevor die Partie eröffnet wird. */
 export type MapEdit = (mapString: string) => string;
 
+/** Spiralplätze, die einander berühren: Ring 2 Norden, Ring 3 Norden und sein Nachbar im Osten. */
+const TOUCHING_HOMES = [7, 19, 20];
+
+/** Legt die Heimat-Plätze (`H`) des Map-Strings auf drei einander berührende Felder. */
+export function touchingHomes(mapString: string): string {
+  const tokens = mapString.trim().split(/\s+/);
+  for (const wanted of TOUCHING_HOMES) {
+    const from = tokens.findIndex((token, at) => token === 'H' && !TOUCHING_HOMES.includes(at));
+    if (tokens[wanted] === 'H' || from < 0) continue;
+    [tokens[wanted], tokens[from]] = [tokens[from] ?? '.', tokens[wanted] ?? '.'];
+  }
+  return tokens.join(' ');
+}
+
 /** Der Gastgeber setzt die Galaxie über das Feld „Map-String“ und importiert sie. */
 async function importMap(host: Page, edit: MapEdit): Promise<void> {
   const field = host.getByLabel('Map-String');
@@ -61,20 +75,37 @@ async function importMap(host: Page, edit: MapEdit): Promise<void> {
   await expect(host.locator('.map-panel .error')).toHaveCount(0);
 }
 
+/** Wählt in der Lobby die eigene Fraktion (über ihren deutschen Namen). */
+export async function chooseFaction(page: Page, faction: string): Promise<void> {
+  await page.getByRole('button', { name: 'Fraktion wählen' }).click();
+  const draft = page.getByRole('dialog', { name: 'Fraktion wählen' });
+  await draft.getByRole('radio', { name: faction }).click();
+  await draft.getByRole('button', { name: 'Wählen' }).click();
+  await expect(draft).toBeHidden();
+}
+
+/** Wählt die Fraktion des Platzes, falls der Test eine vorgibt. */
+async function factionOf(page: Page, faction: string | undefined): Promise<void> {
+  if (faction !== undefined) await chooseFaction(page, faction);
+}
+
 /**
  * Gastgeber eröffnet, Gäste treten bei, der Gastgeber startet; freie Plätze übernimmt die KI.
- * Mit `edit` legt der Gastgeber vorher eine eigene Galaxie aus.
+ * Mit `edit` legt der Gastgeber vorher eine eigene Galaxie aus, mit `factions` wählt jeder Mensch
+ * seine Fraktion (in Platzreihenfolge).
  */
 export async function openTable(
   browser: Browser,
   humans = 3,
   players = 3,
   edit?: MapEdit,
+  factions: readonly string[] = [],
 ): Promise<Page[]> {
   const host = await openSeat(browser, NAMES[0]);
   await host.getByLabel('Spieler').selectOption(String(players));
   if (edit !== undefined) await importMap(host, edit);
   await host.getByRole('button', { name: 'Online-Partie eröffnen' }).click();
+  await factionOf(host, factions[0]);
   const code = (await host.getByTestId('lobby-code').textContent()) ?? '';
   const pages = [host];
   for (const name of NAMES.slice(1, humans)) {
@@ -82,6 +113,7 @@ export async function openTable(
     await guest.getByLabel('Lobbycode').fill(code);
     await guest.getByRole('button', { name: 'Beitreten' }).click();
     await expect(host.getByTestId(`lobby-seat-${String(pages.length)}`)).toContainText('verbunden');
+    await factionOf(guest, factions[pages.length]);
     pages.push(guest);
   }
   await host.getByRole('button', { name: 'Partie starten' }).click();

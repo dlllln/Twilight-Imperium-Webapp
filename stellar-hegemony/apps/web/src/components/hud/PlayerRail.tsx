@@ -158,7 +158,10 @@ function SpeakerToken({ table }: { readonly table: PortraitTable }): ReactElemen
   );
 }
 
-/** Politik: der Geist des Markers auf dem gewählten Porträt; Handel: das Band des Freibriefs. */
+/**
+ * Politik: der Geist des Markers auf dem gewählten Porträt; Handel: das Band des Freibriefs;
+ * Wahl auf dem Agendatisch: das Band „Deine Stimmen“.
+ */
 function ChoiceMark({ button }: { readonly button: PortraitButton }): ReactElement | null {
   const t = useT();
   if (!button.chosen) return null;
@@ -170,7 +173,7 @@ function ChoiceMark({ button }: { readonly button: PortraitButton }): ReactEleme
     );
   return (
     <span className="portrait-free-letter" aria-hidden="true">
-      {t('freeLetter')}
+      {t(button.mode === 'vote' ? 'yourVotes' : 'freeLetter')}
     </span>
   );
 }

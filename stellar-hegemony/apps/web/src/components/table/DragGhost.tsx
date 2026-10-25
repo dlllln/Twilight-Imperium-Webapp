@@ -8,6 +8,7 @@ import { useCarryStore } from '../../table/carry-store.ts';
 import { isCrateRef, type TargetRef } from '../../table/target-ref.ts';
 import { CompleteCardArtwork } from '../cards/CompleteCardArtwork.tsx';
 import { CoinFace, CommandToken } from '../sheet/SheetTokens.tsx';
+import { HitPeg } from './HitPeg.tsx';
 import { SpeakerFace } from './SpeakerFace.tsx';
 import { seatNumberOf } from './StructureTray.tsx';
 
@@ -15,7 +16,7 @@ import { seatNumberOf } from './StructureTray.tsx';
  * Das Stück unter dem Zeiger, solange es gezogen wird: ein Marker, eine Münze (Handelsware vom
  * Haufen oder aus der Kasse), eine Rohstoffkiste, eine Figur, ein Gebäude oder eine Einheit aus
  * der Werft (mit ihrem Bild in der Platzfarbe des Besitzers), eine Aktionskarte aus der Hand
- * (klein und schräg) oder der Sprechermarker. Es liegt außerhalb des schrägen Pults direkt im
+ * (klein und schräg), der Sprechermarker oder ein roter Trefferstift der Kampfmatte. Es liegt außerhalb des schrägen Pults direkt im
  * Dokument, damit es dem Zeiger unverzerrt folgt; die Platzfarbe bringt es selbst mit.
  */
 
@@ -47,7 +48,7 @@ function useCarriedFigure(): Figure | null {
   return game === null || piece === null ? null : figureOf(game, piece, me);
 }
 
-type Material = 'unit' | 'coin' | 'crate' | 'token' | 'card' | 'speaker';
+type Material = 'unit' | 'coin' | 'crate' | 'token' | 'card' | 'speaker' | 'peg';
 
 /** Figur oder Gebäude mit Bild; ohne Bild ein Sechseck, ohne Figur ein Marker. */
 function FigureFace({ faction }: { readonly faction: string }) {
@@ -90,6 +91,7 @@ const FACES: Readonly<Record<Material, (props: FaceProps) => ReactElement | null
   token: ({ faction }) => <CommandToken faction={faction} />,
   card: () => <CardFace />,
   speaker: () => <SpeakerFace />,
+  peg: () => <HitPeg />,
   unit: ({ faction }) => <FigureFace faction={faction} />,
 };
 
@@ -101,6 +103,7 @@ const MATERIALS: Partial<Record<TargetRef['kind'], Material>> = {
   yard: 'unit',
   action: 'card',
   speaker: 'speaker',
+  peg: 'peg',
 };
 
 /** Rohstoffe sind Kisten, keine Münzen, obwohl sie wie Handelswaren am Pult liegen. */

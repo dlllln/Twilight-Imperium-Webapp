@@ -18,6 +18,7 @@ import {
   unitTypeId,
 } from '@stellar/domain';
 import { type Language, type MessageKey, translate } from '../i18n.ts';
+import { outcomeLabel } from '../components/agenda/outcome-label.ts';
 import { actionCardLabel, objectiveLabel, planetLabel, systemLabel, unitLabel } from '../labels.ts';
 
 /*
@@ -29,7 +30,9 @@ import { actionCardLabel, objectiveLabel, planetLabel, systemLabel, unitLabel } 
  * Menschen und Karten am Tisch: das Bild eines Mitspielers („player:“), der Sprechermarker
  * („speaker:token“) und eine Aktionskarte aus der Hand („action:“). Die Werft legt Einheiten
  * als Stücke aus („yard:infantry“) in ihr Dock („slot:dock“), die Handelsmatte nimmt Münzen und
- * Rohstoffkisten („goods:commodities“) auf.
+ * Rohstoffkisten („goods:commodities“) auf. Auf der Kampfmatte wandern rote Trefferstifte
+ * („peg:hit“) auf Schiffe („unit:“), auf dem Agendatisch sind die Ergebnisse Platten
+ * („outcome:for“, „outcome:<Spieler>“, „outcome:<Planet>“).
  */
 
 /** Die Felder einer Markerverteilung: die drei Leisten und die Schale „Neue Marker“. */
@@ -59,7 +62,9 @@ export type TargetRef =
   | { readonly kind: 'player'; readonly id: PlayerId }
   | { readonly kind: 'speaker' }
   | { readonly kind: 'action'; readonly id: ActionCardId }
-  | { readonly kind: 'yard'; readonly type: UnitTypeId };
+  | { readonly kind: 'yard'; readonly type: UnitTypeId }
+  | { readonly kind: 'peg' }
+  | { readonly kind: 'outcome'; readonly id: string };
 
 /** Wie ein Ziel in der laufenden Entscheidung dasteht. */
 export type TargetState = 'legal' | 'chosen' | 'blocked';
@@ -136,6 +141,12 @@ export const yardPiece = (type: UnitTypeId | string): TargetRef => ({
   type: unitTypeId(type),
 });
 
+/** Ein roter Trefferstift der Kampfmatte; alle Stifte sind gleich, es gibt nur einen Stapel. */
+export const HIT_PEG: TargetRef = { kind: 'peg' };
+
+/** Eine Ergebnisplatte des Agendatisches: Dafür, Dagegen, ein Spieler oder ein Planet. */
+export const outcomeTarget = (id: string): TargetRef => ({ kind: 'outcome', id });
+
 /** Der Teil hinter dem Doppelpunkt. */
 function partOf(ref: TargetRef): string {
   switch (ref.kind) {
@@ -150,6 +161,8 @@ function partOf(ref: TargetRef): string {
       return ref.type;
     case 'speaker':
       return 'token';
+    case 'peg':
+      return 'hit';
     default:
       return ref.id;
   }
@@ -178,6 +191,8 @@ const goodsOf = (value: string): TargetRef | null => GOODS.get(value) ?? null;
 
 const speakerOf = (value: string): TargetRef | null => (value === 'token' ? SPEAKER_PIECE : null);
 
+const pegOf = (value: string): TargetRef | null => (value === 'hit' ? HIT_PEG : null);
+
 /** Je Art die Rückübersetzung des Werts; Unbekanntes ergibt `null`. */
 const PARSERS: ReadonlyMap<string, (value: string) => TargetRef | null> = new Map([
   ['system', systemTarget],
@@ -193,6 +208,8 @@ const PARSERS: ReadonlyMap<string, (value: string) => TargetRef | null> = new Ma
   ['speaker', speakerOf],
   ['action', actionPiece],
   ['yard', yardPiece],
+  ['peg', pegOf],
+  ['outcome', outcomeTarget],
 ]);
 
 /** Liest einen Schlüssel zurück; Unbekanntes ergibt `null`. */
@@ -241,6 +258,9 @@ const LABELS: LabelsByKind = {
   speaker: (_ref, _game, language) => translate(language, 'speakerToken'),
   action: (ref, _game, language) => actionCardLabel(ref.id, language),
   yard: (ref, _game, language) => unitLabel(ref.type, language),
+  peg: (_ref, _game, language) => translate(language, 'hitPeg'),
+  outcome: (ref, game, language) =>
+    outcomeLabel(game, ref.id, language, (key) => translate(language, key)),
 };
 
 /** Name eines Ziels für Ansagen: Leiste, System, Planet, Auftrag, Figur, Mitspieler, Karte … */

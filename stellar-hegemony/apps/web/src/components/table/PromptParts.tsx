@@ -21,6 +21,7 @@ import { SystemSelect } from '../game/FormParts.tsx';
 import { PlayerTag } from '../game/PlayerTag.tsx';
 import { PHASE_TITLE } from '../game/TurnPanel.tsx';
 import { ConfirmSeal } from './ConfirmSeal.tsx';
+import { HitMeter, RetreatMeter, TieMeter, VoteMeter } from './PromptBattle.tsx';
 import { MeterLine, ProductionMeter, ResearchMeter } from './PromptMeters.tsx';
 
 /*
@@ -49,11 +50,15 @@ const SPEC_TITLES: Partial<Record<TableSpecId, MessageKey>> = {
   scoring: 'scoreObjectives',
   discard: 'discardCards',
   reaction: 'reaction',
+  hits: 'assignHits',
+  retreat: 'retreatHeading',
+  vote: 'voteHeading',
+  tieBreak: 'tieBreak',
 };
 
 /**
- * Was die Entscheidung betrifft: Markerverteilung, Wertung, Ablegen, Reaktion, aktiviertes
- * System oder Kartenname (sekundär mit Vorsilbe).
+ * Was die Entscheidung betrifft: Markerverteilung, Wertung, Ablegen, Reaktion, Treffer, Rückzug,
+ * Abstimmung, Gleichstand, aktiviertes System oder Kartenname (sekundär mit Vorsilbe).
  */
 export function subtitleOf(
   decision: TableDecision,
@@ -63,8 +68,8 @@ export function subtitleOf(
 ): string | null {
   const { route, specId } = decision;
   const titled = specId === null ? undefined : SPEC_TITLES[specId];
-  if (route.kind === 'tactical') return activeSystemOf(game, t, language);
   if (titled !== undefined) return t(titled);
+  if (route.kind === 'tactical') return activeSystemOf(game, t, language);
   if (route.card === null) return null;
   const name = cardText(route.card).name[language];
   return route.ability === 'secondary' ? `${t('secondaryPrompt')}: ${name}` : name;
@@ -307,7 +312,8 @@ const METERS: { readonly [K in TableDraft['kind']]: MeterFor<K> } = {
   placement: ({ decision, draft, progress }) => (
     <PlacementMeter plan={draft} progress={progress} units={unitCount(decision)} />
   ),
-  system: () => null,
+  system: ({ game, decision, draft }) =>
+    decision.specId === 'retreat' ? <RetreatMeter game={game} plan={draft} /> : null,
   construction: ({ progress }) => <BuildMeter progress={progress} />,
   done: () => null,
   discard: ({ progress }) => <DiscardMeter progress={progress} />,
@@ -316,6 +322,9 @@ const METERS: { readonly [K in TableDraft['kind']]: MeterFor<K> } = {
   ),
   production: YardMeter,
   research: SpreadMeter,
+  hits: ({ progress }) => <HitMeter progress={progress} />,
+  vote: ({ game, draft, progress }) => <VoteMeter game={game} plan={draft} progress={progress} />,
+  outcome: ({ game, draft }) => <TieMeter game={game} plan={draft} />,
 };
 
 function DraftMeter(props: DraftMeterProps): ReactElement | null {

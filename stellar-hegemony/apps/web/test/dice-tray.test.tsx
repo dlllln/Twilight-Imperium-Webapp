@@ -3,7 +3,7 @@ import { playerId, unitId, unitTypeId, type Volley } from '@stellar/domain';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DiceTray } from '../src/components/combat/DiceTray.tsx';
-import { DICE_REVEAL_MS } from '../src/components/combat/use-dice-reveal.ts';
+import { DICE_REVEAL_MS, useThrownDice } from '../src/components/combat/use-dice-reveal.ts';
 import { BattleScreen } from '../src/components/simulator/BattleScreen.tsx';
 import { useSettingsStore } from '../src/settings-store.ts';
 import { useSimulatorStore } from '../src/simulator/simulator-store.ts';
@@ -151,5 +151,38 @@ describe('Simulatorwürfe', () => {
     expect(vi.getTimerCount()).toBe(1);
     sim.settle();
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('Würfelbecher am Tisch (eigener Wurf)', () => {
+  beforeEach(() => useThrownDice.setState({ thrown: new Set() }));
+
+  it('der eigene Wurf bleibt im Becher, bis „Würfeln“ ihn wirft; dann rollt er wie gewohnt', () => {
+    render(<DiceTray volley={volley} gated />);
+    expect(document.querySelector('.dice-tray')?.getAttribute('data-held')).toBe('true');
+    expect(screen.getByText('Würfel im Becher')).toBeTruthy();
+    expect(screen.queryByText('2 Treffer')).toBeNull();
+    expect(values().every((value) => value === '')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Würfeln' }));
+    expect(rolling()).toBe('true');
+    act(() => {
+      vi.advanceTimersByTime(DICE_REVEAL_MS);
+    });
+    expect(values()).toEqual(['2', '9', '10']);
+    expect(screen.getByText('2 Treffer')).toBeTruthy();
+  });
+
+  it('ein schon geworfener Wurf liegt nach dem Neuzeichnen offen; fremde Würfe brauchen keinen Becher', () => {
+    useSettingsStore.setState({ animations: false });
+    const first = render(<DiceTray volley={volley} gated />);
+    fireEvent.click(screen.getByRole('button', { name: 'Würfeln' }));
+    first.unmount();
+    render(<DiceTray volley={volley} gated />);
+    expect(screen.queryByRole('button', { name: 'Würfeln' })).toBeNull();
+    expect(values()).toEqual(['2', '9', '10']);
+    cleanup();
+    render(<DiceTray volley={{ ...volley, player: playerId('bot') }} />);
+    expect(screen.queryByText('Würfel im Becher')).toBeNull();
+    expect(values()).toEqual(['2', '9', '10']);
   });
 });

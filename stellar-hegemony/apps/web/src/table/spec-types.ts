@@ -13,6 +13,7 @@ import type {
 } from '@stellar/domain';
 import type { MessageKey } from '../i18n.ts';
 import type { DecisionRoute } from './decision-route.ts';
+import type { HitMark } from './hit-draft.ts';
 import type { PaymentPlan } from './payment-draft.ts';
 import type { PlanetSide } from './planet-table.ts';
 import type { PoolDraft } from './pool-draft.ts';
@@ -41,7 +42,11 @@ export type TableSpecId =
   | 'trade'
   | 'production'
   | 'warfareSecondary'
-  | 'technology';
+  | 'technology'
+  | 'hits'
+  | 'retreat'
+  | 'vote'
+  | 'tieBreak';
 
 /** Entwurf einer Markerverteilung samt Bezahlung (Führung) und System (Kriegsführung). */
 export interface TokenPlan {
@@ -127,6 +132,25 @@ export interface ResearchPlan {
   readonly payment: PaymentPlan;
 }
 
+/** Kampfmatte: je Schiff seine Trefferstifte (Schlüssel ist die Einheit). */
+export interface HitPlan {
+  readonly kind: 'hits';
+  readonly marks: Readonly<Record<string, HitMark>>;
+}
+
+/** Agendatisch: die gewählte Ergebnisplatte und die Planeten, deren Stimmen darauf liegen. */
+export interface VotePlan {
+  readonly kind: 'vote';
+  readonly outcome: string | null;
+  readonly planets: readonly PlanetId[];
+}
+
+/** Gleichstand: die Platte, für die sich der Sprecher entscheidet. */
+export interface OutcomePlan {
+  readonly kind: 'outcome';
+  readonly outcome: string | null;
+}
+
 export type TableDraft =
   | TokenPlan
   | ObjectivePlan
@@ -138,7 +162,10 @@ export type TableDraft =
   | DiscardPlan
   | PlayersPlan
   | ProductionPlan
-  | ResearchPlan;
+  | ResearchPlan
+  | HitPlan
+  | VotePlan
+  | OutcomePlan;
 
 export type TableAction =
   | { readonly kind: 'move'; readonly from: DraftZone; readonly to: DraftZone }
@@ -166,7 +193,15 @@ export type TableAction =
   /** Eine Technologie der Auslage wählen oder zurücklegen. */
   | { readonly kind: 'technology'; readonly technology: TechnologyId }
   /** Einen Planeten mit Spezialisierung als Ersatz einer Voraussetzung nutzen oder nicht. */
-  | { readonly kind: 'specialty'; readonly planet: PlanetId };
+  | { readonly kind: 'specialty'; readonly planet: PlanetId }
+  /** Ein Schiff der Kampfmatte antippen: kein Treffer → Schaden abfangen → zerstören → beides. */
+  | { readonly kind: 'hit'; readonly unit: UnitId }
+  /** Einen Trefferstift auf ein Schiff legen. */
+  | { readonly kind: 'peg'; readonly unit: UnitId }
+  /** Den Vorschlag der Domain wiederherstellen. */
+  | { readonly kind: 'suggest' }
+  /** Eine Ergebnisplatte wählen (Abstimmung, Gleichstand). */
+  | { readonly kind: 'outcome'; readonly outcome: string };
 
 /** Ein Stück der Entscheidung auf dem Tisch: Figur oder Gebäude, und wo es gerade steht. */
 export interface TablePiece {

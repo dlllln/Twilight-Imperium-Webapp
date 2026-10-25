@@ -9,6 +9,7 @@ import {
   pickCard,
   pickFirstFree,
   portraitTarget,
+  touchingHomes,
   whereVisible,
 } from './table.ts';
 
@@ -47,20 +48,6 @@ test('Tischansicht: ohne Nachbarn liegt weder Handelsmatte noch Münze zum Aufne
   await expect(page.getByRole('button', { name: 'Rohstoff aufnehmen' })).toHaveCount(0);
   await expect(page.locator('.portrait-trade-mark')).toHaveCount(0);
 });
-
-/** Spiralplätze, die einander berühren: Ring 2 Norden, Ring 3 Norden und sein Nachbar im Osten. */
-const TOUCHING_HOMES = [7, 19, 20];
-
-/** Legt die Heimat-Plätze (`H`) des Map-Strings auf drei einander berührende Felder. */
-function touchingHomes(mapString: string): string {
-  const tokens = mapString.trim().split(/\s+/);
-  for (const wanted of TOUCHING_HOMES) {
-    const from = tokens.findIndex((token, at) => token === 'H' && !TOUCHING_HOMES.includes(at));
-    if (tokens[wanted] === 'H' || from < 0) continue;
-    [tokens[wanted], tokens[from]] = [tokens[from] ?? '.', tokens[wanted] ?? '.'];
-  }
-  return tokens.join(' ');
-}
 
 /**
  * Handel primär: Der Aktive füllt Münzen und Rohstoffe auf, sein Zug endet. Wer als Nächster am

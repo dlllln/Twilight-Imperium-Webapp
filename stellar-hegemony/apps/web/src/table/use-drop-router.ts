@@ -35,7 +35,7 @@ import { type TradeMat, useTradeMat } from './use-trade-mat.ts';
  * der oberste Strategiemarker im Sockel der Ansage führt die Sekundärfähigkeit aus. Eine Einheit
  * der Werft im Dock oder im System wird bestellt, auf einem Planeten mit diesem Ziel für neue
  * Bodentruppen. Münzen und Kisten auf dem Bild eines Handelspartners legen sie auf die
- * Handelsmatte.
+ * Handelsmatte. Ein Trefferstift auf einem Schiff der Kampfmatte nimmt dort einen Treffer.
  */
 
 export interface DropInput {
@@ -108,15 +108,20 @@ function yardAction(piece: TargetRef, target: TargetRef): TableAction | null {
   return { kind: 'order', type: piece.type, delta: 1, planet };
 }
 
-/** Figuren auf Planeten oder zurück ins All, Gebäude auf Planeten. */
+/** Eine Figur auf einen Planeten oder zurück ins All. */
+function unitAction(piece: TargetRef, target: TargetRef): TableAction | null {
+  if (piece.kind !== 'unit') return null;
+  if (target.kind === 'site') return { kind: 'assign', unit: piece.id, planet: target.id };
+  const space = target.kind === 'slot' && target.name === 'space';
+  return space ? { kind: 'assign', unit: piece.id, planet: null } : null;
+}
+
+/** Figuren auf Planeten oder zurück ins All, Gebäude auf Planeten, Trefferstifte auf Schiffe. */
 function pieceAction(piece: TargetRef, target: TargetRef): TableAction | null {
-  if (piece.kind === 'unit' && target.kind === 'site')
-    return { kind: 'assign', unit: piece.id, planet: target.id };
-  if (piece.kind === 'unit' && target.kind === 'slot' && target.name === 'space')
-    return { kind: 'assign', unit: piece.id, planet: null };
+  if (piece.kind === 'peg' && target.kind === 'unit') return { kind: 'peg', unit: target.id };
   if (piece.kind === 'structure' && target.kind === 'site')
     return { kind: 'place', type: piece.type, planet: target.id };
-  return yardAction(piece, target);
+  return unitAction(piece, target) ?? yardAction(piece, target);
 }
 
 /** Was ein Ablegen am Entwurf ändert; `null`, wenn es dort nichts bewirkt. */

@@ -75,7 +75,7 @@ interface Ported {
 }
 
 function portedOf(game: GameState, route: DecisionRoute | null): Ported | null {
-  const id = route === null ? null : tableSpecOf(route, content);
+  const id = route === null ? null : tableSpecOf(route, content, game);
   if (route === null || id === null || route.actor === null) return null;
   const ctx = { game, actor: route.actor, route };
   return { spec: TABLE_SPECS[id], ctx, key: `${route.key}@${String(game.version)}` };

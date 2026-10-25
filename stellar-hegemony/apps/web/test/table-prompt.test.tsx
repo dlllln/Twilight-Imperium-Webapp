@@ -238,15 +238,16 @@ describe('Ansage am Pult (Tischansicht)', () => {
     expect(screen.queryByTestId('confirm')).toBeNull();
   });
 
-  it('der Verteidiger sieht nur den Hinweis auf den Kampf und kein Tauschformular', () => {
+  it('der Verteidiger verteilt Treffer am Tisch: Ansage mit Siegel, ohne Hinweiszettel und Tauschformular', () => {
     defending();
     render(<Live />);
     const region = prompt();
     expect(region.dataset['kind']).toBe('combat');
-    expect(within(region).getAllByText('Im Kampf wartet eine Entscheidung auf dich.')).toHaveLength(
-      1,
-    );
-    expect(within(region).getByRole('button', { name: 'Kampfansicht öffnen' })).toBeTruthy();
+    expect(within(region).getByRole('heading', { name: 'Treffer zuweisen' })).toBeTruthy();
+    expect(within(region).getByTestId('hit-count').textContent).toBe('0');
+    expect(screen.getByTestId('confirm').textContent).toContain('Treffer bestätigen');
+    expect(within(region).queryByText('Im Kampf wartet eine Entscheidung auf dich.')).toBeNull();
+    expect(within(region).queryByRole('button', { name: 'Kampfansicht öffnen' })).toBeNull();
     expect(region.querySelector('.transaction')).toBeNull();
     expect(within(region).queryByRole('button', { name: 'Taktische Aktion beenden' })).toBeNull();
   });
